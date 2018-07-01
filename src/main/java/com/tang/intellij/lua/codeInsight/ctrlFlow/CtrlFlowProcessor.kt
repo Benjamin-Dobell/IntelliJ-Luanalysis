@@ -25,6 +25,8 @@ class CtrlFlowProcessor : LuaVisitor() {
 
     private val builder = CtrlFlowInstructionsBuilderImpl()
 
+    private lateinit var factory: VMValueFactory
+
     fun process(block: LuaBlock) {
         block.accept(this)
     }
@@ -36,7 +38,22 @@ class CtrlFlowProcessor : LuaVisitor() {
     }
 
     override fun visitLocalDef(o: LuaLocalDef) {
+        val list = o.exprList?.exprList
+        var unsure = false
+        o.nameList?.nameDefList?.forEachIndexed { index, def ->
+            val varValue = factory.createVariableValue(def)
+            builder.addInstruction(PushInstruction(varValue))
 
+            val expr = list?.getOrNull(index)
+            if (expr is LuaCallExpr) unsure = true
+            when {
+                unsure -> pushUnknown()
+                expr == null -> pushNil()
+                else -> expr.accept(this)
+            }
+
+
+        }
     }
 
     override fun visitAssignStat(o: LuaAssignStat) {
@@ -48,7 +65,7 @@ class CtrlFlowProcessor : LuaVisitor() {
     }
 
     override fun visitLiteralExpr(o: LuaLiteralExpr) {
-        
+
     }
 
     override fun visitBinaryExpr(o: LuaBinaryExpr) {
@@ -72,5 +89,9 @@ class CtrlFlowProcessor : LuaVisitor() {
 
     private fun pushUnknown() {
         builder.addInstruction(PushInstruction(VMUnknown))
+    }
+
+    private fun pushNil() {
+
     }
 }
