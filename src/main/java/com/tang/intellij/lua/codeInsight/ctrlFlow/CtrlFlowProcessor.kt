@@ -16,9 +16,10 @@
 
 package com.tang.intellij.lua.codeInsight.ctrlFlow
 
-import com.tang.intellij.lua.psi.LuaAssignStat
-import com.tang.intellij.lua.psi.LuaBlock
-import com.tang.intellij.lua.psi.LuaVisitor
+import com.tang.intellij.lua.codeInsight.ctrlFlow.instructions.BinaryInstruction
+import com.tang.intellij.lua.codeInsight.ctrlFlow.instructions.PushInstruction
+import com.tang.intellij.lua.codeInsight.ctrlFlow.instructions.UnaryInstruction
+import com.tang.intellij.lua.psi.*
 
 class CtrlFlowProcessor : LuaVisitor() {
 
@@ -34,7 +35,42 @@ class CtrlFlowProcessor : LuaVisitor() {
         builder.exitScope(o)
     }
 
-    override fun visitAssignStat(o: LuaAssignStat) {
+    override fun visitLocalDef(o: LuaLocalDef) {
 
+    }
+
+    override fun visitAssignStat(o: LuaAssignStat) {
+    }
+
+    override fun visitTableExpr(o: LuaTableExpr) {
+        //TODO
+        pushUnknown()
+    }
+
+    override fun visitLiteralExpr(o: LuaLiteralExpr) {
+        
+    }
+
+    override fun visitBinaryExpr(o: LuaBinaryExpr) {
+        o.left?.accept(this) ?: pushUnknown()
+        o.right?.accept(this) ?: pushUnknown()
+        builder.addInstruction(BinaryInstruction(o))
+    }
+
+    override fun visitUnaryExpr(o: LuaUnaryExpr) {
+        o.expr?.accept(this) ?: pushUnknown()
+        builder.addInstruction(UnaryInstruction(o))
+    }
+
+    override fun visitCallExpr(o: LuaCallExpr) {
+        //TODO
+        pushUnknown()
+    }
+
+    override fun visitClassMethodDef(o: LuaClassMethodDef) {
+    }
+
+    private fun pushUnknown() {
+        builder.addInstruction(PushInstruction(VMUnknown))
     }
 }

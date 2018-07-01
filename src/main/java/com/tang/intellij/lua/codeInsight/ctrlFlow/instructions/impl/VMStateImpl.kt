@@ -31,4 +31,6 @@ class VMStateImpl : VMState {
     override fun pop(): VMValue {
         return stack.pop()
     }
+
+    override fun peek(): VMValue = stack.peek()
 }

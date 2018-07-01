@@ -21,6 +21,7 @@ import com.tang.intellij.lua.psi.LuaLocalFuncDef
 import com.tang.intellij.lua.psi.LuaNameDef
 
 interface CtrlFlowInstructionsBuilder {
+    fun <T : VMInstruction> addInstruction(instruction: T): T
 
     fun enterScope(block: LuaBlock)
     fun exitScope(block: LuaBlock)

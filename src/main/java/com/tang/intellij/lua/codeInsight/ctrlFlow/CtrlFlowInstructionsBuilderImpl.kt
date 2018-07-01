@@ -16,15 +16,21 @@
 
 package com.tang.intellij.lua.codeInsight.ctrlFlow
 
-import com.tang.intellij.lua.codeInsight.ctrlFlow.instructions.impl.VMStateImpl
 import com.tang.intellij.lua.psi.LuaBlock
 import com.tang.intellij.lua.psi.LuaLocalFuncDef
 import com.tang.intellij.lua.psi.LuaNameDef
 
 class CtrlFlowInstructionsBuilderImpl : CtrlFlowInstructionsBuilder {
 
-    private val state = VMStateImpl(null)
+    private val pseudoCode = VMPseudoCodeImpl()
+
     private var scope: VMScope? = null
+
+    override fun <T : VMInstruction> addInstruction(instruction: T): T {
+        instruction.scope = scope!!
+        pseudoCode.addInstruction(instruction)
+        return instruction
+    }
 
     override fun enterScope(block: LuaBlock) {
         scope = VMScope(scope, block)

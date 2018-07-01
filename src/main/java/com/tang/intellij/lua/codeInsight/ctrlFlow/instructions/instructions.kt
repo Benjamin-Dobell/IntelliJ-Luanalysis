@@ -16,12 +16,30 @@
 
 package com.tang.intellij.lua.codeInsight.ctrlFlow.instructions
 
-import com.tang.intellij.lua.codeInsight.ctrlFlow.VMInstruction
-import com.tang.intellij.lua.codeInsight.ctrlFlow.VMScope
-import com.tang.intellij.lua.codeInsight.ctrlFlow.VMState
+import com.tang.intellij.lua.codeInsight.ctrlFlow.*
+import com.tang.intellij.lua.psi.LuaBinaryExpr
+import com.tang.intellij.lua.psi.LuaUnaryExpr
 
-open class VMInstructionImpl(override var owner: VMState, override val scope: VMScope) : VMInstruction {
+open class VMInstructionImpl : VMInstruction {
+
+    override var index: Int = 0
+
+    override lateinit var owner: VMPseudoCode
+
+    override lateinit var scope: VMScope
+
     override fun accept(visitor: InstructionVisitor) {
     }
 }
 
+class GotoInstruction(val label: VMLabel) : VMInstructionImpl()
+
+class ConditionGotoInstruction(val label: VMLabel) : VMInstructionImpl()
+
+class PushInstruction(val value: VMValue) : VMInstructionImpl()
+
+//-1, +1
+class UnaryInstruction(val unaryExpr: LuaUnaryExpr) : VMInstructionImpl()
+
+//-2, +1
+class BinaryInstruction(val binaryExpr: LuaBinaryExpr) : VMInstructionImpl()

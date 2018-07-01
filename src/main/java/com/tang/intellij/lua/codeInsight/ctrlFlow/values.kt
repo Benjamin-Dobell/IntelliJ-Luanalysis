@@ -16,12 +16,34 @@
 
 package com.tang.intellij.lua.codeInsight.ctrlFlow
 
-abstract class VMValue
+import com.intellij.util.ThreeState
+import com.tang.intellij.lua.psi.LuaExpr
+import com.tang.intellij.lua.psi.LuaNameDef
 
-class VMBoolean : VMValue()
+abstract class VMValue {
+    companion object {
+        val BOOLEAN_TRUE = VMBoolean(ThreeState.YES)
+        val BOOLEAN_FALSE = VMBoolean(ThreeState.NO)
+        val BOOLEAN_UNSURE = VMBoolean(ThreeState.UNSURE)
+    }
+}
 
-class VMString : VMValue()
+interface VMValueFactory {
+    fun createValue(expr: LuaExpr): VMValue
 
-class VMNumber : VMValue()
+    fun createVariableValue(def: LuaNameDef): VMVariableValue
+}
 
-class VMFunction : VMValue()
+object VMUnknown : VMValue()
+
+abstract class VMConstantValue : VMValue()
+
+class VMBoolean(val value: ThreeState) : VMConstantValue()
+
+class VMString : VMConstantValue()
+
+class VMNumber : VMConstantValue()
+
+class VMFunction : VMConstantValue()
+
+class VMVariableValue : VMValue()
