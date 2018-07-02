@@ -16,21 +16,22 @@
 
 package com.tang.intellij.lua.codeInsight.ctrlFlow
 
-import com.tang.intellij.lua.psi.LuaBlock
-import com.tang.intellij.lua.psi.LuaLocalFuncDef
-import com.tang.intellij.lua.psi.LuaNameDef
+import com.tang.intellij.lua.psi.*
 
-interface CtrlFlowInstructionsBuilder {
-    fun <T : VMInstruction> addInstruction(instruction: T): T
+open class VMValueFactoryImpl : VMValueFactory {
+    override fun createValue(expr: LuaExpr): VMValue {
+        return VMUnknown
+    }
 
-    fun enterScope(block: LuaBlock)
-    fun exitScope(block: LuaBlock): VMPseudoCode
+    override fun createVariableValue(def: LuaNameDef): VMVariableValue {
+        return VMVariableValue(def.name)
+    }
 
-    fun declareParameter(param: LuaNameDef)
-    fun declareLocalVar(local: LuaNameDef)
-    fun declareLocalFun(local: LuaLocalFuncDef)
-
-    fun returnValue()
-
-    fun getPseudoCode(): VMPseudoCode
+    override fun createLiteralValue(expr: LuaLiteralExpr) = when (expr.kind) {
+        LuaLiteralKind.Bool -> if (expr.boolValue) VMBoolean.TRUE else VMBoolean.FALSE
+        LuaLiteralKind.Nil -> VMNil
+        LuaLiteralKind.Number -> VMNumber(expr.numberValue)
+        LuaLiteralKind.String -> VMString(expr.stringValue)
+        else -> VMUnknown
+    }
 }

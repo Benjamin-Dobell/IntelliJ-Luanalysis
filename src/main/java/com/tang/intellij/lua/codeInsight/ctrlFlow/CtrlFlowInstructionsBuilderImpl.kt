@@ -24,20 +24,23 @@ class CtrlFlowInstructionsBuilderImpl : CtrlFlowInstructionsBuilder {
 
     private val pseudoCode = VMPseudoCodeImpl()
 
-    private var scope: VMScope? = null
+    private var scope = VMScope(null)
+
+    override fun getPseudoCode() = pseudoCode
 
     override fun <T : VMInstruction> addInstruction(instruction: T): T {
-        instruction.scope = scope!!
+        instruction.scope = scope
         pseudoCode.addInstruction(instruction)
         return instruction
     }
 
     override fun enterScope(block: LuaBlock) {
-        scope = VMScope(scope, block)
+        scope = VMScope(scope)
     }
 
-    override fun exitScope(block: LuaBlock) {
-        scope = scope?.parent
+    override fun exitScope(block: LuaBlock): VMPseudoCode {
+        scope = scope.parent!!
+        return pseudoCode
     }
 
     override fun declareParameter(param: LuaNameDef) {

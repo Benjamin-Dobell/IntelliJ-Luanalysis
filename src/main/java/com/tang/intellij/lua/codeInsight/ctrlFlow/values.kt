@@ -18,32 +18,37 @@ package com.tang.intellij.lua.codeInsight.ctrlFlow
 
 import com.intellij.util.ThreeState
 import com.tang.intellij.lua.psi.LuaExpr
+import com.tang.intellij.lua.psi.LuaLiteralExpr
 import com.tang.intellij.lua.psi.LuaNameDef
 
-abstract class VMValue {
-    companion object {
-        val BOOLEAN_TRUE = VMBoolean(ThreeState.YES)
-        val BOOLEAN_FALSE = VMBoolean(ThreeState.NO)
-        val BOOLEAN_UNSURE = VMBoolean(ThreeState.UNSURE)
-    }
-}
+abstract class VMValue
 
 interface VMValueFactory {
     fun createValue(expr: LuaExpr): VMValue
 
     fun createVariableValue(def: LuaNameDef): VMVariableValue
+
+    fun createLiteralValue(expr: LuaLiteralExpr): VMValue
 }
 
 object VMUnknown : VMValue()
 
 abstract class VMConstantValue : VMValue()
 
-class VMBoolean(val value: ThreeState) : VMConstantValue()
+object VMNil : VMConstantValue()
 
-class VMString : VMConstantValue()
+class VMBoolean(val value: ThreeState) : VMConstantValue() {
+    companion object {
+        val TRUE = VMBoolean(ThreeState.YES)
+        val FALSE = VMBoolean(ThreeState.NO)
+        val UNSURE = VMBoolean(ThreeState.UNSURE)
+    }
+}
 
-class VMNumber : VMConstantValue()
+class VMString(val value: String) : VMConstantValue()
+
+class VMNumber(val value: Float) : VMConstantValue()
 
 class VMFunction : VMConstantValue()
 
-class VMVariableValue : VMValue()
+class VMVariableValue(val name: String) : VMValue()

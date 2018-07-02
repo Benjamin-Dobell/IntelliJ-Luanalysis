@@ -17,20 +17,11 @@
 package com.tang.intellij.lua.codeInsight.ctrlFlow
 
 import com.tang.intellij.lua.psi.LuaBlock
-import com.tang.intellij.lua.psi.LuaLocalFuncDef
-import com.tang.intellij.lua.psi.LuaNameDef
 
-interface CtrlFlowInstructionsBuilder {
-    fun <T : VMInstruction> addInstruction(instruction: T): T
-
-    fun enterScope(block: LuaBlock)
-    fun exitScope(block: LuaBlock): VMPseudoCode
-
-    fun declareParameter(param: LuaNameDef)
-    fun declareLocalVar(local: LuaNameDef)
-    fun declareLocalFun(local: LuaLocalFuncDef)
-
-    fun returnValue()
-
-    fun getPseudoCode(): VMPseudoCode
+class DataFlowRunner {
+    fun analyzeBlock(psi: LuaBlock) {
+        val pro = CtrlFlowProcessor()
+        pro.process(psi)
+        println(pro)
+    }
 }

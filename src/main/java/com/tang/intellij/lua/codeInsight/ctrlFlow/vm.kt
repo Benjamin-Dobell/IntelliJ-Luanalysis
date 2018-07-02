@@ -17,9 +17,8 @@
 package com.tang.intellij.lua.codeInsight.ctrlFlow
 
 import com.tang.intellij.lua.codeInsight.ctrlFlow.instructions.InstructionVisitor
-import com.tang.intellij.lua.psi.LuaPsiElement
 
-class VMScope(val parent: VMScope?, val block: LuaPsiElement) {
+class VMScope(val parent: VMScope?) {
     val depth: Int = (parent?.depth ?: 0) + 1
 
     val localDeclarationInstructions = mutableListOf<VMLocalDeclarationInstruction>()

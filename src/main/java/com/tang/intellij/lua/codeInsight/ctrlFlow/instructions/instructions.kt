@@ -18,6 +18,7 @@ package com.tang.intellij.lua.codeInsight.ctrlFlow.instructions
 
 import com.tang.intellij.lua.codeInsight.ctrlFlow.*
 import com.tang.intellij.lua.psi.LuaBinaryExpr
+import com.tang.intellij.lua.psi.LuaExpr
 import com.tang.intellij.lua.psi.LuaUnaryExpr
 
 open class VMInstructionImpl : VMInstruction {
@@ -36,6 +37,7 @@ class GotoInstruction(val label: VMLabel) : VMInstructionImpl()
 
 class ConditionGotoInstruction(val label: VMLabel) : VMInstructionImpl()
 
+//+1
 class PushInstruction(val value: VMValue) : VMInstructionImpl()
 
 //-1, +1
@@ -43,3 +45,6 @@ class UnaryInstruction(val unaryExpr: LuaUnaryExpr) : VMInstructionImpl()
 
 //-2, +1
 class BinaryInstruction(val binaryExpr: LuaBinaryExpr) : VMInstructionImpl()
+
+//-2
+class AssignInstruction(val rExpr: LuaExpr?, val targetValue: VMValue) : VMInstructionImpl()

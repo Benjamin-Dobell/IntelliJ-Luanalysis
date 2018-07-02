@@ -16,19 +16,21 @@
 
 package com.tang.intellij.lua.codeInsight.ctrlFlow
 
+import com.tang.intellij.lua.codeInsight.ctrlFlow.instructions.AssignInstruction
 import com.tang.intellij.lua.codeInsight.ctrlFlow.instructions.BinaryInstruction
 import com.tang.intellij.lua.codeInsight.ctrlFlow.instructions.PushInstruction
 import com.tang.intellij.lua.codeInsight.ctrlFlow.instructions.UnaryInstruction
 import com.tang.intellij.lua.psi.*
 
-class CtrlFlowProcessor : LuaVisitor() {
+class CtrlFlowProcessor : LuaRecursiveVisitor() {
 
     private val builder = CtrlFlowInstructionsBuilderImpl()
 
-    private lateinit var factory: VMValueFactory
+    private var factory = VMValueFactoryImpl()
 
-    fun process(block: LuaBlock) {
+    fun process(block: LuaBlock): VMPseudoCode {
         block.accept(this)
+        return builder.getPseudoCode()
     }
 
     override fun visitBlock(o: LuaBlock) {
@@ -52,11 +54,26 @@ class CtrlFlowProcessor : LuaVisitor() {
                 else -> expr.accept(this)
             }
 
-
+            builder.addInstruction(AssignInstruction(expr, varValue))
         }
     }
 
     override fun visitAssignStat(o: LuaAssignStat) {
+        val list = o.varExprList.exprList
+        val exprList = o.valueExprList?.exprList
+        var unsure = false
+        list.forEachIndexed { index, luaExpr ->
+            luaExpr.accept(this)
+            val expr = exprList?.getOrNull(index)
+            if (expr is LuaCallExpr) unsure = true
+            when {
+                unsure -> pushUnknown()
+                expr == null -> pushNil()
+                else -> expr.accept(this)
+            }
+
+            builder.addInstruction(AssignInstruction(expr, VMNil))
+        }
     }
 
     override fun visitTableExpr(o: LuaTableExpr) {
@@ -65,7 +82,7 @@ class CtrlFlowProcessor : LuaVisitor() {
     }
 
     override fun visitLiteralExpr(o: LuaLiteralExpr) {
-
+        builder.addInstruction(PushInstruction(factory.createLiteralValue(o)))
     }
 
     override fun visitBinaryExpr(o: LuaBinaryExpr) {
@@ -92,6 +109,6 @@ class CtrlFlowProcessor : LuaVisitor() {
     }
 
     private fun pushNil() {
-
+        builder.addInstruction(PushInstruction(VMNil))
     }
 }
