@@ -37,6 +37,8 @@ import com.intellij.util.textCompletion.TextFieldWithCompletion;
 import com.tang.intellij.lua.debugger.DebuggerType;
 import com.tang.intellij.lua.lang.LuaFileType;
 import com.tang.intellij.lua.lang.LuaIcons;
+import com.tang.intellij.lua.project.LuaInterpreter;
+import com.tang.intellij.lua.project.LuaSettings;
 import com.tang.intellij.lua.psi.LuaFileUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -61,6 +63,7 @@ public class LuaAppSettingsEditor extends SettingsEditor<LuaAppRunConfiguration>
     private EnvironmentVariablesTextFieldWithBrowseButton myEnvironments;
     private ComboBox<String> outputCharset;
     private JCheckBox showConsoleWindowCheckBox;
+    private ComboBox<LuaInterpreter> myInterpreters;
     private Project project;
 
     LuaAppSettingsEditor(Project project) {
@@ -82,6 +85,14 @@ public class LuaAppSettingsEditor extends SettingsEditor<LuaAppRunConfiguration>
             DebuggerType debuggerType = (DebuggerType) myDebugger.getSelectedItem();
             mobdebugLink.setVisible(debuggerType == DebuggerType.Mob);
             showConsoleWindowCheckBox.setVisible(debuggerType == DebuggerType.Attach);
+            fireEditorStateChanged();
+        });
+
+        // interpreters
+        DefaultComboBoxModel<LuaInterpreter> interpretersModel = new DefaultComboBoxModel<>(LuaSettings.Companion.getInstance().getInterpreters());
+        myInterpreters.setModel(interpretersModel);
+        myInterpreters.addItemListener(e -> {
+            //LuaInterpreter interpreter = (LuaInterpreter) myInterpreters.getSelectedItem();
             fireEditorStateChanged();
         });
 

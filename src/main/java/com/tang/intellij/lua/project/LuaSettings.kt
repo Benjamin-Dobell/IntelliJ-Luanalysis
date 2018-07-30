@@ -68,6 +68,8 @@ class LuaSettings : PersistentStateComponent<LuaSettings> {
 
     var attachDebugCaptureOutput = true
 
+    val interpreters: Array<LuaInterpreter> = arrayOf()
+
     /**
      * Lua language level
      */

@@ -36,6 +36,7 @@ import com.tang.intellij.lua.debugger.DebuggerType
 import com.tang.intellij.lua.debugger.IRemoteConfiguration
 import com.tang.intellij.lua.debugger.LuaCommandLineState
 import com.tang.intellij.lua.debugger.LuaRunConfiguration
+import com.tang.intellij.lua.project.LuaInterpreter
 import com.tang.intellij.lua.psi.LuaFileUtil
 import org.jdom.Element
 import java.io.File
@@ -51,6 +52,7 @@ class LuaAppRunConfiguration(project: Project, factory: ConfigurationFactory)
 
     var program = PathEnvironmentVariableUtil.findInPath("lua")?.absolutePath
             ?: if (SystemInfoRt.isWindows) "lua.exe" else "lua"
+    var interpreter: LuaInterpreter? = null
     var file: String? = null
     var parameters: String? = null
     var charset: String = "UTF-8"

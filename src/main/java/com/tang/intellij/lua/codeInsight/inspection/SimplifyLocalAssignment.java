@@ -16,10 +16,7 @@
 
 package com.tang.intellij.lua.codeInsight.inspection;
 
-import com.intellij.codeInspection.LocalInspectionTool;
-import com.intellij.codeInspection.LocalQuickFix;
-import com.intellij.codeInspection.ProblemDescriptor;
-import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.codeInspection.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
@@ -48,7 +45,7 @@ public class SimplifyLocalAssignment extends LocalInspectionTool {
                     if (list.size() == 1) {
                         LuaExpr expr = list.get(0);
                         if (expr instanceof LuaLiteralExpr && Constants.WORD_NIL.equals(expr.getText())) {
-                            holder.registerProblem(expr, "Local assignment can be simplified", new Fix());
+                            holder.registerProblem(expr, "Local assignment can be simplified", ProblemHighlightType.WEAK_WARNING, new Fix());
                         }
                     }
                 }
