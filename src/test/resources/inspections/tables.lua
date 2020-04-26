@@ -28,9 +28,11 @@ numberNumberTable[1] = <error descr="Type mismatch. Required: 'number' Found: '\
 
 numberStringTable[1] = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>
 numberStringTable[1] = "a string"
+numberStringTable[1] = nil
 
 numberArray[1] = 1
 numberArray[1] = <error descr="Type mismatch. Required: 'number' Found: '\"a string\"'">"a string"</error>
+numberArray[1] = <error descr="Type mismatch. Required: 'number' Found: 'nil'">nil</error>
 
 stringArray[1] = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>
 stringArray[1] = "a string"

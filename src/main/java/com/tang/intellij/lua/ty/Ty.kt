@@ -70,6 +70,7 @@ class TyVarianceFlags {
         const val STRICT_UNKNOWN = 0x1
         const val ABSTRACT_PARAMS = 0x2 // A generic is to be considered contravariant if its TyParameter generic parameters are contravariant.
         const val WIDEN_TABLES = 0x4 // A generic table is to be considered contravariant if its generic parameters are contravariant.
+        const val STRICT_NIL = 0x8 // In certain contexts nil is always strict, irrespective of the user's 'Strict nil checks' setting.
     }
 }
 
@@ -388,7 +389,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
         if (this == other
                 || (other.kind == TyKind.Unknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0)
-                || (other.kind == TyKind.Nil && !LuaSettings.instance.isNilStrict)) {
+                || (other.kind == TyKind.Nil && flags and TyVarianceFlags.STRICT_NIL == 0 && !LuaSettings.instance.isNilStrict)) {
             return true
         }
 

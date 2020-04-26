@@ -34,6 +34,18 @@ class AssignTypeInspection : StrictInspection() {
                         // Get owner class
                         val fieldOwnerType = assignee.guessParentType(context)
 
+                        // table<K, V> will always accept nil value assignment i.e. entry removal
+                        val source = if (fieldOwnerType is ITyGeneric && fieldOwnerType.base == Ty.TABLE) {
+                            if (value == Ty.NIL) {
+                                return
+                            }
+                            if (value is TyUnion) value.getChildTypes().fold(Ty.VOID as ITy) { acc, ty ->
+                                if (ty == Ty.NIL) acc else acc.union(ty)
+                            } else {
+                                value
+                            }
+                        } else value
+
                         val idExpr = assignee.idExpr
                         val memberName = assignee.name
 
@@ -43,7 +55,8 @@ class AssignTypeInspection : StrictInspection() {
                             idExpr?.let { fieldOwnerType.guessIndexerType(it.guessType(context), context) }
                         } ?: Ty.NIL
 
-                        ProblemUtil.contravariantOf(assigneeMemberType, value, context, varianceFlags, targetElement, expressionElement) { targetElement, sourceElement, message, highlightType ->
+                        val flags = if (fieldOwnerType is ITyArray) varianceFlags or TyVarianceFlags.STRICT_NIL else varianceFlags
+                        ProblemUtil.contravariantOf(assigneeMemberType, source, context, flags, targetElement, expressionElement) { targetElement, sourceElement, message, highlightType ->
                             myHolder.registerProblem(sourceElement, message, highlightType)
                             if (targetElement != null && targetElement != sourceElement) {
                                 myHolder.registerProblem(targetElement, message, highlightType)
