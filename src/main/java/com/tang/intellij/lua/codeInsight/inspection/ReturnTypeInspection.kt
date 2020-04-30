@@ -129,7 +129,7 @@ class ReturnTypeInspection : StrictInspection() {
                             returnDef?.type
                         }
 
-                        if (type != null) {
+                        if (type != null && o.textLength != 0) {
                             myHolder.registerProblem(o, "Return type '%s' specified but no return values found.".format(type.displayName))
                         }
                     }
