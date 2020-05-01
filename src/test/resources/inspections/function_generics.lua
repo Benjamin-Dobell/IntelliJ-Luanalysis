@@ -395,3 +395,16 @@ overloadMergedStringStringMap.a = "a string"
 overloadMergedStringStringMap.a = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>
 overloadMergedStringStringMap['a'] = "a string"
 overloadMergedStringStringMap['a'] = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>
+
+
+---@overload fun<T : number>(value: T): void
+---@generic T : string
+---@param optional number
+---@param value T
+local function overloadedT(value, optional) end
+
+overloadedT(1)
+overloadedT(<error descr="Type mismatch. Required: 'T : number' Found: '\"string\"'. In: fun(value:T : number): void">"string"</error><error descr="Missing argument: optional: number. In: fun(value:T : string, optional:number): void">)</error>
+
+overloadedT(<error descr="Type mismatch. Required: 'T : string' Found: '1'">1</error>, 1)
+overloadedT("string", 1)

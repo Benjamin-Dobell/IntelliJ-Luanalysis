@@ -26,9 +26,8 @@ import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.Processor
 import com.tang.intellij.lua.comment.LuaCommentUtil
-import com.tang.intellij.lua.comment.psi.LuaDocGenericDef
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass
-import com.tang.intellij.lua.comment.psi.LuaDocTagOverload
+import com.tang.intellij.lua.comment.psi.LuaDocTagGenericList
 import com.tang.intellij.lua.comment.psi.api.LuaComment
 import com.tang.intellij.lua.lang.type.LuaString
 import com.tang.intellij.lua.search.SearchContext
@@ -289,7 +288,11 @@ val LuaFuncBodyOwner.tyParams: Array<TyParameter>? get() {
 
     val list = mutableListOf<TyParameter>()
     if (this is LuaCommentOwner) {
-        comment?.findTags(LuaDocGenericDef::class.java)?.forEach { list.add(TyParameter(it)) }
+        comment?.findTags(LuaDocTagGenericList::class.java)?.forEach {
+            it.genericDefList.forEach { genericDef ->
+                list.add(TyParameter(genericDef))
+            }
+        }
     }
     return list.toTypedArray()
 }

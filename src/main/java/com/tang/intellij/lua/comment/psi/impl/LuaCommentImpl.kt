@@ -17,7 +17,6 @@
 package com.tang.intellij.lua.comment.psi.impl
 
 import com.intellij.extapi.psi.ASTWrapperPsiElement
-import com.intellij.extapi.psi.StubBasedPsiElementBase
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
@@ -28,7 +27,6 @@ import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.comment.psi.api.LuaComment
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
-import com.tang.intellij.lua.stubs.LuaFuncBodyOwnerStub
 import com.tang.intellij.lua.ty.*
 
 /**
@@ -56,11 +54,24 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
     }
 
     override fun findGeneric(name: String): LuaDocGenericDef? {
-        val genericDefs: Collection<LuaDocGenericDef> = findTags(LuaDocGenericDef::class.java)
+        val typeGenericDefList = (PsiTreeUtil.getChildOfType(this, LuaDocTagClass::class.java))?.genericDefList
+                ?: PsiTreeUtil.getChildOfType(this, LuaDocTagAlias::class.java)?.genericDefList
 
-        for (genericDef in genericDefs) {
-            if (name == genericDef.id.text) {
-                return genericDef
+        if (typeGenericDefList != null) {
+            for (genericDef in typeGenericDefList) {
+                if (name == genericDef.id.text) {
+                    return genericDef
+                }
+            }
+        }
+
+        val functionGenericDefLists: Collection<LuaDocTagGenericList> = findTags(LuaDocTagGenericList::class.java)
+
+        for (functionGenericDefList in functionGenericDefLists) {
+            for (genericDef in functionGenericDefList.genericDefList) {
+                if (name == genericDef.id.text) {
+                    return genericDef
+                }
             }
         }
 

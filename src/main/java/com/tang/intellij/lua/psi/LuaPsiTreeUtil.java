@@ -209,23 +209,24 @@ public class LuaPsiTreeUtil {
 
     @Nullable
     public static LuaDocGenericDef findGenericDef(String name, PsiElement current, boolean ancestralOnly) {
+        LuaDocFunctionTy fn = findAncestorOfType(current, LuaDocFunctionTy.class);
+
+        while (fn != null) {
+            for (LuaDocGenericDef genericDef : fn.getGenericDefList()) {
+                if (name.equals(genericDef.getId().getText())) {
+                    return genericDef;
+                }
+            }
+
+            fn = findAncestorOfType(fn, LuaDocFunctionTy.class);
+        }
+
         if (current instanceof LuaDocPsiElement) {
             LuaComment comment = LuaCommentUtil.INSTANCE.findContainer((LuaDocPsiElement) current);
             LuaDocGenericDef genericDef = comment.findGeneric(name);
 
             if (genericDef != null) {
                 return genericDef;
-            }
-        }
-
-        LuaDocFunctionTy fn = findAncestorOfType(current, LuaDocFunctionTy.class);
-        List<LuaDocGenericDef> genericDefList = fn != null ? fn.getGenericDefList() : null;
-
-        if (genericDefList != null) {
-            for (LuaDocGenericDef genericDef : genericDefList) {
-                if (name.equals(genericDef.getId().getText())) {
-                    return genericDef;
-                }
             }
         }
 
