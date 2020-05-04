@@ -138,9 +138,20 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
 
     override val displayName: String by lazy {
         val paramsText = params?.map {
-            it.name + ":" + it.ty.displayName
+            val paramTy = it.ty
+            val paramTypeName = if (paramTy is TyParameter && paramTy.superClass != null) {
+                "(${paramTy.displayName})"
+            } else paramTy.displayName
+            it.name + ": " + paramTypeName
         }?.let { "(${it.joinToString(", ")})" } ?: ""
-        "fun${paramsText}${returnTy?.let {": " + it.displayName}}"
+
+        val returnTypeName = returnTy?.let {
+            if (it is TyParameter && it.superClass != null) {
+                "(${it.displayName})"
+            } else it.displayName
+        }
+
+        "fun${paramsText}${returnTypeName?.let {": " + it}}"
     }
 
     override val paramSignature: String get() {

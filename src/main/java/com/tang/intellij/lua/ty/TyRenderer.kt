@@ -107,23 +107,44 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
     }
 
     override fun renderSignature(sb: StringBuilder, signature: IFunSignature) {
-        val sig = mutableListOf<String>()
         val params = signature.params
         val varargTy = signature.varargTy
 
         if (params != null || varargTy != null) {
-            params?.forEach {
-                sig.add("${it.name}: ${render(it.ty)}")
+            sb.append("(")
+            params?.forEachIndexed { i, it ->
+                if (i > 0) {
+                    sb.append(", ")
+                }
+
+                sb.append(it.name)
+                sb.append(": ")
+
+                val paramTy = it.ty
+                if (paramTy is TyParameter && paramTy.superClass != null) {
+                    sb.append("(")
+                    render(paramTy, sb)
+                    sb.append(")")
+                } else {
+                    render(paramTy, sb)
+                }
             }
             varargTy?.let {
-                sig.add("...: ${render(it)}")
+                sb.append("...: ")
+                render(it, sb)
             }
-            sb.append("(${sig.joinToString(", ")})")
+            sb.append(")")
         }
 
         signature.returnTy?.let {
             sb.append(": ")
-            render(it, sb)
+            if (it is TyParameter && it.superClass != null) {
+                sb.append("(")
+                render(it, sb)
+                sb.append(")")
+            } else {
+                render(it, sb)
+            }
         }
     }
 
