@@ -23,6 +23,7 @@ import com.tang.intellij.lua.psi.LuaIndexExpr
 import com.tang.intellij.lua.psi.LuaVisitor
 import com.tang.intellij.lua.psi.prefixExpr
 import com.tang.intellij.lua.search.SearchContext
+import com.tang.intellij.lua.ty.TySnippet
 import com.tang.intellij.lua.ty.TyUnion
 
 class UndeclaredMemberInspection : StrictInspection() {
@@ -33,16 +34,16 @@ class UndeclaredMemberInspection : StrictInspection() {
                     val prefix = o.prefixExpr.guessType(context)
                     val memberName = o.name
 
-                    TyUnion.each(prefix) { prefix ->
+                    TyUnion.each(prefix) { prefixTy ->
                         if (memberName != null) {
-                            if (prefix.guessMemberType(memberName, context) == null) {
-                                myHolder.registerProblem(o, "No such member '%s' found on type '%s'".format(memberName, prefix))
+                            if (prefixTy.guessMemberType(memberName, context) == null) {
+                                myHolder.registerProblem(o, "No such member '%s' found on type '%s'".format(memberName, prefixTy))
                             }
                         } else {
                             o.idExpr?.guessType(context)?.let { indexTy ->
                                 TyUnion.each(indexTy) {
-                                    if (prefix.guessIndexerType(it, context) == null) {
-                                        myHolder.registerProblem(o, "No such indexer '[%s]' found on type '%s'".format(it.displayName, prefix))
+                                    if (it !is TySnippet && prefixTy.guessIndexerType(it, context) == null) {
+                                        myHolder.registerProblem(o, "No such indexer '[%s]' found on type '%s'".format(it.displayName, prefixTy))
                                     }
                                 }
 
