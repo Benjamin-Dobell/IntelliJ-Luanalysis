@@ -93,25 +93,39 @@ class TyUnion : Ty(TyKind.Union) {
     }
 
     override fun findMember(name: String, searchContext: SearchContext): LuaClassMember? {
-        return childSet.firstOrNull()?.findMember(name, searchContext)?.let { member ->
-            childSet.asSequence().drop(1).forEach {
-                if (it.findMember(name, searchContext) != member) {
-                    return null
-                }
-            }
-            member
-        }
+        return childSet.firstOrNull()?.findMember(name, searchContext)
     }
 
     override fun findIndexer(indexTy: ITy, searchContext: SearchContext): LuaClassMember? {
-        return childSet.firstOrNull()?.findIndexer(indexTy, searchContext)?.let { member ->
-            childSet.asSequence().drop(1).forEach {
-                if (it.findIndexer(indexTy, searchContext) != member) {
-                    return null
-                }
+        return childSet.firstOrNull()?.findIndexer(indexTy, searchContext)
+    }
+
+    override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
+        var ty: ITy? = null
+
+        childSet.forEach {
+            val valueTy = it.guessMemberType(name, searchContext)
+
+            if (valueTy != null) {
+                ty = ty?.union(valueTy) ?: valueTy
             }
-            member
         }
+
+        return ty
+    }
+
+    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext): ITy? {
+        var ty: ITy? = null
+
+        childSet.forEach {
+            val valueTy = it.guessIndexerType(indexTy, searchContext)
+
+            if (valueTy != null) {
+                ty = ty?.union(valueTy) ?: valueTy
+            }
+        }
+
+        return ty
     }
 
     override fun accept(visitor: ITyVisitor) {

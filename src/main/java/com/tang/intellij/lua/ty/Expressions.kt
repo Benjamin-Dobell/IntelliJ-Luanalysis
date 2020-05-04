@@ -350,7 +350,7 @@ private fun getType(context: SearchContext, def: PsiElement): ITy {
             }
 
             //Global
-            if (isGlobal(def) && type !is ITyPrimitive) {
+            if (isGlobal(def) && def.docTy == null && type !is ITyPrimitive) {
                 //use globalClassTy to store class members, that's very important
                 type = type.union(TyClass.createGlobalType(def, context.forStub))
             }
