@@ -446,12 +446,8 @@ private fun guessFieldType(indexExpr: LuaIndexExpr, ty: ITy, context: SearchCont
 
     return fieldName?.let {
         ty.guessMemberType(it, context)
-    } ?: indexTy?.let { indexTy ->
-        var valueTy: ITy = Ty.VOID
-        TyUnion.each(indexTy) {
-            valueTy = ty.guessIndexerType(it, context)?.union(valueTy) ?: valueTy
-        }
-        valueTy
+    } ?: indexTy?.let {
+        ty.guessIndexerType(it, context)
     } ?: Ty.VOID
 }
 

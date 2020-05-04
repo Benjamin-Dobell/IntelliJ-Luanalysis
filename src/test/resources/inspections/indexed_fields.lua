@@ -63,3 +63,15 @@ aNumber = <error descr="Type mismatch. Required: 'number' Found: 'true'">literal
 
 aBoolean = <error descr="Type mismatch. Required: 'boolean' Found: '1'">literalTable[2]</error>
 aNumber = literalTable[2]
+
+---@alias OneOrTwo 1|2
+---@alias OneOrFour 1|4
+
+---@type OneOrTwo
+local oneOrTwo
+
+---@type OneOrFour
+local oneOrFour
+
+aNumber = vector[oneOrTwo]
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean|number'">vector[oneOrFour]</error>

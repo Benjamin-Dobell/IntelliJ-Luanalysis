@@ -120,10 +120,25 @@ interface ITy : Comparable<ITy> {
     }
 
     fun guessIndexerType(indexTy: ITy, searchContext: SearchContext): ITy? {
-        return findIndexer(indexTy, searchContext)?.guessType(searchContext)?.let {
-            val substitutor = getMemberSubstitutor(searchContext)
-            return if (substitutor != null) it.substitute(substitutor) else it
+        val resolvedIndexTy = TyAliasSubstitutor.substitute(indexTy, searchContext)
+        var ty: ITy? = null
+
+        resolvedIndexTy.each {
+            val valueTy = if (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String) {
+                guessMemberType(it.value, searchContext)
+            } else {
+                findIndexer(it, searchContext)?.guessType(searchContext)?.let {
+                    val substitutor = getMemberSubstitutor(searchContext)
+                    if (substitutor != null) it.substitute(substitutor) else it
+                }
+            }
+
+            if (valueTy != null) {
+                ty = ty?.union(valueTy) ?: valueTy
+            }
         }
+
+        return ty
     }
 
     fun processMembers(context: SearchContext, processor: (ITy, LuaClassMember) -> Boolean, deep: Boolean = true): Boolean
