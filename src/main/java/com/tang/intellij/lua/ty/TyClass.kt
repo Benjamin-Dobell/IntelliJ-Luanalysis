@@ -399,6 +399,10 @@ fun getDocTableTypeName(table: LuaDocTableDef): String {
 }
 
 class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table)) {
+    init {
+        this.flags = TyFlags.SHAPE
+    }
+
     override fun doLazyInit(searchContext: SearchContext) {}
 
     override fun processMembers(context: SearchContext, processor: (ITy, LuaClassMember) -> Boolean, deep: Boolean): Boolean {
