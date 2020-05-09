@@ -49,7 +49,7 @@ class MatchFunctionSignatureInspection : StrictInspection() {
 
                     val searchContext = SearchContext.get(o)
                     val prefixExpr = o.expr
-                    var type = prefixExpr.guessType(searchContext)
+                    var type = TyAliasSubstitutor.substitute(prefixExpr.guessType(searchContext), searchContext)
 
                     if (type is TyUnion && type.size == 2 && type.getChildTypes().last().isAnonymous) {
                         type = type.getChildTypes().first()

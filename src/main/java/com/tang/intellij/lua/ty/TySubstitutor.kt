@@ -209,7 +209,11 @@ class TyAliasSubstitutor private constructor(val context: SearchContext) : TySub
 
     override fun substitute(alias: ITyAlias): ITy {
         if (alias.params?.size ?: 0 == 0) {
-            return if (processedNames.add(alias.name)) alias.ty.substitute(this) else Ty.VOID
+            return if (processedNames.add(alias.name)) {
+                val resolved = alias.ty.substitute(this)
+                processedNames.remove(alias.name)
+                resolved
+            } else Ty.VOID
         }
 
         return alias
@@ -220,7 +224,9 @@ class TyAliasSubstitutor private constructor(val context: SearchContext) : TySub
 
         if (base is ITyAlias) {
             return if (processedNames.add(base.name)) {
-                base.ty.substitute(generic.getMemberSubstitutor(context)).substitute(this)
+                val resolved = base.ty.substitute(generic.getMemberSubstitutor(context)).substitute(this)
+                processedNames.remove(base.name)
+                resolved
             } else Ty.VOID
         }
 

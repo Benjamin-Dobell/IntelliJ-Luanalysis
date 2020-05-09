@@ -31,3 +31,17 @@ classToBeAliased = <error descr="Type mismatch. Required: 'ClassToBeAliased' Fou
 
 unionAlias = myAlias
 myAlias = <error descr="Type mismatch. Required: 'ClassToBeAliased' Found: 'UnionAlias'">unionAlias</error>
+
+---@alias AliasedFunction fun(a: string): void
+
+---@type AliasedFunction
+local aliasedFunction
+
+aliasedFunction(<error descr="Type mismatch. Required: 'string' Found: '1'">1</error>)
+aliasedFunction("okay")
+
+---@type fun(a: MyAlias, b: MyAlias): void
+local myAliasFun
+
+myAliasFun(classToBeAliased, <error descr="Type mismatch. Required: 'ClassToBeAliased' Found: '1'">1</error>)
+myAliasFun(classToBeAliased, classToBeAliased)
