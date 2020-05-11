@@ -378,7 +378,7 @@ fun LuaLiteralExpr.infer(): ITy {
         LuaLiteralKind.String -> TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, LuaString.getContent(firstChild.text).value)
         LuaLiteralKind.Varargs -> {
             val o = PsiTreeUtil.getParentOfType(this, LuaFuncBodyOwner::class.java)
-            o?.varargType ?: Ty.UNKNOWN
+            TyMultipleResults(listOf(o?.varargType ?: Ty.UNKNOWN), true)
         }
         else -> Ty.UNKNOWN
     }

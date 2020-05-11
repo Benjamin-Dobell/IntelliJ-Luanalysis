@@ -46,6 +46,13 @@ local aNumber
 ---@type boolean
 local aBoolean
 
+---@vararg number
+local function varargFunction7(...)
+    aNumber = ...
+    aNumber, aNumber = ...
+    aNumber, <error descr="Type mismatch. Required: 'boolean' Found: 'number'">aBoolean</error>, aNumber = <error descr="Type mismatch. Required: 'boolean' Found: 'number'">...</error>
+end
+
 ---@type fun<T>(index: number, vararg T): T
 local genericVarargFunction
 
