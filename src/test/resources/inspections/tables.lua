@@ -127,3 +127,19 @@ local function returnSpecificTable()
         return {}
     end
 end
+
+---@type string
+local aString
+
+---@type table<string, {aNumber: number}>
+local tableLiteralWithNonLiteralKey = {
+    [aString] = {
+        aNumber = 1
+    },
+}
+
+tableLiteralWithNonLiteralKey = <error descr="Type mismatch. Required: 'table<string, { aNumber: number }>' Found: 'table'">{
+    [aString] = {
+        aNumber = "wrong"
+    },
+}</error>

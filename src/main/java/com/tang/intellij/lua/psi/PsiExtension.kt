@@ -435,7 +435,7 @@ val LuaTableField.shouldCreateStub: Boolean get() =
     }
 
 private val LuaTableField.innerShouldCreateStub: Boolean get() {
-    if (name == null && (idExpr as? LuaLiteralExpr) == null)
+    if (name == null && idExpr == null)
         return false
 
     val tableExpr = PsiTreeUtil.getStubOrPsiParentOfType(this, LuaTableExpr::class.java)

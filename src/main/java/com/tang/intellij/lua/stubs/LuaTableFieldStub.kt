@@ -26,9 +26,11 @@ import com.intellij.util.BitUtil
 import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.impl.LuaTableFieldImpl
+import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.stubs.index.StubKeys
 import com.tang.intellij.lua.ty.ITy
+import com.tang.intellij.lua.ty.Ty
 import com.tang.intellij.lua.ty.getTableTypeName
 import com.tang.intellij.lua.ty.infer
 
@@ -50,7 +52,12 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
 
     override fun createStub(field: LuaTableField, parentStub: StubElement<*>): LuaTableFieldStub {
         val className = findTableExprTypeName(field)
-        val indexTy = field.indexType?.getType() ?: (field.idExpr as? LuaLiteralExpr)?.infer()
+        val indexTy = field.idExpr?.let {
+            SearchContext.withStub(it.project, it.containingFile, Ty.UNKNOWN) { context ->
+                it.guessType(context)
+            }
+        }
+
         val flags = BitUtil.set(0, FLAG_DEPRECATED, field.isDeprecated)
         val valueTy = field.comment?.docTy ?: (field.valueExpr as? LuaLiteralExpr)?.infer()
 
