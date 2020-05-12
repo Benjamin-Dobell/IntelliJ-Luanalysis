@@ -19,10 +19,10 @@ table = {}
 --- `list[i]..sep..list[i+1] ... sep..list[j]`. The default value for
 --- `sep` is the empty string, the default for `i` is 1, and the default for
 --- `j` is #list. If `i` is greater than `j`, returns the empty string.
----@overload fun(list:(string|number)[]):string
----@overload fun(list:(string|number)[], sep:string):string
----@overload fun(list:(string|number)[], sep:string, i:number):string
----@param list (string|number)[]
+---@overload fun(list:string[]|number[]|(string|number)[]):string
+---@overload fun(list:string[]|number[]|(string|number)[], sep:string):string
+---@overload fun(list:string[]|number[]|(string|number)[], sep:string, i:number):string
+---@param list string[]|number[]|(string|number)[]
 ---@param sep string
 ---@param i number
 ---@param j number
