@@ -18,6 +18,7 @@ package com.tang.intellij.lua.ty
 
 import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
+import com.tang.intellij.lua.psi.LuaTableExpr
 import com.tang.intellij.lua.search.SearchContext
 
 interface ITyArray : ITy {
@@ -35,11 +36,59 @@ class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
     }
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
-        if (super.contravariantOf(other, context, flags)
-                || (other is ITyArray && base.contravariantOf(other.base, context, flags))
-                || (other is TyTable && other.processMembers(context) { _, _ -> false })
-        ) {
+        if (super.contravariantOf(other, context, flags) || (other is ITyArray && base.contravariantOf(other.base, context, flags))) {
             return true
+        }
+
+        if (other is TyClass) {
+            other.lazyInit(context)
+
+            if (other is TyTable || other.flags and TyFlags.SHAPE != 0) {
+                val indexes = mutableSetOf<Int>()
+                var foundNumberIndexer = false
+
+                val onlyIntegerKeys = other.processMembers(context) { _, otherMember ->
+                    val indexTy = otherMember.guessIndexType(context)
+
+                    if (indexTy == null || indexTy !is TyPrimitiveLiteral || indexTy.primitiveKind != TyPrimitiveKind.Number) {
+                        return@processMembers false
+                    }
+
+                    if (indexTy == Ty.NUMBER) {
+                        foundNumberIndexer = true
+                    } else {
+                        val index = indexTy.value.toIntOrNull()
+
+                        if (index == null) {
+                            return@processMembers false
+                        }
+
+                        indexes.add(index)
+                    }
+
+                    val otherFieldTypes = otherMember.guessType(context).let {
+                        if (it is TyMultipleResults) it.list else listOf(it)
+                    }
+
+                    otherFieldTypes.forEach { otherFieldTy ->
+                        if (!base.contravariantOf(otherFieldTy, context, flags)) {
+                            return@processMembers false
+                        }
+                    }
+
+                    true
+                }
+
+                if (onlyIntegerKeys && !foundNumberIndexer) {
+                    indexes.sorted().forEachIndexed { index, i ->
+                        if (i != index + 1) {
+                            return false
+                        }
+                    }
+                }
+
+                return onlyIntegerKeys
+            }
         }
 
         return false

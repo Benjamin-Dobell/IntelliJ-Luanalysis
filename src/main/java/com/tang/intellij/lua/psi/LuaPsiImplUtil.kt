@@ -27,6 +27,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.SearchScope
 import com.intellij.psi.stubs.StubElement
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.util.BitUtil
 import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.LuaDocAccessModifier
 import com.tang.intellij.lua.comment.psi.LuaDocTagVararg
@@ -37,6 +38,9 @@ import com.tang.intellij.lua.lang.type.LuaString
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.LuaClassMemberStub
 import com.tang.intellij.lua.stubs.LuaFuncBodyOwnerStub
+import com.tang.intellij.lua.stubs.LuaTableFieldStubImpl
+import com.tang.intellij.lua.stubs.LuaTableFieldType
+import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.ty.*
 import java.util.*
 import javax.swing.Icon
@@ -478,6 +482,35 @@ fun getNameIdentifier(tableField: LuaTableField): PsiElement? {
 fun guessParentType(tableField: LuaTableField, context: SearchContext): ITy {
     val tbl = PsiTreeUtil.getParentOfType(tableField, LuaTableExpr::class.java)!!
     return tbl.guessType(context)
+}
+
+fun guessIndexType(tableField: LuaTableField, context: SearchContext): ITy? {
+    if (tableField.fieldName != null) {
+        return null
+    }
+
+    val indexTy = tableField.idExpr?.guessType(context)
+
+    if (indexTy != null) {
+        return indexTy
+    } else {
+        var fieldIndex = 0
+        val siblingFields = tableField.parent.children
+
+        for (i in 0 until siblingFields.size) {
+            val siblingField = siblingFields[i]
+
+            if (siblingField is LuaTableField && tableField.idExpr == null && tableField.fieldName == null) {
+                fieldIndex += 1
+            }
+
+            if (siblingField == tableField) {
+                break
+            }
+        }
+
+        return TyPrimitiveLiteral.getTy(TyPrimitiveKind.Number, fieldIndex.toString())
+    }
 }
 
 fun guessType(tableField: LuaTableField, context: SearchContext): ITy {

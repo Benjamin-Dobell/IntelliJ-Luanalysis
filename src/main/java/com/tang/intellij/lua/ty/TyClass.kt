@@ -375,15 +375,6 @@ class TyTable(val table: LuaTableExpr) : TyClass(getTableTypeName(table)) {
         this.flags = TyFlags.ANONYMOUS or TyFlags.ANONYMOUS_TABLE
     }
 
-    override fun processMembers(context: SearchContext, processor: (ITy, LuaClassMember) -> Boolean, deep: Boolean): Boolean {
-        for (field in table.tableFieldList) {
-            if (!processor(this, field)) {
-                return false
-            }
-        }
-        return super.processMembers(context, processor, deep)
-    }
-
     override fun toString(): String = displayName
 
     override fun doLazyInit(searchContext: SearchContext) = Unit

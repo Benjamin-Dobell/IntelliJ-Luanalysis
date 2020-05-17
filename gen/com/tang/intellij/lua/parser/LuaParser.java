@@ -239,10 +239,8 @@ public class LuaParser implements PsiParser, LightPsiParser {
   private static boolean checkFuncPrefix_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "checkFuncPrefix_1")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = consumeToken(b, DOT);
     if (!r) r = consumeToken(b, COLON);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -1034,10 +1032,8 @@ public class LuaParser implements PsiParser, LightPsiParser {
   private static boolean parList_recover_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "parList_recover_0")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = consumeToken(b, RPAREN);
     if (!r) r = consumeToken(b, IN);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -1229,7 +1225,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
   private static boolean stat_recover_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "stat_recover_0")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = consumeToken(b, ID);
     if (!r) r = consumeToken(b, COMMA);
     if (!r) r = consumeToken(b, SEMI);
@@ -1250,7 +1245,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
     if (!r) r = consumeToken(b, DOUBLE_COLON);
     if (!r) r = consumeToken(b, GOTO);
     if (!r) r = unaryOp(b, l + 1);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -1375,11 +1369,9 @@ public class LuaParser implements PsiParser, LightPsiParser {
   private static boolean tableField_recover_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "tableField_recover_0")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = tableFieldSep(b, l + 1);
     if (!r) r = consumeToken(b, RCURLY);
     if (!r) r = consumeToken(b, LBRACK);
-    exit_section_(b, m, null, r);
     return r;
   }
 

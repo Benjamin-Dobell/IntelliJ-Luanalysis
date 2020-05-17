@@ -30,6 +30,11 @@ import com.tang.intellij.lua.ty.TyUnion
 interface LuaClassMember : LuaTypeGuessable, PsiNamedElement {
     fun guessParentType(context: SearchContext): ITy
 
+    @JvmDefault
+    fun guessIndexType(context: SearchContext): ITy? {
+        return indexType?.getType()
+    }
+
     val visibility: Visibility
     val isDeprecated: Boolean
 

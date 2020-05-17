@@ -119,14 +119,94 @@ object ProblemUtil {
         val problems = mutableListOf<Problem>()
         tyProblems[target.displayName] = problems
 
-        if (target is ITyArray) {
-            if (source is TyTable) {
-                if (!source.processMembers(context) { _, _ -> false }) {
-                    problems.add(Problem(targetElement, sourceElement, "Type mismatch. Required: '%s' Found: '%s'".format(target.displayName, source.displayName)))
-                    return false
-                }
+        var isContravariant = true
 
-                return true
+        if (target is ITyArray) {
+            val base = TyAliasSubstitutor.substitute(target.base, context)
+
+            if (base is TyClass) {
+                base.lazyInit(context)
+            }
+
+            if (source is TyClass) {
+                source.lazyInit(context)
+
+                if (source is TyTable || source.flags and TyFlags.SHAPE != 0) {
+                    val baseIsShape = base.flags and TyFlags.SHAPE != 0
+                    val sourceIsInline = source is TyTable && sourceElement is LuaTableExpr
+                    val indexes = mutableSetOf<Int>()
+                    var foundNumberIndexer = false
+
+                    source.processMembers(context) { _, sourceMember ->
+                        val indexTy = sourceMember.guessIndexType(context)
+                        val highlightElement = if (sourceIsInline) sourceMember else sourceElement
+
+                        if (indexTy == null || indexTy !is TyPrimitiveLiteral || indexTy.primitiveKind != TyPrimitiveKind.Number) {
+                            isContravariant = false
+                            problems.add(Problem(
+                                    targetElement,
+                                    highlightElement,
+                                    "Type mismatch. Required: '${target.displayName}' Found non-array field '${sourceMember.name ?: "[${indexTy?.displayName}]"}'"
+                            ))
+                            return@processMembers true
+                        }
+
+                        if (indexTy == Ty.NUMBER) {
+                            foundNumberIndexer = true
+                        } else {
+                            val index = indexTy.value.toIntOrNull()
+
+                            if (index == null) {
+                                isContravariant = false
+                                problems.add(Problem(
+                                        targetElement,
+                                        highlightElement,
+                                        "Type mismatch. Required: '%s' Found non-array field '[%s]'".format(target.displayName, indexTy.displayName)
+                                ))
+                                return@processMembers true
+                            }
+
+                            indexes.add(index)
+                        }
+
+                        val sourceFieldTypes = sourceMember.guessType(context).let {
+                            if (it is TyMultipleResults) it.list else listOf(it)
+                        }
+
+                        sourceFieldTypes.forEach { sourceFieldTy ->
+                            if (baseIsShape && sourceMember is LuaTableExpr) {
+                                contravariantOf(base, sourceFieldTy, context, varianceFlags, targetElement, sourceMember) { targetElement, sourceElement, message, highlightType ->
+                                    isContravariant = false
+                                    problems.add(Problem(targetElement, sourceElement, message, highlightType))
+                                }
+                            } else if (!base.contravariantOf(sourceFieldTy, context, varianceFlags)) {
+                                isContravariant = false
+                                problems.add(Problem(
+                                        targetElement,
+                                        highlightElement,
+                                        "Type mismatch. Required: '%s' Found: '%s'".format(base.displayName, sourceFieldTy.displayName)
+                                ))
+                            }
+                        }
+
+                        true
+                    }
+
+                    if (isContravariant && !foundNumberIndexer) {
+                        indexes.sorted().forEachIndexed { index, i ->
+                            if (i != index + 1) {
+                                problems.add(Problem(
+                                        targetElement,
+                                        sourceElement,
+                                        "Type mismatch. Required: '%s' Found: 'table<number, %s>'".format(target.displayName, base)
+                                ))
+                                return false
+                            }
+                        }
+                    }
+
+                    return isContravariant
+                }
             }
 
             if (source !is ITyArray) {
@@ -134,38 +214,23 @@ object ProblemUtil {
                 return false
             }
 
+            val baseIsShape = base.flags and TyFlags.SHAPE != 0
+
             if (sourceElement is LuaTableExpr) {
-                var isContravariant = true
-
-                val base = TyAliasSubstitutor.substitute(target.base, context)
-
-                if (base is TyClass) {
-                    base.lazyInit(context)
-                }
-
-                val baseIsShape = base.flags and TyFlags.SHAPE != 0
-
                 sourceElement.tableFieldList.forEach { sourceField ->
                     val sourceFieldTypes = sourceField.guessType(context).let {
                         if (it is TyMultipleResults) it.list else listOf(it)
                     }
 
                     sourceFieldTypes.forEach { sourceFieldTy ->
-                        var checked = false
+                        val sourceFieldElement = sourceField.valueExpr
 
-                        if (baseIsShape)  {
-                            val sourceFieldElement = sourceField.valueExpr
-
-                            if (sourceFieldElement is LuaTableExpr) {
-                                checked = true
-                                contravariantOf(base, sourceFieldTy, context, varianceFlags, targetElement, sourceFieldElement) { targetElement, sourceElement, message, highlightType ->
-                                    isContravariant = false
-                                    problems.add(Problem(targetElement, sourceElement, message, highlightType))
-                                }
+                        if (baseIsShape && sourceFieldElement is LuaTableExpr) {
+                            contravariantOf(base, sourceFieldTy, context, varianceFlags, targetElement, sourceFieldElement) { targetElement, sourceElement, message, highlightType ->
+                                isContravariant = false
+                                problems.add(Problem(targetElement, sourceElement, message, highlightType))
                             }
-                        }
-
-                        if (!checked && !base.contravariantOf(sourceFieldTy, context, varianceFlags)) {
+                        } else if (!base.contravariantOf(sourceFieldTy, context, varianceFlags)) {
                             isContravariant = false
                             problems.add(Problem(
                                     targetElement,
@@ -185,8 +250,6 @@ object ProblemUtil {
         if (base is TyClass) {
             base.lazyInit(context)
         }
-
-        var isContravariant = true
 
         if (base.flags and TyFlags.SHAPE != 0 && sourceElement is LuaTableExpr) {
             val sourceSubstitutor = source.getMemberSubstitutor(context)

@@ -478,23 +478,7 @@ private fun LuaTableExpr.infer(context: SearchContext): ITy {
                 }
             }
         }
-
-        return TyTable(this)
     }
 
-    var elementType: ITy = Ty.VOID
-
-    list.forEach {
-        val exprList = it.exprList
-
-        if (exprList.size == 2 || it.id != null) {
-            return TyTable(this)
-        }
-
-        elementType = elementType.union(exprList[0].guessType(context))
-    }
-
-    return if (!Ty.isInvalid(elementType)) {
-        TyArray(elementType)
-    } else TyTable(this)
+    return TyTable(this)
 }
