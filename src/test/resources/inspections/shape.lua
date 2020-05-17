@@ -122,3 +122,46 @@ shapeWithOptionalField = {
     requiredField = 1,
     optional = <error descr="Type mismatch. Required: 'nil|number' Found: 'string'">aString</error>
 }
+
+---@shape ArrayValue
+---@field a number
+
+---@shape WithArrayValues
+---@field values ArrayValue[]
+
+---@type WithArrayValues
+local goodLiteral = {
+    values = {
+        {
+            a = 1
+        }
+    }
+}
+
+---@type WithArrayValues
+local badLiteral = {
+    values = {
+        {
+            a = <error descr="Type mismatch. Required: 'number' Found: '\"some string\"'">"some string"</error>
+        }
+    }
+}
+
+local goodAnonymous = {
+    values = {
+        {
+            a = 1
+        }
+    }
+}
+
+local badAnonymous = {
+    values = {
+        {
+            a = "some string"
+        }
+    }
+}
+
+goodLiteral = goodAnonymous
+goodLiteral = <error descr="Type mismatch. Required: 'WithArrayValues' Found: 'table'">badAnonymous</error>

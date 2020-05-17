@@ -74,3 +74,11 @@ aNumber = genericVarargFunction3(1, 1, 2, 3)
 aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean'">genericVarargFunction3(1, true, false, true)</error>
 aBoolean = <error descr="Type mismatch. Required: 'boolean' Found: '1|2|3'">genericVarargFunction3(1, 1, 2, 3)</error>
 aBoolean = genericVarargFunction3(1, true, false, true)
+
+---@return 1, 2, 3
+local function returns123()
+    return 1, 2, 3
+end
+
+---@type number[]
+local numberArray = {returns123()}

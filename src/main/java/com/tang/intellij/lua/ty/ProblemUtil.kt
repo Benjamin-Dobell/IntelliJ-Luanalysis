@@ -18,10 +18,7 @@ package com.tang.intellij.lua.ty
 
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.psi.PsiElement
-import com.tang.intellij.lua.psi.LuaLiteralExpr
-import com.tang.intellij.lua.psi.LuaParenExpr
-import com.tang.intellij.lua.psi.LuaTableExpr
-import com.tang.intellij.lua.psi.LuaTableField
+import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
 
 /*
@@ -122,6 +119,67 @@ object ProblemUtil {
         val problems = mutableListOf<Problem>()
         tyProblems[target.displayName] = problems
 
+        if (target is ITyArray) {
+            if (source is TyTable) {
+                if (!source.processMembers(context) { _, _ -> false }) {
+                    problems.add(Problem(targetElement, sourceElement, "Type mismatch. Required: '%s' Found: '%s'".format(target.displayName, source.displayName)))
+                    return false
+                }
+
+                return true
+            }
+
+            if (source !is ITyArray) {
+                problems.add(Problem(targetElement, sourceElement, "Type mismatch. Required: '%s' Found: '%s'".format(target.displayName, source.displayName)))
+                return false
+            }
+
+            if (sourceElement is LuaTableExpr) {
+                var isContravariant = true
+
+                val base = TyAliasSubstitutor.substitute(target.base, context)
+
+                if (base is TyClass) {
+                    base.lazyInit(context)
+                }
+
+                val baseIsShape = base.flags and TyFlags.SHAPE != 0
+
+                sourceElement.tableFieldList.forEach { sourceField ->
+                    val sourceFieldTypes = sourceField.guessType(context).let {
+                        if (it is TyMultipleResults) it.list else listOf(it)
+                    }
+
+                    sourceFieldTypes.forEach { sourceFieldTy ->
+                        var checked = false
+
+                        if (baseIsShape)  {
+                            val sourceFieldElement = sourceField.valueExpr
+
+                            if (sourceFieldElement is LuaTableExpr) {
+                                checked = true
+                                contravariantOf(base, sourceFieldTy, context, varianceFlags, targetElement, sourceFieldElement) { targetElement, sourceElement, message, highlightType ->
+                                    isContravariant = false
+                                    problems.add(Problem(targetElement, sourceElement, message, highlightType))
+                                }
+                            }
+                        }
+
+                        if (!checked && !base.contravariantOf(sourceFieldTy, context, varianceFlags)) {
+                            isContravariant = false
+                            problems.add(Problem(
+                                    targetElement,
+                                    sourceField,
+                                    "Type mismatch. Required: '%s' Found: '%s'".format(base.displayName, sourceFieldTy.displayName)
+                            ))
+                        }
+                    }
+                }
+
+                return isContravariant
+            }
+        }
+
         val base = if (target is ITyGeneric) target.base else target
 
         if (base is TyClass) {
@@ -154,8 +212,7 @@ object ProblemUtil {
                         problems.add(Problem(
                                 targetElement,
                                 sourceElement,
-                                "Type mismatch. Missing member: '%s' of: '%s'".format(memberName, target.displayName),
-                                ProblemHighlightType.GENERIC_ERROR_OR_WARNING
+                                "Type mismatch. Missing member: '%s' of: '%s'".format(memberName, target.displayName)
                         ))
                     }
 
@@ -176,8 +233,7 @@ object ProblemUtil {
                     isContravariant = false
                     problems.add(Problem(targetElement,
                             memberElement ?: sourceElement,
-                            "Type mismatch. Required: '%s' Found: '%s'".format(targetMemberTy.displayName, sourceMemberTy.displayName),
-                            ProblemHighlightType.GENERIC_ERROR_OR_WARNING))
+                            "Type mismatch. Required: '%s' Found: '%s'".format(targetMemberTy.displayName, sourceMemberTy.displayName)))
                 }
                 true
             }, true)

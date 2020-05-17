@@ -29,10 +29,7 @@ import com.tang.intellij.lua.psi.impl.LuaTableFieldImpl
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.stubs.index.StubKeys
-import com.tang.intellij.lua.ty.ITy
-import com.tang.intellij.lua.ty.Ty
-import com.tang.intellij.lua.ty.getTableTypeName
-import com.tang.intellij.lua.ty.infer
+import com.tang.intellij.lua.ty.*
 
 class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("TABLE_FIELD") {
 
@@ -59,9 +56,21 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
         }
 
         val flags = BitUtil.set(0, FLAG_DEPRECATED, field.isDeprecated)
-        val valueTy = field.comment?.docTy ?: (field.valueExpr as? LuaLiteralExpr)?.infer()
+        var valueTy = field.comment?.docTy ?: (field.valueExpr as? LuaLiteralExpr)?.infer()
 
-        if (indexTy != null) {
+        if (field.fieldName != null) {
+            valueTy = if (valueTy is TyMultipleResults) valueTy.list.first() else valueTy
+
+            return LuaTableFieldStubImpl(
+                    parentStub,
+                    this,
+                    className,
+                    field.fieldName,
+                    flags,
+                    valueTy)
+        } else if (indexTy != null) {
+            valueTy = if (valueTy is TyMultipleResults) valueTy.list.first() else valueTy
+
             return LuaTableFieldStubImpl(
                     parentStub,
                     this,
@@ -70,11 +79,30 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
                     flags,
                     valueTy)
         } else {
+            var fieldIndex = 0
+            val siblingFields = field.parent.children
+
+            for (i in 0 until siblingFields.size) {
+                val siblingField = siblingFields[i]
+
+                if (siblingField is LuaTableField && field.idExpr == null && field.fieldName == null) {
+                    fieldIndex += 1
+                }
+
+                if (siblingField == field) {
+                    break
+                }
+            }
+
+            valueTy = if (valueTy is TyMultipleResults) {
+                if (fieldIndex + 1 == siblingFields.size) valueTy else valueTy.list.first()
+            } else valueTy
+
             return LuaTableFieldStubImpl(
                     parentStub,
                     this,
                     className,
-                    field.fieldName,
+                    TyPrimitiveLiteral.getTy(TyPrimitiveKind.Number, fieldIndex.toString()),
                     flags,
                     valueTy)
         }
@@ -122,7 +150,22 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
         }
 
         val indexTy = fieldStub.indexTy ?: return
-        LuaClassMemberIndex.indexIndexerStub(indexSink, className, indexTy)
+        val valueTy = fieldStub.valueTy
+
+        if (valueTy is TyMultipleResults) {
+            if (valueTy.variadic) {
+                LuaClassMemberIndex.indexIndexerStub(indexSink, className, Ty.NUMBER)
+            } else {
+                val startIndex = (indexTy as TyPrimitiveLiteral).value.toInt()
+
+                for (i in 0 until valueTy.list.size) {
+                    val resultIndexTy = TyPrimitiveLiteral.getTy(TyPrimitiveKind.Number, (startIndex + i).toString())
+                    LuaClassMemberIndex.indexIndexerStub(indexSink, className, resultIndexTy)
+                }
+            }
+        } else {
+            LuaClassMemberIndex.indexIndexerStub(indexSink, className, indexTy)
+        }
     }
 
     companion object {
