@@ -306,7 +306,8 @@ class TyPsiFunction(private val colonCall: Boolean, val psi: LuaFuncBodyOwner, f
 
         object : FunSignatureBase(colonCall, psi.params, psi.tyParams) {
             override val returnTy: ITy by lazy {
-                var returnTy = psi.guessReturnType(SearchContext.get(psi.project))
+                val context = SearchContext.get(psi.project)
+                var returnTy = context.withMultipleResults { psi.guessReturnType(context) }
                 /**
                  * todo optimize this bug solution
                  * local function test()
