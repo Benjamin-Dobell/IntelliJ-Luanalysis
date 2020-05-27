@@ -41,7 +41,7 @@ class LuaNameDefElementType : LuaStubElementType<LuaNameDefStub, LuaNameDef>("NA
         val anonymous = getAnonymousType(nameDef)
         val commentOwner = PsiTreeUtil.getParentOfType(nameDef, LuaCommentOwner::class.java)
         val comment = commentOwner?.comment
-        val docTy = comment?.tagType?.type ?: comment?.tagClass?.type
+        val docTy = comment?.tagType?.getType() ?: comment?.tagClass?.type
 
         return LuaNameDefStub(name, anonymous, docTy, parentStub, LuaElementType.NAME_DEF)
     }

@@ -235,8 +235,19 @@ fun isShape(tagClass: LuaDocTagClass): Boolean {
  * *
  * @return 类型集合
  */
+fun getType(tagType: LuaDocTagType, index: Int): ITy {
+    return tagType.typeList?.tyList?.getOrNull(index)?.getType() ?: Ty.UNKNOWN
+}
+
 fun getType(tagType: LuaDocTagType): ITy {
-    return tagType.ty?.getType() ?: Ty.UNKNOWN
+    val list = tagType.typeList?.tyList?.map { it.getType() }
+    return if (list == null) {
+        Ty.UNKNOWN
+    } else if (list.size == 1) {
+        list.first()
+    } else {
+        TyMultipleResults(list, false)
+    }
 }
 
 @Suppress("UNUSED_PARAMETER")

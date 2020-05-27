@@ -36,14 +36,12 @@ fun inferExpr(expr: LuaExpr?, context: SearchContext): ITy {
         return Ty.UNKNOWN
 
     if (expr.comment != null) {
-        val types = PsiTreeUtil.getChildrenOfTypeAsList(expr.comment, LuaDocTagTypeImpl::class.java)
+        val typeCast = PsiTreeUtil.getChildrenOfTypeAsList(expr.comment, LuaDocTagTypeImpl::class.java).firstOrNull()
 
-        if (types.size == 1) {
-            val castType = types.get(0).ty?.getType()
-
-            if (castType != null) {
-                return castType
-            }
+        if (typeCast != null) {
+            return if (context.supportsMultipleResults) {
+                typeCast.getType()
+            } else typeCast.getType(context.index)
         }
     }
 

@@ -339,7 +339,7 @@ tag_class ::= (TAG_NAME_CLASS|TAG_NAME_SHAPE|TAG_NAME_MODULE) ID ('<' generic_de
 }
 
 // @type CLASS_REF
-tag_type ::= TAG_NAME_TYPE ty comment_string? {
+tag_type ::= TAG_NAME_TYPE type_list comment_string? {
     pin = 1
     stubClass = "com.tang.intellij.lua.stubs.LuaDocTagTypeStub"
     methods = [getType]

@@ -127,25 +127,34 @@ private fun LuaNameDef.infer(context: SearchContext): ITy {
             type = infer(expr, context)
     } else {
         val docTy = this.docTy
-        if (docTy != null)
-            return docTy
 
         val localDef = PsiTreeUtil.getParentOfType(this, LuaLocalDef::class.java)
+
         if (localDef != null) {
-            //计算 expr 返回类型
-            if (Ty.isInvalid(type) /*&& !context.forStub*/) {
-                val nameList = localDef.nameList
-                val exprList = localDef.exprList
-                if (nameList != null && exprList != null) {
-                    type = context.withIndex(localDef.getIndexFor(this), false) {
-                        exprList.guessTypeAt(context)
-                    }
+            val index = localDef.getIndexFor(this)
+
+            if (docTy != null) {
+                return if (docTy is TyMultipleResults) {
+                    docTy.list.getOrNull(index) ?: Ty.NIL
+                } else docTy
+            }
+
+            val nameList = localDef.nameList
+            val exprList = localDef.exprList
+
+            if (nameList != null && exprList != null) {
+                type = context.withIndex(index, false) {
+                    exprList.guessTypeAt(context)
                 }
             }
 
             if (type is TyPrimitiveLiteral) {
                 type = type.primitiveType
             }
+        } else if (docTy != null) {
+            if (!context.supportsMultipleResults && docTy is TyMultipleResults) {
+                return docTy.list.getOrNull(context.index) ?: Ty.NIL
+            } else return docTy
         }
     }
     return type

@@ -245,7 +245,7 @@ private fun renderOverload(sb: StringBuilder, tagOverload: LuaDocTagOverload, ty
 }
 
 private fun renderTypeDef(sb: StringBuilder, tagType: LuaDocTagType, tyRenderer: ITyRenderer) {
-    renderTy(sb, tagType.type, tyRenderer)
+    renderTy(sb, tagType.getType(), tyRenderer)
 }
 
 private fun renderSee(sb: StringBuilder, see: LuaDocTagSee, tyRenderer: ITyRenderer) {

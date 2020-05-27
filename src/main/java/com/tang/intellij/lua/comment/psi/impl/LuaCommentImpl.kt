@@ -181,7 +181,9 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
         if (classDef != null)
             return classDef.type
         val typeDef = tagType
-        return typeDef?.type ?: Ty.UNKNOWN
+        return if (typeDef != null) {
+            if (context.supportsMultipleResults) typeDef.getType() else typeDef.getType(context.index)
+        } else Ty.UNKNOWN
     }
 
     override fun isOverride(): Boolean {

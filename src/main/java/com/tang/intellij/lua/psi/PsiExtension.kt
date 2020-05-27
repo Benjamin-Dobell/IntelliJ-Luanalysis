@@ -354,12 +354,12 @@ val LuaLiteralExpr.numberValue: Float get() {
 }
 
 val LuaComment.docTy: ITy? get() {
-    return this.tagType?.type
+    return this.tagType?.getType()
 }
 
 val LuaComment.ty: ITy? get() {
     val cls = tagClass?.type
-    return cls ?: tagType?.type
+    return cls ?: tagType?.getType()
 }
 
 val LuaDocTagClass.overloads: Array<IFunSignature>? get() {
