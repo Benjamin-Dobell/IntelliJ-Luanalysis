@@ -229,12 +229,6 @@ fun isShape(tagClass: LuaDocTagClass): Boolean {
     return stub?.isShape ?: tagClass.shape != null
 }
 
-/**
- * 猜测类型
- * @param tagType 类型定义
- * *
- * @return 类型集合
- */
 fun getType(tagType: LuaDocTagType, index: Int): ITy {
     return tagType.typeList?.tyList?.getOrNull(index)?.getType() ?: Ty.UNKNOWN
 }
@@ -247,6 +241,19 @@ fun getType(tagType: LuaDocTagType): ITy {
         list.first()
     } else {
         TyMultipleResults(list, false)
+    }
+}
+
+fun getType(tagNot: LuaDocTagNot, index: Int): ITy {
+    return tagNot.typeList?.tyList?.getOrNull(index)?.getType() ?: Ty.VOID
+}
+
+fun getType(tagNot: LuaDocTagNot): ITy {
+    val list = tagNot.typeList?.tyList?.map { it.getType() }
+    return if (list != null && list.size > 0) {
+        if (list.size > 1) TyMultipleResults(list, false) else list.first()
+    } else {
+        Ty.VOID
     }
 }
 

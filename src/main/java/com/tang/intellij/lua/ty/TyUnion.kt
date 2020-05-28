@@ -66,6 +66,37 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
         return TyUnion.union(unionTys) as TyUnion
     }
 
+    override fun not(ty: ITy): ITy {
+        val unionTys = mutableListOf<ITy>()
+        unionTys.addAll(childSet)
+
+        val notTypes = if (ty is TyUnion) ty.childSet else listOf(ty)
+
+        notTypes.forEach {
+            unionTys.remove(it)
+
+            if (it == Ty.FALSE) {
+                if (unionTys.remove(Ty.BOOLEAN)) {
+                    unionTys.add(Ty.TRUE)
+                }
+            } else if (it == Ty.TRUE) {
+                if (unionTys.remove(Ty.BOOLEAN)) {
+                    unionTys.add(Ty.FALSE)
+                }
+            } else if (it == Ty.BOOLEAN) {
+                unionTys.remove(Ty.TRUE)
+                unionTys.remove(Ty.FALSE)
+            }
+        }
+
+        return if (unionTys.size == 1) {
+            unionTys.first()
+        } else if (unionTys.size == 0) {
+            Ty.VOID
+        } else {
+            TyUnion.union(unionTys)
+        }
+    }
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
         return super.contravariantOf(other, context, flags)
@@ -207,6 +238,16 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
                 childSet.first()
             } else {
                 TyUnion(childSet)
+            }
+        }
+
+        // NOTE: This is *not* set subtraction because TyUnion can only represent a union of types, not a true type set.
+        // i.e. if t2 contains a type that is covariant of a type in t1, this case is not handled.
+        fun not(t1: ITy, t2: ITy): ITy {
+            return when {
+                t1 is TyUnion -> t1.not(t2)
+                t1 == t2 || t2 is TyUnknown || (t2 is TyUnion && t2.childSet.contains(t1)) -> Ty.VOID
+                else -> t1
             }
         }
 

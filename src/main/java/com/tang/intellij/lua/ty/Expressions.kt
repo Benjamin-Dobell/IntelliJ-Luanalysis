@@ -21,6 +21,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.Constants
+import com.tang.intellij.lua.comment.psi.impl.LuaDocTagNotImpl
 import com.tang.intellij.lua.comment.psi.impl.LuaDocTagTypeImpl
 import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.lang.type.LuaNumber
@@ -45,14 +46,45 @@ fun inferExpr(expr: LuaExpr?, context: SearchContext): ITy {
         }
     }
 
+    var ty: ITy? = null
+
     if (expr is LuaIndexExpr || expr is LuaNameExpr) {
         val tree = LuaDeclarationTree.get(expr.containingFile)
         val declaration = tree.find(expr)?.firstDeclaration?.psi
         if (declaration != expr && declaration is LuaTypeGuessable) {
-            return declaration.guessType(context)
+            ty = declaration.guessType(context)
         }
     }
-    return inferExprInner(expr, context)
+
+    if (ty == null) {
+        ty = inferExprInner(expr, context)
+    }
+
+    val notTypeCast = PsiTreeUtil.getChildrenOfTypeAsList(expr.comment, LuaDocTagNotImpl::class.java).firstOrNull()
+
+    if (notTypeCast != null) {
+        val notTy = if (context.supportsMultipleResults) {
+            notTypeCast.getType()
+        } else {
+            notTypeCast.getType(context.index)
+        }
+
+        if (ty is TyMultipleResults) {
+            val notTyList = if (notTy is TyMultipleResults) {
+                notTy.list
+            } else {
+                listOf(notTy)
+            }
+
+            return TyMultipleResults(ty.list.mapIndexed { i, resultTy ->
+                resultTy.not(notTyList.getOrNull(i) ?: Ty.VOID)
+            }, ty.variadic)
+        }
+
+        return ty.not((notTy as? TyMultipleResults)?.list?.first() ?: notTy)
+    }
+
+    return ty
 }
 
 private fun inferExprInner(expr: LuaPsiElement, context: SearchContext): ITy {

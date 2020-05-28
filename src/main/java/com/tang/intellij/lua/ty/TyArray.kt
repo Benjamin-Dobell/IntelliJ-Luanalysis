@@ -18,7 +18,6 @@ package com.tang.intellij.lua.ty
 
 import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
-import com.tang.intellij.lua.psi.LuaTableExpr
 import com.tang.intellij.lua.search.SearchContext
 
 interface ITyArray : ITy {
@@ -40,58 +39,23 @@ class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
             return true
         }
 
-        if (other is TyClass) {
-            other.lazyInit(context)
-
-            if (other is TyTable || other.flags and TyFlags.SHAPE != 0) {
-                val indexes = mutableSetOf<Int>()
-                var foundNumberIndexer = false
-
-                val onlyIntegerKeys = other.processMembers(context) { _, otherMember ->
-                    val indexTy = otherMember.guessIndexType(context)
-
-                    if (indexTy == null || indexTy !is TyPrimitiveLiteral || indexTy.primitiveKind != TyPrimitiveKind.Number) {
-                        return@processMembers false
-                    }
-
-                    if (indexTy == Ty.NUMBER) {
-                        foundNumberIndexer = true
-                    } else {
-                        val index = indexTy.value.toIntOrNull()
-
-                        if (index == null) {
-                            return@processMembers false
-                        }
-
-                        indexes.add(index)
-                    }
-
-                    val otherFieldTypes = otherMember.guessType(context).let {
-                        if (it is TyMultipleResults) it.list else listOf(it)
-                    }
-
-                    otherFieldTypes.forEach { otherFieldTy ->
-                        if (!base.contravariantOf(otherFieldTy, context, flags)) {
-                            return@processMembers false
-                        }
-                    }
-
-                    true
-                }
-
-                if (onlyIntegerKeys && !foundNumberIndexer) {
-                    indexes.sorted().forEachIndexed { index, i ->
-                        if (i != index + 1) {
-                            return false
-                        }
-                    }
-                }
-
-                return onlyIntegerKeys
-            }
+        if (other !is ITyClass || !TyArray.isArray(other, context)) {
+            return false
         }
 
-        return false
+        return other.processMembers(context) { _, otherMember ->
+            val otherFieldTypes = otherMember.guessType(context).let {
+                if (it is TyMultipleResults) it.list else listOf(it)
+            }
+
+            otherFieldTypes.forEach { otherFieldTy ->
+                if (!base.contravariantOf(otherFieldTy, context, flags)) {
+                    return@processMembers false
+                }
+            }
+
+            true
+        }
     }
 
     override fun substitute(substitutor: ITySubstitutor): ITy {
@@ -112,6 +76,51 @@ class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
         }
 
         return super<Ty>.guessIndexerType(indexTy, searchContext)
+    }
+
+    companion object {
+        fun isArray(ty: ITyClass, context: SearchContext): Boolean {
+            ty.lazyInit(context)
+
+            if (ty is TyTable || ty.flags and TyFlags.SHAPE != 0) {
+                val indexes = mutableSetOf<Int>()
+                var foundNumberIndexer = false
+
+                val onlyIntegerKeys = ty.processMembers(context) { _, otherMember ->
+                    val indexTy = otherMember.guessIndexType(context)
+
+                    if (indexTy == null || indexTy !is TyPrimitiveLiteral || indexTy.primitiveKind != TyPrimitiveKind.Number) {
+                        return@processMembers false
+                    }
+
+                    if (indexTy == Ty.NUMBER) {
+                        foundNumberIndexer = true
+                    } else {
+                        val index = indexTy.value.toIntOrNull()
+
+                        if (index == null) {
+                            return@processMembers false
+                        }
+
+                        indexes.add(index)
+                    }
+
+                    true
+                }
+
+                if (onlyIntegerKeys && !foundNumberIndexer) {
+                    indexes.sorted().forEachIndexed { index, i ->
+                        if (i != index + 1) {
+                            return false
+                        }
+                    }
+                }
+
+                return onlyIntegerKeys
+            }
+
+            return false
+        }
     }
 }
 

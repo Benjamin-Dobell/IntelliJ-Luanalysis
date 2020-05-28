@@ -144,6 +144,7 @@ BOOLEAN=true|false
     "module"                   { yybegin(xCLASS); return TAG_NAME_MODULE; }
     "return"                   { beginType(); return TAG_NAME_RETURN; }
     "type"                     { beginType(); return TAG_NAME_TYPE;}
+    "not"                      { beginType(); return TAG_NAME_NOT;}
     "overload"                 { beginType(); return TAG_NAME_OVERLOAD; }
     "private"                  { return TAG_NAME_PRIVATE; }
     "protected"                { return TAG_NAME_PROTECTED; }

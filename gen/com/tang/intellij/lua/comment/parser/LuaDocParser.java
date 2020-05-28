@@ -319,6 +319,7 @@ public class LuaDocParser implements PsiParser, LightPsiParser {
   //     | tag_class
   //     | tag_field
   //     | tag_type
+  //     | tag_not
   //     | tag_lan
   //     | tag_overload
   //     | tag_see
@@ -344,6 +345,7 @@ public class LuaDocParser implements PsiParser, LightPsiParser {
   //     | tag_class
   //     | tag_field
   //     | tag_type
+  //     | tag_not
   //     | tag_lan
   //     | tag_overload
   //     | tag_see
@@ -361,6 +363,7 @@ public class LuaDocParser implements PsiParser, LightPsiParser {
     if (!r) r = tag_class(b, l + 1);
     if (!r) r = tag_field(b, l + 1);
     if (!r) r = tag_type(b, l + 1);
+    if (!r) r = tag_not(b, l + 1);
     if (!r) r = tag_lan(b, l + 1);
     if (!r) r = tag_overload(b, l + 1);
     if (!r) r = tag_see(b, l + 1);
@@ -1044,6 +1047,20 @@ public class LuaDocParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "tag_lan_2")) return false;
     comment_string(b, l + 1);
     return true;
+  }
+
+  /* ********************************************************** */
+  // TAG_NAME_NOT type_list
+  public static boolean tag_not(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "tag_not")) return false;
+    if (!nextTokenIs(b, TAG_NAME_NOT)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, TAG_NOT, null);
+    r = consumeToken(b, TAG_NAME_NOT);
+    p = r; // pin = 1
+    r = r && type_list(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
   }
 
   /* ********************************************************** */

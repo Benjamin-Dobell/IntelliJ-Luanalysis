@@ -106,6 +106,13 @@ class GenericAnalyzer(params: Array<TyParameter>?, private val searchContext: Se
                 warp(it.base) {
                     array.base.accept(this)
                 }
+            } else if (it is ITyClass && TyArray.isArray(it, searchContext)) {
+                it.processMembers(searchContext) { _, member ->
+                    warp(member.guessType(searchContext)) {
+                        array.base.accept(this)
+                    }
+                    true
+                }
             }
         }
     }

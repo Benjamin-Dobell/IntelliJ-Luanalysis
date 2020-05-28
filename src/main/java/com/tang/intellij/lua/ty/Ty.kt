@@ -87,6 +87,8 @@ interface ITy : Comparable<ITy> {
 
     fun union(ty: ITy): ITy
 
+    fun not(ty: ITy): ITy
+
     fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean
 
     fun covariantOf(other: ITy, context: SearchContext, flags: Int): Boolean
@@ -416,6 +418,10 @@ abstract class Ty(override val kind: TyKind) : ITy {
 
     override fun union(ty: ITy): ITy {
         return TyUnion.union(this, ty)
+    }
+
+    override fun not(ty: ITy): ITy {
+        return TyUnion.not(this, ty)
     }
 
     override fun toString(): String {

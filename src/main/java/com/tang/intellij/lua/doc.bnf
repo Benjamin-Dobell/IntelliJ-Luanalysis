@@ -79,6 +79,7 @@
         TAG_NAME_SHAPE = 'shape'
         TAG_NAME_FIELD = 'field'
         TAG_NAME_TYPE = 'type'
+        TAG_NAME_NOT = 'not'
         TAG_NAME_LANGUAGE = 'language'
         TAG_NAME_OVERLOAD = 'overload'
         TAG_NAME_MODULE = 'module'
@@ -104,6 +105,7 @@ private doc_item ::= '@' (tag_param
     | tag_class
     | tag_field
     | tag_type
+    | tag_not
     | tag_lan
     | tag_overload
     | tag_see
@@ -338,10 +340,15 @@ tag_class ::= (TAG_NAME_CLASS|TAG_NAME_SHAPE|TAG_NAME_MODULE) ID ('<' generic_de
     ]
 }
 
-// @type CLASS_REF
 tag_type ::= TAG_NAME_TYPE type_list comment_string? {
     pin = 1
     stubClass = "com.tang.intellij.lua.stubs.LuaDocTagTypeStub"
+    methods = [getType]
+}
+
+tag_not ::= TAG_NAME_NOT type_list {
+    pin = 1
+    stubClass = "com.tang.intellij.lua.stubs.LuaDocTagNotStub"
     methods = [getType]
 }
 
