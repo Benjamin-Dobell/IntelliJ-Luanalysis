@@ -89,7 +89,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
             return processClassKey(null, className, "*$fieldName", context, processor, deep)
         }
 
-        fun findMember(type: ITyClass, fieldName: String, context: SearchContext): LuaClassMember? {
+        fun findMember(type: ITyClass, fieldName: String, context: SearchContext, searchIndexers: Boolean = true): LuaClassMember? {
             var perfect: LuaClassMember? = null
             var tagField: LuaDocTagField? = null
             var tableField: LuaTableField? = null
@@ -110,9 +110,14 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
                     }
                 }
             })
+
             if (tagField != null) return tagField
             if (tableField != null) return tableField
-            return perfect
+            if (perfect != null) return perfect
+
+            return if (searchIndexers) {
+                findIndexer(type, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, fieldName), context, false)
+            } else null
         }
 
         fun findMethod(className: String, memberName: String, context: SearchContext, deep: Boolean = true): LuaClassMethod? {
@@ -163,19 +168,18 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
             } ?: false
         }
 
-        fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, deep: Boolean = true): LuaClassMember? {
-            var target: LuaClassMember? = null
-
-            if (indexTy is TyPrimitiveLiteral && indexTy.primitiveKind == TyPrimitiveKind.String) {
-                findMember(type, indexTy.value, context)?.let {
+        fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, searchMembers: Boolean = true): LuaClassMember? {
+            if (searchMembers && indexTy is TyPrimitiveLiteral && indexTy.primitiveKind == TyPrimitiveKind.String) {
+                findMember(type, indexTy.value, context, false)?.let {
                     return it
                 }
             }
 
+            var target: LuaClassMember? = null
             processIndexer(type, indexTy, context, Processor {
                 target = it
                 false
-            }, deep)
+            })
             return target
         }
 
@@ -194,11 +198,13 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
         }
 
         fun indexIndexerStub(indexSink: IndexSink, className: String, indexTy: ITy) {
-            if (indexTy is TyPrimitiveLiteral && indexTy.primitiveKind == TyPrimitiveKind.String) {
-                indexMemberStub(indexSink, className, indexTy.value)
-            } else {
-                indexMemberStub(indexSink, className, "[${indexTy.displayName}]")
-                indexSink.occurrence(StubKeys.CLASS_MEMBER, "$className[]".hashCode())
+            TyUnion.each(indexTy) {
+                if (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String) {
+                    indexMemberStub(indexSink, className, it.value)
+                } else {
+                    indexMemberStub(indexSink, className, "[${it.displayName}]")
+                    indexSink.occurrence(StubKeys.CLASS_MEMBER, "$className[]".hashCode())
+                }
             }
         }
     }
