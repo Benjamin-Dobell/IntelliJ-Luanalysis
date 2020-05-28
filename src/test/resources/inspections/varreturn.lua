@@ -1,79 +1,85 @@
----@type fun(numberParam: number, vararg boolean)
-local varargFunction
-
-varargFunction(1, true, true)
-varargFunction(1, true, true, <error descr="Type mismatch. Required: 'boolean' Found: '4'">4</error>, true)
-
----@type fun(numberParam: number, ...: boolean)
-local varargFunction2
-
-varargFunction2(1, true, true)
-varargFunction2(1, true, true, <error descr="Type mismatch. Required: 'boolean' Found: '4'">4</error>, true)
-
----@param numberParam number
----@vararg boolean
-local function varargFunction3(numberParam, ...)
-end
-
-varargFunction3(1, true, true)
-varargFunction3(1, true, true, <error descr="Type mismatch. Required: 'boolean' Found: '4'">4</error>, true)
-
----@type fun(vararg boolean)
-local varargFunction4
-
-varargFunction4(true, true)
-varargFunction4(true, true, <error descr="Type mismatch. Required: 'boolean' Found: '4'">4</error>, true)
-varargFunction4(<error descr="Type mismatch. Required: 'boolean' Found: '1'">1</error>, true)
-
----@type fun(...: boolean)
-local varargFunction5
-
-varargFunction5(true, true)
-varargFunction5(true, true, <error descr="Type mismatch. Required: 'boolean' Found: '4'">4</error>, true)
-varargFunction5(<error descr="Type mismatch. Required: 'boolean' Found: '1'">1</error>, true)
-
----@vararg boolean
-local function varargFunction6(...)
-end
-
-varargFunction6(true, true)
-varargFunction6(true, true, <error descr="Type mismatch. Required: 'boolean' Found: '4'">4</error>, true)
-varargFunction6(<error descr="Type mismatch. Required: 'boolean' Found: '1'">1</error>, true)
-
 ---@type number
 local aNumber
 
 ---@type boolean
 local aBoolean
 
----@type fun<T>(index: number, vararg T): T
-local genericVarargFunction
+---@type fun(): number, boolean...
+local varreturnFunction
 
-aNumber = genericVarargFunction(1, 1, 2, 3)
-aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean'">genericVarargFunction(1, true, false, true)</error>
-aBoolean = <error descr="Type mismatch. Required: 'boolean' Found: '1|2|3'">genericVarargFunction(1, 1, 2, 3)</error>
-aBoolean = genericVarargFunction(1, true, false, true)
+aNumber, aBoolean, aBoolean = varreturnFunction()
+aNumber, aBoolean, aBoolean, <error descr="Type mismatch. Required: 'number' Found: 'boolean'">aNumber</error>, aBoolean = <error descr="Result 4, type mismatch. Required: 'number' Found: 'boolean'">varreturnFunction()</error>
 
-----@type fun<T>(index: number, ...: T): T
-local genericVarargFunction2
 
-aNumber = genericVarargFunction2(1, 1, 2, 3)
-aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean'">genericVarargFunction2(1, true, false, true)</error>
-aBoolean = <error descr="Type mismatch. Required: 'boolean' Found: '1|2|3'">genericVarargFunction2(1, 1, 2, 3)</error>
-aBoolean = genericVarargFunction2(1, true, false, true)
-
----@generic T
----@param index number
----@vararg T
----@return T
-local function genericVarargFunction3(index, ...)
-    return table.unpack({...}, index, 1)
+---@param numberParam number
+---@return number, boolean...
+local function varreturnFunction2()
+    if aNumber == 1 then
+        return 1
+    elseif aNumber == 2 then
+        return 1, <error descr="Result 2, type mismatch. Required: 'boolean' Found: '\"not a boolean\"'">"not a boolean"</error>
+    elseif aNumber == 3 then
+        return 1, true
+    elseif aNumber == 4 then
+        return 1, true, false
+    else
+        <error descr="Type mismatch. Required: 'number' Found: 'nil'">return</error> -- Expect
+    end
 end
 
-aNumber = genericVarargFunction3(1, 1, 2, 3)
-aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean'">genericVarargFunction3(1, true, false, true)</error>
-aBoolean = <error descr="Type mismatch. Required: 'boolean' Found: '1|2|3'">genericVarargFunction3(1, 1, 2, 3)</error>
-aBoolean = genericVarargFunction3(1, true, false, true)
+aNumber, aBoolean, aBoolean = varreturnFunction2()
+aNumber, aBoolean, aBoolean, <error descr="Type mismatch. Required: 'number' Found: 'boolean'">aNumber</error>, aBoolean = <error descr="Result 4, type mismatch. Required: 'number' Found: 'boolean'">varreturnFunction2()</error>
+
+---@param a number
+---@param b string
+local function acceptsNumberString(a, b) end
+
+acceptsNumberString(<error descr="Result 2, type mismatch. Required: 'string' Found: 'boolean'">varreturnFunction2()</error><error descr="Missing argument: b: string">)</error>
+
+---@param a number
+---@vararg string
+local function acceptsNumberVariadicString(a, ...) end
+
+acceptsNumberVariadicString(<error descr="Variadic result, type mismatch. Required: 'string' Found: 'boolean'">varreturnFunction2()</error>)
+
+---@type fun(): boolean...
+local varreturnFunction3
+
+aBoolean, aBoolean = varreturnFunction3()
+aBoolean, aBoolean, <error descr="Type mismatch. Required: 'number' Found: 'boolean'">aNumber</error>, aBoolean = <error descr="Result 3, type mismatch. Required: 'number' Found: 'boolean'">varreturnFunction3()</error>
+
+---@return boolean...
+local function varreturnFunction4()
+    if aNumber == 1 then
+        return
+    elseif aNumber == 2 then
+        return <error descr="Type mismatch. Required: 'boolean' Found: '\"not a boolean\"'">"not a boolean"</error>
+    elseif aNumber == 3 then
+        return true
+    elseif aNumber == 4 then
+        return true, false
+    end
+end
+
+aBoolean, aBoolean = varreturnFunction4()
+aBoolean, aBoolean, <error descr="Type mismatch. Required: 'number' Found: 'boolean'">aNumber</error>, aBoolean = <error descr="Result 3, type mismatch. Required: 'number' Found: 'boolean'">varreturnFunction4()</error>
+
+---@generic T
+---@param list T[]
+---@return T...
+local function genericVarreturn(list)
+    return table.unpack(list)
+end
+
+aNumber, aNumber = genericVarreturn({1, 2})
+aNumber, <error descr="Type mismatch. Required: 'boolean' Found: '1|2'">aBoolean</error> = <error descr="Result 2, type mismatch. Required: 'boolean' Found: '1|2'">genericVarreturn({1, 2})</error>
+
+local implicitNumber1, implicitNumber2 = genericVarreturn({1, 2})
+
+aNumber = implicitNumber1
+aBoolean = <error descr="Type mismatch. Required: 'boolean' Found: '1|2'">implicitNumber1</error>
+aNumber = implicitNumber2
+aBoolean = <error descr="Type mismatch. Required: 'boolean' Found: '1|2'">implicitNumber2</error>
 
 ---@return 1, 2, 3
 local function returns123()

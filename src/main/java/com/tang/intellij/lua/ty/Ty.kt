@@ -225,6 +225,8 @@ fun ITy.findCandidateSignatures(context: SearchContext, call: LuaCallExpr): Coll
 fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem: ((targetElement: PsiElement?, sourceElement: PsiElement, message: String, highlightType: ProblemHighlightType) -> Unit)? = null): SignatureMatchResult? {
     val args = call.argList
     val concreteArgTypes = mutableListOf<MatchFunctionSignatureInspection.ConcreteTypeInfo>()
+    var multipleResultsVariadicTypeInfo: MatchFunctionSignatureInspection.ConcreteTypeInfo? = null
+
     args.forEachIndexed { index, luaExpr ->
         val ty = if (index == args.lastIndex)
             context.withMultipleResults { luaExpr.guessType(context) }
@@ -233,13 +235,21 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
 
         if (!context.supportsMultipleResults && ty is TyMultipleResults) {
             if (index == args.lastIndex) {
-                concreteArgTypes.addAll(ty.list.map { MatchFunctionSignatureInspection.ConcreteTypeInfo(luaExpr, it) })
-            } else {
+                val concreteResults = if (ty.variadic) {
+                    multipleResultsVariadicTypeInfo = MatchFunctionSignatureInspection.ConcreteTypeInfo(luaExpr, ty.list.last())
+                    ty.list.dropLast(1)
+                } else {
+                    ty.list
+                }
+
+                concreteArgTypes.addAll(concreteResults.map { MatchFunctionSignatureInspection.ConcreteTypeInfo(luaExpr, it) })
+            } else if (ty.list.size > 1 || !ty.variadic) {
                 concreteArgTypes.add(MatchFunctionSignatureInspection.ConcreteTypeInfo(luaExpr, ty.list.first()))
             }
         } else concreteArgTypes.add(MatchFunctionSignatureInspection.ConcreteTypeInfo(luaExpr, ty))
     }
 
+    val variadicArg: MatchFunctionSignatureInspection.ConcreteTypeInfo? = multipleResultsVariadicTypeInfo
     val problems = if (processProblem != null) mutableMapOf<IFunSignature, Collection<Problem>>() else null
     val candidates = findCandidateSignatures(context, call)
 
@@ -253,9 +263,9 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
 
         signature.processArgs(call) { i, pi ->
             nParams = i + 1
-            val typeInfo = concreteArgTypes.getOrNull(i)
+            val typeInfo = concreteArgTypes.getOrNull(i) ?: variadicArg
 
-            if (typeInfo == null) {
+            if (typeInfo == null || typeInfo == variadicArg) {
                 var problemElement = call.lastChild.lastChild
 
                 // Some PSI elements injected by IntelliJ (e.g. PsiErrorElementImpl) can be empty and thus cannot be targeted for our own errors.
@@ -268,7 +278,9 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                 candidateFailed = true
                 signatureProblems?.add(Problem(null, problemElement, "Missing argument: ${pi.name}: ${pi.ty}"))
 
-                return@processArgs true
+                if (typeInfo == null) {
+                    return@processArgs true
+                }
             }
 
             val paramType = pi.ty
@@ -278,7 +290,14 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
 
             if (processProblem != null) {
                 val contravariant = ProblemUtil.contravariantOf(paramType, argType, context, varianceFlags, null, argExpr) { _, element, message, highlightProblem ->
-                    signatureProblems?.add(Problem(null, element, message, highlightProblem))
+                    val contextualMessage = if (i >= args.size &&
+                            (concreteArgTypes.size > args.size || (variadicArg != null && concreteArgTypes.size >= args.size))) {
+                        "Result ${i + 1}, ${message.decapitalize()}"
+                    } else {
+                        message
+                    }
+
+                    signatureProblems?.add(Problem(null, element, contextualMessage, highlightProblem))
                 }
 
                 if (!contravariant) {
@@ -291,24 +310,24 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
             true
         }
 
-        if (nParams < concreteArgTypes.size) {
-            val varargTy = signature.varargTy
+        val varargParamTy = signature.varargTy
 
-            if (varargTy != null) {
+        if (nParams < concreteArgTypes.size) {
+            if (varargParamTy != null) {
                 for (i in nParams until args.size) {
                     val argType = concreteArgTypes.get(i).ty
                     val argExpr = args.get(i)
                     val varianceFlags = if (argExpr is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
 
                     if (processProblem != null) {
-                        val contravariant = ProblemUtil.contravariantOf(varargTy, argType, context, varianceFlags, null, argExpr) { _, element, message, highlightProblem ->
+                        val contravariant = ProblemUtil.contravariantOf(varargParamTy, argType, context, varianceFlags, null, argExpr) { _, element, message, highlightProblem ->
                             signatureProblems?.add(Problem(null, element, message, highlightProblem))
                         }
 
                         if (!contravariant) {
                             candidateFailed = true
                         }
-                    } else if (!varargTy.contravariantOf(argType, context, varianceFlags)) {
+                    } else if (!varargParamTy.contravariantOf(argType, context, varianceFlags)) {
                         candidateFailed = true
                     }
                 }
@@ -324,6 +343,19 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                     val message = if (excess == 1) "1 result is an excess argument." else "${excess} results are excess arguments."
                     signatureProblems?.add(Problem(null, args.last(), message, ProblemHighlightType.WEAK_WARNING))
                 }
+            }
+        } else if (varargParamTy != null && variadicArg != null) {
+            if (processProblem != null) {
+                val contravariant = ProblemUtil.contravariantOf(varargParamTy, variadicArg.ty, context, 0, null, variadicArg.param) { _, element, message, highlightProblem ->
+                    val contextualMessage = "Variadic result, ${message.decapitalize()}"
+                    signatureProblems?.add(Problem(null, element, contextualMessage, highlightProblem))
+                }
+
+                if (!contravariant) {
+                    candidateFailed = true
+                }
+            } else if (!varargParamTy.contravariantOf(variadicArg.ty, context, 0)) {
+                candidateFailed = true
             }
         }
 

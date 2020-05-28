@@ -50,7 +50,8 @@ local aBoolean
 local function varargFunction7(...)
     aNumber = ...
     aNumber, aNumber = ...
-    aNumber, <error descr="Type mismatch. Required: 'boolean' Found: 'number'">aBoolean</error>, aNumber = <error descr="Type mismatch. Required: 'boolean' Found: 'number'">...</error>
+    <error descr="Type mismatch. Required: 'boolean' Found: 'number'">aBoolean</error>, <error descr="Type mismatch. Required: 'boolean' Found: 'number'">aBoolean</error> = <error descr="Result 1, type mismatch. Required: 'boolean' Found: 'number'"><error descr="Result 2, type mismatch. Required: 'boolean' Found: 'number'">...</error></error>
+    aNumber, <error descr="Type mismatch. Required: 'boolean' Found: 'number'">aBoolean</error>, aNumber = <error descr="Result 2, type mismatch. Required: 'boolean' Found: 'number'">...</error>
 end
 
 ---@type fun<T>(index: number, vararg T): T

@@ -10,6 +10,8 @@ end
 
 wantsNumber(<error descr="Type mismatch. Required: 'number' Found: 'number|string'">stringOrNumber(false)</error>)
 wantsNumber(--[[---@type number]] stringOrNumber(false))
+wantsNumber(--[[---@not string]] stringOrNumber(false))
+wantsNumber(<error descr="Type mismatch. Required: 'number' Found: 'string'">--[[---@not number]] stringOrNumber(false)</error>)
 
 wantsNumber(
         ---@type number @Single line doc comments also work as type casts
@@ -36,6 +38,26 @@ return 1, "a string"
 end
 
 aNumber, aString = multiReturn()
-<error descr="Type mismatch. Required: 'string' Found: 'number'">aString</error>, <error descr="Type mismatch. Required: 'number' Found: 'string'">aNumber</error> = <error descr="Type mismatch. Required: 'number' Found: 'string'"><error descr="Type mismatch. Required: 'string' Found: 'number'">multiReturn()</error></error> -- Expect error
+<error descr="Type mismatch. Required: 'string' Found: 'number'">aString</error>, <error descr="Type mismatch. Required: 'number' Found: 'string'">aNumber</error> = <error descr="Result 1, type mismatch. Required: 'string' Found: 'number'"><error descr="Result 2, type mismatch. Required: 'number' Found: 'string'">multiReturn()</error></error>
 aString, aNumber = --[[---@type string, number]] multiReturn()
-aString, <error descr="Type mismatch. Required: 'number' Found: 'string'">aNumber</error> = <error descr="Type mismatch. Required: 'number' Found: 'string'">--[[---@type string, string]] multiReturn()</error> -- Expect error
+aString, <error descr="Type mismatch. Required: 'number' Found: 'string'">aNumber</error> = <error descr="Result 2, type mismatch. Required: 'number' Found: 'string'">--[[---@type string, string]] multiReturn()</error>
+
+
+---@type number|nil
+local numberOrNil
+
+wantsNumber(numberOrNil)
+wantsNumber(--[[---@not nil]] numberOrNil)
+
+---@param returnNumbers boolean
+---@return number|string, number|string
+local function multiReturn2(returnNumbers)
+return stringOrNumber(returnNumbers), stringOrNumber(returnNumbers)
+end
+
+
+<error descr="Type mismatch. Required: 'number' Found: 'number|string'">aNumber</error>, <error descr="Type mismatch. Required: 'number' Found: 'number|string'">aNumber</error> = <error descr="Result 1, type mismatch. Required: 'number' Found: 'number|string'"><error descr="Result 2, type mismatch. Required: 'number' Found: 'number|string'">multiReturn2(true)</error></error>
+aNumber, aNumber = --[[---@not string, string]] multiReturn2(true)
+aNumber, aString = --[[---@not string, number]] multiReturn2(true)
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'number|string'">multiReturn2(true)</error>
+aNumber = --[[---@not string]] multiReturn2(true)

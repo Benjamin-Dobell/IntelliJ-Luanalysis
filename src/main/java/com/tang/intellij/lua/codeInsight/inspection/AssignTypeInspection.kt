@@ -19,6 +19,7 @@ package com.tang.intellij.lua.codeInsight.inspection
 import com.intellij.codeInspection.LocalInspectionToolSession
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
@@ -27,9 +28,7 @@ import com.tang.intellij.lua.ty.*
 class AssignTypeInspection : StrictInspection() {
     override fun buildVisitor(myHolder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor =
             object : LuaVisitor() {
-                private fun inspectAssignee(assignee: LuaTypeGuessable, value: ITy, varianceFlags: Int, expressionElement: LuaExpr, targetAssignee: Boolean, context: SearchContext) {
-                    val targetElement = if (targetAssignee) assignee else null
-
+                private fun inspectAssignee(assignee: LuaTypeGuessable, value: ITy, varianceFlags: Int, targetElement: PsiElement?, expressionElement: LuaExpr, context: SearchContext, processProblem: (targetElement: PsiElement?, sourceElement: PsiElement, message: String, highlightType: ProblemHighlightType) -> Unit) {
                     if (assignee is LuaIndexExpr) {
                         // Get owner class
                         val fieldOwnerType = assignee.guessParentType(context)
@@ -56,20 +55,10 @@ class AssignTypeInspection : StrictInspection() {
                         } ?: Ty.NIL
 
                         val flags = if (fieldOwnerType is ITyArray) varianceFlags or TyVarianceFlags.STRICT_NIL else varianceFlags
-                        ProblemUtil.contravariantOf(assigneeMemberType, source, context, flags, targetElement, expressionElement) { targetElement, sourceElement, message, highlightType ->
-                            myHolder.registerProblem(sourceElement, message, highlightType)
-                            if (targetElement != null && targetElement != sourceElement) {
-                                myHolder.registerProblem(targetElement, message, highlightType)
-                            }
-                        }
+                        ProblemUtil.contravariantOf(assigneeMemberType, source, context, flags, targetElement, expressionElement, processProblem)
                     } else {
                         val variableType = assignee.guessType(context)
-                        ProblemUtil.contravariantOf(variableType, value, context, varianceFlags, targetElement, expressionElement) { targetElement, sourceElement, message, highlightType ->
-                            myHolder.registerProblem(sourceElement, message, highlightType)
-                            if (targetElement != null && targetElement != sourceElement) {
-                                myHolder.registerProblem(targetElement, message, highlightType)
-                            }
-                        }
+                        ProblemUtil.contravariantOf(variableType, value, context, varianceFlags, targetElement, expressionElement, processProblem)
                     }
                 }
 
@@ -80,7 +69,7 @@ class AssignTypeInspection : StrictInspection() {
 
                     val searchContext = SearchContext.get(expressions.first().project)
                     var assigneeIndex = 0
-                    var variadicTy: ITy? = null
+                    var variadicMultipleResults: TyMultipleResults? = null
 
                     for (expressionIndex in 0 until expressions.size) {
                         val isLastExpression = expressionIndex == expressions.size - 1
@@ -99,7 +88,7 @@ class AssignTypeInspection : StrictInspection() {
                             val variadic = isLastExpression && valueIndex == values.size - 1 && multipleResults?.variadic == true
 
                             if (variadic) {
-                                variadicTy = value
+                                variadicMultipleResults = multipleResults
                             }
 
                             if (assigneeIndex >= assignees.size) {
@@ -118,7 +107,15 @@ class AssignTypeInspection : StrictInspection() {
                                     myHolder.registerProblem(expression, "Type mismatch. Required: 'table' Found: '%s'".format(value.displayName))
                                 }
                             } else {
-                                inspectAssignee(assignee, value, varianceFlags, expression, assignees.size > 1, searchContext)
+                                val inspectionTargetElement = if (assignees.size > 1) assignee else null
+                                inspectAssignee(assignee, value, varianceFlags, inspectionTargetElement, expression, searchContext) { targetElement, sourceElement, message, highlightType ->
+                                    val sourceMessage = if (assignees.size > 1 && (variadic || values.size > 1)) "Result ${valueIndex + 1}, ${message.decapitalize()}" else message
+                                    myHolder.registerProblem(sourceElement, sourceMessage, highlightType)
+
+                                    if (targetElement != null && targetElement != sourceElement) {
+                                        myHolder.registerProblem(targetElement, message, highlightType)
+                                    }
+                                }
                             }
 
                             if (!isLastExpression) {
@@ -128,10 +125,19 @@ class AssignTypeInspection : StrictInspection() {
                     }
 
                     if (assigneeIndex < assignees.size) {
-                        for (i in assigneeIndex until assignees.size) {
-                            if (variadicTy != null) {
+                        val lastExplicitIndex = assigneeIndex
+                        for (i in lastExplicitIndex until assignees.size) {
+                            if (variadicMultipleResults != null) {
                                 val assignee = assignees[assigneeIndex++]
-                                inspectAssignee(assignee, variadicTy, 0, expressions.last(), assignees.size > 1, searchContext)
+                                inspectAssignee(assignee, variadicMultipleResults.list.last(), 0, assignee, expressions.last(), searchContext) { targetElement, sourceElement, message, highlightType ->
+                                    val resultIndex = variadicMultipleResults.list.size + assigneeIndex - lastExplicitIndex
+                                    val sourceMessage = if (assignees.size > 1) "Result ${resultIndex}, ${message.decapitalize()}" else message
+                                    myHolder.registerProblem(sourceElement, sourceMessage, highlightType)
+
+                                    if (targetElement != null && targetElement != sourceElement) {
+                                        myHolder.registerProblem(targetElement, message, highlightType)
+                                    }
+                                }
                             } else {
                                 myHolder.registerProblem(assignees[i], "Too many assignees, will be assigned nil.")
                             }

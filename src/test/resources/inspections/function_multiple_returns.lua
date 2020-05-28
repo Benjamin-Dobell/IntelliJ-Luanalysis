@@ -13,7 +13,7 @@ local aString
 
 ---@type number, ClassWithAField
 local aNumber, classWithAField = multipleReturns()
-<error descr="Type mismatch. Required: 'ClassWithAField' Found: 'number'">classWithAField</error>, <error descr="Type mismatch. Required: 'number' Found: 'ClassWithAField'">aNumber</error> = <error descr="Type mismatch. Required: 'ClassWithAField' Found: 'number'"><error descr="Type mismatch. Required: 'number' Found: 'ClassWithAField'">multipleReturns()</error></error>
+<error descr="Type mismatch. Required: 'ClassWithAField' Found: 'number'">classWithAField</error>, <error descr="Type mismatch. Required: 'number' Found: 'ClassWithAField'">aNumber</error> = <error descr="Result 1, type mismatch. Required: 'ClassWithAField' Found: 'number'"><error descr="Result 2, type mismatch. Required: 'number' Found: 'ClassWithAField'">multipleReturns()</error></error>
 aNumber, classWithAField, <error descr="Too many assignees, will be assigned nil.">aString</error> = multipleReturns()
 aNumber = <weak_warning descr="Insufficient assignees, values will be discarded.">multipleReturns()</weak_warning>
 aNumber, aString = multipleReturns(), "some string"
@@ -56,5 +56,5 @@ acceptsNumberStringVariadicBoolean(1, "a string", true)
 acceptsNumberStringVariadicBoolean(returnsNumberStringVariadicBoolean())
 acceptsNumberStringVariadicBoolean(returnsNumberStringVariadicBoolean(), <error descr="Type mismatch. Required: 'string' Found: 'true'">true</error>)
 acceptsNumberStringVariadicBoolean(1, returnStringVariadicBoolean())
-acceptsNumberString(<weak_warning descr="1 result is an excess argument.">returnsNumberStringVariadicBoolean()</weak_warning>)
+acceptsNumberString(returnsNumberStringVariadicBoolean())
 acceptsNumberString(<weak_warning descr="1 result is an excess argument.">returnsNumberStringBoolean()</weak_warning>)

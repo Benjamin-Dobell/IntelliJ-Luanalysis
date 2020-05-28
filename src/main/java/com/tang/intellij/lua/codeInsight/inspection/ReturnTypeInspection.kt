@@ -73,7 +73,8 @@ class ReturnTypeInspection : StrictInspection() {
                         for (i in 0 until concreteTypes.size) {
                             val element = o.exprList?.getExprAt(i) ?: o
                             ProblemUtil.contravariantOf(abstractTypes[i], concreteTypes[i], context, 0, null, element) { targetElement, sourceElement, message, highlightType ->
-                                myHolder.registerProblem(sourceElement, message, highlightType)
+                                val sourceMessage = if (concreteTypes.size > 1) "Result ${i + 1}, ${message.decapitalize()}" else message
+                                myHolder.registerProblem(sourceElement, sourceMessage, highlightType)
                                 if (targetElement != null && targetElement != sourceElement) {
                                     myHolder.registerProblem(targetElement, message, highlightType)
                                 }
