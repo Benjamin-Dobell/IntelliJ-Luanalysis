@@ -20,10 +20,11 @@ import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.search.SearchContext
+import java.util.*
 
-class TyUnion : Ty(TyKind.Union) {
-    private val childSet = sortedSetOf<ITy>(java.util.Comparator {a, b -> a.displayName.compareTo(b.displayName)})
+private val displayNameComparator: Comparator<ITy> = Comparator { a, b -> a.displayName.compareTo(b.displayName) }
 
+class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKind.Union) {
     fun getChildTypes() = childSet
 
     val size:Int
@@ -48,38 +49,23 @@ class TyUnion : Ty(TyKind.Union) {
             return resolvedType ?: Ty.BOOLEAN
         }
 
-    fun append(ty: ITy): TyUnion {
+    override fun union(ty: ITy): TyUnion {
+        if (ty == Ty.VOID) {
+            return this
+        }
+
+        val unionTys = mutableListOf<ITy>()
+        unionTys.addAll(childSet)
+
         if (ty is TyUnion) {
-            ty.childSet.forEach { addChild(it) }
-        }
-        else addChild(ty)
-        return this
-    }
-
-    private fun addChild(ty: ITy): Boolean {
-        if (ty == Ty.FALSE || ty == Ty.TRUE) {
-            if (childSet.contains(Ty.BOOLEAN)) {
-                return false
-            }
-
-            if (ty == Ty.FALSE) {
-                if (childSet.contains(Ty.TRUE)) {
-                    childSet.remove(Ty.TRUE)
-                    return childSet.add(Ty.BOOLEAN)
-                }
-            } else if (ty == Ty.TRUE) {
-                if (childSet.contains(Ty.FALSE)) {
-                    childSet.remove(Ty.FALSE)
-                    return childSet.add(Ty.BOOLEAN)
-                }
-            }
-        } else if (ty == Ty.BOOLEAN) {
-            childSet.remove(Ty.TRUE)
-            childSet.remove(Ty.FALSE)
+            unionTys.addAll(ty.childSet)
+        } else {
+            unionTys.add(ty)
         }
 
-        return childSet.add(ty)
+        return TyUnion.union(unionTys) as TyUnion
     }
+
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
         return super.contravariantOf(other, context, flags)
@@ -189,15 +175,38 @@ class TyUnion : Ty(TyKind.Union) {
                 t1 is TyUnknown || t2 is TyUnknown -> Ty.UNKNOWN
                 isInvalid(t1) -> t2
                 isInvalid(t2) -> t1
-                t1 is TyUnion -> t1.append(t2)
-                t2 is TyUnion -> t2.append(t1)
+                t1 is TyUnion -> t1.union(t2)
+                t2 is TyUnion -> t2.union(t1)
                 else -> {
-                    val u = TyUnion()
-                    u.addChild(t1)
-                    u.addChild(t2)
-                    //if t1 == t2
-                    if (u.childSet.size == 1) u.childSet.first() else u
+                    TyUnion.union(listOf(t1, t2))
                 }
+            }
+        }
+
+        fun union(tys: Iterable<ITy>): ITy {
+            val childSet = sortedSetOf(displayNameComparator)
+
+            tys.forEach {
+                if (it is TyUnion) {
+                    childSet.addAll(it.childSet)
+                } else if (it != Ty.VOID) {
+                    childSet.add(it)
+                }
+            }
+
+            if (childSet.contains(Ty.TRUE) && childSet.contains(Ty.FALSE)) {
+                childSet.add(Ty.BOOLEAN)
+            }
+
+            if (childSet.contains(Ty.BOOLEAN)) {
+                childSet.remove(Ty.TRUE)
+                childSet.remove(Ty.FALSE)
+            }
+
+            return if (childSet.size == 1) {
+                childSet.first()
+            } else {
+                TyUnion(childSet)
             }
         }
 
@@ -227,11 +236,11 @@ object TyUnionSerializer : TySerializer<TyUnion>() {
     }
 
     override fun deserializeTy(flags: Int, stream: StubInputStream): TyUnion {
-        val union = TyUnion()
+        val tys = mutableListOf<ITy>()
         val size = stream.readInt()
         for (i in 0 until size) {
-            union.append(Ty.deserialize(stream))
+            tys.add(Ty.deserialize(stream))
         }
-        return union
+        return TyUnion.union(tys) as TyUnion
     }
 }

@@ -126,15 +126,16 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
             Ty.TRUE -> infer(rhs, context)
             Ty.FALSE -> lty
             else -> {
-                val u = TyUnion()
+                val tys = mutableListOf<ITy>()
                 TyUnion.each(lty) {
                     if (it == Ty.BOOLEAN) {
-                        u.append(Ty.FALSE)
+                        tys.add(Ty.FALSE)
                     } else if (it.booleanType != Ty.TRUE) {
-                        u.append(it)
+                        tys.add(it)
                     }
                 }
-                u.append(infer(rhs, context))
+                tys.add(infer(rhs, context))
+                TyUnion.union(tys)
             }
         }
     }
@@ -144,15 +145,16 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
         Ty.TRUE -> lty
         Ty.FALSE -> infer(rhs, context)
         else -> {
-            val u = TyUnion()
+            val tys = mutableListOf<ITy>()
             TyUnion.each(lty) {
                 if (it == Ty.BOOLEAN) {
-                    u.append(Ty.TRUE)
+                    tys.add(Ty.TRUE)
                 } else if (it.booleanType != Ty.FALSE) {
-                    u.append(it)
+                    tys.add(it)
                 }
             }
-            u.append(infer(rhs, context))
+            tys.add(infer(rhs, context))
+            TyUnion.union(tys)
         }
     }
 }
