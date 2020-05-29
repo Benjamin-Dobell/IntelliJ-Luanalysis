@@ -104,9 +104,20 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
     }
 
     override fun substitute(substitutor: ITySubstitutor): ITy {
-        var ty: ITy = Ty.VOID
-        childSet.forEach { ty = ty.union(it.substitute(substitutor)) }
-        return ty
+        var substituted = false
+        val substitutedChildren = childSet.map {
+            val substitutedChild = it.substitute(substitutor)
+
+            if (substitutedChild !== it) {
+                substituted = true
+            }
+
+            substitutedChild
+        }
+
+        return if (substituted) {
+            TyUnion.union(substitutedChildren)
+        } else this
     }
 
     override fun findMember(name: String, searchContext: SearchContext): LuaClassMember? {

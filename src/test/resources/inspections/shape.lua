@@ -102,7 +102,7 @@ local nestedShape3 = {
 }
 
 ---@return NestedShape
-local function returnNestedSahpe()
+local function returnNestedShape()
     return {
         shape1 = {a = <error descr="Type mismatch. Required: 'number' Found: 'table'">{}</error>},
         shape2 = {a = aNumber, b = <error descr="Type mismatch. Required: 'string' Found: 'number'">aNumber</error>}
@@ -146,25 +146,6 @@ local badLiteral = {
         }
     }
 }
-
-local goodAnonymous = {
-    values = {
-        {
-            a = 1
-        }
-    }
-}
-
-local badAnonymous = {
-    values = {
-        {
-            a = "some string"
-        }
-    }
-}
-
-goodLiteral = goodAnonymous
-goodLiteral = <error descr="Type mismatch. Required: 'WithArrayValues' Found: 'table'">badAnonymous</error>
 
 
 ---@shape StringNumberBooleanTuple

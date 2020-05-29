@@ -209,7 +209,7 @@ abstract class TyGeneric(final override val params: Array<ITy>, final override v
                 && params.size == otherParams.size
                 && params.asSequence().zip(otherParams.asSequence()).all { (param, otherParam) ->
                     // Params are always invariant as we don't support use-site variance nor immutable/read-only annotations
-                    param.equals(otherParam)
+                    param.equals(otherParam, context)
                             || (flags and TyVarianceFlags.STRICT_UNKNOWN == 0 && otherParam is TyUnknown)
                             || ((contravariantParams || (flags and TyVarianceFlags.ABSTRACT_PARAMS != 0 && param is TyParameter))
                                 && param.contravariantOf(otherParam, context, flags))

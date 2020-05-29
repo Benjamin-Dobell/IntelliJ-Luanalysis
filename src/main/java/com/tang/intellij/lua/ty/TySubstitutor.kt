@@ -198,16 +198,47 @@ open class TySubstitutor : ITySubstitutor {
     }
 
     override fun substitute(generic: ITyGeneric): ITy {
-        return TySerializedGeneric(
-                generic.params.map { it.substitute(this) }.toTypedArray(),
-                generic.base.substitute(this)
-        )
+        var paramsSubstituted = false
+        val substitutedParams = generic.params.map {
+            val substitutedParam = it.substitute(this)
+
+            if (substitutedParam !== it) {
+                paramsSubstituted = true
+            }
+
+            substitutedParam
+        }
+
+        val substitutedBase = generic.base.substitute(this)
+
+        return if (paramsSubstituted || substitutedBase !== generic.base) {
+            TySerializedGeneric(substitutedParams.toTypedArray(), substitutedBase)
+        } else {
+            generic
+        }
     }
 
     override fun substitute(function: ITyFunction): ITy {
-        return TySerializedFunction(function.mainSignature.substitute(this),
-                function.signatures.map { it.substitute(this) }.toTypedArray(),
-                function.flags)
+        var signaturesSubstituted = false
+        val substitutedSignatures = function.signatures.map {
+            val substitutedSignature = it.substitute(this)
+
+            if (substitutedSignature !== it) {
+                signaturesSubstituted = true
+            }
+
+            substitutedSignature
+        }
+
+        val substitutedMainSignature = function.mainSignature.substitute(this)
+
+        return if (signaturesSubstituted || substitutedMainSignature !== function.mainSignature) {
+            TySerializedFunction(substitutedMainSignature,
+                    substitutedSignatures.toTypedArray(),
+                    function.flags)
+        } else {
+            function
+        }
     }
 }
 

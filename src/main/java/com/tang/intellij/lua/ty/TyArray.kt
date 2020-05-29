@@ -35,12 +35,17 @@ class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
     }
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
-        if (super.contravariantOf(other, context, flags) || (other is ITyArray && base.contravariantOf(other.base, context, flags))) {
+        if (super.contravariantOf(other, context, flags)) {
             return true
         }
 
-        if (other !is ITyClass || !TyArray.isArray(other, context)) {
+        if (other !is ITyArray && (other !is ITyClass || !TyArray.isArray(other, context))) {
             return false
+        }
+
+        if (other is ITyArray) {
+            return base.equals(other.base, context)
+                    || (flags and TyVarianceFlags.WIDEN_TABLES != 0 && base.contravariantOf(other.base, context, flags))
         }
 
         return other.processMembers(context) { _, otherMember ->
@@ -49,7 +54,8 @@ class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
             }
 
             otherFieldTypes.forEach { otherFieldTy ->
-                if (!base.contravariantOf(otherFieldTy, context, flags)) {
+                if (!base.equals(otherFieldTy, context)
+                        && (flags and TyVarianceFlags.WIDEN_TABLES == 0 || !base.contravariantOf(otherFieldTy, context, flags))) {
                     return@processMembers false
                 }
             }
@@ -59,7 +65,12 @@ class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
     }
 
     override fun substitute(substitutor: ITySubstitutor): ITy {
-        return TyArray(base.substitute(substitutor))
+        val substitutedBase = base.substitute(substitutor)
+        return if (substitutedBase !== base) {
+            TyArray(substitutedBase)
+        } else {
+            this
+        }
     }
 
     override fun accept(visitor: ITyVisitor) {

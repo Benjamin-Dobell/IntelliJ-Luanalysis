@@ -166,12 +166,29 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
     }
 
     override fun substitute(substitutor: ITySubstitutor): IFunSignature {
-        val list = params?.map { it.substitute(substitutor) }
-        return FunSignature(colonCall,
-                returnTy?.substitute(substitutor),
-                varargTy?.substitute(substitutor),
-                list?.toTypedArray(),
-                tyParameters)
+        var paramsSubstituted = false
+        val substitutedParams = params?.map {
+            val substitutedParam = it.substitute(substitutor)
+
+            if (substitutedParam !== it) {
+                paramsSubstituted = true
+            }
+
+            substitutedParam
+        }
+
+        val substitutedReturnTy = returnTy?.substitute(substitutor)
+        val substitutedVarargTy = varargTy?.substitute(substitutor)
+
+        return if (paramsSubstituted || substitutedReturnTy !== returnTy || substitutedVarargTy !== varargTy) {
+            FunSignature(colonCall,
+                    substitutedReturnTy,
+                    substitutedVarargTy,
+                    substitutedParams?.toTypedArray(),
+                    tyParameters)
+        } else {
+            this
+        }
     }
 
     override fun contravariantOf(other: IFunSignature, context: SearchContext, flags: Int): Boolean {

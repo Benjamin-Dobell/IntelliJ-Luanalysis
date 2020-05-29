@@ -77,6 +77,11 @@ abstract class TyClass(override val className: String,
 
     private var _lazyInitialized: Boolean = false
 
+    override fun equals(other: ITy, context: SearchContext): Boolean {
+        lazyInit(context)
+        return super<Ty>.equals(other, context)
+    }
+
     override fun equals(other: Any?): Boolean {
         return other is ITyClass && other.className == className && other.flags == flags
     }
@@ -194,7 +199,7 @@ abstract class TyClass(override val className: String,
 
         val resolved = TyAliasSubstitutor.substitute(this, context)
 
-        if (resolved != this) {
+        if (resolved !== this) {
             return resolved.contravariantOf(other, context, flags)
         } else {
             return super.contravariantOf(other, context, flags)

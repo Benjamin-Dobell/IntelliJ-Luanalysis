@@ -23,8 +23,21 @@ import com.tang.intellij.lua.search.SearchContext
 class TyMultipleResults(val list: List<ITy>, val variadic: Boolean) : Ty(TyKind.MultipleResults) {
 
     override fun substitute(substitutor: ITySubstitutor): ITy {
-        val list = list.map { it.substitute(substitutor) }
-        return TyMultipleResults(list, variadic)
+        var resultsSubstituted = false
+        val substitutedResults = list.map {
+            val substitutedResult = it.substitute(substitutor)
+
+            if (substitutedResult !== it) {
+                resultsSubstituted = true
+            }
+
+            substitutedResult
+        }
+        return if (resultsSubstituted) {
+            TyMultipleResults(substitutedResults, variadic)
+        } else {
+            this
+        }
     }
 
     override fun accept(visitor: ITyVisitor) {

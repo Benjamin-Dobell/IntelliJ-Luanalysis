@@ -69,7 +69,7 @@ class TyVarianceFlags {
     companion object {
         const val STRICT_UNKNOWN = 0x1
         const val ABSTRACT_PARAMS = 0x2 // A generic is to be considered contravariant if its TyParameter generic parameters are contravariant.
-        const val WIDEN_TABLES = 0x4 // A generic table is to be considered contravariant if its generic parameters are contravariant.
+        const val WIDEN_TABLES = 0x4 // Generics (and arrays) are to be considered contravariant if their generic parameters (or base) are contravariant.
         const val STRICT_NIL = 0x8 // In certain contexts nil is always strict, irrespective of the user's 'Strict nil checks' setting.
     }
 }
@@ -84,6 +84,26 @@ interface ITy : Comparable<ITy> {
     val flags: Int
 
     val booleanType: ITy
+
+    fun equals(other: ITy, context: SearchContext): Boolean {
+        if (this === other) {
+            return true
+        }
+
+        val resolved = TyAliasSubstitutor.substitute(this, context)
+
+        if (resolved !== this) {
+            return resolved.equals(other, context)
+        }
+
+        val resolvedOther = TyAliasSubstitutor.substitute(other, context)
+
+        if (resolvedOther is ITyClass) {
+            resolvedOther.lazyInit(context)
+        }
+
+        return equals(resolvedOther)
+    }
 
     fun union(ty: ITy): ITy
 
@@ -448,7 +468,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
 
         val resolvedOther = TyAliasSubstitutor.substitute(other, context)
 
-        if (resolvedOther != other) {
+        if (resolvedOther !== other) {
             return contravariantOf(resolvedOther, context, flags)
         }
 
@@ -462,7 +482,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
             return true
         }
 
-        if (this.flags and TyFlags.SHAPE != 0) {
+        if (this.flags and TyFlags.SHAPE != 0 || this is TyTable) {
             return processMembers(context, { _, classMember ->
                 val indexTy = classMember.indexType?.getType()
 

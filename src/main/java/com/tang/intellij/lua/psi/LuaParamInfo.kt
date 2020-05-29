@@ -40,9 +40,15 @@ class LuaParamInfo(var name: String = "", var ty: ITy = Ty.UNKNOWN) {
     }
 
     fun substitute(substitutor: ITySubstitutor): LuaParamInfo {
+        val substitutedTy = ty.substitute(substitutor)
+
+        if (substitutedTy === ty) {
+            return this
+        }
+
         val pi = LuaParamInfo()
         pi.name = name
-        pi.ty = ty.substitute(substitutor)
+        pi.ty = substitutedTy
         return pi
     }
 
