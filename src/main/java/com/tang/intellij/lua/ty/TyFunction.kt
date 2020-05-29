@@ -264,10 +264,16 @@ abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
         var matched = false
 
         processSignatures(context, Processor { sig ->
-            other.processSignatures(context, Processor { otherSig ->
-                matched = sig.contravariantOf(otherSig, context, flags)
-                !matched
-            })
+            if (other == Ty.FUNCTION) {
+                val multipleResults = sig.returnTy as? TyMultipleResults
+                matched = multipleResults?.variadic == true && multipleResults.list.size == 1 && multipleResults.list.first() == Ty.UNKNOWN
+                        && (sig.params?.size ?: 0) == 0 && sig.varargTy == Ty.UNKNOWN
+            } else {
+                other.processSignatures(context, Processor { otherSig ->
+                    matched = sig.contravariantOf(otherSig, context, flags)
+                    !matched
+                })
+            }
             !matched
         })
 
