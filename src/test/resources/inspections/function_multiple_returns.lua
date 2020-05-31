@@ -49,7 +49,14 @@ end
 
 ---@return number, string, boolean
 local function returnsNumberStringBoolean()
-    return 1, "a string", true
+    if aNumber == 1 then
+        return 1, "a string", true
+    elseif aNumber == 2 then
+        ---@type <error descr="Incorrect number of values. Expected 3 but found 1."><error descr="Type mismatch. Required: 'number' Found: 'string'">string</error></error>
+        return <error descr="Result 1, type mismatch. Required: 'string' Found: '1'">1</error>, <error descr="Result 2, type mismatch. Required: 'void' Found: '\"a string\"'">"a string"</error>, <error descr="Result 3, type mismatch. Required: 'void' Found: 'true'">true</error>
+    else
+        return <error descr="Incorrect number of values. Expected 3 but found 2.">returnsNumberStringVariadicBoolean()</error>
+    end
 end
 
 acceptsNumberStringVariadicBoolean(1, "a string", true)

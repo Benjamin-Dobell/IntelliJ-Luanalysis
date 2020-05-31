@@ -21,12 +21,10 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
+import com.tang.intellij.lua.comment.psi.impl.LuaDocTagTypeImpl
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
-import com.tang.intellij.lua.ty.ITy
-import com.tang.intellij.lua.ty.ProblemUtil
-import com.tang.intellij.lua.ty.Ty
-import com.tang.intellij.lua.ty.TyMultipleResults
+import com.tang.intellij.lua.ty.*
 
 class ReturnTypeInspection : StrictInspection() {
     override fun buildVisitor(myHolder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor =
@@ -38,7 +36,7 @@ class ReturnTypeInspection : StrictInspection() {
 
                     val context = SearchContext.get(o)
                     val bodyOwner = PsiTreeUtil.getParentOfType(o, LuaFuncBodyOwner::class.java) ?: return
-                    val abstractType = if (bodyOwner is LuaClassMethodDef) {
+                    val expectedReturnType = if (bodyOwner is LuaClassMethodDef) {
                         guessSuperReturnTypes(bodyOwner, context)
                     } else {
                         var comment = (bodyOwner as? LuaCommentOwner)?.comment
@@ -46,49 +44,80 @@ class ReturnTypeInspection : StrictInspection() {
                         if (comment == null) {
                             comment = (bodyOwner.parent?.parent as? LuaDeclaration)?.comment // Doc comment may appear on declarations
                         }
-
                         comment?.tagReturn?.type
+                    } ?: TyMultipleResults(listOf(Ty.UNKNOWN), true)
+
+                    val concreteType = context.withMultipleResults {
+                        o.exprList?.guessType(context) ?: Ty.VOID
                     }
-                    val concreteType = context.withMultipleResults { guessReturnType(o, context) }
-                    var abstractTypes = toList(abstractType)
                     val concreteTypes = toList(concreteType)
 
-                    // Extend expected types with nil until the same amount as given types
-                    if (abstractTypes.size < concreteTypes.size) {
-                        abstractTypes += List(concreteTypes.size - abstractTypes.size) { Ty.UNKNOWN }
+                    val documentedReturnTypeTag = o.comment?.let { PsiTreeUtil.getChildrenOfTypeAsList(it, LuaDocTagTypeImpl::class.java).firstOrNull() }
+                    val documentedType = documentedReturnTypeTag?.getType()
+
+                    val abstractTypes = toList(documentedType ?: expectedReturnType)
+                    val variadicAbstractType = if (expectedReturnType is TyMultipleResults && expectedReturnType.variadic) {
+                        expectedReturnType.list.last()
+                    } else null
+
+                    for (i in 0 until concreteTypes.size) {
+                        val element = o.exprList?.getExprAt(i) ?: o
+                        val targetType = abstractTypes.getOrNull(i) ?: variadicAbstractType ?: Ty.VOID
+                        val varianceFlags = if (element is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
+                        ProblemUtil.contravariantOf(targetType, concreteTypes[i], context, varianceFlags, null, element) { targetElement, sourceElement, message, highlightType ->
+                            val sourceMessage = if (concreteTypes.size > 1) "Result ${i + 1}, ${message.decapitalize()}" else message
+                            myHolder.registerProblem(sourceElement, sourceMessage, highlightType)
+                            if (targetElement != null && targetElement != sourceElement) {
+                                myHolder.registerProblem(targetElement, message, highlightType)
+                            }
+                        }
                     }
 
-                    val requiredReturnCount = if (abstractType is TyMultipleResults) {
-                        if (abstractType.variadic) abstractType.list.size - 1 else abstractType.list.size
+                    val abstractReturnCount = if (variadicAbstractType != null) {
+                        abstractTypes.size - 1
                     } else abstractTypes.size
 
-                    // Check number
-                    if (requiredReturnCount > concreteTypes.size) {
-                        if (concreteTypes.isEmpty()) {
-                            myHolder.registerProblem(o.lastChild, "Type mismatch. Required: '%s' Found: 'nil'".format(abstractTypes[0]))
-                        } else {
-                            myHolder.registerProblem(o.lastChild, "Incorrect number of return values. Expected %s but found %s.".format(requiredReturnCount, concreteTypes.size))
-                        }
-                    } else {
-                        for (i in 0 until concreteTypes.size) {
-                            val element = o.exprList?.getExprAt(i) ?: o
-                            ProblemUtil.contravariantOf(abstractTypes[i], concreteTypes[i], context, 0, null, element) { targetElement, sourceElement, message, highlightType ->
-                                val sourceMessage = if (concreteTypes.size > 1) "Result ${i + 1}, ${message.decapitalize()}" else message
-                                myHolder.registerProblem(sourceElement, sourceMessage, highlightType)
-                                if (targetElement != null && targetElement != sourceElement) {
-                                    myHolder.registerProblem(targetElement, message, highlightType)
-                                }
+                    val concreteReturnCount = if (concreteType is TyMultipleResults && concreteType.variadic) {
+                        concreteTypes.size - 1
+                    } else concreteTypes.size
+
+                    if (concreteReturnCount < abstractReturnCount) {
+                        myHolder.registerProblem(o.lastChild, "Incorrect number of values. Expected %s but found %s.".format(abstractReturnCount, concreteReturnCount))
+                    }
+
+                    if (documentedType != null) {
+                        val expectedReturnTypes = toList(expectedReturnType)
+                        val variadicExpectedReturnType = if (expectedReturnType is TyMultipleResults && expectedReturnType.variadic) {
+                            expectedReturnType.list.last()
+                        } else null
+
+                        for (i in 0 until abstractTypes.size) {
+                            val targetType = expectedReturnTypes.getOrNull(i) ?: variadicExpectedReturnType ?: Ty.VOID
+
+                            if (!targetType.contravariantOf(abstractTypes[i], context, 0)) {
+                                val element = documentedReturnTypeTag.typeList?.tyList?.let { it.getOrNull(i) ?: it.last() } ?: documentedReturnTypeTag
+                                val message = "Type mismatch. Required: '%s' Found: '%s'".format(targetType.displayName, abstractTypes[i].displayName)
+                                myHolder.registerProblem(element, message)
                             }
+                        }
+
+                        val expectedReturnCount = if (variadicExpectedReturnType != null) {
+                            expectedReturnTypes.size - 1
+                        } else expectedReturnTypes.size
+
+                        if (abstractReturnCount < expectedReturnCount) {
+                            val element = documentedReturnTypeTag.typeList ?: documentedReturnTypeTag
+                            val message = "Incorrect number of values. Expected %s but found %s.".format(expectedReturnCount, abstractReturnCount)
+                            myHolder.registerProblem(element, message)
                         }
                     }
                 }
 
-                private fun toList(type: ITy?): List<ITy> {
+                private fun toList(type: ITy): List<ITy> {
                     return when (type) {
                         Ty.VOID -> emptyList()
                         is TyMultipleResults -> type.list
-                        is ITy -> listOf(type)
-                        else -> emptyList()
+                        else -> listOf(type)
                     }
                 }
 

@@ -27,20 +27,17 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.SearchScope
 import com.intellij.psi.stubs.StubElement
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.util.BitUtil
 import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.LuaDocAccessModifier
 import com.tang.intellij.lua.comment.psi.LuaDocTagVararg
 import com.tang.intellij.lua.comment.psi.LuaDocTy
 import com.tang.intellij.lua.comment.psi.api.LuaComment
+import com.tang.intellij.lua.comment.psi.impl.LuaDocTagTypeImpl
 import com.tang.intellij.lua.lang.LuaIcons
 import com.tang.intellij.lua.lang.type.LuaString
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.LuaClassMemberStub
 import com.tang.intellij.lua.stubs.LuaFuncBodyOwnerStub
-import com.tang.intellij.lua.stubs.LuaTableFieldStubImpl
-import com.tang.intellij.lua.stubs.LuaTableFieldType
-import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.ty.*
 import java.util.*
 import javax.swing.Icon
@@ -610,6 +607,16 @@ fun getName(nameExpr: LuaNameExpr): String {
 
 fun guessReturnType(returnStat: LuaReturnStat?, context: SearchContext): ITy {
     if (returnStat != null) {
+        if (returnStat.comment != null) {
+            val returnType = PsiTreeUtil.getChildrenOfTypeAsList(returnStat.comment, LuaDocTagTypeImpl::class.java).firstOrNull()
+
+            if (returnType != null) {
+                return if (context.supportsMultipleResults) {
+                    returnType.getType()
+                } else returnType.getType(context.index)
+            }
+        }
+
         val returnExpr = returnStat.exprList
         if (returnExpr != null) {
             return if (context.supportsMultipleResults)

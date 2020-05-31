@@ -408,3 +408,21 @@ overloadedT(<error descr="Type mismatch. Required: 'T : number' Found: '\"string
 
 overloadedT(<error descr="Type mismatch. Required: 'T : string' Found: '1'">1</error>, 1)
 overloadedT("string", 1)
+
+
+---@generic T
+---@param builder fun(): T
+---@return T
+function build(builder)
+    return builder()
+end
+
+stringNumberTable = <error descr="Type mismatch. Required: 'table<string, number>' Found: 'table'">build(function()
+    return {a = 1}
+end)</error>
+
+stringNumberTable = build(function()
+    ---@type table<string, number>
+    return {a = 1}
+end)
+

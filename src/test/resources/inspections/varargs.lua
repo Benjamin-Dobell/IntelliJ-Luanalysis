@@ -75,7 +75,7 @@ aBoolean = genericVarargFunction2(1, true, false, true)
 ---@vararg T
 ---@return T
 local function genericVarargFunction3(index, ...)
-    return table.unpack({...}, index, 1)
+    return --[[---@type T]] table.unpack({...}, index, 1)
 end
 
 aNumber = genericVarargFunction3(1, 1, 2, 3)

@@ -23,7 +23,7 @@ local function varreturnFunction2()
     elseif aNumber == 4 then
         return 1, true, false
     else
-        <error descr="Type mismatch. Required: 'number' Found: 'nil'">return</error> -- Expect
+        <error descr="Incorrect number of values. Expected 1 but found 0.">return</error> -- Expect
     end
 end
 
