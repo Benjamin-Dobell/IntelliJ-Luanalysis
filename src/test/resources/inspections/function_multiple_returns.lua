@@ -65,3 +65,29 @@ acceptsNumberStringVariadicBoolean(returnsNumberStringVariadicBoolean(), <error 
 acceptsNumberStringVariadicBoolean(1, returnStringVariadicBoolean())
 acceptsNumberString(returnsNumberStringVariadicBoolean())
 acceptsNumberString(<weak_warning descr="1 result is an excess argument.">returnsNumberStringBoolean()</weak_warning>)
+
+
+---@return number, number
+local function returnsNumberNumber()
+return 0, 0
+end
+
+---@return string, string
+local function returnsStringString()
+return "a", "a"
+end
+
+local returnsNumberNumberOrStringString = {returnsNumberNumber, returnsStringString}
+
+---@type number | string
+local numberOrString
+
+for _, fun in ipairs(returnsNumberNumberOrStringString) do
+    local numberOrString1, numberOrString2 = fun()
+
+    numberOrString = numberOrString1
+    numberOrString = numberOrString2
+
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'number|string'">numberOrString1</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'number|string'">numberOrString2</error>
+end

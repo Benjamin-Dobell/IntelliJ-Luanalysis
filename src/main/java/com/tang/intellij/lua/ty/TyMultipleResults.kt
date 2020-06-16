@@ -97,6 +97,55 @@ class TyMultipleResults(val list: List<ITy>, val variadic: Boolean) : Ty(TyKind.
         }
         return super.equals(other)
     }
+
+
+    companion object {
+        fun flatten(ty: ITy): ITy {
+            if (ty !is TyUnion) {
+                return ty
+            }
+
+            val tyList = mutableListOf<ITy>()
+            var variadicTy: ITy? = null
+
+            TyUnion.each(ty) {
+                if (it is TyMultipleResults) {
+                    val multipleResults = it
+
+                    multipleResults.list.forEachIndexed { index, resultTy ->
+                        if (index < tyList.size) {
+                            tyList[index] = tyList[index].union(resultTy)
+                        } else if (!multipleResults.variadic || index < multipleResults.list.lastIndex) {
+                            tyList.add(variadicTy?.union(resultTy) ?: resultTy)
+                        }
+                    }
+
+                    if (multipleResults.variadic) {
+                        val multipleResultsVariadicTy = multipleResults.list.last()
+
+                        for (i in multipleResults.list.size until tyList.size) {
+                            tyList[i] = tyList[i].union(multipleResultsVariadicTy)
+                        }
+
+                        variadicTy = variadicTy?.union(multipleResultsVariadicTy) ?: multipleResultsVariadicTy
+                    }
+                } else {
+                    if (tyList.isEmpty()) {
+                        tyList.add(it)
+                    } else {
+                        tyList[0] = tyList[0].union(it)
+                    }
+                }
+            }
+
+            if (tyList.size == 1 && variadicTy == null) {
+                return tyList[0]
+            }
+
+            variadicTy?.let { tyList.add(it) }
+            return TyMultipleResults(tyList.toList(), variadicTy != null)
+        }
+    }
 }
 
 object TyMultipleResultsSerializer : TySerializer<TyMultipleResults>() {

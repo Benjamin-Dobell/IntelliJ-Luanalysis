@@ -290,7 +290,9 @@ private fun resolveParamType(paramNameDef: LuaParamNameDef, context: SearchConte
         val paramIndex = paramOwner.getIndexFor(paramNameDef)
 
         // iterator support
-        val type = callExpr?.guessType(context)
+        val type = context.withMultipleResults {
+            callExpr?.guessType(context)
+        }
         if (type != null) {
             var result: ITy = Ty.VOID
             TyUnion.each(type) {

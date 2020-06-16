@@ -315,7 +315,7 @@ private fun LuaCallExpr.infer(context: SearchContext): ITy {
         }
     }
 
-    return if (Ty.isInvalid(ret)) Ty.UNKNOWN else ret
+    return if (Ty.isInvalid(ret)) Ty.UNKNOWN else TyMultipleResults.flatten(ret)
 }
 
 private fun LuaNameExpr.infer(context: SearchContext): ITy {

@@ -48,7 +48,7 @@ class ReturnTypeInspection : StrictInspection() {
                     } ?: TyMultipleResults(listOf(Ty.UNKNOWN), true)
 
                     val concreteType = context.withMultipleResults {
-                        o.exprList?.guessType(context) ?: Ty.VOID
+                        TyMultipleResults.flatten(o.exprList?.guessType(context) ?: Ty.VOID)
                     }
                     val concreteTypes = toList(concreteType)
 

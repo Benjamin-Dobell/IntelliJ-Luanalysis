@@ -97,11 +97,13 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
             }
 
             override fun visitMultipleResults(multipleResults: TyMultipleResults) {
+                sb.append("(")
                 val list = multipleResults.list.map { render(it) }
                 sb.append(list.joinToString(", "))
                 if (multipleResults.variadic) {
                     sb.append("...")
                 }
+                sb.append(")")
             }
         })
     }
