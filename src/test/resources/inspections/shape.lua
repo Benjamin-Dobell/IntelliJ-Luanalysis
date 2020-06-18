@@ -179,3 +179,19 @@ numberArray = numberTuple
 local nonContiguousNumberTuple
 
 numberArray = <error descr="Type mismatch. Required: 'number[]' Found: 'table<number, number>'">nonContiguousNumberTuple</error>
+
+
+---@shape PrimitiveAndTable
+---@field primitiveField string
+---@field tableField {}
+
+---@type PrimitiveAndTable
+local primitiveAndTable = {
+    primitiveField = "a string",
+    tableField = {}
+}
+
+primitiveAndTable = {
+    primitiveField = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>,
+    tableField = {}
+}

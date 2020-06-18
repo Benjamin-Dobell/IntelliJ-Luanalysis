@@ -291,7 +291,7 @@ object ProblemUtil {
                 if (memberElement is LuaTableExpr) {
                     isContravariant = contravariantOf(targetMemberTy, sourceMemberTy, context, varianceFlags, targetElement, memberElement) { targetElement, sourceElement, message, highlightType ->
                         problems.add(Problem(targetElement, sourceElement, message, highlightType))
-                    }
+                    } && isContravariant
                 } else if (!targetMemberTy.contravariantOf(sourceMemberTy, context, varianceFlags)) {
                     isContravariant = false
                     problems.add(Problem(targetElement,
