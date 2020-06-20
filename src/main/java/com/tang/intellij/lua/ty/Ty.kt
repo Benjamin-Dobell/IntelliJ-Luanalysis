@@ -703,13 +703,13 @@ class TyNil : Ty(TyKind.Nil) {
     override val booleanType = Ty.FALSE
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
-        return other.kind == TyKind.Nil
+        return other.kind == TyKind.Nil || super.contravariantOf(other, context, flags)
     }
 }
 
 class TyVoid : Ty(TyKind.Void) {
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
-        return other.kind == TyKind.Void
+        return other.kind == TyKind.Void || super.contravariantOf(other, context, flags)
     }
 }

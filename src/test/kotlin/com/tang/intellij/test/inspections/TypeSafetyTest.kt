@@ -130,6 +130,7 @@ class TypeSafetyTest : LuaInspectionsTestBase(
     }
 
     fun testOps() {
+        LuaSettings.instance.isNilStrict = true
         checkByFile("ops.lua")
     }
 

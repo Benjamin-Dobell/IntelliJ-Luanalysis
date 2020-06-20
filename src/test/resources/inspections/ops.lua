@@ -1,3 +1,5 @@
+--- Assuming strict nil checks is enabled
+
 ---@type number
 local aNumber
 
