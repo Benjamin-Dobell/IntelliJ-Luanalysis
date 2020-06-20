@@ -460,16 +460,6 @@ private val LuaTableExpr.innerShouldCreateStub: Boolean get() {
     }
 }
 
-private val KEY_FORWARD = Key.create<CachedValue<PsiElement>>("lua.lua_func_def.forward")
-
-val LuaFuncDef.forwardDeclaration: PsiElement? get() {
-    return CachedValuesManager.getCachedValue(this, KEY_FORWARD) {
-        val refName = name
-        val ret = if (refName == null) null else resolveLocal(refName, this)
-        CachedValueProvider.Result.create(ret, this)
-    }
-}
-
 val LuaCallExpr.prefixExpr: LuaExpr? get() {
     val expr = this.expr
     if (expr is LuaIndexExpr) {

@@ -101,7 +101,7 @@ class LuaAnnotator : Annotator {
 
         override fun visitFuncDef(o: LuaFuncDef) {
             val name = o.nameIdentifier
-            if (name != null && o.forwardDeclaration == null) {
+            if (name != null) {
                 if (isModuleFile) {
                     val annotation = createInfoAnnotation(name, "Module function \"${o.name}\"")
                     annotation.textAttributes = LuaHighlightingData.INSTANCE_METHOD
