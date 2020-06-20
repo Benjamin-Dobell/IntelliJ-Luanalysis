@@ -422,7 +422,7 @@ private fun LuaIndexExpr.infer(context: SearchContext): ITy {
         var parentTy: ITy? = null
         // xxx[yyy] as an array element?
         if (indexExpr.brack) {
-            val tySet = indexExpr.guessParentType(context)
+            val tySet = TyAliasSubstitutor.substitute(indexExpr.guessParentType(context), context)
             var ty: ITy = Ty.VOID
 
             // Type[]

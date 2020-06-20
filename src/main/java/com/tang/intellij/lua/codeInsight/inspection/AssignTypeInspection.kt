@@ -28,34 +28,48 @@ import com.tang.intellij.lua.ty.*
 class AssignTypeInspection : StrictInspection() {
     override fun buildVisitor(myHolder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor =
             object : LuaVisitor() {
-                private fun inspectAssignee(assignee: LuaTypeGuessable, value: ITy, varianceFlags: Int, targetElement: PsiElement?, expressionElement: LuaExpr, context: SearchContext, processProblem: (targetElement: PsiElement?, sourceElement: PsiElement, message: String, highlightType: ProblemHighlightType) -> Unit) {
+                private fun unionAwareProblemProcessor(ownerTy: ITy, targetTy: ITy, processProblem: ProcessProblem): ProcessProblem {
+                    if (ownerTy !is TyUnion) {
+                        return processProblem
+                    }
+
+                    return { targetElement: PsiElement?, sourceElement: PsiElement, message: String, highlightType: ProblemHighlightType ->
+                        val tyMessage = "${message} on union member ${targetTy.displayName}"
+                        processProblem(targetElement, sourceElement, tyMessage, highlightType)
+                    }
+                }
+
+                private fun inspectAssignee(assignee: LuaTypeGuessable, value: ITy, varianceFlags: Int, targetElement: PsiElement?, expressionElement: LuaExpr, context: SearchContext, processProblem: ProcessProblem) {
                     if (assignee is LuaIndexExpr) {
                         // Get owner class
-                        val fieldOwnerType = assignee.guessParentType(context)
+                        val fieldOwnerType = TyAliasSubstitutor.substitute(assignee.guessParentType(context), context)
 
-                        // table<K, V> will always accept nil value assignment i.e. entry removal
-                        val source = if (fieldOwnerType is ITyGeneric && fieldOwnerType.base == Ty.TABLE) {
-                            if (value == Ty.NIL) {
-                                return
-                            }
-                            if (value is TyUnion) value.getChildTypes().fold(Ty.VOID as ITy) { acc, ty ->
-                                if (ty == Ty.NIL) acc else acc.union(ty)
+                        TyUnion.each(fieldOwnerType) { targetTy ->
+                            // table<K, V> will always accept nil value assignment i.e. entry removal
+                            val sourceTy = if (targetTy is ITyGeneric && targetTy.base == Ty.TABLE) {
+                                if (value == Ty.NIL) {
+                                    return
+                                }
+                                if (value is TyUnion) value.getChildTypes().fold(Ty.VOID as ITy) { acc, ty ->
+                                    if (ty == Ty.NIL) acc else acc.union(ty)
+                                } else {
+                                    value
+                                }
+                            } else value
+
+                            val idExpr = assignee.idExpr
+                            val memberName = assignee.name
+
+                            val targetMemberType = if (memberName != null) {
+                                targetTy.guessMemberType(memberName, context)
                             } else {
-                                value
-                            }
-                        } else value
+                                idExpr?.let { targetTy.guessIndexerType(it.guessType(context), context) }
+                            } ?: Ty.NIL
 
-                        val idExpr = assignee.idExpr
-                        val memberName = assignee.name
-
-                        val assigneeMemberType = if (memberName != null) {
-                            fieldOwnerType.guessMemberType(memberName, context)
-                        } else {
-                            idExpr?.let { fieldOwnerType.guessIndexerType(it.guessType(context), context) }
-                        } ?: Ty.NIL
-
-                        val flags = if (fieldOwnerType is ITyArray) varianceFlags or TyVarianceFlags.STRICT_NIL else varianceFlags
-                        ProblemUtil.contravariantOf(assigneeMemberType, source, context, flags, targetElement, expressionElement, processProblem)
+                            val processor = unionAwareProblemProcessor(fieldOwnerType, targetTy, processProblem)
+                            val flags = if (targetTy is ITyArray) varianceFlags or TyVarianceFlags.STRICT_NIL else varianceFlags
+                            ProblemUtil.contravariantOf(targetMemberType, sourceTy, context, flags, targetElement, expressionElement, processor)
+                        }
                     } else {
                         val variableType = assignee.guessType(context)
                         ProblemUtil.contravariantOf(variableType, value, context, varianceFlags, targetElement, expressionElement, processProblem)

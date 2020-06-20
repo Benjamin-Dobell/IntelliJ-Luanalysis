@@ -38,6 +38,8 @@ import com.tang.intellij.lua.search.SearchContext
  */
 
 
+typealias ProcessProblem = (targetElement: PsiElement?, sourceElement: PsiElement, message: String, highlightType: ProblemHighlightType) -> Unit
+
 class Problem (
         val targetElement: PsiElement?,
         val sourceElement: PsiElement,
@@ -308,7 +310,7 @@ object ProblemUtil {
         return isContravariant
     }
 
-    fun contravariantOf(target: ITy, source: ITy, context: SearchContext, varianceFlags: Int, targetElement: PsiElement?, sourceElement: PsiElement, processProblem: (targetElement: PsiElement?, sourceElement: PsiElement, message: String, highlightType: ProblemHighlightType) -> Unit): Boolean {
+    fun contravariantOf(target: ITy, source: ITy, context: SearchContext, varianceFlags: Int, targetElement: PsiElement?, sourceElement: PsiElement, processProblem: ProcessProblem): Boolean {
         val tyProblems = mutableMapOf<String, Collection<Problem>>()
         val resolvedTarget = TyAliasSubstitutor.substitute(target, context)
 

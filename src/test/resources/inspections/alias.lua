@@ -71,3 +71,12 @@ identifiedTuple = {<error descr="Type mismatch. Required: 'IdentifierString' Fou
 
 identifiedTuple = {<error descr="Type mismatch. Required: 'IdentifierNumber' Found: 'IdentifierString'">STRING</error>, <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>}
 identifiedTuple = {NUMBER, 1}
+
+---@type Identifier
+local identifier = identifiedTuple[1]
+
+STRING = <error descr="Type mismatch. Required: '0' Found: 'IdentifierNumber|IdentifierString'">identifiedTuple[1]</error>
+NUMBER = <error descr="Type mismatch. Required: '1' Found: 'IdentifierNumber|IdentifierString'">identifiedTuple[1]</error>
+
+identifiedTuple[1] = <error descr="Type mismatch. Required: '1' Found: 'IdentifierString' on union member { [1]: IdentifierNumber, [2]: number }">STRING</error>
+identifiedTuple[1] = <error descr="Type mismatch. Required: '0' Found: 'IdentifierNumber' on union member { [1]: IdentifierString, [2]: string }">NUMBER</error>

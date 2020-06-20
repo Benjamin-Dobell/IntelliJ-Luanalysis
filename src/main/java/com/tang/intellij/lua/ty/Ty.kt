@@ -244,7 +244,7 @@ fun ITy.findCandidateSignatures(context: SearchContext, call: LuaCallExpr): Coll
     return findCandidateSignatures(context, if(isStaticMethodUsedAsInstanceMethod) n + 1 else n)
 }
 
-fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem: ((targetElement: PsiElement?, sourceElement: PsiElement, message: String, highlightType: ProblemHighlightType) -> Unit)? = null): SignatureMatchResult? {
+fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem: ProcessProblem? = null): SignatureMatchResult? {
     val args = call.argList
     val concreteArgTypes = mutableListOf<MatchFunctionSignatureInspection.ConcreteTypeInfo>()
     var multipleResultsVariadicTypeInfo: MatchFunctionSignatureInspection.ConcreteTypeInfo? = null
