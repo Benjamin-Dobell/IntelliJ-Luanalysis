@@ -104,9 +104,9 @@ public class LuaPsiTreeUtil {
     }
 
     @Nullable
-    private static LuaDocGenericDef findOwnerClassGenericDef(LuaFuncBodyOwner fundBodyOwner, String name) {
-        SearchContext context = SearchContext.Companion.get(fundBodyOwner.getProject());
-        ITy parentType = fundBodyOwner.guessParentType(context);
+    private static LuaDocGenericDef findOwnerClassGenericDef(LuaFuncBodyOwner funcBodyOwner, String name) {
+        SearchContext context = SearchContext.Companion.get(funcBodyOwner.getProject());
+        ITy parentType = funcBodyOwner.guessParentType(context);
 
         if (parentType instanceof ITyClass) {
             ITyClass cls = (ITyClass) parentType;

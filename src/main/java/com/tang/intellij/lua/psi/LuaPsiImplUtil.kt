@@ -21,6 +21,7 @@ package com.tang.intellij.lua.psi
 import com.intellij.extapi.psi.StubBasedPsiElementBase
 import com.intellij.icons.AllIcons
 import com.intellij.navigation.ItemPresentation
+import com.intellij.openapi.util.Computable
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry
 import com.intellij.psi.search.GlobalSearchScope
@@ -33,6 +34,7 @@ import com.tang.intellij.lua.comment.psi.LuaDocTagVararg
 import com.tang.intellij.lua.comment.psi.LuaDocTy
 import com.tang.intellij.lua.comment.psi.api.LuaComment
 import com.tang.intellij.lua.comment.psi.impl.LuaDocTagTypeImpl
+import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.lang.LuaIcons
 import com.tang.intellij.lua.lang.type.LuaString
 import com.tang.intellij.lua.search.SearchContext
@@ -142,8 +144,11 @@ fun guessParentType(classMethodDef: LuaClassMethodDef, context: SearchContext): 
     }*/
 
     val expr = classMethodDef.classMethodName.expr
-    val ty = expr.guessType(context)
-    return TyUnion.getPerfectClass(ty) ?: Ty.UNKNOWN
+    val parentTy = recursionGuard(expr, Computable {
+        val ty = expr.guessType(context)
+        TyUnion.getPerfectClass(ty)
+    })
+    return parentTy ?: Ty.UNKNOWN
 }
 
 fun guessParentType(luaClosureExpr: LuaClosureExpr, context: SearchContext): ITy {
