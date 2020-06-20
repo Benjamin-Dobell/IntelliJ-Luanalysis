@@ -299,12 +299,11 @@ private fun LuaCallExpr.infer(context: SearchContext): ITy {
     TyUnion.each(ty) {
         val substitutedSignature = it.matchSignature(context, this)?.substitutedSignature
 
-        if (substitutedSignature != null) {
-            ret = ret.union(getReturnTy(substitutedSignature, context))
-        } else if (ty is ITyClass) {
-            //constructor : Class table __call
-            ret = ret.union(it)
+        if (substitutedSignature == null) {
+            return Ty.UNKNOWN
         }
+
+        ret = ret.union(getReturnTy(substitutedSignature, context))
     }
 
     // xxx.new()

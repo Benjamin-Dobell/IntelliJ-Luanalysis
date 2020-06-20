@@ -129,7 +129,7 @@ class TestCompletion : TestCompletionBase() {
             --- testAnonymous.lua
 
             local function test()
-                local v = xx()
+                local v = {}
                 v.pp = 123
                 return v
             end
