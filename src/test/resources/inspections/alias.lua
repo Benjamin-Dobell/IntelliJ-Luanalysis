@@ -80,3 +80,40 @@ NUMBER = <error descr="Type mismatch. Required: '1' Found: 'IdentifierNumber|Ide
 
 identifiedTuple[1] = <error descr="Type mismatch. Required: '1' Found: 'IdentifierString' on union member { [1]: IdentifierNumber, [2]: number }">STRING</error>
 identifiedTuple[1] = <error descr="Type mismatch. Required: '0' Found: 'IdentifierNumber' on union member { [1]: IdentifierString, [2]: string }">NUMBER</error>
+
+---@alias NumberArray number[]
+---@alias StringArray string[]
+
+---@type NumberArray
+local aliasedNumberArray
+
+---@type number[]
+local numberArray
+
+---@type StringArray
+local aliasedStringArray
+
+aliasedNumberArray = numberArray
+numberArray = aliasedNumberArray
+
+aliasedNumberArray = {1, 2, 3}
+numberArray = {1, 2, 3}
+
+aliasedNumberArray = <error descr="Type mismatch. Required: 'number[]' Found: 'StringArray'">aliasedStringArray</error>
+aliasedStringArray = <error descr="Type mismatch. Required: 'string[]' Found: 'NumberArray'">aliasedNumberArray</error>
+
+
+---@generic K, V
+---@param tab table<K, V>
+local function acceptArrayAsGenericTable(tab)
+end
+
+---@alias SomeAliasedType number
+---@alias SomeAliasedArrayOfAliasedType SomeAliasedType[]
+
+---@type SomeAliasedArrayOfAliasedType
+local aliasedArrayOfAliasedType
+
+acceptArrayAsGenericTable({1, 2, 3})
+acceptArrayAsGenericTable(aliasedArrayOfAliasedType)
+acceptArrayAsGenericTable(<error descr="Type mismatch. Required: 'table<K, V>' Found: '1'">1</error>)

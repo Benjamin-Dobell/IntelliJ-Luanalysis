@@ -227,7 +227,7 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
         val genericAnalyzer = GenericAnalyzer(sig.tyParameters, context)
 
         var processedIndex = -1
-        sig.processArgs { index, param ->
+        sig.processParameters { index, param ->
             val arg = list.getOrNull(index)
             if (arg != null) {
                 genericAnalyzer.analyze(arg, param.ty)
@@ -295,8 +295,8 @@ private fun LuaCallExpr.infer(context: SearchContext): ITy {
     }
 
     var ret: ITy = Ty.VOID
-    val ty = infer(expr, context)//expr.guessType(context)
-    TyUnion.each(ty) {
+    val ty = infer(expr, context)
+    Ty.eachResolved(ty, context) {
         val substitutedSignature = it.matchSignature(context, this)?.substitutedSignature
 
         if (substitutedSignature == null) {
@@ -418,26 +418,6 @@ fun LuaLiteralExpr.infer(): ITy {
 private fun LuaIndexExpr.infer(context: SearchContext): ITy {
     val retTy = recursionGuard(this, Computable {
         val indexExpr = this
-        var parentTy: ITy? = null
-        // xxx[yyy] as an array element?
-        if (indexExpr.brack) {
-            val tySet = TyAliasSubstitutor.substitute(indexExpr.guessParentType(context), context)
-            var ty: ITy = Ty.VOID
-
-            // Type[]
-            TyUnion.each(tySet) {
-                if (it is ITyArray) ty = ty.union(it.base)
-            }
-            if (!Ty.isInvalid(ty) && ty !is TyUnknown) return@Computable ty
-
-            // table<number, Type>
-            TyUnion.each(tySet) {
-                if (it is ITyGeneric) ty = ty.union(it.getParamTy(1))
-            }
-            if (!Ty.isInvalid(ty) && ty !is TyUnknown) return@Computable ty
-
-            parentTy = tySet
-        }
 
         //from @type annotation
         val docTy = indexExpr.docTy
@@ -454,9 +434,9 @@ private fun LuaIndexExpr.infer(context: SearchContext): ITy {
             }
         }
 
-        //from other class member
-        val prefixType = parentTy ?: indexExpr.guessParentType(context)
-        prefixType.each { ty ->
+        val prefixType = indexExpr.guessParentType(context)
+
+        Ty.eachResolved(prefixType, context) { ty ->
             result = result.union(guessFieldType(indexExpr, ty, context))
         }
 

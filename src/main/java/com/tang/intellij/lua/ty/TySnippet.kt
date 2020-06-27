@@ -18,10 +18,15 @@ package com.tang.intellij.lua.ty
 
 import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
+import com.tang.intellij.lua.search.SearchContext
 
 
 class TySnippet(val content: String) : Ty(TyKind.Snippet) {
     override fun toString() = content
+
+    override fun equals(other: ITy, context: SearchContext): Boolean {
+        return false
+    }
 }
 
 object TySnippetSerializer : TySerializer<TySnippet>() {

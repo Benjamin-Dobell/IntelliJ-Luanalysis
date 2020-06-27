@@ -89,7 +89,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
             return processClassKey(null, className, "*$fieldName", context, processor, deep)
         }
 
-        fun findMember(type: ITyClass, fieldName: String, context: SearchContext, searchIndexers: Boolean = true): LuaClassMember? {
+        fun findMember(type: ITyClass, fieldName: String, context: SearchContext, searchIndexers: Boolean = true, deep: Boolean = true): LuaClassMember? {
             var perfect: LuaClassMember? = null
             var tagField: LuaDocTagField? = null
             var tableField: LuaTableField? = null
@@ -109,14 +109,14 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
                         true
                     }
                 }
-            })
+            }, deep)
 
             if (tagField != null) return tagField
             if (tableField != null) return tableField
             if (perfect != null) return perfect
 
             return if (searchIndexers) {
-                findIndexer(type, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, fieldName), context, false)
+                findIndexer(type, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, fieldName), context, false, deep)
             } else null
         }
 
@@ -133,7 +133,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
         }
 
         fun processAllIndexers(type: ITyClass, context: SearchContext, processor: Processor<LuaClassMember>, deep: Boolean = true): Boolean {
-            return processClassKey(type, "[]", context, processor)
+            return processClassKey(type, "[]", context, processor, deep)
         }
 
         fun processIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, processor: Processor<LuaClassMember>, deep: Boolean = true): Boolean {
@@ -152,7 +152,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
             var inexactIndexerTy: ITy? = null
 
             processAllIndexers(type, context, Processor {
-                val candidateIndexerTy = it.indexType?.getType()
+                val candidateIndexerTy = it.guessIndexType(context)
 
                 if (candidateIndexerTy?.contravariantOf(indexTy, context, TyVarianceFlags.STRICT_UNKNOWN) == true) {
                     if (inexactIndexerTy?.contravariantOf(candidateIndexerTy, context, TyVarianceFlags.STRICT_UNKNOWN) != false) {
@@ -164,22 +164,24 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
             }, deep)
 
             return inexactIndexerTy?.let {
-                processClassKey(type, "*[${it.displayName}]", context, processor)
+                processClassKey(type, "*[${it.displayName}]", context, processor, deep)
             } ?: false
         }
 
-        fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, searchMembers: Boolean = true): LuaClassMember? {
+        fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, searchMembers: Boolean = true, deep: Boolean = true): LuaClassMember? {
             if (searchMembers && indexTy is TyPrimitiveLiteral && indexTy.primitiveKind == TyPrimitiveKind.String) {
-                findMember(type, indexTy.value, context, false)?.let {
+                findMember(type, indexTy.value, context, false, deep)?.let {
                     return it
                 }
             }
 
             var target: LuaClassMember? = null
+
             processIndexer(type, indexTy, context, Processor {
                 target = it
                 false
-            })
+            }, deep)
+
             return target
         }
 

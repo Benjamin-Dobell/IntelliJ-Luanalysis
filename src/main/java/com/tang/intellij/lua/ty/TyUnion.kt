@@ -164,6 +164,42 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
         childSet.forEach { it.accept(visitor) }
     }
 
+    override fun equals(other: ITy, context: SearchContext): Boolean {
+        val resolvedTy = childSet.reduce { resolved, ty ->
+            resolved.union(Ty.resolve(ty, context))
+        }
+
+        val otherResolvedTy = Ty.resolve(other, context).let {
+            if (it is TyUnion) {
+                it.childSet.reduce { resolved, ty ->
+                    resolved.union(Ty.resolve(ty, context))
+                }
+            } else it
+        }
+
+        val resolvedSet = if (resolvedTy is TyUnion) {
+            resolvedTy.childSet
+        } else setOf(resolvedTy)
+
+        val resolvedOtherSet = if (otherResolvedTy is TyUnion) {
+            otherResolvedTy.childSet
+        } else setOf(otherResolvedTy)
+
+        if (resolvedSet.size == resolvedOtherSet.size) {
+            val allMembersMatch = resolvedSet.all { ty ->
+                resolvedOtherSet.contains(ty) || resolvedOtherSet.any { otherTy ->
+                    ty.equals(otherTy, context)
+                }
+            }
+
+            if (allMembersMatch) {
+                return true
+            }
+        }
+
+        return false
+    }
+
     override fun equals(other: Any?): Boolean {
         return other is TyUnion && other.hashCode() == hashCode()
     }
@@ -175,6 +211,19 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
     }
 
     companion object {
+        fun isUnion(ty: ITy, context: SearchContext): Boolean {
+            if (ty is TyUnion) {
+                return true
+            }
+
+            if (ty is TyAlias || ty is TyClass) {
+                val resolvedTy = Ty.resolve(ty, context)
+                return resolvedTy is TyUnion
+            }
+
+            return false
+        }
+
         fun <T : ITy> find(ty: ITy, clazz: Class<T>): T? {
             if (clazz.isInstance(ty))
                 return clazz.cast(ty)
@@ -188,27 +237,12 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
 
         inline fun each(ty: ITy, fn: (ITy) -> Unit) {
             if (ty is TyUnion) {
-                for (child in ty.getChildTypes().toTypedArray()) {
+                for (child in ty.getChildTypes()) {
                     fn(child)
                 }
-            } else if (ty == Ty.BOOLEAN) {
-                fn(Ty.TRUE)
-                fn(Ty.FALSE)
             } else {
                 fn(ty)
             }
-        }
-
-        // used by ver.2017
-        @Suppress("unused")
-        fun eachPerfect(ty: ITy, process: (ITy) -> Boolean) {
-            if (ty is TyUnion) {
-                val list = ty.childSet.sorted()
-                for (iTy in list) {
-                    if (!process(iTy))
-                        break
-                }
-            } else process(ty)
         }
 
         fun union(t1: ITy, t2: ITy): ITy {

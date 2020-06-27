@@ -40,8 +40,8 @@ interface ITyClass : ITy {
     var params: Array<TyParameter>?
     var signatures: Array<IFunSignature>?
 
-    fun processAlias(processor: Processor<String>): Boolean
     fun lazyInit(searchContext: SearchContext)
+    fun processAlias(processor: Processor<String>): Boolean
 
     fun recoverAlias(context: SearchContext, aliasSubstitutor: TyAliasSubstitutor): ITy {
         return this
@@ -77,17 +77,53 @@ abstract class TyClass(override val className: String,
 
     private var _lazyInitialized: Boolean = false
 
-    override fun equals(other: ITy, context: SearchContext): Boolean {
-        lazyInit(context)
-        return super<Ty>.equals(other, context)
-    }
-
     override fun equals(other: Any?): Boolean {
         return other is ITyClass && other.className == className && other.flags == flags
     }
 
+    override fun equals(other: ITy, context: SearchContext): Boolean {
+        if (this === other) {
+            return true
+        }
+
+        Ty.resolve(this, context).let {
+            if (it !== this) {
+                return it.equals(other, context)
+            }
+        }
+
+        val resolvedOther = Ty.resolve(other, context)
+
+        if (resolvedOther is ITyClass) {
+            lazyInit(context)
+            resolvedOther.lazyInit(context)
+
+            if (resolvedOther.className == className && resolvedOther.flags == flags) {
+                return true
+            }
+        }
+
+        if (isShape(context) && resolvedOther.isShape(context)) {
+            return contravariantOf(resolvedOther, context, 0)
+                    && resolvedOther.contravariantOf(this, context, 0)
+        }
+
+        return false
+    }
+
     override fun hashCode(): Int {
         return className.hashCode()
+    }
+
+    override fun isShape(searchContext: SearchContext): Boolean {
+        val resolved = Ty.resolve(this, searchContext)
+
+        if (resolved !== this) {
+            return resolved.isShape(searchContext)
+        }
+
+        lazyInit(searchContext)
+        return super<Ty>.isShape(searchContext)
     }
 
     override fun processAlias(processor: Processor<String>): Boolean {
@@ -197,7 +233,7 @@ abstract class TyClass(override val className: String,
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
         lazyInit(context)
 
-        val resolved = TyAliasSubstitutor.substitute(this, context)
+        val resolved = Ty.resolve(this, context)
 
         if (resolved !== this) {
             return resolved.contravariantOf(other, context, flags)
@@ -377,7 +413,7 @@ fun getGlobalTypeName(nameExpr: LuaNameExpr): String {
 
 class TyTable(val table: LuaTableExpr) : TyClass(getTableTypeName(table)) {
     init {
-        this.flags = TyFlags.ANONYMOUS or TyFlags.ANONYMOUS_TABLE
+        this.flags = TyFlags.ANONYMOUS or TyFlags.ANONYMOUS_TABLE or TyFlags.SHAPE
     }
 
     override fun toString(): String = displayName
@@ -419,7 +455,7 @@ class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table)
         var narrowestIndexTy: ITy? = null
 
         table.tableFieldList.forEach {
-            val candidateIndexerTy = it.indexType?.getType()
+            val candidateIndexerTy = it.guessIndexType(searchContext)
 
             if (candidateIndexerTy?.contravariantOf(indexTy, searchContext, TyVarianceFlags.STRICT_UNKNOWN) == true) {
                 if (narrowestIndexTy?.contravariantOf(candidateIndexerTy, searchContext, TyVarianceFlags.STRICT_UNKNOWN) != false) {

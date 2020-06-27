@@ -23,13 +23,13 @@ import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.ty.IFunSignature
 import com.tang.intellij.lua.ty.hasVarargs
-import com.tang.intellij.lua.ty.processArgs
+import com.tang.intellij.lua.ty.processParameters
 
 open class SignatureInsertHandler(val sig: IFunSignature, private val isColonStyle: Boolean = false) : ArgsInsertHandler() {
 
     private val myParams: Array<LuaParamInfo> by lazy {
         val list = mutableListOf<LuaParamInfo>()
-        sig.processArgs(null, isColonStyle) { _, param ->
+        sig.processParameters(null, isColonStyle) { _, param ->
             list.add(param)
         }
         list.toTypedArray()

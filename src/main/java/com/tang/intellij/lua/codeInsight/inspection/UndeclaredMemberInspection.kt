@@ -23,7 +23,7 @@ import com.tang.intellij.lua.psi.LuaIndexExpr
 import com.tang.intellij.lua.psi.LuaVisitor
 import com.tang.intellij.lua.psi.prefixExpr
 import com.tang.intellij.lua.search.SearchContext
-import com.tang.intellij.lua.ty.TyAliasSubstitutor
+import com.tang.intellij.lua.ty.Ty
 import com.tang.intellij.lua.ty.TySnippet
 import com.tang.intellij.lua.ty.TyUnion
 
@@ -32,10 +32,10 @@ class UndeclaredMemberInspection : StrictInspection() {
             object : LuaVisitor() {
                 override fun visitIndexExpr(o: LuaIndexExpr) {
                     val context = SearchContext.get(o)
-                    val prefix = TyAliasSubstitutor.substitute(o.prefixExpr.guessType(context), context)
+                    val prefix = o.prefixExpr.guessType(context)
                     val memberName = o.name
 
-                    TyUnion.each(prefix) { prefixTy ->
+                    Ty.eachResolved(prefix, context) { prefixTy ->
                         if (memberName != null) {
                             if (prefixTy.guessMemberType(memberName, context) == null) {
                                 myHolder.registerProblem(o, "No such member '%s' found on type '%s'".format(memberName, prefixTy))

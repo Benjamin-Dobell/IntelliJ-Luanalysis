@@ -20,6 +20,7 @@ import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.Constants
+import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.ITy
 import com.tang.intellij.lua.ty.ITySubstitutor
 import com.tang.intellij.lua.ty.Ty
@@ -33,6 +34,10 @@ class LuaParamInfo(var name: String = "", var ty: ITy = Ty.UNKNOWN) {
     override fun equals(other: Any?): Boolean {
         //only check ty
         return other is LuaParamInfo && other.ty == ty
+    }
+
+    fun equals(other: LuaParamInfo, context: SearchContext): Boolean {
+        return ty.equals(other.ty, context)
     }
 
     override fun hashCode(): Int {

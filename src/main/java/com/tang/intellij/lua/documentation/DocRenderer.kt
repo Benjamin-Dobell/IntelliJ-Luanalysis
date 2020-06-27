@@ -20,6 +20,7 @@ import com.intellij.codeInsight.documentation.DocumentationManagerUtil
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.comment.psi.api.LuaComment
+import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
 
 inline fun StringBuilder.wrap(prefix: String, postfix: String, crossinline body: () -> Unit) {
@@ -171,7 +172,7 @@ fun renderClassDef(sb: StringBuilder, tag: LuaDocTagClass, tyRenderer: ITyRender
 }
 
 private fun renderFieldDef(sb: StringBuilder, tagField: LuaDocTagField, tyRenderer: ITyRenderer) {
-    val name = tagField.name ?: "[${tagField.indexType?.getType() ?: Ty.UNKNOWN}]"
+    val name = tagField.name ?: "[${tagField.guessIndexType(SearchContext.get(tagField.project))}]"
     sb.append("${name}: ")
     renderTypeUnion(null, null, sb, tagField.valueType, tyRenderer)
     renderCommentString(" - ", null, sb, tagField.commentString)

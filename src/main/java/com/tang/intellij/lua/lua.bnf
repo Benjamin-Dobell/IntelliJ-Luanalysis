@@ -420,6 +420,7 @@ left indexExpr ::= '[' expr ']' | '.' ID | ':' ID {
         getIdExpr
         toString
 
+		guessIndexType
         guessParentType
         isDeprecated
 

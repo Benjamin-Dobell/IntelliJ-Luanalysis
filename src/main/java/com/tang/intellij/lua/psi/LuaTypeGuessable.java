@@ -26,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface LuaTypeGuessable extends LuaPsiElement {
     @NotNull
-    default ITy guessType(SearchContext context) {
+    default ITy guessType(@NotNull SearchContext context) {
         return SearchContext.Companion.infer(this, context);
     }
 }

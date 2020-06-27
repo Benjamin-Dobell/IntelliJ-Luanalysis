@@ -73,8 +73,8 @@ class LuaParameterHintsProvider : InlayParameterHintsProvider {
 
             val sig = ty.matchSignature(searchContext, callExpr)?.signature
 
-            sig?.processArgs(null, callExpr.isMethodColonCall) { index, paramInfo ->
-                val expr = exprList.getOrNull(index) ?: return@processArgs false
+            sig?.processParameters(null, callExpr.isMethodColonCall) { index, paramInfo ->
+                val expr = exprList.getOrNull(index) ?: return@processParameters false
                 val show =
                 if (index == 0 && isInstanceMethodUsedAsStaticMethod) {
                     true

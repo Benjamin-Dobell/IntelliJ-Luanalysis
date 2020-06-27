@@ -85,7 +85,7 @@ class LuaIndexExprType : LuaStubElementType<LuaIndexExprStub, LuaIndexExpr>("IND
         flags = BitUtil.set(flags, LuaIndexExprType.FLAG_ASSIGN, stat != null)
 
         val idTy = indexExpr.idExpr?.let {
-            SearchContext.withStub(indexExpr.project, indexExpr.containingFile, Ty.UNKNOWN) { context ->
+            SearchContext.withStub(indexExpr.project, indexExpr.containingFile, null) { context ->
                 it.guessType(context)
             }
         }
@@ -126,6 +126,7 @@ class LuaIndexExprType : LuaStubElementType<LuaIndexExprStub, LuaIndexExpr>("IND
         val fieldName = indexStub.name
         val idTy = indexStub.idTy
         val classNames = indexStub.classNames
+
         if (indexStub.isAssign && classNames.isNotEmpty()) {
             if (fieldName != null) {
                 classNames.forEach {

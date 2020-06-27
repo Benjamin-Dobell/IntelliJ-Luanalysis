@@ -17,6 +17,7 @@
 package com.tang.intellij.lua.ty
 
 import com.tang.intellij.lua.Constants
+import com.tang.intellij.lua.search.SearchContext
 
 interface ITyRenderer {
     fun render(ty: ITy): String
@@ -157,9 +158,10 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
     open fun renderClass(clazz: ITyClass): String {
         return when {
             clazz is TyDocTable -> {
+                val context = SearchContext.get(clazz.table.project)
                 val list = mutableListOf<String>()
                 clazz.table.tableFieldList.forEach {
-                    val key = it.indexType?.getType()?.let { indexTy -> "[${render(indexTy)}]"} ?: it.name
+                    val key = it.name ?: "[${render(it.guessIndexType(context) ?: Ty.VOID)}]"
                     it.valueType?.let { ty -> list.add("${key}: ${render(ty.getType())}") }
                 }
                 "{ ${list.joinToString(", ")} }"

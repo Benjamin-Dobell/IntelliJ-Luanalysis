@@ -98,6 +98,18 @@ class TyMultipleResults(val list: List<ITy>, val variadic: Boolean) : Ty(TyKind.
         return super.equals(other)
     }
 
+    override fun equals(other: ITy, context: SearchContext): Boolean {
+        if (this === other) {
+            return true
+        }
+
+        val resolvedOther = Ty.resolve(other, context)
+
+        return resolvedOther is TyMultipleResults
+                && resolvedOther.variadic == variadic
+                && resolvedOther.list.size == list.size
+                && resolvedOther.list.asSequence().zip(list.asSequence()).all { (otherTy, ty) -> otherTy.equals(ty, context) }
+    }
 
     companion object {
         fun flatten(ty: ITy): ITy {

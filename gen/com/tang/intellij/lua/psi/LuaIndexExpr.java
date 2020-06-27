@@ -40,6 +40,9 @@ public interface LuaIndexExpr extends LuaExpr, PsiNameIdentifierOwner, LuaClassM
   //matching toString(LuaIndexExpr, ...)
   //methods are not found in LuaPsiImplUtilKt
 
+  @Nullable
+  ITy guessIndexType(@NotNull SearchContext context);
+
   @NotNull
   ITy guessParentType(@NotNull SearchContext context);
 

@@ -73,3 +73,42 @@ infiniteGenericAlias1 = infiniteGenericAlias2
 infiniteGenericAlias2 = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>
 infiniteGenericAlias2 = 'string'
 infiniteGenericAlias2 = infiniteGenericAlias1
+
+
+---@alias JSONObject table<string, JSONValue>
+---@alias JSONArray JSONValue[]
+---@alias JSONContainer JSONObject | JSONArray
+---@alias JSONValue JSONContainer | number | string | boolean | nil
+
+---@type JSONValue
+local value
+
+value = 1
+value = true
+value = "a string"
+value = {}
+value = {1, 2, 3}
+value = {
+    a = 1,
+    b = 2,
+    c = 3
+}
+value = nil
+value = {
+    a = {
+        b = 1,
+        c = {
+            1,
+            2,
+            {
+                d = false,
+                e = nil
+            }
+        }
+    }
+}
+value = <error descr="Type mismatch. Required: 'JSONValue[]|boolean|nil|number|string|table<string, JSONValue>' Found: 'fun(): void'">function() end</error>
+value = <error descr="Type mismatch. Required: 'JSONValue[]|boolean|nil|number|string|table<string, JSONValue>' Found: 'thread'">coroutine.create(function() end)</error>
+value = <error descr="Type mismatch. Required: 'JSONValue[]|boolean|nil|number|string|table<string, JSONValue>' Found: 'table'">{
+    [3] = "bad"
+}</error>

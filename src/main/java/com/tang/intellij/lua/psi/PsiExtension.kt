@@ -19,7 +19,6 @@ package com.tang.intellij.lua.psi
 import com.intellij.extapi.psi.StubBasedPsiElementBase
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
-import com.intellij.psi.PsiElement
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
@@ -81,7 +80,7 @@ private fun LuaExpr.shouldBeInternal(context: SearchContext): ITy {
             val idx = p1.getIndexFor(this)
             val fTy = infer(p2.expr, context)
             var ret: ITy = Ty.VOID
-            fTy.each {
+            Ty.eachResolved(fTy, context) {
                 if (it is ITyFunction) {
                     var sig = it.matchSignature(context, p2)?.signature ?: it.mainSignature
                     val substitutor = p2.createSubstitutor(sig, context)

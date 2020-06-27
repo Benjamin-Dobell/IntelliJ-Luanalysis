@@ -32,19 +32,21 @@ interface IFunSignature {
     val paramSignature: String
     val tyParameters: Array<TyParameter>?
     val varargTy: ITy?
+
     fun substitute(substitutor: ITySubstitutor): IFunSignature
+    fun equals(other: IFunSignature, context: SearchContext): Boolean
     fun contravariantOf(other: IFunSignature, context: SearchContext, flags: Int): Boolean
 }
 
-fun IFunSignature.processArgs(callExpr: LuaCallExpr, processor: (index:Int, param: LuaParamInfo) -> Boolean) {
+fun IFunSignature.processParameters(callExpr: LuaCallExpr, processor: (index:Int, param: LuaParamInfo) -> Boolean) {
     val expr = callExpr.expr
     val thisTy = if (expr is LuaIndexExpr) {
         expr.guessType(SearchContext.get(expr.project))
     } else null
-    processArgs(thisTy, callExpr.isMethodColonCall, processor)
+    processParameters(thisTy, callExpr.isMethodColonCall, processor)
 }
 
-fun IFunSignature.processArgs(thisTy: ITy?, colonStyle: Boolean, processor: (index:Int, param: LuaParamInfo) -> Boolean) {
+fun IFunSignature.processParameters(thisTy: ITy?, colonStyle: Boolean, processor: (index:Int, param: LuaParamInfo) -> Boolean) {
     var index = 0
     var pIndex = 0
     if (colonStyle && !colonCall) {
@@ -61,7 +63,7 @@ fun IFunSignature.processArgs(thisTy: ITy?, colonStyle: Boolean, processor: (ind
     }
 }
 
-fun IFunSignature.processArgs(processor: (index:Int, param: LuaParamInfo) -> Boolean) {
+fun IFunSignature.processParameters(processor: (index:Int, param: LuaParamInfo) -> Boolean) {
     var index = 0
     if (colonCall)
         index++
@@ -121,6 +123,48 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
                     && varargTy == other.varargTy
         }
         return false
+    }
+
+    override fun equals(other: IFunSignature, context: SearchContext): Boolean {
+        if (colonCall != other.colonCall) {
+            return false
+        }
+
+        val returnTyEqual = returnTy?.let {
+            other.returnTy?.equals(it, context) ?: false
+        } ?: (other.returnTy === null)
+
+        if (!returnTyEqual) {
+            return false
+        }
+
+        val varargTyEqual = varargTy?.let {
+            other.varargTy?.equals(it, context) ?: false
+        } ?: (other.varargTy === null)
+
+        if (!varargTyEqual) {
+            return false
+        }
+
+        val paramsEqual = params?.let { params ->
+            other.params?.let { otherParams ->
+                params.size == otherParams.size && otherParams.asSequence().zip(params.asSequence()).all { (param, otherParam) ->
+                    param.equals(otherParam, context)
+                }
+            } ?: false
+        } ?: (other.params == null)
+
+        if (!paramsEqual) {
+            return false
+        }
+
+        return tyParameters?.let { params ->
+            other.tyParameters?.let { otherParams ->
+                params.size == otherParams.size && otherParams.asSequence().zip(params.asSequence()).all { (param, otherParam) ->
+                    param.equals(otherParam, context)
+                }
+            } ?: false
+        } ?: (other.tyParameters == null)
     }
 
     override fun hashCode(): Int {
@@ -264,6 +308,26 @@ abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
                 return false
            return signatures.indices.none { signatures[it] != other.signatures.getOrNull(it) }
         }
+        return false
+    }
+
+    override fun equals(other: ITy, context: SearchContext): Boolean {
+        if (this === other) {
+            return true
+        }
+
+        val resolvedOther = Ty.resolve(other, context)
+
+        if (resolvedOther is ITyFunction) {
+            if (!mainSignature.equals(resolvedOther.mainSignature, context))
+                return false
+
+            return signatures.size == resolvedOther.signatures.size
+                    && signatures.asSequence().zip(resolvedOther.signatures.asSequence()).all { (signature, otherSignature) ->
+                signature.equals(otherSignature, context)
+            }
+        }
+
         return false
     }
 

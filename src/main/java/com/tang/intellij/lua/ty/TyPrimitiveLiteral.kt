@@ -23,15 +23,6 @@ import java.util.concurrent.ConcurrentHashMap
 
 
 class TyPrimitiveLiteral private constructor(override val primitiveKind: TyPrimitiveKind, val value: String) : Ty(TyKind.PrimitiveLiteral), ITyPrimitive {
-    companion object {
-        private val primitiveLiterals = ConcurrentHashMap<String, TyPrimitiveLiteral>()
-
-        fun getTy(primitiveKind: TyPrimitiveKind, value: String): TyPrimitiveLiteral {
-            val id = "$primitiveKind:$value"
-            return primitiveLiterals.getOrPut(id, { TyPrimitiveLiteral(primitiveKind, value) })
-        }
-    }
-
     override val displayName: String by lazy { if (primitiveKind == TyPrimitiveKind.String) "\"${value.replace("\"", "\\\"")}\"" else value }
 
     // Ty.TRUE/Ty.FALSE are TyPrimitiveLiteral, to avoid circular references (a null booleanType) we make this lazy.
@@ -58,6 +49,15 @@ class TyPrimitiveLiteral private constructor(override val primitiveKind: TyPrimi
         return other is TyPrimitiveLiteral && primitiveKind == other.primitiveKind && value.equals(other.value)
     }
 
+    override fun equals(other: ITy, context: SearchContext): Boolean {
+        if (this === other) {
+            return true
+        }
+
+        val resolvedOther = Ty.resolve(other, context)
+        return resolvedOther is TyPrimitiveLiteral && primitiveKind == resolvedOther.primitiveKind && value.equals(resolvedOther.value)
+    }
+
     override fun hashCode(): Int {
         return primitiveKind.hashCode() * 31 * value.hashCode()
     }
@@ -68,6 +68,15 @@ class TyPrimitiveLiteral private constructor(override val primitiveKind: TyPrimi
 
     override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext): ITy? {
         return primitiveType.guessIndexerType(indexTy, searchContext)
+    }
+
+    companion object {
+        private val primitiveLiterals = ConcurrentHashMap<String, TyPrimitiveLiteral>()
+
+        fun getTy(primitiveKind: TyPrimitiveKind, value: String): TyPrimitiveLiteral {
+            val id = "$primitiveKind:$value"
+            return primitiveLiterals.getOrPut(id, { TyPrimitiveLiteral(primitiveKind, value) })
+        }
     }
 }
 

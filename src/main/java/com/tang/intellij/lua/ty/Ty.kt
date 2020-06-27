@@ -18,7 +18,6 @@ package com.tang.intellij.lua.ty
 
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
-import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.Processor
@@ -31,6 +30,7 @@ import com.tang.intellij.lua.psi.LuaCallExpr
 import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.psi.LuaTableExpr
 import com.tang.intellij.lua.psi.argList
+import com.tang.intellij.lua.psi.search.LuaShortNamesManager
 import com.tang.intellij.lua.search.SearchContext
 
 enum class TyKind {
@@ -85,25 +85,7 @@ interface ITy : Comparable<ITy> {
 
     val booleanType: ITy
 
-    fun equals(other: ITy, context: SearchContext): Boolean {
-        if (this === other) {
-            return true
-        }
-
-        val resolved = TyAliasSubstitutor.substitute(this, context)
-
-        if (resolved !== this) {
-            return resolved.equals(other, context)
-        }
-
-        val resolvedOther = TyAliasSubstitutor.substitute(other, context)
-
-        if (resolvedOther is ITyClass) {
-            resolvedOther.lazyInit(context)
-        }
-
-        return equals(resolvedOther)
-    }
+    fun equals(other: ITy, context: SearchContext): Boolean
 
     fun union(ty: ITy): ITy
 
@@ -121,10 +103,6 @@ interface ITy : Comparable<ITy> {
 
     fun substitute(substitutor: ITySubstitutor): ITy
 
-    fun each(fn: (ITy) -> Unit) {
-        TyUnion.each(this, fn)
-    }
-
     fun eachTopClass(fn: Processor<ITy>)
 
     fun accept(visitor: ITyVisitor)
@@ -134,6 +112,10 @@ interface ITy : Comparable<ITy> {
     fun findMember(name: String, searchContext: SearchContext): LuaClassMember?
     fun findIndexer(indexTy: ITy, searchContext: SearchContext): LuaClassMember?
 
+    fun isShape(searchContext: SearchContext): Boolean {
+        return flags and TyFlags.SHAPE != 0
+    }
+
     fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
         return findMember(name, searchContext)?.guessType(searchContext)?.let {
             val substitutor = getMemberSubstitutor(searchContext)
@@ -142,10 +124,9 @@ interface ITy : Comparable<ITy> {
     }
 
     fun guessIndexerType(indexTy: ITy, searchContext: SearchContext): ITy? {
-        val resolvedIndexTy = TyAliasSubstitutor.substitute(indexTy, searchContext)
         var ty: ITy? = null
 
-        resolvedIndexTy.each {
+        Ty.eachResolved(indexTy, searchContext) {
             val valueTy = if (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String) {
                 guessMemberType(it.value, searchContext)
             } else {
@@ -276,15 +257,15 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
     val candidates = findCandidateSignatures(context, call)
 
     candidates.forEach {
-        var nParams = 0
+        var parameterCount = 0
         var candidateFailed = false
         val signatureProblems = if (problems != null) mutableListOf<Problem>() else null
 
         val substitutor = call.createSubstitutor(it, context)
         val signature = it.substitute(substitutor)
 
-        signature.processArgs(call) { i, pi ->
-            nParams = i + 1
+        signature.processParameters(call) { i, pi ->
+            parameterCount = i + 1
             val typeInfo = concreteArgTypes.getOrNull(i) ?: variadicArg
 
             if (typeInfo == null || typeInfo == variadicArg) {
@@ -301,7 +282,7 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                 signatureProblems?.add(Problem(null, problemElement, "Missing argument: ${pi.name}: ${pi.ty}"))
 
                 if (typeInfo == null) {
-                    return@processArgs true
+                    return@processParameters true
                 }
             }
 
@@ -334,9 +315,9 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
 
         val varargParamTy = signature.varargTy
 
-        if (nParams < concreteArgTypes.size) {
+        if (parameterCount < concreteArgTypes.size) {
             if (varargParamTy != null) {
-                for (i in nParams until args.size) {
+                for (i in parameterCount until args.size) {
                     val argType = concreteArgTypes.get(i).ty
                     val argExpr = args.get(i)
                     val varianceFlags = if (argExpr is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
@@ -354,14 +335,14 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                     }
                 }
             } else {
-                if (nParams < args.size) {
-                    for (i in nParams until args.size) {
+                if (parameterCount < args.size) {
+                    for (i in parameterCount until args.size) {
                         candidateFailed = true
                         signatureProblems?.add(Problem(null, args[i], "Too many arguments."))
                     }
                 } else {
                     // Last argument is TyMultipleResults, just a weak warning.
-                    val excess = nParams - args.size
+                    val excess = parameterCount - args.size
                     val message = if (excess == 1) "1 result is an excess argument." else "${excess} results are excess arguments."
                     signatureProblems?.add(Problem(null, args.last(), message, ProblemHighlightType.WEAK_WARNING))
                 }
@@ -423,7 +404,8 @@ abstract class Ty(override val kind: TyKind) : ITy {
     override val displayName: String
         get() = TyRenderer.SIMPLE.render(this)
 
-    override val booleanType: ITy = Ty.TRUE
+    // Lazy initialization because Ty.TRUE is itself a Ty that needs to be instantiated and refers to itself.
+    override val booleanType: ITy by lazy { Ty.TRUE }
 
     fun addFlag(flag: Int) {
         flags = flags or flag
@@ -466,7 +448,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
             return true
         }
 
-        val resolvedOther = TyAliasSubstitutor.substitute(other, context)
+        val resolvedOther = Ty.resolve(other, context)
 
         if (resolvedOther !== other) {
             return contravariantOf(resolvedOther, context, flags)
@@ -482,9 +464,9 @@ abstract class Ty(override val kind: TyKind) : ITy {
             return true
         }
 
-        if (this.flags and TyFlags.SHAPE != 0 || this is TyTable) {
+        if (isShape(context)) {
             return processMembers(context, { _, classMember ->
-                val indexTy = classMember.indexType?.getType()
+                val indexTy = classMember.guessIndexType(context)
 
                 val memberTy = if (indexTy != null) {
                     guessIndexerType(indexTy, context)
@@ -571,16 +553,19 @@ abstract class Ty(override val kind: TyKind) : ITy {
 
     companion object {
 
-        val UNKNOWN = TyUnknown()
-        val VOID = TyVoid()
-        val BOOLEAN = TyPrimitive(TyPrimitiveKind.Boolean, Constants.WORD_BOOLEAN)
+        // Defined first because each Ty implements booleanType, which returns a reference to these constants.
         val TRUE = TyPrimitiveLiteral.getTy(TyPrimitiveKind.Boolean, Constants.WORD_TRUE)
         val FALSE = TyPrimitiveLiteral.getTy(TyPrimitiveKind.Boolean, Constants.WORD_FALSE)
-        val STRING = TyPrimitiveClass(TyPrimitiveKind.String, Constants.WORD_STRING)
-        val NUMBER = TyPrimitive(TyPrimitiveKind.Number, Constants.WORD_NUMBER)
-        val TABLE = TyPrimitive(TyPrimitiveKind.Table, Constants.WORD_TABLE)
-        val FUNCTION = TyPrimitive(TyPrimitiveKind.Function, Constants.WORD_FUNCTION)
+
+        val UNKNOWN = TyUnknown()
+        val VOID = TyVoid()
         val NIL = TyNil()
+
+        val BOOLEAN = TyPrimitive(TyPrimitiveKind.Boolean, Constants.WORD_BOOLEAN)
+        val FUNCTION = TyPrimitive(TyPrimitiveKind.Function, Constants.WORD_FUNCTION)
+        val NUMBER = TyPrimitive(TyPrimitiveKind.Number, Constants.WORD_NUMBER)
+        val STRING = TyPrimitiveClass(TyPrimitiveKind.String, Constants.WORD_STRING)
+        val TABLE = TyPrimitive(TyPrimitiveKind.Table, Constants.WORD_TABLE)
 
         private val serializerMap = mapOf<TyKind, ITySerializer>(
                 TyKind.Array to TyArraySerializer,
@@ -672,6 +657,81 @@ abstract class Ty(override val kind: TyKind) : ITy {
             }
             return true
         }
+
+        inline fun eachResolved(ty: ITy, context: SearchContext, fn: (ITy) -> Unit) {
+            val visitedTys = mutableSetOf<ITy>()
+            val memberTys = mutableListOf(ty)
+
+            while (memberTys.isNotEmpty()) {
+                val memberTy = memberTys.removeAt(memberTys.lastIndex)
+                val base = if (memberTy is ITyGeneric) memberTy.base else memberTy
+
+                if (visitedTys.add(base)) {
+                    val aliasTy = if (base is ITyAlias) {
+                        base
+                    } else if (base is ITyClass) {
+                        base.lazyInit(context)
+
+                        if (!base.isAnonymous && !base.isGlobal) {
+                            val aliasTy = LuaShortNamesManager.getInstance(context.project).findAlias(base.className, context)
+                            aliasTy?.type as? ITyAlias
+                        } else {
+                            null
+                        }
+                    } else {
+                        null
+                    }
+
+                    val resolvedMemberTy = if (aliasTy != null) {
+                        val params = aliasTy.params
+
+                        if (params?.size ?: 0 > 0) {
+                            val paramMap = mutableMapOf<String, ITy>()
+
+                            if (memberTy is ITyGeneric) {
+                                params?.forEachIndexed { index, baseParam ->
+                                    if (index < params.size) {
+                                        paramMap[baseParam.className] = memberTy.params[index]
+                                    }
+                                }
+                            } else {
+                                params?.forEachIndexed { index, baseParam ->
+                                    paramMap[baseParam.className] = params[index]
+                                }
+                            }
+
+                            aliasTy.ty.substitute(TyParameterSubstitutor(paramMap))
+                        } else {
+                            aliasTy.ty
+                        }
+                    } else {
+                        base
+                    }
+
+                    if (resolvedMemberTy is TyUnion) {
+                        memberTys.addAll(resolvedMemberTy.getChildTypes())
+                    } else if (resolvedMemberTy !== base) {
+                        memberTys.add(resolvedMemberTy)
+                    } else {
+                        fn(memberTy)
+                    }
+                }
+            }
+        }
+
+        fun resolve(ty: ITy, context: SearchContext): ITy {
+            if (ty !is TyAlias && ty !is TyClass && ty !is TyGeneric) {
+                return ty
+            }
+
+            var resolvedTy: ITy = Ty.VOID
+
+            eachResolved(ty, context) {
+                resolvedTy = resolvedTy.union(it)
+            }
+
+            return resolvedTy
+        }
     }
 }
 
@@ -679,6 +739,14 @@ class TyUnknown : Ty(TyKind.Unknown) {
 
     override fun equals(other: Any?): Boolean {
         return other is TyUnknown
+    }
+
+    override fun equals(other: ITy, context: SearchContext): Boolean {
+        if (other === Ty.UNKNOWN) {
+            return true
+        }
+
+        return Ty.resolve(other, context) is TyUnknown
     }
 
     override fun hashCode(): Int {
@@ -702,12 +770,28 @@ class TyNil : Ty(TyKind.Nil) {
 
     override val booleanType = Ty.FALSE
 
+    override fun equals(other: ITy, context: SearchContext): Boolean {
+        if (other === Ty.NIL) {
+            return true
+        }
+
+        return Ty.resolve(other, context) is TyNil
+    }
+
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
         return other.kind == TyKind.Nil || super.contravariantOf(other, context, flags)
     }
 }
 
 class TyVoid : Ty(TyKind.Void) {
+
+    override fun equals(other: ITy, context: SearchContext): Boolean {
+        if (other === Ty.VOID) {
+            return true
+        }
+
+        return Ty.resolve(other, context) is TyVoid
+    }
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
         return other.kind == TyKind.Void || super.contravariantOf(other, context, flags)

@@ -77,19 +77,11 @@ object ProblemUtil {
     }
 
     private fun acceptsShape(target: ITy, context: SearchContext): Boolean {
-        TyUnion.each(target) {
-            if (it is ITyGeneric) {
-                if (acceptsShape(it.base, context)) {
-                    return true
-                }
-            } else {
-                if (it is TyClass) {
-                    it.lazyInit(context)
-                }
+        Ty.eachResolved(target, context) {
+            val resolved = Ty.resolve(it, context)
 
-                if (it.flags and TyFlags.SHAPE != 0) {
-                    return true
-                }
+            if (resolved.isShape(context)) {
+                return true
             }
         }
 
@@ -97,34 +89,13 @@ object ProblemUtil {
     }
 
     private fun contravariantOf(target: ITy, source: ITy, context: SearchContext, varianceFlags: Int, targetElement: PsiElement?, sourceElement: PsiElement, tyProblems: MutableMap<String, Collection<Problem>>): Boolean {
-        if (target is ITyGeneric) {
-            val base = TyAliasSubstitutor.substitute(target.base, context)
-
-            if (base is ITyAlias) {
-                TyUnion.each(base.ty.substitute(target.getMemberSubstitutor(context))) { concreteAliasTy ->
-                    val problems = mutableListOf<Problem>()
-                    tyProblems[concreteAliasTy.displayName] = problems
-
-                    val isContravariant = contravariantOf(concreteAliasTy, source, context, varianceFlags, targetElement, sourceElement) {targetElement, sourceElement, message, highlightType ->
-                        problems.add(Problem(targetElement, sourceElement, message, highlightType))
-                    }
-
-                    if (isContravariant) {
-                        return true
-                    }
-                }
-
-                return false
-            }
-        }
-
         val problems = mutableListOf<Problem>()
         tyProblems[target.displayName] = problems
 
         var isContravariant = true
 
         if (target is ITyArray) {
-            val base = TyAliasSubstitutor.substitute(target.base, context)
+            val base = Ty.resolve(target.base, context)
 
             if (base is TyClass) {
                 base.lazyInit(context)
@@ -133,8 +104,8 @@ object ProblemUtil {
             if (source is TyClass) {
                 source.lazyInit(context)
 
-                if (source is TyTable || source.flags and TyFlags.SHAPE != 0) {
-                    val baseIsShape = base.flags and TyFlags.SHAPE != 0
+                if (source.isShape(context)) {
+                    val baseIsShape = base.isShape(context)
                     val sourceIsInline = source is TyTable && sourceElement is LuaTableExpr
                     val indexes = mutableSetOf<Int>()
                     var foundNumberIndexer = false
@@ -211,12 +182,12 @@ object ProblemUtil {
                 }
             }
 
-            if (source !is ITyArray) {
+            if (source !is ITyArray && (source !is ITyClass || !TyArray.isArray(source, context))) {
                 problems.add(Problem(targetElement, sourceElement, "Type mismatch. Required: '%s' Found: '%s'".format(target.displayName, source.displayName)))
                 return false
             }
 
-            val baseIsShape = base.flags and TyFlags.SHAPE != 0
+            val baseIsShape = base.isShape(context)
 
             if (sourceElement is LuaTableExpr) {
                 sourceElement.tableFieldList.forEach { sourceField ->
@@ -253,12 +224,12 @@ object ProblemUtil {
             base.lazyInit(context)
         }
 
-        if (base.flags and TyFlags.SHAPE != 0 && sourceElement is LuaTableExpr) {
+        if (base.isShape(context) && sourceElement is LuaTableExpr) {
             val sourceSubstitutor = source.getMemberSubstitutor(context)
             val targetSubstitutor = target.getMemberSubstitutor(context)
 
             target.processMembers(context, { _, targetMember ->
-                val indexTy = targetMember.indexType?.getType()
+                val indexTy = targetMember.guessIndexType(context)
 
                 val sourceMember = if (indexTy != null) {
                     source.findIndexer(indexTy, context)
@@ -273,7 +244,7 @@ object ProblemUtil {
                 if (sourceMember == null) {
                     if (TyUnion.find(targetMemberTy, TyNil::class.java) == null) {
                         isContravariant = false
-                        val memberName = targetMember.name ?: "[${targetMember.indexType?.getType()?.displayName}]"
+                        val memberName = targetMember.name ?: "[${targetMember.guessIndexType(context)?.displayName}]"
                         problems.add(Problem(
                                 targetElement,
                                 sourceElement,
@@ -312,14 +283,14 @@ object ProblemUtil {
 
     fun contravariantOf(target: ITy, source: ITy, context: SearchContext, varianceFlags: Int, targetElement: PsiElement?, sourceElement: PsiElement, processProblem: ProcessProblem): Boolean {
         val tyProblems = mutableMapOf<String, Collection<Problem>>()
-        val resolvedTarget = TyAliasSubstitutor.substitute(target, context)
+        val resolvedTarget = Ty.resolve(target, context)
 
         if (sourceElement is LuaTableExpr && acceptsShape(resolvedTarget, context)) {
-            if (source is TyUnion && resolvedTarget.contravariantOf(source, context, varianceFlags)) {
+            if (TyUnion.isUnion(resolvedTarget, context) && resolvedTarget.contravariantOf(source, context, varianceFlags)) {
                 return true
             }
 
-            TyUnion.each(resolvedTarget) {
+            Ty.eachResolved(resolvedTarget, context) {
                 if (contravariantOf(it, source, context, varianceFlags, targetElement, sourceElement, tyProblems)) {
                     return true
                 }

@@ -100,7 +100,7 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
         var start = 0
         var end = 0
         val str = buildString {
-            o.sig.processArgs(null, o.isColonStyle) { idx, pi ->
+            o.sig.processParameters(null, o.isColonStyle) { idx, pi ->
                 if (idx > 0) append(", ")
                 if (idx == index) start = length
                 append(pi.name)

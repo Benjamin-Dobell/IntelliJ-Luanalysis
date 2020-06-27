@@ -49,14 +49,14 @@ class MatchFunctionSignatureInspection : StrictInspection() {
 
                     val searchContext = SearchContext.get(o)
                     val prefixExpr = o.expr
-                    var type = TyAliasSubstitutor.substitute(prefixExpr.guessType(searchContext), searchContext)
+                    var resolvedTy = Ty.resolve(prefixExpr.guessType(searchContext), searchContext)
 
-                    if (type is TyUnion && type.size == 2 && type.getChildTypes().last().isAnonymous) {
-                        type = type.getChildTypes().first()
+                    if (resolvedTy is TyUnion && resolvedTy.size == 2 && resolvedTy.getChildTypes().last().isAnonymous) {
+                        resolvedTy = resolvedTy.getChildTypes().first()
                     }
 
                     var problemReported = false
-                    val signatureMatch = type.matchSignature(searchContext, o) { _, sourceElement, message, highlightType ->
+                    val signatureMatch = resolvedTy.matchSignature(searchContext, o) { _, sourceElement, message, highlightType ->
                         myHolder.registerProblem(sourceElement, message, highlightType)
                         problemReported = true
                     }
@@ -95,7 +95,7 @@ class MatchFunctionSignatureInspection : StrictInspection() {
                                 }
                             }
                         }
-                    } else if (type == Ty.NIL) {
+                    } else if (resolvedTy == Ty.NIL) {
                         myHolder.registerProblem(o, "Unknown function '%s'.".format(prefixExpr.lastChild.text))
                     }
                 }

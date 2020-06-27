@@ -30,6 +30,15 @@ class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
         return other is ITyArray && base == other.base
     }
 
+    override fun equals(other: ITy, context: SearchContext): Boolean {
+        if (this === other) {
+            return true
+        }
+
+        val resolvedOther = Ty.resolve(other, context)
+        return resolvedOther is ITyArray && base.equals(resolvedOther.base, context)
+    }
+
     override fun hashCode(): Int {
         return displayName.hashCode()
     }
@@ -43,25 +52,41 @@ class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
             return false
         }
 
+        val resolvedBase = Ty.resolve(base, context)
+
         if (other is ITyArray) {
-            return base.equals(other.base, context)
-                    || (flags and TyVarianceFlags.WIDEN_TABLES != 0 && base.contravariantOf(other.base, context, flags))
+            return resolvedBase.equals(other.base, context)
+                    || (flags and TyVarianceFlags.WIDEN_TABLES != 0 && resolvedBase.contravariantOf(other.base, context, flags))
         }
 
-        return other.processMembers(context) { _, otherMember ->
-            val otherFieldTypes = otherMember.guessType(context).let {
-                if (it is TyMultipleResults) it.list else listOf(it)
-            }
+        var indexedMemberType: ITy = Ty.VOID
+        val membersContravariant = other.processMembers(context) { _, otherMember ->
+            val index = otherMember.guessIndexType(context)
 
-            otherFieldTypes.forEach { otherFieldTy ->
-                if (!base.equals(otherFieldTy, context)
-                        && (flags and TyVarianceFlags.WIDEN_TABLES == 0 || !base.contravariantOf(otherFieldTy, context, flags))) {
-                    return@processMembers false
+            if ((index is TyPrimitive && index.primitiveKind == TyPrimitiveKind.Number)
+                    || (index is TyPrimitiveLiteral && index.primitiveKind == TyPrimitiveKind.Number)) {
+                val otherFieldTypes = otherMember.guessType(context).let {
+                    if (it is TyMultipleResults) it.list else listOf(it)
+                }
+
+                otherFieldTypes.forEach { otherFieldTy ->
+                    if (!resolvedBase.contravariantOf(otherFieldTy, context, flags)) {
+                        return@processMembers false
+                    }
+
+                    indexedMemberType = indexedMemberType.union(otherFieldTy)
                 }
             }
-
             true
         }
+
+        if (!membersContravariant) {
+            return false
+        }
+
+        return flags and TyVarianceFlags.WIDEN_TABLES != 0
+                || Ty.resolve(resolvedBase, context).equals(indexedMemberType, context)
+                || (resolvedBase is TyUnknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0)
     }
 
     override fun substitute(substitutor: ITySubstitutor): ITy {
@@ -91,13 +116,23 @@ class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
 
     companion object {
         fun isArray(ty: ITyClass, context: SearchContext): Boolean {
-            ty.lazyInit(context)
+            val resolvedTy = Ty.resolve(ty, context)
 
-            if (ty is TyTable || ty.flags and TyFlags.SHAPE != 0) {
+            if (resolvedTy is ITyArray) {
+                return true
+            }
+
+            if (resolvedTy !is ITyClass) {
+                return false
+            }
+
+            resolvedTy.lazyInit(context)
+
+            if (resolvedTy.isShape(context)) {
                 val indexes = mutableSetOf<Int>()
                 var foundNumberIndexer = false
 
-                val onlyIntegerKeys = ty.processMembers(context) { _, otherMember ->
+                val onlyIntegerKeys = resolvedTy.processMembers(context) { _, otherMember ->
                     val indexTy = otherMember.guessIndexType(context)
 
                     if (indexTy == null || indexTy !is TyPrimitiveLiteral || indexTy.primitiveKind != TyPrimitiveKind.Number) {

@@ -115,6 +115,31 @@ abstract class TyGeneric(final override val params: Array<ITy>, final override v
         return other is ITyGeneric && other.base == base && other.displayName == displayName
     }
 
+    override fun equals(other: ITy, context: SearchContext): Boolean {
+        if (this === other) {
+            return true
+        }
+
+        val resolvedOther = Ty.resolve(other, context)
+
+        if (resolvedOther is ITyGeneric && params.size == resolvedOther.params.size && base.equals(resolvedOther.base, context)) {
+            val allParamsEqual = params.asSequence().zip(resolvedOther.params.asSequence()).all { (param, otherParam) ->
+                param.equals(otherParam)
+            }
+
+            if (allParamsEqual) {
+                return true
+            }
+        }
+
+        if (isShape(context) && resolvedOther.isShape(context)) {
+            return contravariantOf(resolvedOther, context, 0)
+                    && resolvedOther.contravariantOf(this, context, 0)
+        }
+
+        return false
+    }
+
     override fun hashCode(): Int {
         return displayName.hashCode()
     }
@@ -124,11 +149,12 @@ abstract class TyGeneric(final override val params: Array<ITy>, final override v
     }
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
-        val resolvedBase = TyAliasSubstitutor.substitute(base, context)
+        val resolvedBase = Ty.resolve(base, context)
+        val resolvedOther = Ty.resolve(other, context)
 
         if (resolvedBase is ITyAlias) {
             TyUnion.each(resolvedBase.ty.substitute(getMemberSubstitutor(context))) {
-                if (it.contravariantOf(other, context, flags)) {
+                if (it.contravariantOf(resolvedOther, context, flags)) {
                     return true
                 }
             }
@@ -136,43 +162,40 @@ abstract class TyGeneric(final override val params: Array<ITy>, final override v
             return false
         }
 
-        if (resolvedBase is ITyClass) {
-            resolvedBase.lazyInit(context)
+        if (resolvedBase.isShape(context)) {
+            val memberSubstitutor = getMemberSubstitutor(context)
+            val otherMemberSubstitutor = resolvedOther.getMemberSubstitutor(context)
 
-            if (resolvedBase.flags and TyFlags.SHAPE != 0) {
-                val memberSubstitutor = getMemberSubstitutor(context)
-                val otherMemberSubstitutor = other.getMemberSubstitutor(context)
+            return processMembers(context, { _, classMember ->
+                val indexTy = classMember.guessIndexType(context)
 
-                return processMembers(context, { _, classMember ->
-                    val indexTy = classMember.indexType?.getType()
+                val otherMember = if (indexTy != null) {
+                    resolvedOther.findIndexer(indexTy, context)
+                } else {
+                    classMember.name?.let { resolvedOther.findMember(it, context) }
+                }
 
-                    val otherMember = if (indexTy != null) {
-                        other.findIndexer(indexTy, context)
-                    } else {
-                        classMember.name?.let { other.findMember(it, context) }
-                    }
+                val memberTy = classMember.guessType(context).substitute(memberSubstitutor)
 
-                    val memberTy = classMember.guessType(context).substitute(memberSubstitutor)
+                if (otherMember == null) {
+                    return@processMembers TyUnion.find(memberTy, TyNil::class.java) != null
+                }
 
-                    if (otherMember == null) {
-                        return@processMembers TyUnion.find(memberTy, TyNil::class.java) != null
-                    }
+                val otherMemberTy = otherMember.guessType(context).let {
+                    if (otherMemberSubstitutor != null) it.substitute(otherMemberSubstitutor) else it
+                }
 
-                    val otherMemberTy = otherMember.guessType(context).let {
-                        if (otherMemberSubstitutor != null) it.substitute(otherMemberSubstitutor) else it
-                    }
-
-                    memberTy.contravariantOf(otherMemberTy, context, flags)
-                }, true)
-            }
+                memberTy.contravariantOf(otherMemberTy, context, flags)
+            }, true)
         }
 
-        if (other is ITyArray) {
+        if (resolvedOther is ITyArray) {
             return if (resolvedBase == Ty.TABLE && params.size == 2) {
                 val keyTy = params.first()
                 val valueTy = params.last()
+                val resolvedOtherBase = Ty.resolve(resolvedOther.base, context)
                 return (keyTy == Ty.NUMBER || (keyTy is TyUnknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0))
-                        && (valueTy == other.base || (flags and TyVarianceFlags.WIDEN_TABLES != 0 && valueTy.contravariantOf(other.base, context, flags)))
+                        && (valueTy == resolvedOtherBase || (flags and TyVarianceFlags.WIDEN_TABLES != 0 && valueTy.contravariantOf(resolvedOtherBase, context, flags)))
             } else false
         }
 
@@ -180,33 +203,28 @@ abstract class TyGeneric(final override val params: Array<ITy>, final override v
         var otherParams: Array<out ITy>? =  null
         var contravariantParams = false
 
-        if (other is ITyGeneric) {
-            otherBase = other.base
-            otherParams = other.params
+        if (resolvedOther is ITyGeneric) {
+            otherBase = resolvedOther.base
+            otherParams = resolvedOther.params
         } else if (resolvedBase == Ty.TABLE && params.size == 2) {
-            if (other == Ty.TABLE) {
+            if (resolvedOther == Ty.TABLE) {
                 return params.first() is TyUnknown && params.last() is TyUnknown
             }
 
-            val otherIsShape = other is TyTable || (other as? ITyClass)?.let {
-                it.lazyInit(context)
-                it.flags and TyFlags.SHAPE != 0
-            } == true
-
-            if (otherIsShape) {
-                val genericTable = createTableGenericFromMembers(other, context)
+            if (resolvedOther.isShape(context)) {
+                val genericTable = createTableGenericFromMembers(resolvedOther, context)
                 otherBase = genericTable.base
                 otherParams = genericTable.params
                 contravariantParams = flags and TyVarianceFlags.WIDEN_TABLES != 0
             }
-        } else if (other is ITyClass) {
-            otherBase = other
-            otherParams = other.getParams(context)
+        } else if (resolvedOther is ITyClass) {
+            otherBase = resolvedOther
+            otherParams = resolvedOther.getParams(context)
         }
 
         if (otherBase != null && otherParams != null
-                && resolvedBase.contravariantOf(otherBase, context, flags)
                 && params.size == otherParams.size
+                && resolvedBase.contravariantOf(otherBase, context, flags)
                 && params.asSequence().zip(otherParams.asSequence()).all { (param, otherParam) ->
                     // Params are always invariant as we don't support use-site variance nor immutable/read-only annotations
                     param.equals(otherParam, context)
@@ -217,7 +235,7 @@ abstract class TyGeneric(final override val params: Array<ITy>, final override v
             return true
         }
 
-        return super.contravariantOf(other, context, flags)
+        return super.contravariantOf(resolvedOther, context, flags)
     }
 
     override fun accept(visitor: ITyVisitor) {
@@ -234,6 +252,10 @@ abstract class TyGeneric(final override val params: Array<ITy>, final override v
 
     override fun findIndexer(indexTy: ITy, searchContext: SearchContext): LuaClassMember? {
         return base.findIndexer(indexTy, searchContext)
+    }
+
+    override fun isShape(searchContext: SearchContext): Boolean {
+        return base.isShape(searchContext)
     }
 
     override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {

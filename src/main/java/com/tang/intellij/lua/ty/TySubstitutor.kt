@@ -65,7 +65,7 @@ class GenericAnalyzer(params: Array<TyParameter>?, private val searchContext: Se
             if (clazzParams != null && it is ITyClass) {
                 it.params?.asSequence()?.zip(clazzParams.asSequence())?.forEach { (param, clazzParam) ->
                     warp(param) {
-                        clazzParam.accept(this)
+                        Ty.resolve(clazzParam, searchContext).accept(this)
                     }
                 }
             }
@@ -97,19 +97,21 @@ class GenericAnalyzer(params: Array<TyParameter>?, private val searchContext: Se
     }
 
     override fun visitUnion(u: TyUnion) {
-        TyUnion.each(u) { it.accept(this) }
+        Ty.eachResolved(u, searchContext) {
+            it.accept(this)
+        }
     }
 
     override fun visitArray(array: ITyArray) {
         cur.let {
             if (it is ITyArray) {
                 warp(it.base) {
-                    array.base.accept(this)
+                    Ty.resolve(array.base, searchContext).accept(this)
                 }
             } else if (it is ITyClass && TyArray.isArray(it, searchContext)) {
                 it.processMembers(searchContext) { _, member ->
                     warp(member.guessType(searchContext)) {
-                        array.base.accept(this)
+                        Ty.resolve(array.base, searchContext).accept(this)
                     }
                     true
                 }
@@ -129,40 +131,37 @@ class GenericAnalyzer(params: Array<TyParameter>?, private val searchContext: Se
         cur.let {
             if (it is ITyGeneric) {
                 warp(it.base) {
-                    generic.base.accept(this)
+                    Ty.resolve(generic.base, searchContext).accept(this)
                 }
 
                 it.params.asSequence().zip(generic.params.asSequence()).forEach { (param, genericParam) ->
                     warp(param) {
-                        genericParam.accept(this)
+                        Ty.resolve(genericParam, searchContext).accept(this)
                     }
                 }
             } else if (generic.base == Ty.TABLE && generic.params.size == 2) {
                 if (it == Ty.TABLE) {
                     warp(Ty.UNKNOWN) {
-                        generic.params.first().accept(this)
+                        Ty.resolve(generic.params.first(), searchContext).accept(this)
                     }
 
                     warp(Ty.UNKNOWN) {
-                        generic.params.last().accept(this)
+                        Ty.resolve(generic.params.last(), searchContext).accept(this)
                     }
                 } else if (it is ITyArray) {
                     warp(Ty.NUMBER) {
-                        generic.params.first().accept(this)
+                        Ty.resolve(generic.params.first(), searchContext).accept(this)
                     }
 
                     warp(it.base) {
-                        generic.params.last().accept(this)
+                        Ty.resolve(generic.params.last(), searchContext).accept(this)
                     }
-                } else if (it is TyTable || (it as? ITyClass)?.let {
-                            it.lazyInit(searchContext)
-                            it.flags and TyFlags.SHAPE != 0
-                        } == true) {
+                } else if (it.isShape(searchContext)) {
                     val genericTable = createTableGenericFromMembers(it, searchContext)
 
                     genericTable.params.asSequence().zip(generic.params.asSequence()).forEach { (param, genericParam) ->
                         warp(param) {
-                            genericParam.accept(this)
+                            Ty.resolve(genericParam, searchContext).accept(this)
                         }
                     }
                 }
@@ -172,7 +171,11 @@ class GenericAnalyzer(params: Array<TyParameter>?, private val searchContext: Se
 
     private fun visitSig(arg: IFunSignature, par: IFunSignature) {
         arg.returnTy?.let {
-            warp(it) { par.returnTy?.accept(this) }
+            warp(it) {
+                par.returnTy?.let {
+                    Ty.resolve(it, searchContext).accept(this)
+                }
+            }
         }
     }
 
@@ -180,7 +183,7 @@ class GenericAnalyzer(params: Array<TyParameter>?, private val searchContext: Se
         if (Ty.isInvalid(ty))
             return
         val arg = cur
-        cur = ty
+        cur = Ty.resolve(ty, searchContext)
         action()
         cur = arg
     }
@@ -246,12 +249,10 @@ class TyAliasSubstitutor private constructor(val context: SearchContext) : TySub
     val processedNames = mutableSetOf<String>()
 
     override fun substitute(alias: ITyAlias): ITy {
-        if (alias.params?.size ?: 0 == 0) {
-            return if (processedNames.add(alias.name)) {
-                val resolved = alias.ty.substitute(this)
-                processedNames.remove(alias.name)
-                resolved
-            } else Ty.VOID
+        if (alias.params?.size ?: 0 == 0 && processedNames.add(alias.name)) {
+            val resolved = alias.ty.substitute(this)
+            processedNames.remove(alias.name)
+            return resolved
         }
 
         return alias

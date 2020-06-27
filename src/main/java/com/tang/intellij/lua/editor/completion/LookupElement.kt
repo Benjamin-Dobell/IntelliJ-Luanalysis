@@ -106,7 +106,7 @@ class TyFunctionLookupElement(name: String,
 ) : LuaLookupElement(name, bold, icon) {
     /*init {
         val list = mutableListOf<String>()
-        signature.processArgs(null, colonStyle) { _, param ->
+        signature.processParameters(null, colonStyle) { _, param ->
             list.add(param.name)
             true
         }
@@ -120,7 +120,7 @@ class TyFunctionLookupElement(name: String,
 
     private val lazyItemText by lazy {
         val list = mutableListOf<String>()
-        signature.processArgs(null, colonStyle) { _, param ->
+        signature.processParameters(null, colonStyle) { _, param ->
             list.add(param.name)
             true
         }

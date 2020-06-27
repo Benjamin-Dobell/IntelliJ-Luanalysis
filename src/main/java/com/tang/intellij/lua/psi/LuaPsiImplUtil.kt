@@ -319,6 +319,20 @@ fun getIdExpr(indexExpr: LuaIndexExpr): LuaExpr? {
     return null
 }
 
+fun guessIndexType(indexExpr: LuaIndexExpr, context: SearchContext): ITy? {
+    val stubIdTy = indexExpr.stub?.idTy
+
+    if (stubIdTy != null) {
+        return stubIdTy
+    }
+
+    val idExpr = indexExpr.idExpr
+
+    return if (idExpr != null) {
+        SearchContext.infer(idExpr)
+    } else null
+}
+
 fun getName(indexExpr: LuaIndexExpr): String? {
     val stub = indexExpr.stub
     if (stub != null)

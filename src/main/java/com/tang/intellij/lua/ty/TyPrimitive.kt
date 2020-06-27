@@ -34,6 +34,15 @@ class TyPrimitive(override val primitiveKind: TyPrimitiveKind,
         return other is TyPrimitive && other.primitiveKind == primitiveKind
     }
 
+    override fun equals(other: ITy, context: SearchContext): Boolean {
+        if (this === other) {
+            return true
+        }
+
+        val resolvedOther = Ty.resolve(other, context)
+        return resolvedOther is TyPrimitive && resolvedOther.primitiveKind == primitiveKind
+    }
+
     override fun hashCode(): Int {
         return primitiveKind.hashCode()
     }

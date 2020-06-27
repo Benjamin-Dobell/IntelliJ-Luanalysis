@@ -324,7 +324,7 @@ private fun resolveParamType(paramNameDef: LuaParamNameDef, context: SearchConte
     if (paramOwner is LuaClosureExpr) {
         var ret: ITy = Ty.VOID
         val shouldBe = paramOwner.shouldBe(context)
-        shouldBe.each {
+        Ty.eachResolved(shouldBe, context) {
             if (it is ITyFunction) {
                 val paramIndex = paramOwner.getIndexFor(paramNameDef)
                 ret = ret.union(it.mainSignature.getParamTy(paramIndex))
