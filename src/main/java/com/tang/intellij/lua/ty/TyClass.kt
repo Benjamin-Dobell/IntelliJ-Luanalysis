@@ -342,8 +342,12 @@ fun createTableGenericFromMembers(ty: ITy, context: SearchContext): ITyGeneric {
             val exprList = classMember.exprList
 
             if (exprList.size == 2) {
-                keyType = keyType.union(exprList[0].guessType(context))
-                elementType = elementType.union(exprList[1].guessType(context))
+                keyType = keyType.union(context.withIndex(0) {
+                    exprList[0].guessType(context)
+                })
+                elementType = elementType.union(context.withIndex(0) {
+                    exprList[1].guessType(context)
+                })
             } else if (exprList.size == 1) {
                 if (name != null) {
                     keyType = keyType.union(TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name))

@@ -50,20 +50,21 @@ class TyMultipleResults(val list: List<ITy>, val variadic: Boolean) : Ty(TyKind.
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
         val requiredSize = if (variadic) list.size - 1 else list.size
+        val flattenedOther = TyMultipleResults.flatten(other)
 
-        if (other is TyMultipleResults) {
-            if (other.variadic) {
+        if (flattenedOther is TyMultipleResults) {
+            if (flattenedOther.variadic) {
                 if (!variadic) {
                     return false
                 }
             } else {
-                if (other.list.size < requiredSize) {
+                if (flattenedOther.list.size < requiredSize) {
                     return false
                 }
             }
 
-            for (i in 0 until other.list.size) {
-                val otherTy = other.list[i]
+            for (i in 0 until flattenedOther.list.size) {
+                val otherTy = flattenedOther.list[i]
                 val thisTy = if (i >= list.size) {
                     if (variadic) list.last() else return true
                 } else list[i]
@@ -75,6 +76,7 @@ class TyMultipleResults(val list: List<ITy>, val variadic: Boolean) : Ty(TyKind.
 
             return true
         }
+
         return requiredSize <= 1 && list.first().contravariantOf(other, context, flags)
     }
 
@@ -112,6 +114,26 @@ class TyMultipleResults(val list: List<ITy>, val variadic: Boolean) : Ty(TyKind.
     }
 
     companion object {
+        fun getResult(ty: ITy, index: Int = 0): ITy {
+            val flattenedTy = TyMultipleResults.flatten(ty)
+
+            return if (flattenedTy is TyMultipleResults) {
+                if (index < flattenedTy.list.lastIndex) {
+                    getResult(flattenedTy.list.get(index))
+                } else if (flattenedTy.variadic) {
+                    val lastResult = flattenedTy.list.last()
+                    val variadicTy = getResult(lastResult).union(getResult(lastResult, index - flattenedTy.list.lastIndex))
+                    Ty.NIL.union(variadicTy)
+                } else {
+                    getResult(flattenedTy.list.last(), index - flattenedTy.list.lastIndex)
+                }
+            } else if (index == 0) {
+                flattenedTy
+            } else {
+                Ty.NIL
+            }
+        }
+
         fun flatten(ty: ITy): ITy {
             if (ty !is TyUnion) {
                 return ty

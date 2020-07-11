@@ -91,3 +91,25 @@ for _, fun in ipairs(returnsNumberNumberOrStringString) do
     aNumber = <error descr="Type mismatch. Required: 'number' Found: 'number|string'">numberOrString1</error>
     aNumber = <error descr="Type mismatch. Required: 'number' Found: 'number|string'">numberOrString2</error>
 end
+
+
+---@return 1, 2, 3
+local function returns123()
+return 1, 2, 3
+end
+
+---@type number[]
+local numberArray = {returns123()}
+
+---@overload fun(f: (fun: void), ...: any): nil|string
+---@generic T
+---@param f fun: T
+---@return string | T
+local function returnStringOrGeneric(f, ...)
+    return aString
+end
+
+local inferredNumberOrString = <weak_warning descr="Insufficient assignees, values will be discarded.">returnStringOrGeneric(returns123)</weak_warning>
+
+numberOrString = inferredNumberOrString
+aNumber = <error descr="Type mismatch. Required: 'number' Found: '1|string'">inferredNumberOrString</error> -- Expect error

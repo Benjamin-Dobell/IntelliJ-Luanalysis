@@ -33,163 +33,167 @@ class TypeSafetyTest : LuaInspectionsTestBase(
         ReturnTypeInspection(),
         UndeclaredMemberInspection()
 ) {
+    fun check(filename: String, checkWarn: Boolean = true, checkInfo: Boolean = false, checkWeakWarn: Boolean = false) {
+        LuaSettings.instance.isNilStrict = true
+        checkByFile(filename, checkWarn, checkInfo, checkWeakWarn)
+        LuaSettings.instance.isNilStrict = false
+    }
+
     fun testAlias() {
-        checkByFile("alias.lua")
+        check("alias.lua")
     }
 
     fun testBoolean() {
-        checkByFile("boolean.lua")
+        check("boolean.lua")
     }
 
     fun testClass() {
-        checkByFile("class.lua")
+        check("class.lua")
     }
 
     fun testFunctionClosures() {
-        checkByFile("function_closures.lua")
+        check("function_closures.lua")
     }
 
     fun testFunctionCovariance() {
-        checkByFile("function_covariance.lua")
+        check("function_covariance.lua")
     }
 
     fun testFunctionGenerics() {
-        checkByFile("function_generics.lua")
+        check("function_generics.lua")
     }
 
     fun testFunctionGenericsScope() {
-        checkByFile("function_generics_scope.lua")
+        check("function_generics_scope.lua")
     }
 
     fun testFunctionMultipleReturns() {
-        checkByFile("function_multiple_returns.lua", true, false, true)
+        check("function_multiple_returns.lua", true, false, true)
     }
 
     fun testFunctionPartiallyTyped() {
-        checkByFile("function_partially_typed.lua")
+        check("function_partially_typed.lua")
     }
 
     fun testGenericAlias() {
         // TODO: There's a bug in IntelliJ's XML descr attribute parsing. Once fixed we should add descr.
-        checkByFile("generic_alias.lua")
+        check("generic_alias.lua")
     }
 
     fun testGenericClassConstraints() {
-        checkByFile("generic_class_constraints.lua")
+        check("generic_class_constraints.lua")
     }
 
     // TODO: Uncomment once https://youtrack.jetbrains.com/issue/IJSDK-799 is resolved.
     /*fun testGenericClassCovariance() {
-        checkByFile("generic_class_covariance.lua")
+        check("generic_class_covariance.lua")
     }*/
 
     fun testGenericClassFields() {
-        checkByFile("generic_class_fields.lua")
+        check("generic_class_fields.lua")
     }
 
     fun testGenericClassScope() {
-        checkByFile("generic_class_scope.lua")
+        check("generic_class_scope.lua")
     }
 
     // TODO: Uncomment once https://youtrack.jetbrains.com/issue/IJSDK-799 is resolved.
     /*fun testGenericSelf() {
-        checkByFile("generic_self.lua")
+        check("generic_self.lua")
     }*/
 
     fun testImplicitTypes() {
-        checkByFile("implicit_types.lua")
+        check("implicit_types.lua")
     }
 
     fun testIndexedFields() {
-        checkByFile("indexed_fields.lua")
+        check("indexed_fields.lua")
     }
 
     fun testLambdaClass() {
-        checkByFile("lambda_class.lua")
+        check("lambda_class.lua")
     }
 
     fun testLambdaParams() {
-        checkByFile("lambda_params.lua")
+        check("lambda_params.lua")
     }
 
     fun testLocalDefAssignment() {
-        checkByFile("local_def_assignment.lua")
+        check("local_def_assignment.lua")
     }
 
     fun testModules() {
         myFixture.configureByFiles("moduleA.lua", "moduleA_reference.lua")
         LuaSettings.instance.languageLevel = LuaLanguageLevel.LUA51
+        LuaSettings.instance.isNilStrict = true
         enableInspection()
         myFixture.checkHighlighting(true, false, false)
         LuaSettings.instance.languageLevel = LuaLanguageLevel.LUA53
-    }
-
-    fun testNumbers() {
-        LuaSettings.instance.languageLevel = LuaLanguageLevel.LUA53
-        checkByFile("numbers.lua")
-    }
-
-    fun testOps() {
-        LuaSettings.instance.isNilStrict = true
-        checkByFile("ops.lua")
-    }
-
-    fun testOverloads() {
-        checkByFile("overloads.lua")
-    }
-
-    fun testRecursiveAlias() {
-        checkByFile("recursive_alias.lua")
-    }
-
-    fun testSelf() {
-        checkByFile("self.lua")
-    }
-
-    fun testShape() {
-        checkByFile("shape.lua")
-    }
-
-    fun testSnippet() {
-        checkByFile("snippet.lua")
-    }
-
-    fun testStrictNil() {
-        LuaSettings.instance.isNilStrict = true
-        checkByFile("strict_nil.lua")
         LuaSettings.instance.isNilStrict = false
     }
 
+    fun testNumbers() {
+        check("numbers.lua")
+    }
+
+    fun testOps() {
+        check("ops.lua")
+    }
+
+    fun testOverloads() {
+        check("overloads.lua")
+    }
+
+    fun testRecursiveAlias() {
+        check("recursive_alias.lua")
+    }
+
+    fun testSelf() {
+        check("self.lua")
+    }
+
+    fun testShape() {
+        check("shape.lua")
+    }
+
+    fun testSnippet() {
+        check("snippet.lua")
+    }
+
+    fun testStrictNil() {
+        check("strict_nil.lua")
+    }
+
     fun testStringLiterals() {
-        checkByFile("string_literals.lua")
+        check("string_literals.lua")
     }
 
     fun testTables() {
-        checkByFile("tables.lua")
+        check("tables.lua")
     }
 
     fun testTrailingType() {
-        checkByFile("trailing_type.lua")
+        check("trailing_type.lua")
     }
 
     fun testTypeCasts() {
-        checkByFile("type_casts.lua")
+        check("type_casts.lua")
     }
 
     fun testUnions() {
         // TODO: As above, there's a bug in IntelliJ's XML descr attribute parsing. Once fixed we should add descr.
-        checkByFile("unions.lua")
+        check("unions.lua")
     }
 
     fun testUnknown() {
-        checkByFile("unknown.lua")
+        check("unknown.lua")
     }
 
     fun testVarargs() {
-        checkByFile("varargs.lua")
+        check("varargs.lua")
     }
 
     fun testVarreturn() {
-        checkByFile("varreturn.lua")
+        check("varreturn.lua")
     }
 }

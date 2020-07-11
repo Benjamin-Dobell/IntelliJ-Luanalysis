@@ -24,6 +24,7 @@ import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.ITy
 import com.tang.intellij.lua.ty.ITySubstitutor
 import com.tang.intellij.lua.ty.Ty
+import com.tang.intellij.lua.ty.TyMultipleResults
 
 /**
  * parameter info
@@ -45,7 +46,7 @@ class LuaParamInfo(var name: String = "", var ty: ITy = Ty.UNKNOWN) {
     }
 
     fun substitute(substitutor: ITySubstitutor): LuaParamInfo {
-        val substitutedTy = ty.substitute(substitutor)
+        val substitutedTy = TyMultipleResults.getResult(ty.substitute(substitutor))
 
         if (substitutedTy === ty) {
             return this

@@ -203,11 +203,12 @@ function pairs(t) end
 --- boolean), which is true if the call succeeds without errors. In such case,
 --- `pcall` also returns all results from the call, after this first result. In
 --- case of any error, `pcall` returns **false** plus the error message.
----@overload fun(f:fun():any):boolean|table
----@param f fun():any
----@param arg1 table
----@return boolean|table
-function pcall(f, arg1, ...) end
+---@overload fun(f: (fun: void), ...: any): boolean, nil | string
+---@generic T
+---@param f fun: T
+---@vararg any
+---@return boolean, T
+function pcall(f, ...) end
 
 ---
 --- Receives any number of arguments, and prints their values to `stdout`,

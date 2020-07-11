@@ -426,3 +426,60 @@ stringNumberTable = build(function()
     return {a = 1}
 end)
 
+
+---@type nil | boolean
+local nilOrBoolean
+
+---@type nil | number
+local nilOrNumber
+
+---@type nil | string
+local nilOrString
+
+---@type nil | number | string
+local nilOrNumberOrString
+
+---@return string, number
+local function returnsStringNumber()
+    return "one", 1
+end
+
+---@return number, boolean...
+local function returnsNumberVariadicBoolean()
+    return 1, true, false
+end
+
+local function chainedMultipleResults()
+    return returnsStringNumber(), returnsStringNumber()
+end
+
+---@generic T
+---@param f fun(): T
+---@return boolean, T
+function genericParameterMultipleResults(f, ...)
+    return true, f()
+end
+
+anyBoolean, anyString, anyNumber = genericParameterMultipleResults(returnsStringNumber)
+anyBoolean, anyString, <error descr="Type mismatch. Required: 'string' Found: 'number'">anyString</error> = <error descr="Result 2, type mismatch. Required: 'string' Found: 'number'">genericParameterMultipleResults(returnsStringNumber)</error>
+anyBoolean, anyBoolean, anyString, anyNumber = genericParameterMultipleResults(returnsStringNumber), genericParameterMultipleResults(returnsStringNumber)
+
+anyBoolean, anyNumber = genericParameterMultipleResults(returnsNumberVariadicBoolean)
+anyBoolean, anyNumber, nilOrBoolean, nilOrBoolean = genericParameterMultipleResults(returnsNumberVariadicBoolean)
+anyBoolean, anyNumber, <error descr="Type mismatch. Required: 'nil|string' Found: 'boolean|nil'">nilOrString</error> = <error descr="Result 2, type mismatch. Required: 'nil|string' Found: 'boolean|nil'">genericParameterMultipleResults(returnsNumberVariadicBoolean)</error>
+anyBoolean, anyBoolean, anyNumber, nilOrBoolean, nilOrBoolean = genericParameterMultipleResults(returnsNumberVariadicBoolean), genericParameterMultipleResults(returnsNumberVariadicBoolean)
+anyBoolean, anyBoolean, anyNumber, nilOrBoolean, <error descr="Type mismatch. Required: 'nil|string' Found: 'boolean|nil'">nilOrString</error> = genericParameterMultipleResults(returnsNumberVariadicBoolean), <error descr="Result 4, type mismatch. Required: 'nil|string' Found: 'boolean|nil'">genericParameterMultipleResults(returnsNumberVariadicBoolean)</error>
+
+anyBoolean, anyString, anyString, anyNumber = genericParameterMultipleResults(chainedMultipleResults)
+anyBoolean, anyString, anyString, <error descr="Type mismatch. Required: 'string' Found: 'number'">anyString</error> = <error descr="Result 3, type mismatch. Required: 'string' Found: 'number'">genericParameterMultipleResults(chainedMultipleResults)</error>
+anyBoolean, anyBoolean, anyString, anyString, anyNumber = genericParameterMultipleResults(chainedMultipleResults), genericParameterMultipleResults(chainedMultipleResults)
+
+---@generic T
+---@param f fun(): T
+---@return boolean, T...
+function variadicGenericParameterMultipleResults(f, ...)
+    return true, f(), f(), f()
+end
+
+anyBoolean, nilOrString, nilOrNumberOrString, nilOrNumberOrString = variadicGenericParameterMultipleResults(returnsStringNumber)
+anyBoolean, nilOrString, <error descr="Type mismatch. Required: 'nil|number' Found: 'nil|number|string'">nilOrNumber</error> = <error descr="Result 2, type mismatch. Required: 'nil|number' Found: 'nil|number|string'">variadicGenericParameterMultipleResults(returnsStringNumber)</error>

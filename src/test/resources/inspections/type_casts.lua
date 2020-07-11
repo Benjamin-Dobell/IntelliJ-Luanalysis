@@ -46,7 +46,7 @@ aString, <error descr="Type mismatch. Required: 'number' Found: 'string'">aNumbe
 ---@type number|nil
 local numberOrNil
 
-wantsNumber(numberOrNil)
+wantsNumber(<error descr="Type mismatch. Required: 'number' Found: 'nil|number'">numberOrNil</error>)
 wantsNumber(--[[---@not nil]] numberOrNil)
 
 ---@param returnNumbers boolean

@@ -209,7 +209,7 @@ open class TySubstitutor : ITySubstitutor {
                 paramsSubstituted = true
             }
 
-            substitutedParam
+            TyMultipleResults.getResult(substitutedParam)
         }
 
         val substitutedBase = generic.base.substitute(this)

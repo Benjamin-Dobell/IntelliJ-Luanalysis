@@ -90,7 +90,8 @@ class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
     }
 
     override fun substitute(substitutor: ITySubstitutor): ITy {
-        val substitutedBase = base.substitute(substitutor)
+        val substitutedBase = TyMultipleResults.getResult(base.substitute(substitutor))
+
         return if (substitutedBase !== base) {
             TyArray(substitutedBase)
         } else {

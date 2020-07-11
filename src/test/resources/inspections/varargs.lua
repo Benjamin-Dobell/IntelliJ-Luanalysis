@@ -46,12 +46,18 @@ local aNumber
 ---@type boolean
 local aBoolean
 
+---@type nil | number
+local nilOrNumber
+
+---@type nil | boolean
+local nilOrBoolean
+
 ---@vararg number
 local function varargFunction7(...)
-    aNumber = ...
-    aNumber, aNumber = ...
-    <error descr="Type mismatch. Required: 'boolean' Found: 'number'">aBoolean</error>, <error descr="Type mismatch. Required: 'boolean' Found: 'number'">aBoolean</error> = <error descr="Result 1, type mismatch. Required: 'boolean' Found: 'number'"><error descr="Result 2, type mismatch. Required: 'boolean' Found: 'number'">...</error></error>
-    aNumber, <error descr="Type mismatch. Required: 'boolean' Found: 'number'">aBoolean</error>, aNumber = <error descr="Result 2, type mismatch. Required: 'boolean' Found: 'number'">...</error>
+    nilOrNumber = ...
+    nilOrNumber, nilOrNumber = ...
+    <error descr="Type mismatch. Required: 'boolean|nil' Found: 'nil|number'">nilOrBoolean</error>, <error descr="Type mismatch. Required: 'boolean|nil' Found: 'nil|number'">nilOrBoolean</error> = <error descr="Result 2, type mismatch. Required: 'boolean|nil' Found: 'nil|number'"><error descr="Type mismatch. Required: 'boolean|nil' Found: 'nil|number'">...</error></error>
+    <error descr="Type mismatch. Required: 'boolean|nil' Found: 'nil|number'">nilOrBoolean</error>, <error descr="Type mismatch. Required: 'boolean|nil' Found: 'nil|number'">nilOrBoolean</error> = <error descr="Result 2, type mismatch. Required: 'boolean|nil' Found: 'nil|number'"><error descr="Type mismatch. Required: 'boolean|nil' Found: 'nil|number'">...</error></error>
 end
 
 ---@type fun<T>(index: number, vararg T): T

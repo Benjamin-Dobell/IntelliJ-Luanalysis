@@ -21,6 +21,7 @@ import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
+import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
@@ -92,7 +93,8 @@ class AssignTypeInspection : StrictInspection() {
 
                     val searchContext = SearchContext.get(expressions.first().project)
                     var assigneeIndex = 0
-                    var variadicMultipleResults: TyMultipleResults? = null
+                    var variadicTy: ITy? = null
+                    var lastExpressionFirstAssigneeIndex = 0
 
                     for (expressionIndex in 0 until expressions.size) {
                         val isLastExpression = expressionIndex == expressions.size - 1
@@ -103,27 +105,52 @@ class AssignTypeInspection : StrictInspection() {
                             searchContext.withIndex(0) { expression.guessType(searchContext) }
                         }
                         val varianceFlags = if (expression is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
-                        val multipleResults = expressionType as? TyMultipleResults
-                        val values = if (multipleResults != null) multipleResults.list else listOf(expressionType)
 
-                        for (valueIndex in 0 until values.size) {
-                            val value = values[valueIndex]
-                            val variadic = isLastExpression && valueIndex == values.size - 1 && multipleResults?.variadic == true
+                        var multipleResults = expressionType as? TyMultipleResults
+                        var values = if (multipleResults != null) multipleResults.list else listOf(expressionType)
+                        var valueIndex = 0
 
-                            if (variadic) {
-                                variadicMultipleResults = multipleResults
+                        if (isLastExpression) {
+                            lastExpressionFirstAssigneeIndex = assigneeIndex
+                        }
+
+                        while (valueIndex < values.size) {
+                            var value = values[valueIndex]
+                            val isLastValue = valueIndex == values.lastIndex
+
+                            if (isLastValue) {
+                                if (variadicTy == null && isLastExpression && multipleResults?.variadic == true) {
+                                    variadicTy = if (value is TyMultipleResults) {
+                                        TyMultipleResults.getResult(value)
+                                    } else value
+
+                                    if (LuaSettings.instance.isNilStrict) {
+                                        variadicTy = Ty.NIL.union(variadicTy)
+                                    }
+                                }
+
+                                // Nested multiple value handling. Particularly important for handling generic parameter substitutions with multiple results.
+                                if (value is TyMultipleResults) {
+                                    multipleResults = value
+                                    values = value.list
+                                    valueIndex = 0
+                                    continue
+                                }
                             }
 
                             if (assigneeIndex >= assignees.size) {
-                                if (!variadic) {
-                                    for (i in expressionIndex until expressions.size) {
-                                        myHolder.registerProblem(expressions[i], "Insufficient assignees, values will be discarded.", ProblemHighlightType.WEAK_WARNING)
-                                    }
+                                for (i in expressionIndex until expressions.size) {
+                                    myHolder.registerProblem(expressions[i], "Insufficient assignees, values will be discarded.", ProblemHighlightType.WEAK_WARNING)
                                 }
                                 return
                             }
 
                             val assignee = assignees[assigneeIndex++]
+
+                            if (variadicTy != null) {
+                                variadicTy = variadicTy.union(value)
+                                value = variadicTy
+                            }
 
                             if (assignees.size == 1 && (assignee.parent?.parent as? LuaCommentOwner)?.comment?.tagClass != null) {
                                 if (value !is TyTable) {
@@ -132,7 +159,7 @@ class AssignTypeInspection : StrictInspection() {
                             } else {
                                 val inspectionTargetElement = if (assignees.size > 1) assignee else null
                                 inspectAssignee(assignee, value, varianceFlags, inspectionTargetElement, expression, searchContext) { targetElement, sourceElement, message, highlightType ->
-                                    val sourceMessage = if (assignees.size > 1 && (variadic || values.size > 1)) "Result ${valueIndex + 1}, ${message.decapitalize()}" else message
+                                    val sourceMessage = if (assignees.size > 1 && values.size > 1) "Result ${valueIndex + 1}, ${message.decapitalize()}" else message
                                     myHolder.registerProblem(sourceElement, sourceMessage, highlightType)
 
                                     if (targetElement != null && targetElement != sourceElement) {
@@ -144,16 +171,18 @@ class AssignTypeInspection : StrictInspection() {
                             if (!isLastExpression) {
                                 break // Multiple values are only handled for the last expression
                             }
+
+                            valueIndex++
                         }
                     }
 
                     if (assigneeIndex < assignees.size) {
-                        val lastExplicitIndex = assigneeIndex
-                        for (i in lastExplicitIndex until assignees.size) {
-                            if (variadicMultipleResults != null) {
-                                val assignee = assignees[assigneeIndex++]
-                                inspectAssignee(assignee, variadicMultipleResults.list.last(), 0, assignee, expressions.last(), searchContext) { targetElement, sourceElement, message, highlightType ->
-                                    val resultIndex = variadicMultipleResults.list.size + assigneeIndex - lastExplicitIndex
+                        while (assigneeIndex < assignees.size) {
+                            if (variadicTy != null) {
+                                val assignee = assignees[assigneeIndex]
+
+                                inspectAssignee(assignee, variadicTy, 0, assignee, expressions.last(), searchContext) { targetElement, sourceElement, message, highlightType ->
+                                    val resultIndex = assigneeIndex - lastExpressionFirstAssigneeIndex + 1
                                     val sourceMessage = if (assignees.size > 1) "Result ${resultIndex}, ${message.decapitalize()}" else message
                                     myHolder.registerProblem(sourceElement, sourceMessage, highlightType)
 
@@ -161,8 +190,10 @@ class AssignTypeInspection : StrictInspection() {
                                         myHolder.registerProblem(targetElement, message, highlightType)
                                     }
                                 }
+
+                                assigneeIndex++
                             } else {
-                                myHolder.registerProblem(assignees[i], "Too many assignees, will be assigned nil.")
+                                myHolder.registerProblem(assignees[assigneeIndex++], "Too many assignees, will be assigned nil.")
                             }
                         }
                     }

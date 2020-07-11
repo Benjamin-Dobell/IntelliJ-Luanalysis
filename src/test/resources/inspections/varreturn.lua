@@ -4,11 +4,17 @@ local aNumber
 ---@type boolean
 local aBoolean
 
+---@type nil | number
+local nilOrNumber
+
+---@type nil | boolean
+local nilOrBoolean
+
 ---@type fun(): number, boolean...
 local varreturnFunction
 
-aNumber, aBoolean, aBoolean = varreturnFunction()
-aNumber, aBoolean, aBoolean, <error descr="Type mismatch. Required: 'number' Found: 'boolean'">aNumber</error>, aBoolean = <error descr="Result 4, type mismatch. Required: 'number' Found: 'boolean'">varreturnFunction()</error>
+aNumber, nilOrBoolean, nilOrBoolean = varreturnFunction()
+aNumber, nilOrBoolean, nilOrBoolean, <error descr="Type mismatch. Required: 'nil|number' Found: 'boolean|nil'">nilOrNumber</error>, nilOrBoolean = <error descr="Result 4, type mismatch. Required: 'nil|number' Found: 'boolean|nil'">varreturnFunction()</error>
 
 
 ---@param numberParam number
@@ -23,12 +29,12 @@ local function varreturnFunction2()
     elseif aNumber == 4 then
         return 1, true, false
     else
-        <error descr="Incorrect number of values. Expected 1 but found 0.">return</error> -- Expect
+        <error descr="Incorrect number of values. Expected 1 but found 0.">return</error>
     end
 end
 
-aNumber, aBoolean, aBoolean = varreturnFunction2()
-aNumber, aBoolean, aBoolean, <error descr="Type mismatch. Required: 'number' Found: 'boolean'">aNumber</error>, aBoolean = <error descr="Result 4, type mismatch. Required: 'number' Found: 'boolean'">varreturnFunction2()</error>
+aNumber, nilOrBoolean, nilOrBoolean = varreturnFunction2()
+aNumber, nilOrBoolean, nilOrBoolean, <error descr="Type mismatch. Required: 'nil|number' Found: 'boolean|nil'">nilOrNumber</error>, nilOrBoolean = <error descr="Result 4, type mismatch. Required: 'nil|number' Found: 'boolean|nil'">varreturnFunction2()</error>
 
 ---@param a number
 ---@param b string
@@ -45,8 +51,8 @@ acceptsNumberVariadicString(<error descr="Variadic result, type mismatch. Requir
 ---@type fun(): boolean...
 local varreturnFunction3
 
-aBoolean, aBoolean = varreturnFunction3()
-aBoolean, aBoolean, <error descr="Type mismatch. Required: 'number' Found: 'boolean'">aNumber</error>, aBoolean = <error descr="Result 3, type mismatch. Required: 'number' Found: 'boolean'">varreturnFunction3()</error>
+nilOrBoolean, nilOrBoolean = varreturnFunction3()
+nilOrBoolean, nilOrBoolean, <error descr="Type mismatch. Required: 'nil|number' Found: 'boolean|nil'">nilOrNumber</error>, nilOrBoolean = <error descr="Result 3, type mismatch. Required: 'nil|number' Found: 'boolean|nil'">varreturnFunction3()</error>
 
 ---@return boolean...
 local function varreturnFunction4()
@@ -61,8 +67,8 @@ local function varreturnFunction4()
     end
 end
 
-aBoolean, aBoolean = varreturnFunction4()
-aBoolean, aBoolean, <error descr="Type mismatch. Required: 'number' Found: 'boolean'">aNumber</error>, aBoolean = <error descr="Result 3, type mismatch. Required: 'number' Found: 'boolean'">varreturnFunction4()</error>
+nilOrBoolean, nilOrBoolean = varreturnFunction4()
+nilOrBoolean, nilOrBoolean, <error descr="Type mismatch. Required: 'nil|number' Found: 'boolean|nil'">nilOrNumber</error>, nilOrBoolean = <error descr="Result 3, type mismatch. Required: 'nil|number' Found: 'boolean|nil'">varreturnFunction4()</error>
 
 ---@generic T
 ---@param list T[]
@@ -71,20 +77,12 @@ local function genericVarreturn(list)
     return table.unpack(list)
 end
 
-aNumber, aNumber = genericVarreturn({1, 2})
-aNumber, <error descr="Type mismatch. Required: 'boolean' Found: '1|2'">aBoolean</error> = <error descr="Result 2, type mismatch. Required: 'boolean' Found: '1|2'">genericVarreturn({1, 2})</error>
+nilOrNumber, nilOrNumber = genericVarreturn({1, 2})
+nilOrNumber, <error descr="Type mismatch. Required: 'boolean|nil' Found: '1|2|nil'">nilOrBoolean</error> = <error descr="Result 2, type mismatch. Required: 'boolean|nil' Found: '1|2|nil'">genericVarreturn({1, 2})</error>
 
-local implicitNumber1, implicitNumber2 = genericVarreturn({1, 2})
+local implicitNilOrNumber1, implicitNilOrNumber2 = genericVarreturn({ 1, 2})
 
-aNumber = implicitNumber1
-aBoolean = <error descr="Type mismatch. Required: 'boolean' Found: '1|2'">implicitNumber1</error>
-aNumber = implicitNumber2
-aBoolean = <error descr="Type mismatch. Required: 'boolean' Found: '1|2'">implicitNumber2</error>
-
----@return 1, 2, 3
-local function returns123()
-    return 1, 2, 3
-end
-
----@type number[]
-local numberArray = {returns123()}
+nilOrNumber = implicitNilOrNumber1
+nilOrBoolean = <error descr="Type mismatch. Required: 'boolean|nil' Found: '1|2|nil'">implicitNilOrNumber1</error>
+nilOrNumber = implicitNilOrNumber2
+nilOrBoolean = <error descr="Type mismatch. Required: 'boolean|nil' Found: '1|2|nil'">implicitNilOrNumber2</error>
