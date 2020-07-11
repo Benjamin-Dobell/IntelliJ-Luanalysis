@@ -26,14 +26,18 @@ class TyPrimitiveLiteral private constructor(override val primitiveKind: TyPrimi
     override val displayName: String by lazy { if (primitiveKind == TyPrimitiveKind.String) "\"${value.replace("\"", "\\\"")}\"" else value }
 
     // Ty.TRUE/Ty.FALSE are TyPrimitiveLiteral, to avoid circular references (a null booleanType) we make this lazy.
-    override val booleanType by lazy { if (primitiveKind != TyPrimitiveKind.Boolean || value == "true") Ty.TRUE else Ty.FALSE }
+    override val booleanType by lazy {
+        if (primitiveKind != TyPrimitiveKind.Boolean || value == "true") Ty.TRUE else Ty.FALSE
+    }
 
-    val primitiveType = when (primitiveKind) {
-        TyPrimitiveKind.Boolean -> Ty.BOOLEAN
-        TyPrimitiveKind.Function -> Ty.FUNCTION
-        TyPrimitiveKind.Number -> Ty.NUMBER
-        TyPrimitiveKind.String -> Ty.STRING
-        TyPrimitiveKind.Table -> Ty.TABLE
+    val primitiveType by lazy {
+        when (primitiveKind) {
+            TyPrimitiveKind.Boolean -> Ty.BOOLEAN
+            TyPrimitiveKind.Function -> Ty.FUNCTION
+            TyPrimitiveKind.Number -> Ty.NUMBER
+            TyPrimitiveKind.String -> Ty.STRING
+            TyPrimitiveKind.Table -> Ty.TABLE
+        }
     }
 
     override fun getSuperClass(context: SearchContext): ITy? {
