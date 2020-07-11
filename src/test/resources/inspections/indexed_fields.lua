@@ -75,3 +75,43 @@ local oneOrFour
 
 aNumber = vector[oneOrTwo]
 aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean|number'">vector[oneOrFour]</error>
+
+
+---@alias AOrB 'a' | 'b'
+
+---@type AOrB
+local aOrB
+
+---@shape UnionIndexer
+---@field [AOrB] boolean
+---@field [OneOrTwo] boolean
+---@field [3|4] boolean
+
+---@type UnionIndexer
+local unionIndexer
+
+aBoolean = unionIndexer.a
+aBoolean = unionIndexer['a']
+aBoolean = unionIndexer[aOrB]
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean'">unionIndexer.a</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean'">unionIndexer['a']</error>
+
+aBoolean = unionIndexer[1]
+aBoolean = unionIndexer[oneOrTwo]
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean'">unionIndexer[1]</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean'">unionIndexer[oneOrTwo]</error>
+
+---@alias ThreeOrFour 3|4
+
+---@type 3|4
+local threeOrFour
+
+---@type ThreeOrFour
+local aliasThreeOrFour
+
+aBoolean = unionIndexer[3]
+aBoolean = unionIndexer[threeOrFour]
+aBoolean = unionIndexer[aliasThreeOrFour]
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean'">unionIndexer[3]</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean'">unionIndexer[threeOrFour]</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean'">unionIndexer[aliasThreeOrFour]</error>
