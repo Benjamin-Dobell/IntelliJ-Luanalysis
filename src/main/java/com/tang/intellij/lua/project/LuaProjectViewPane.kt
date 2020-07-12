@@ -62,7 +62,7 @@ class LuaProjectViewPane(project: Project) : AbstractProjectViewPSIPane(project)
     }
 
     override fun getTitle(): String {
-        return "EmmyLua Explorer"
+        return "Luanalysis Explorer"
     }
 
     override fun createSelectInTarget(): SelectInTarget {

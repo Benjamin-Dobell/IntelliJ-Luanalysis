@@ -21,7 +21,7 @@
     <depends>com.intellij.modules.lang</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <errorHandler implementation="com.tang.intellij.lua.errorreporting.GitHubErrorReporter"/>
+        <!--<<errorHandler implementation="com.tang.intellij.lua.errorreporting.GitHubErrorReporter"/>-->
 
         <!--LuaCheck-->
         <toolWindow id="LuaCheck"
@@ -162,7 +162,7 @@
         <!--lua settings-->
         <applicationService serviceImplementation="com.tang.intellij.lua.project.LuaSettings"/>
         <applicationConfigurable groupId="language"
-                                 displayName="EmmyLua"
+                                 displayName="Luanalysis"
                                  id="preferences.Lua"
                                  instance="com.tang.intellij.lua.project.LuaSettingsPanel">
             <!--<configurable instance="com.tang.intellij.lua.project.CompletionSettingsPanel"

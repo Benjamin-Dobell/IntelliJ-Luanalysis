@@ -56,8 +56,8 @@ import javax.crypto.spec.SecretKeySpec
 
 private object AnonymousFeedback {
 	private const val tokenFile = "errorreporting/token.bin"
-	private const val gitRepoUser = "EmmyLua"
-	private const val gitRepo = "EmmyLua-ErrorReport"
+	private const val gitRepoUser = "Benjamin-Dobell"
+	private const val gitRepo = "IntelliJ-Luanalysis"
 	private const val issueLabel = "pending"
 
 	/**

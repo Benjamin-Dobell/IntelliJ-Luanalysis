@@ -18,40 +18,11 @@ versions["201"] = [
     ideaSDKVersion: "IC-201.6668.121",
     sinceBuild: "201",
     untilBuild: "201.*",
-    archiveName: "IntelliJ-EmmyLua"
-]
-versions["193"] = [
-    ideaSDKVersion: "IC-193.5233.102",
-    sinceBuild: "193",
-    untilBuild: "194.*",
-    archiveName: "IntelliJ-EmmyLua",
-]
-versions["182"] = [
-    ideaSDKVersion: "IC-182.2371.4",
-    sinceBuild: "182",
-    untilBuild: "193.*",
-    archiveName: "IntelliJ-EmmyLua",
-    explicitJavaDependency: "false",
-]
-versions["172"] = [
-    ideaSDKVersion: "IC-172.4574.19",
-    sinceBuild: "172",
-    untilBuild: "181.*",
-    archiveName: "IntelliJ-EmmyLua",
-    explicitJavaDependency: "false",
-]
-versions["171"] = [
-    ideaSDKVersion: "IC-171.4694.73",
-    sinceBuild: "171",
-    untilBuild: "171.*",
-    archiveName: "IntelliJ-EmmyLua",
-    explicitJavaDependency: "false",
+    archiveName: "IntelliJ-Luanalysis"
 ]
 
 versions.each { shortVer, cfg ->
     task "build_${shortVer}"(type: GradleBuild) {
-        //temporarily remove the "test" task for 201-EAP
-        //see https://youtrack.jetbrains.com/issue/IDEA-232880
         tasks = ["buildPluginWithBunch", "test"]
         buildFile = 'build_plugin.gradle'
         startParameter.setProjectProperties([
@@ -60,4 +31,4 @@ versions.each { shortVer, cfg ->
     }
 }
 
-task buildAll(dependsOn: [build_201, build_182])
+task buildAll(dependsOn: [build_201])

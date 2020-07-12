@@ -29,7 +29,7 @@ class EmmyLuaDirectoryProjectGenerator : DirectoryProjectGeneratorBase<Any>() {
     }
 
     override fun getName(): String {
-        return "EmmyLua"
+        return "Luanalysis"
     }
 
     override fun getLogo(): Icon = LuaIcons.FILE

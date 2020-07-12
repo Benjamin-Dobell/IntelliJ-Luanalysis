@@ -1,30 +1,29 @@
-Environment（环境）
+Environment
 --------------
    name   |   version  
 ----------|----------
  IDEA version         | [e.g. IC2018.2 EAP, CL2018.1.2]
- EmmyLua version | [e.g. v1.2.5]
+ Luanalysis version | [e.g. v1.2.5]
  OS                        | [e.g. OSX 10.13.4, Windows 10]
 
-What are the steps to reproduce this issue?（重现步骤？）
+What are the steps to reproduce this issue?
 ------------------------------------------------
 1. …
 2. …
 3. …
 
-What happens?（出现什么问题？）
+What happens?
 -------------
 …
 
-What were you expecting to happen?（期望？）
+What were you expecting to happen?
 -----------------------------------------
 …
 
-Any logs, error output, etc?（有没有什么log, error输出？）
+Any logs, error output, etc?
 ------------------------------
-(If it’s long, please paste to https://ghostbin.com/ and insert the link here.)
+…
 
-
-Any other comments?（其它说明）
+Any other comments?
 ------------------------
 …
