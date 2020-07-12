@@ -139,8 +139,10 @@ class AssignTypeInspection : StrictInspection() {
                             }
 
                             if (assigneeIndex >= assignees.size) {
-                                for (i in expressionIndex until expressions.size) {
-                                    myHolder.registerProblem(expressions[i], "Insufficient assignees, values will be discarded.", ProblemHighlightType.WEAK_WARNING)
+                                if (!isLastValue || multipleResults?.variadic != true) {
+                                    for (i in expressionIndex until expressions.size) {
+                                        myHolder.registerProblem(expressions[i], "Insufficient assignees, values will be discarded.", ProblemHighlightType.WEAK_WARNING)
+                                    }
                                 }
                                 return
                             }
