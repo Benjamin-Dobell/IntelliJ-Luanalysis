@@ -26,5 +26,6 @@ import com.intellij.openapi.fileTypes.FileTypeFactory
 class LuaFileTypeFactory : FileTypeFactory() {
     override fun createFileTypes(fileTypeConsumer: FileTypeConsumer) {
         fileTypeConsumer.consume(LuaFileType.INSTANCE, "lua")
+        fileTypeConsumer.consume(LuaFileType.INSTANCE, "ttslua")
     }
 }

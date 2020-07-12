@@ -44,18 +44,6 @@ To install the `.zip` you'll need to go to IntelliJ's...
 
 Select the `.zip`, then when prompted restart IntelliJ.
 
-### Tabletop Simulator (.ttslua file extension)
-
-By default, Luanalysis expects Lua files to have the extension `.lua`. If you wish to work with other file type extensions e.g Tabletop Simulator's `.ttslua` extension then you can go to IntelliJ's:
-
-    Preferences -> Editor -> File Types -> Lua Language
-
-At the bottom of the "Registered patterns" list click the add ('+') icon and add the entry:
-
-    *.ttslua
-
-![](https://user-images.githubusercontent.com/482276/82045601-b4ee7580-96f2-11ea-932f-9fd4b1c4e050.png)
-
 ## Features
 
 Luanalysis is derived from EmmyLua and supports all the basic editing and refactoring functionality provided by [EmmyLua](https://github.com/EmmyLua/IntelliJ-EmmyLua).
