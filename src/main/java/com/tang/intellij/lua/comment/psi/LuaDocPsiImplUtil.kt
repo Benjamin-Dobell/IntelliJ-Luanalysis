@@ -230,28 +230,52 @@ fun isShape(tagClass: LuaDocTagClass): Boolean {
 }
 
 fun getType(tagType: LuaDocTagType, index: Int): ITy {
-    return tagType.typeList?.tyList?.getOrNull(index)?.getType() ?: Ty.UNKNOWN
+    val tyList = tagType.typeList?.tyList
+
+    if (tyList == null) {
+        return Ty.UNKNOWN
+    }
+
+    return tyList.getOrNull(index)?.getType() ?: if (tagType.variadic != null) {
+        tyList.last().getType()
+    } else {
+        Ty.UNKNOWN
+    }
 }
 
 fun getType(tagType: LuaDocTagType): ITy {
     val list = tagType.typeList?.tyList?.map { it.getType() }
     return if (list == null) {
         Ty.UNKNOWN
-    } else if (list.size == 1) {
+    } else if (list.size == 1 && tagType.variadic == null) {
         list.first()
     } else {
-        TyMultipleResults(list, false)
+        TyMultipleResults(list, tagType.variadic != null)
     }
 }
 
 fun getType(tagNot: LuaDocTagNot, index: Int): ITy {
-    return tagNot.typeList?.tyList?.getOrNull(index)?.getType() ?: Ty.VOID
+    val tyList = tagNot.typeList?.tyList
+
+    if (tyList == null) {
+        return Ty.VOID
+    }
+
+    return tyList.getOrNull(index)?.getType() ?: if (tagNot.variadic != null) {
+        tyList.last().getType()
+    } else {
+        Ty.VOID
+    }
 }
 
 fun getType(tagNot: LuaDocTagNot): ITy {
     val list = tagNot.typeList?.tyList?.map { it.getType() }
     return if (list != null && list.size > 0) {
-        if (list.size > 1) TyMultipleResults(list, false) else list.first()
+        if (list.size > 1 || tagNot.variadic != null) {
+            TyMultipleResults(list, tagNot.variadic != null)
+        } else {
+            list.first()
+        }
     } else {
         Ty.VOID
     }

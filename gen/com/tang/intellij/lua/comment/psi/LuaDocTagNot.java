@@ -19,4 +19,7 @@ public interface LuaDocTagNot extends LuaDocTag, StubBasedPsiElement<LuaDocTagNo
   @NotNull
   ITy getType();
 
+  @Nullable
+  PsiElement getVariadic();
+
 }

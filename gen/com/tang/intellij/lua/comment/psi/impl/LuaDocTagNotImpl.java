@@ -56,4 +56,10 @@ public class LuaDocTagNotImpl extends StubBasedPsiElementBase<LuaDocTagNotStub> 
     return LuaDocPsiImplUtilKt.getType(this);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getVariadic() {
+    return findChildByType(ELLIPSIS);
+  }
+
 }

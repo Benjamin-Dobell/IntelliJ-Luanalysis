@@ -20,7 +20,19 @@ import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.tang.intellij.lua.search.SearchContext
 
-class TyMultipleResults(val list: List<ITy>, val variadic: Boolean) : Ty(TyKind.MultipleResults) {
+class TyMultipleResults : Ty {
+    val list: List<ITy>
+    val variadic: Boolean
+
+    constructor(iterable: Iterable<ITy>, variadic: Boolean): super(TyKind.MultipleResults) {
+        list = iterable.toList()
+        this.variadic = variadic
+    }
+
+    constructor(sequence: Sequence<ITy>, variadic: Boolean): super(TyKind.MultipleResults) {
+        list = sequence.toList()
+        this.variadic = variadic
+    }
 
     override fun substitute(substitutor: ITySubstitutor): ITy {
         var resultsSubstituted = false
@@ -111,6 +123,52 @@ class TyMultipleResults(val list: List<ITy>, val variadic: Boolean) : Ty(TyKind.
                 && resolvedOther.variadic == variadic
                 && resolvedOther.list.size == list.size
                 && resolvedOther.list.asSequence().zip(list.asSequence()).all { (otherTy, ty) -> otherTy.equals(ty, context) }
+    }
+
+    fun <R> convolve(other: TyMultipleResults, transformer: (ITy, ITy?) -> R): Sequence<R> {
+        return ConvolveSequence(this, other, transformer)
+    }
+
+    private class ConvolveSequence<V>(
+            private val multipleResults1: TyMultipleResults,
+            private val multipleResults2: TyMultipleResults,
+            private val transform: (ITy, ITy?) -> V
+    ) : Sequence<V> {
+        override fun iterator(): Iterator<V> = object : Iterator<V> {
+            var index1 = 0
+            var index2 = 0
+            val list1 = multipleResults1.list
+            val list2 = multipleResults2.list
+            val variadic1 = multipleResults1.variadic
+            val variadic2 = multipleResults2.variadic
+
+            override fun hasNext(): Boolean {
+                return if (variadic1) {
+                    (variadic2 && index2 < list2.size) || index2 <= list2.size
+                } else {
+                    index1 < list1.size
+                }
+            }
+
+            override fun next(): V {
+                val ty1 = if (multipleResults1.variadic && index1 >= list1.lastIndex) {
+                    Ty.NIL.union(list1.last())
+                } else {
+                    list1[index1]
+                }
+
+                val ty2 = if (multipleResults2.variadic && index2 >= list2.lastIndex) {
+                    Ty.NIL.union(list2.last())
+                } else {
+                    list2.getOrNull(index2)
+                }
+
+                index1++
+                index2++
+
+                return transform(ty1, ty2)
+            }
+        }
     }
 
     companion object {

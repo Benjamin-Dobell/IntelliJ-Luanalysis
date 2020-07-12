@@ -40,9 +40,13 @@ fun inferExpr(expr: LuaExpr?, context: SearchContext): ITy {
         val typeCast = PsiTreeUtil.getChildrenOfTypeAsList(expr.comment, LuaDocTagTypeImpl::class.java).firstOrNull()
 
         if (typeCast != null) {
+            val castTy = typeCast.getType()
+
             return if (context.supportsMultipleResults) {
-                typeCast.getType()
-            } else typeCast.getType(context.index)
+                castTy
+            } else {
+                TyMultipleResults.getResult(castTy, context.index)
+            }
         }
     }
 
@@ -69,19 +73,21 @@ fun inferExpr(expr: LuaExpr?, context: SearchContext): ITy {
             notTypeCast.getType(context.index)
         }
 
-        if (ty is TyMultipleResults) {
-            val notTyList = if (notTy is TyMultipleResults) {
-                notTy.list
-            } else {
-                listOf(notTy)
-            }
+        if (notTy is TyMultipleResults) {
+            val flattenedTy = TyMultipleResults.flatten(ty)
 
-            return TyMultipleResults(ty.list.mapIndexed { i, resultTy ->
-                resultTy.not(notTyList.getOrNull(i) ?: Ty.VOID)
-            }, ty.variadic)
+            if (flattenedTy is TyMultipleResults) {
+                return TyMultipleResults(flattenedTy.convolve(notTy) { resultTy, notResultTy ->
+                    if (notResultTy != null) {
+                        resultTy.not(notResultTy)
+                    } else {
+                        resultTy
+                    }
+                }, flattenedTy.variadic)
+            }
         }
 
-        return ty.not((notTy as? TyMultipleResults)?.list?.first() ?: notTy)
+        return TyMultipleResults.getResult(ty).not(TyMultipleResults.getResult(notTy))
     }
 
     return ty

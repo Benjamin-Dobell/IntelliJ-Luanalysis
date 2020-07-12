@@ -61,3 +61,56 @@ aNumber, aNumber = --[[---@not string, string]] multiReturn2(true)
 aNumber, aString = --[[---@not string, number]] multiReturn2(true)
 aNumber = <error descr="Type mismatch. Required: 'number' Found: 'number|string'">multiReturn2(true)</error>
 aNumber = --[[---@not string]] multiReturn2(true)
+
+
+---@type number[]
+local numberArray
+
+local a, b, c = --[[---@not nil, nil, nil]] table.unpack(numberArray, 1, 3)
+
+aNumber = a
+aNumber = b
+aNumber = c
+
+aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">a</error>
+aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">b</error>
+aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">c</error>
+
+---@type (number | string)[]
+local stringOrNumberArray
+
+local d, e, f = --[[---@not nil | number, nil | number, nil | number]] table.unpack(stringOrNumberArray, 1, 3)
+
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">d</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">e</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">f</error>
+
+aString = d
+aString = e
+aString = f
+
+---@type nil | number
+local nilOrNumber
+
+local g, h, i = --[[---@not string...]] table.unpack(stringOrNumberArray, 1, 3)
+
+nilOrNumber = g
+nilOrNumber = h
+nilOrNumber = i
+
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'nil|number'">g</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'nil|number'">h</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'nil|number'">i</error>
+
+---@type nil | string
+local nilOrString
+
+local j, k, l = --[[---@type string...]] table.unpack(stringOrNumberArray, 1, 3)
+
+nilOrNumber = <error descr="Type mismatch. Required: 'nil|number' Found: 'nil|string'">j</error>
+nilOrNumber = <error descr="Type mismatch. Required: 'nil|number' Found: 'nil|string'">k</error>
+nilOrNumber = <error descr="Type mismatch. Required: 'nil|number' Found: 'nil|string'">l</error>
+
+nilOrString = j
+nilOrString = k
+nilOrString = l

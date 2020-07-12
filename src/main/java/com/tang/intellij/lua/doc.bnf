@@ -202,7 +202,7 @@ private function_generic ::= '<' generic_def (',' generic_def)* '>' {
 function_params ::= '(' function_param_list? ')' {
     pin = 1
 }
-function_return_list ::= ':' type_list '...'? {
+function_return_list ::= ':' type_list ELLIPSIS ? {
     pin = 1
     methods = [
         varreturn = 'ELLIPSIS'
@@ -340,16 +340,22 @@ tag_class ::= (TAG_NAME_CLASS|TAG_NAME_SHAPE|TAG_NAME_MODULE) ID ('<' generic_de
     ]
 }
 
-tag_type ::= TAG_NAME_TYPE type_list comment_string? {
+tag_type ::= TAG_NAME_TYPE type_list ELLIPSIS? comment_string? {
     pin = 1
     stubClass = "com.tang.intellij.lua.stubs.LuaDocTagTypeStub"
-    methods = [getType]
+    methods = [
+        getType
+        variadic = 'ELLIPSIS'
+    ]
 }
 
-tag_not ::= TAG_NAME_NOT type_list {
+tag_not ::= TAG_NAME_NOT type_list ELLIPSIS? {
     pin = 1
     stubClass = "com.tang.intellij.lua.stubs.LuaDocTagNotStub"
-    methods = [getType]
+    methods = [
+        getType
+        variadic = 'ELLIPSIS'
+    ]
 }
 
 comment_string ::= STRING_BEGIN? STRING? {
