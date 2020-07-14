@@ -116,7 +116,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
             if (perfect != null) return perfect
 
             return if (searchIndexers) {
-                findIndexer(type, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, fieldName), context, false, deep)
+                findIndexer(type, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, fieldName), context, false, false, deep)
             } else null
         }
 
@@ -136,7 +136,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
             return processClassKey(type, "[]", context, processor, deep)
         }
 
-        fun processIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, processor: Processor<in LuaClassMember>, deep: Boolean = true): Boolean {
+        fun processIndexer(type: ITyClass, indexTy: ITy, exact: Boolean, context: SearchContext, processor: Processor<in LuaClassMember>, deep: Boolean = true): Boolean {
             val exactIndexerKey = "*[${indexTy.displayName}]"
             var exactIndexerFound = false
 
@@ -145,7 +145,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
                 processor.process(it)
             }, deep)
 
-            if (exactIndexerFound) {
+            if (exactIndexerFound || exact) {
                 return exactIndexerResult
             }
 
@@ -168,7 +168,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
             } ?: false
         }
 
-        fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, searchMembers: Boolean = true, deep: Boolean = true): LuaClassMember? {
+        fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, exact: Boolean = false, searchMembers: Boolean = true, deep: Boolean = true): LuaClassMember? {
             if (searchMembers && indexTy is TyPrimitiveLiteral && indexTy.primitiveKind == TyPrimitiveKind.String) {
                 findMember(type, indexTy.value, context, false, deep)?.let {
                     return it
@@ -177,7 +177,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
 
             var target: LuaClassMember? = null
 
-            processIndexer(type, indexTy, context, Processor {
+            processIndexer(type, indexTy, exact, context, Processor {
                 target = it
                 false
             }, deep)

@@ -43,8 +43,8 @@ class LuaShortNamesManagerImpl : LuaShortNamesManager() {
         return LuaClassMemberIndex.findMember(type, fieldName, context)
     }
 
-    override fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext): LuaClassMember? {
-        return LuaClassMemberIndex.findIndexer(type, indexTy, context)
+    override fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, exact: Boolean): LuaClassMember? {
+        return LuaClassMemberIndex.findIndexer(type, indexTy, context, exact)
     }
 
     override fun processAllAliases(project: Project, processor: Processor<String>): Boolean {
@@ -71,7 +71,7 @@ class LuaShortNamesManagerImpl : LuaShortNamesManager() {
         return LuaClassMemberIndex.processMember(type, fieldName, context, processor)
     }
 
-    override fun processIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean {
-        return LuaClassMemberIndex.processIndexer(type, indexTy, context, processor)
+    override fun processIndexer(type: ITyClass, indexTy: ITy, exact: Boolean, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean {
+        return LuaClassMemberIndex.processIndexer(type, indexTy, exact, context, processor)
     }
 }

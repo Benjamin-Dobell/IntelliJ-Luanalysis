@@ -187,8 +187,8 @@ abstract class TyClass(override val className: String,
         return LuaShortNamesManager.getInstance(searchContext.project).findMember(this, name, searchContext)
     }
 
-    override fun findIndexer(indexTy: ITy, searchContext: SearchContext): LuaClassMember? {
-        return LuaShortNamesManager.getInstance(searchContext.project).findIndexer(this, indexTy, searchContext)
+    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember? {
+        return LuaShortNamesManager.getInstance(searchContext.project).findIndexer(this, indexTy, searchContext, exact)
     }
 
     override fun accept(visitor: ITyVisitor) {
@@ -454,14 +454,15 @@ class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table)
         return table.tableFieldList.firstOrNull { it.name == name }
     }
 
-    override fun findIndexer(indexTy: ITy, searchContext: SearchContext): LuaClassMember? {
+    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember? {
         var narrowestClassMember: LuaClassMember? = null
         var narrowestIndexTy: ITy? = null
 
         table.tableFieldList.forEach {
             val candidateIndexerTy = it.guessIndexType(searchContext)
 
-            if (candidateIndexerTy?.contravariantOf(indexTy, searchContext, TyVarianceFlags.STRICT_UNKNOWN) == true) {
+            if ((!exact && candidateIndexerTy?.contravariantOf(indexTy, searchContext, TyVarianceFlags.STRICT_UNKNOWN) == true)
+                    || candidateIndexerTy == indexTy) {
                 if (narrowestIndexTy?.contravariantOf(candidateIndexerTy, searchContext, TyVarianceFlags.STRICT_UNKNOWN) != false) {
                     narrowestClassMember = it
                     narrowestIndexTy = candidateIndexerTy

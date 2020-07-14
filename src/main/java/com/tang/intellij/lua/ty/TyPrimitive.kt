@@ -79,10 +79,10 @@ class TyPrimitive(override val primitiveKind: TyPrimitiveKind,
         } else super<Ty>.guessMemberType(name, searchContext)
     }
 
-    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext): ITy? {
+    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
         return if (primitiveKind == TyPrimitiveKind.Table) {
             Ty.UNKNOWN
-        } else super<Ty>.guessIndexerType(indexTy, searchContext)
+        } else super<Ty>.guessIndexerType(indexTy, searchContext, exact)
     }
 }
 

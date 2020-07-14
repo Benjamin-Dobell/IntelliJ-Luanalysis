@@ -110,7 +110,7 @@ interface ITy : Comparable<ITy> {
     fun acceptChildren(visitor: ITyVisitor)
 
     fun findMember(name: String, searchContext: SearchContext): LuaClassMember?
-    fun findIndexer(indexTy: ITy, searchContext: SearchContext): LuaClassMember?
+    fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean = false): LuaClassMember?
 
     fun isShape(searchContext: SearchContext): Boolean {
         return flags and TyFlags.SHAPE != 0
@@ -123,14 +123,14 @@ interface ITy : Comparable<ITy> {
         }
     }
 
-    fun guessIndexerType(indexTy: ITy, searchContext: SearchContext): ITy? {
+    fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean = false): ITy? {
         var ty: ITy? = null
 
         Ty.eachResolved(indexTy, searchContext) {
             val valueTy = if (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String) {
                 guessMemberType(it.value, searchContext)
             } else {
-                findIndexer(it, searchContext)?.guessType(searchContext)?.let {
+                findIndexer(it, searchContext, exact)?.guessType(searchContext)?.let {
                     val substitutor = getMemberSubstitutor(searchContext)
                     if (substitutor != null) it.substitute(substitutor) else it
                 }
@@ -475,7 +475,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
                 } ?: Ty.UNKNOWN
 
                 val otherMemberTy = if (indexTy != null) {
-                    other.guessIndexerType(indexTy, context)
+                    other.guessIndexerType(indexTy, context, true)
                 } else {
                     classMember.name?.let { other.guessMemberType(it, context) }
                 }
@@ -539,7 +539,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
         return null
     }
 
-    override fun findIndexer(indexTy: ITy, searchContext: SearchContext): LuaClassMember? {
+    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember? {
         return null
     }
 
@@ -761,7 +761,7 @@ class TyUnknown : Ty(TyKind.Unknown) {
         return if (LuaSettings.instance.isUnknownIndexable) Ty.UNKNOWN else null
     }
 
-    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext): ITy? {
+    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
         return if (LuaSettings.instance.isUnknownIndexable) Ty.UNKNOWN else null
     }
 }

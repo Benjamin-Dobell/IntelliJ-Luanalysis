@@ -54,9 +54,9 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager() {
         return null
     }
 
-    override fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext): LuaClassMember? {
+    override fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, exact: Boolean): LuaClassMember? {
         for (manager in list) {
-            val ret = manager.findIndexer(type, indexTy, context)
+            val ret = manager.findIndexer(type, indexTy, context, exact)
             if (ret != null) return ret
         }
         return null
@@ -111,9 +111,9 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager() {
         return true
     }
 
-    override fun processIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean {
+    override fun processIndexer(type: ITyClass, indexTy: ITy, exact: Boolean, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean {
         for (manager in list) {
-            if (!manager.processIndexer(type, indexTy, context, processor))
+            if (!manager.processIndexer(type, indexTy, false, context, processor))
                 return false
         }
         return true

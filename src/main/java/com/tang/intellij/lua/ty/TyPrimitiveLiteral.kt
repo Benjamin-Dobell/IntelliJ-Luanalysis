@@ -70,8 +70,8 @@ class TyPrimitiveLiteral private constructor(override val primitiveKind: TyPrimi
         return primitiveType.guessMemberType(name, searchContext)
     }
 
-    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext): ITy? {
-        return primitiveType.guessIndexerType(indexTy, searchContext)
+    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
+        return primitiveType.guessIndexerType(indexTy, searchContext, exact)
     }
 
     companion object {

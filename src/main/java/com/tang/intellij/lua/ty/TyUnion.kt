@@ -124,8 +124,8 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
         return childSet.firstOrNull()?.findMember(name, searchContext)
     }
 
-    override fun findIndexer(indexTy: ITy, searchContext: SearchContext): LuaClassMember? {
-        return childSet.firstOrNull()?.findIndexer(indexTy, searchContext)
+    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember? {
+        return childSet.firstOrNull()?.findIndexer(indexTy, searchContext, exact)
     }
 
     override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
@@ -142,11 +142,11 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
         return ty
     }
 
-    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext): ITy? {
+    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
         var ty: ITy? = null
 
         childSet.forEach {
-            val valueTy = it.guessIndexerType(indexTy, searchContext)
+            val valueTy = it.guessIndexerType(indexTy, searchContext, exact)
 
             if (valueTy != null) {
                 ty = ty?.union(valueTy) ?: valueTy

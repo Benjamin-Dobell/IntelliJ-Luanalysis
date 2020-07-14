@@ -50,7 +50,7 @@ abstract class LuaShortNamesManager {
 
     abstract fun findMember(type: ITyClass, fieldName: String, context: SearchContext): LuaClassMember?
 
-    abstract fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext): LuaClassMember?
+    abstract fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, exact: Boolean = false): LuaClassMember?
 
     abstract fun processAllAliases(project: Project, processor: Processor<String>): Boolean
 
@@ -64,7 +64,7 @@ abstract class LuaShortNamesManager {
 
     abstract fun processMember(type: ITyClass, fieldName: String, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean
 
-    abstract fun processIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean
+    abstract fun processIndexer(type: ITyClass, indexTy: ITy, exact: Boolean, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean
 
     open fun findType(name: String, context: SearchContext): LuaTypeDef? {
         return findClass(name, context) ?: findAlias(name, context)

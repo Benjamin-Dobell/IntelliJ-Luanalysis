@@ -107,12 +107,12 @@ class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
         base.accept(visitor)
     }
 
-    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext): ITy? {
-        if (Ty.NUMBER.contravariantOf(indexTy, searchContext, 0)) {
+    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
+        if ((!exact && Ty.NUMBER.contravariantOf(indexTy, searchContext, 0)) || Ty.NUMBER == indexTy) {
             return base
         }
 
-        return super<Ty>.guessIndexerType(indexTy, searchContext)
+        return super<Ty>.guessIndexerType(indexTy, searchContext, exact)
     }
 
     companion object {

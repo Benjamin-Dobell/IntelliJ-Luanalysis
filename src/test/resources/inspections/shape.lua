@@ -171,6 +171,7 @@ local numberArray
 local numberTuple
 
 numberArray = numberTuple
+numberTuple = <error descr="Type mismatch. Required: 'NumberTuple' Found: 'number[]'">numberArray</error>
 
 ---@shape NonContiguousNumberTuple : NumberTuple
 ---@field [5] number

@@ -170,7 +170,7 @@ abstract class TyGeneric(final override val params: Array<ITy>, final override v
                 val indexTy = classMember.guessIndexType(context)
 
                 val otherMember = if (indexTy != null) {
-                    resolvedOther.findIndexer(indexTy, context)
+                    resolvedOther.findIndexer(indexTy, context, false)
                 } else {
                     classMember.name?.let { resolvedOther.findMember(it, context) }
                 }
@@ -250,8 +250,8 @@ abstract class TyGeneric(final override val params: Array<ITy>, final override v
         return base.findMember(name, searchContext)
     }
 
-    override fun findIndexer(indexTy: ITy, searchContext: SearchContext): LuaClassMember? {
-        return base.findIndexer(indexTy, searchContext)
+    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember? {
+        return base.findIndexer(indexTy, searchContext, exact)
     }
 
     override fun isShape(searchContext: SearchContext): Boolean {
@@ -267,12 +267,12 @@ abstract class TyGeneric(final override val params: Array<ITy>, final override v
         return super<Ty>.guessMemberType(name, searchContext)
     }
 
-    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext): ITy? {
-        if (base == Ty.TABLE && params.size == 2 && params[0].contravariantOf(indexTy, searchContext, 0)) {
+    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
+        if (base == Ty.TABLE && params.size == 2 && ((!exact && params[0].contravariantOf(indexTy, searchContext, 0)) || indexTy == params[0])) {
             return params[1]
         }
 
-        return super<Ty>.guessIndexerType(indexTy, searchContext)
+        return super<Ty>.guessIndexerType(indexTy, searchContext, exact)
     }
 
     override fun processMembers(context: SearchContext, processor: (ITy, LuaClassMember) -> Boolean, deep: Boolean): Boolean {

@@ -232,7 +232,7 @@ object ProblemUtil {
                 val indexTy = targetMember.guessIndexType(context)
 
                 val sourceMember = if (indexTy != null) {
-                    source.findIndexer(indexTy, context)
+                    source.findIndexer(indexTy, context, true)
                 } else {
                     targetMember.name?.let { source.findMember(it, context) }
                 }
