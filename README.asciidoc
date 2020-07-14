@@ -1,0 +1,388 @@
+= Luanalysis (an EmmyLua fork) for IntelliJ IDEA
+:toc:
+:toc-placement!:
+
+An IDE for statically typed Lua development.
+
+_Derived from https://emmylua.github.io/[EmmyLua]._
+
+image:./snapshot/overview.gif[snapshot]
+
+toc::[]
+
+== Editor Features
+
+=== Find usages
+
+image:./snapshot/find_usages.gif[find_usages]
+
+=== Rename
+
+image:./snapshot/rename.gif[rename]
+
+=== Parameter hints
+
+image:./snapshot/param_hints.png[param_hints]
+image:./snapshot/param_hints_cfg.png[param_hints_cfg]
+
+=== Go to symbol
+
+image:./snapshot/go_to_symbol.gif[go_to_symbol]
+
+=== Go to class
+
+image:./snapshot/go_to_class.gif[go_to_class]
+
+=== Quick Documentation (Ctrl + Q)
+
+image:./snapshot/quick_documentation.gif[quick_documentation]
+
+=== Method separators
+
+image:./snapshot/method_separators_cfg.png[method_separators_cfg]
+image:./snapshot/method_separators.png[method_separators]
+
+=== Method override line marker
+
+image:./snapshot/method_override_line_marker.gif[method_override_line_marker]
+
+== Installation
+
+The latest release is available for download within IntelliJ or from the
+https://plugins.jetbrains.com/plugin/14698-luanalysis[Jetbrains Plugin
+website].
+
+== Static Analysis Features
+
+Luanalysis is derived from EmmyLua and supports all the basic editing and refactoring functionality provided by
+https://github.com/EmmyLua/IntelliJ-EmmyLua[EmmyLua].
+
+Beyond basic Lua editing capabilities, Luanalysis supports a significant amount of additional functionality necessary to statically type advanced codebases.
+
+_*Note*: Features are roughly listed in the order they were implemented, by no means order of importance._
+
+=== Demo Project
+
+A great way to see what’s possible in terms of static typing is to checkout the
+https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/[Luanalysis demo
+project].
+
+=== EmmyDoc Block Comments
+
+image:./snapshot/1_emmydoc_block_comments.png[image]
+
+=== Type casts
+
+In addition to defining new types, the `@type` tag can now we also used to cast the result of a Lua expression.
+
+This is most useful with the newly added support for EmmyDoc block comments as we can easily specify inline type casts:
+
+image:./snapshot/2_type_casts.png[image]
+
+https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f61e74e620b7505b58c65/src/type_casts.lua
+
+=== Improved variance detection
+
+EmmyLua attempts to determine if a type is assignable to another type simply by checking if the former is a ``subtype'' of latter, however proper type variance of complex types is not implemented.
+For example, functions may be covariant or contravariant of other function types, depending on parameters and return value types:
+
+image:./snapshot/3_improved_variance_detection.png[image]
+
+EmmyLua does _not_ report the above error.
+
+Additionally, union variance detection has been fixed:
+
+image:./snapshot/3_2_improved_variance_detection.png[image]
+
+As above, the current release of EmmyLua does not catch this error.
+
+=== Primitive literal types
+
+image:./snapshot/4_primitive_literal_types.png[image]
+
+https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f61e74e620b7505b58c65/src/string_literals.lua
+
+=== Generic parameter type usage within function bodies
+
+image:./snapshot/5_generic_parameters_within_function_bodies.png[image]
+
+https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f61e74e620b7505b58c65/src/function_generics_scope.lua
+
+=== Binding of EmmyDoc to lambdas in assignments
+
+i.e. Type checking now works inside function ``lambdas'' assigned to a variable with an EmmyDoc definition.
+
+image:./snapshot/6_emmydoc_lambda_binding.png[image]
+
+https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f61e74e620b7505b58c65/src/lambda_params.lua
+
+=== Table type checking improvements
+
+Various improvements, for example EmmyDoc ``arrays'' are now assignable to compatible table types e.g.
+
+image:./snapshot/7_table_improvements.png[image]
+
+The current EmmyLua release will report an error here even though this is sound.
+
+https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f61e74e620b7505b58c65/src/tables.lua
+
+=== Generic classes
+
+image:./snapshot/8_generic_classes.png[image]
+
+https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f61e74e620b7505b58c65/src/generic_class_fields.lua
+
+=== Support for generic params referencing generic params
+
+image:./snapshot/9_generic_param_relationships.png[image]
+
+https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f61e74e620b7505b58c65/src/function_generics.lua#L226-L249
+
+=== Generic inference fixes
+
+The current EmmyLua release is unable to infer generics correctly in several situations and thus reports type errors where no error exists, and also misses errors where errors should exist e.g.
+
+https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f61e74e620b7505b58c65/src/function_generics.lua#L154-L181
+
+=== Type errors are now errors by default
+
+By default, type safety errors are now reported as errors instead of warnings.
+This is made feasible by three things:
+
+[arabic]
+. Many improvements in the ability to specify complex types
+. Type safety bug fixes
+. _Casting_
+
+Casting in particular means that if a user is doing something the type system deems unsafe, but they know at runtime will be fine, they can just add a cast to signify this and the error will go away.
+
+=== Generic parameter use _within a class_
+
+image:./snapshot/10_generic_params_within_classes.png[image]
+
+Shadowing of a generic parameter is forbidden and an error reports:
+
+image:./snapshot/10_2_generic_params_within_classes.png[image]
+
+https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f61e74e620b7505b58c65/src/generic_class_scope.lua
+
+=== ``No such member'' inspection
+
+image:./snapshot/11_no_such_member.png[image]
+
+https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f61e74e620b7505b58c65/src/generic_class_fields.lua#L44-L45
+
+=== `self` is a real type
+
+Improved type checking for `self`, for example `self` can be assigned to a variable that matches the parent type of a method.
+However, that parent type cannot be assigned to `self`, as the class may be sub-classed (in which case `self` refers to a more specific type).
+
+image:./snapshot/12_self_type.png[image]
+
+https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f61e74e620b7505b58c65/src/self.lua
+
+=== Type checking of immediately assigned variable declarations
+
+image:./snapshot/13_inspect_variable_declarations.png[image]
+
+Current EmmyLua release will allow this invalid assignment.
+
+=== Fixed a bug where the type inference cache was being used in the presence of an index
+
+When a function returns multiple values, the current EmmyLua release will infer values and put them in the cache.
+This is inaccurate as generic types analysis may result in the same generic parameter being resolved differently based on the value being assigned, thus the cache cannot be used in this circumstance.
+Presently this results in both missing errors, and additional inaccurate errors, depending on the assignment.
+
+=== Added support for `@shape`
+
+A shape can be defined similarly to a class, except that contravariance is determined by compatibility of the members _not_ the inheritance hierarchy.
+
+This is most useful when working with ``structures'' (e.g. JSON) rather than OOP classes.
+
+image:./snapshot/14_shape.png[image]
+
+https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f61e74e620b7505b58c65/src/shape.lua
+
+What makes shapes particularly useful is that they support generics and inheritance (at definition time, not assignment) just like classes:
+
+https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f61e74e620b7505b58c65/src/shape.lua#L36-L74
+
+Even _better_, type inspections are not just reported on incompatible
+`table`s as whole, but rather the inspections know how to traverse
+_table literals_ and provide detailed annotations of incompatibilities
+between two shapes e.g.
+
+image:./snapshot/14_2_shapes.png[image]
+
+=== Generic Aliases
+
+Aliases can now take generic parameters, just like a class or shape.
+
+image:./snapshot/15_generic_aliases.png[image]
+
+https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f61e74e620b7505b58c65/src/generic_alias.lua
+
+=== Improved vararg syntax
+
+Function types can now use `...: T` as an alternative to `vararg T`:
+
+image:./snapshot/16_vararg_syntax.png[image]
+
+=== Variadic return values
+
+We now support variadic return values:
+
+image:./snapshot/17_variadic_return_values.png[image]
+
+Internally, `TyTuple` has been replaced with `TyMultipleResults` to reflect the fact that this construct is not fixed size.
+Additionally, multiple results are now properly handled in more locations.
+
+=== Standard library type improvements
+
+Various improvements to typings of Lua built-ins taking advantage of variadic return values etc.
+
+=== Support for indexed fields
+
+We can now type all properties of tables, not just string constants.
+Given that Luanalysis also adds support for primitive literal types we can use this a lot of different ways e.g.
+
+image:./snapshot/18_indexed_fields.png[image]
+
+Here we have regular string identifier fields, number literal fields
+`[1]`, `[2]` and `[3]` _and_ a `[boolean]` field.
+That last one is really powerful, because it’s _not_ a constant, it’s a real type.
+
+We can type custom data structures e.g.
+
+[source,lua]
+----
+---@class Dictionary<K, V>
+---@field [K] V
+----
+
+This will work correctly for any `K` and everything will be statically type checked as you’d expect.
+
+There’s also syntax for table types, it works for table literals _and_ anonymous classes (i.e. tables that aren’t explicitly typed):
+
+image:./snapshot/18_2_indexed_fields.png[image]
+
+=== Partially typed functions
+
+We now support `fun` types with optional parameter lists and optional return values i.e. `fun: boolean` and `fun(arg: boolean)`. `fun` (with neither specified) also works for posterity but is functionally equivalent to the existing `function` type.
+
+Partially typed functions are extremely useful for implementing callback and handler patterns.
+For example, it’s quite common to have an extensible event system where each event has unique arguments, but the handler must return `true` to indicate the event was handled:
+
+image:./snapshot/19_partially_typed_functions.png[image]
+
+=== Callable types
+
+This is another _really_ useful feature.
+We can now properly indicate that an object is callable (i.e. is a `table` whose metatable has a
+`__call` method).
+
+image:./snapshot/20_callable_types.png[image]
+
+This is done by using the existing `@overload` EmmyDoc keyword, and works similarly i.e. we can specify many overloads and type checking and completion will work as you’d expect:
+
+image:./snapshot/20_2_callable_types.png[image]
+
+=== Strongly typed tuples
+
+Tuples can be implemented as shapes with number literal indexes:
+
+image:./snapshot/21_tuples.png[image]
+
+or as aliases of table literal types:
+
+image:./snapshot/21_2_tuples.png[image]
+
+As can be seen above, when a tuple is compatible with an array, it can be assigned to one, but not vice versa.
+
+=== Type lists
+
+The `@type` annotation supports a list of types.
+This can be used when declaring variables:
+
+image:./snapshot/22_type_lists.png[image]
+
+or for casting multiple results returned by an expression (e.g. function call):
+
+image:./snapshot/22_2_type_lists.png[image]
+
+=== `@not` type casts
+
+A `@not` type cast eliminates types from a union.
+It’s useful in a variety of circumstances, the most straight-forward of which is eliminating `nil`:
+
+image:./snapshot/23_not_casts.png[image]
+
+Like `@type`, is also supports type lists for casting multiple return values of a function, and can itself eliminate unions:
+
+image:./snapshot/23_2_not_casts.png[image]
+
+When you simply want to eliminate types from a union, it’s generally safer to use `@not` cast than a `@type` cast because a `@type` cast essentially disables all type checking for the assignment, where as
+`@not` cast just excludes certain types.
+
+=== `@type` annotations on return statements
+
+Return statements now accept type annotations, which are _type-safe_ way of typing the return value of anonymous lambdas.
+
+image:./snapshot/24_type_return_statements.png[image]
+
+Unlike a type cast, these are type-safe:
+
+image:./snapshot/24_2_type_return_statements.png[image]
+
+=== Recursive alias resolution
+
+Alias types are now lazily resolved, which allows us to type recursive data structures.
+For example, JSON:
+
+image:./snapshot/25_recursive_alias.png[image]
+
+=== Casting to/from variadic type lists
+
+A functions API may return an unknown number of results.
+However, when calling these functions, you tend to know how many results you expect back.
+
+A variadic return value can be cast to a concrete type list by `@not`
+casting away `nil`:
+
+image:./snapshot/26_variadic_casts.png[image]
+
+One variadic type may also be cast to another:
+
+image:./snapshot/26_2_variadic_casts.png[image]
+
+== Building from Source
+
+`./gradlew build_201`
+
+For more details about the Jetbrains Platform SDK please refer to the
+https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/setting_up_environment.html[official
+documentation].
+
+== Installation from Source
+
+To install the `.zip` you built, you’ll need to go to IntelliJ’s…
+
+....
+Preferences -> Plugins -> Settings Cog Icon -> Install Plugin from Disk...
+....
+
+image:./snapshot/source_install.png[image]
+
+Select the `.zip`, and then when prompted, restart IntelliJ.
+
+== Developed By
+
+Luanalysis by: https://github.com/Benjamin-Dobell[Benjamin Dobell]
+
+EmmyLua by: https://github.com/tangzx[@tangzx 阿唐]
+
+*Contributors*
+
+Please
+https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/graphs/contributors[refer
+to Github] for a complete list of contributors.
