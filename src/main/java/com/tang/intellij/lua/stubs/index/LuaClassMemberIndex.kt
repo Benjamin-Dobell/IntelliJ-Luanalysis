@@ -39,14 +39,14 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
     companion object {
         val instance = LuaClassMemberIndex()
 
-        private fun processKey(key: String, context: SearchContext, processor: Processor<LuaClassMember>): Boolean {
+        private fun processKey(key: String, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean {
             if (context.isDumb)
                 return false
             val all = LuaClassMemberIndex.instance.get(key.hashCode(), context.project, context.scope)
             return ContainerUtil.process(all, processor)
         }
 
-        private fun processClassKey(cls: ITyClass?, className: String, key: String, context: SearchContext, processor: Processor<LuaClassMember>, deep: Boolean): Boolean {
+        private fun processClassKey(cls: ITyClass?, className: String, key: String, context: SearchContext, processor: Processor<in LuaClassMember>, deep: Boolean): Boolean {
             val classKey = "$className$key"
 
             if (!processKey(classKey, context, processor))
@@ -75,17 +75,17 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
             return true
         }
 
-        private fun processClassKey(cls: ITyClass, key: String, context: SearchContext, processor: Processor<LuaClassMember>, deep: Boolean = true): Boolean {
+        private fun processClassKey(cls: ITyClass, key: String, context: SearchContext, processor: Processor<in LuaClassMember>, deep: Boolean = true): Boolean {
             return if (cls is TyParameter)
                 (cls.superClass as? ITyClass)?.let { processClassKey(it, it.className, key, context, processor, deep) } ?: true
             else processClassKey(cls, cls.className, key, context, processor, deep)
         }
 
-        fun processMember(cls: ITyClass, fieldName: String, context: SearchContext, processor: Processor<LuaClassMember>, deep: Boolean = true): Boolean {
+        fun processMember(cls: ITyClass, fieldName: String, context: SearchContext, processor: Processor<in LuaClassMember>, deep: Boolean = true): Boolean {
             return processClassKey(cls, "*$fieldName", context, processor, deep)
         }
 
-        fun processMember(className: String, fieldName: String, context: SearchContext, processor: Processor<LuaClassMember>, deep: Boolean = true): Boolean {
+        fun processMember(className: String, fieldName: String, context: SearchContext, processor: Processor<in LuaClassMember>, deep: Boolean = true): Boolean {
             return processClassKey(null, className, "*$fieldName", context, processor, deep)
         }
 
@@ -132,11 +132,11 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
             return target
         }
 
-        fun processAllIndexers(type: ITyClass, context: SearchContext, processor: Processor<LuaClassMember>, deep: Boolean = true): Boolean {
+        fun processAllIndexers(type: ITyClass, context: SearchContext, processor: Processor<in LuaClassMember>, deep: Boolean = true): Boolean {
             return processClassKey(type, "[]", context, processor, deep)
         }
 
-        fun processIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, processor: Processor<LuaClassMember>, deep: Boolean = true): Boolean {
+        fun processIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, processor: Processor<in LuaClassMember>, deep: Boolean = true): Boolean {
             val exactIndexerKey = "*[${indexTy.displayName}]"
             var exactIndexerFound = false
 
@@ -185,7 +185,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
             return target
         }
 
-        fun processAll(type: ITyClass, context: SearchContext, processor: Processor<LuaClassMember>) {
+        fun processAll(type: ITyClass, context: SearchContext, processor: Processor<in LuaClassMember>) {
             if (processKey(type.className, context, processor)) {
                 type.lazyInit(context)
                 type.processAlias(Processor {

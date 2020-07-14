@@ -31,11 +31,6 @@ import com.tang.intellij.lua.ty.ITy
 import com.tang.intellij.lua.ty.Ty
 
 class LuaDocTagAliasType : LuaStubElementType<LuaDocTagAliasStub, LuaDocTagAlias>("DOC_TAG_ALIAS") {
-    override fun shouldCreateStub(node: ASTNode): Boolean {
-        val psi = node.psi as LuaDocTagAlias
-        return psi.name != null
-    }
-
     override fun createPsi(stub: LuaDocTagAliasStub): LuaDocTagAlias {
         return  LuaDocTagAliasImpl(stub, this)
     }
@@ -52,7 +47,7 @@ class LuaDocTagAliasType : LuaStubElementType<LuaDocTagAliasStub, LuaDocTagAlias
     }
 
     override fun createStub(alias: LuaDocTagAlias, parent: StubElement<*>): LuaDocTagAliasStub {
-        return LuaDocTagAliasStubImpl(alias.name!!, alias.type, parent)
+        return LuaDocTagAliasStubImpl(alias.name, alias.type, parent)
     }
 
     override fun indexStub(stub: LuaDocTagAliasStub, sink: IndexSink) {

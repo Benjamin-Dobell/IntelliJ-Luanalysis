@@ -23,8 +23,6 @@ import com.intellij.psi.tree.IStubFileElementType
 import com.tang.intellij.lua.lang.LuaLanguage
 import com.tang.intellij.lua.psi.LuaBlock
 import com.tang.intellij.lua.psi.LuaPsiElement
-import com.tang.intellij.lua.ty.ITy
-import com.tang.intellij.lua.ty.Ty
 
 abstract class LuaStubElementType<StubT : StubElement<*>, PsiT : LuaPsiElement>(debugName: String)
     : IStubElementType<StubT, PsiT>(debugName, LuaLanguage.INSTANCE) {

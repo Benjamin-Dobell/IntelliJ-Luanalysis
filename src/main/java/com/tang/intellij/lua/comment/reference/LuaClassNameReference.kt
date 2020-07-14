@@ -46,7 +46,7 @@ class LuaClassNameReference(element: LuaDocClassNameRef) : PsiReferenceBase<LuaD
 
     override fun resolve(): PsiElement? {
         val name = myElement.text
-        return LuaPsiTreeUtil.findGenericDef(name, myElement) ?: LuaShortNamesManager.getInstance(myElement.project).findTypeDef(name, SearchContext.get(myElement.project))
+        return LuaPsiTreeUtil.findGenericDef(name, myElement) ?: LuaShortNamesManager.getInstance(myElement.project).findType(name, SearchContext.get(myElement.project))
     }
 
     override fun getVariants(): Array<Any> = emptyArray()

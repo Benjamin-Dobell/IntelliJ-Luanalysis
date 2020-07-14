@@ -37,7 +37,7 @@ class GenericConstraintInspection : LocalInspectionTool() {
         return object : LuaDocVisitor() {
             private fun validateGenericArguments(typeElement: LuaDocPsiElement, classNameRef: LuaDocClassNameRef, args: List<LuaDocTy>) {
                 val context = SearchContext.get(classNameRef)
-                val params = LuaPsiTreeUtil.findTypeDef(classNameRef.text, context)?.type?.getParams(context)
+                val params = LuaPsiTreeUtil.findType(classNameRef.text, context)?.type?.getParams(context)
 
                 if (params != null && params.size > 0) {
                     val genericAnalyzer = GenericAnalyzer(params, context)

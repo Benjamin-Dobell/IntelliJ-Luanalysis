@@ -57,7 +57,7 @@ public class LuaDocTagAliasImpl extends StubBasedPsiElementBase<LuaDocTagAliasSt
   }
 
   @Override
-  @Nullable
+  @NotNull
   public PsiElement getNameIdentifier() {
     return LuaDocPsiImplUtilKt.getNameIdentifier(this);
   }

@@ -38,9 +38,6 @@ import com.tang.intellij.lua.ty.Ty;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.List;
-
 /**
  *
  * Created by tangzx on 2016/12/3.
@@ -291,11 +288,11 @@ public class LuaPsiTreeUtil {
     }
 
     @Nullable
-    public static LuaTypeDef findTypeDef(String name, SearchContext searchContext) {
+    public static LuaTypeDef findType(String name, SearchContext searchContext) {
         LuaDocGenericDef luaDocGenericDef = findGenericDef(name, searchContext);
 
         return luaDocGenericDef != null ? luaDocGenericDef
-                : LuaShortNamesManager.Companion.getInstance(searchContext.getProject()).findTypeDef(name, searchContext);
+                : LuaShortNamesManager.Companion.getInstance(searchContext.getProject()).findType(name, searchContext);
     }
 
     public static void processChildren(PsiElement parent, PsiElementProcessor<PsiElement> processor) {

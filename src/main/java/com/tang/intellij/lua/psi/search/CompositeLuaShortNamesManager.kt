@@ -28,6 +28,15 @@ import com.tang.intellij.lua.ty.ITyClass
 class CompositeLuaShortNamesManager : LuaShortNamesManager() {
     private val list: Array<LuaShortNamesManager> = LuaShortNamesManager.EP_NAME.extensions
 
+    override fun findAlias(name: String, context: SearchContext): LuaTypeAlias? {
+        for (manager in list) {
+            val alias = manager.findAlias(name, context)
+            if (alias != null)
+                return alias
+        }
+        return null
+    }
+
     override fun findClass(name: String, context: SearchContext): LuaClass? {
         for (ep in list) {
             val c = ep.findClass(name, context)
@@ -53,17 +62,33 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager() {
         return null
     }
 
-    override fun processAllClassNames(project: Project, processor: Processor<String>): Boolean {
-        for (ep in list) {
-            if (!ep.processAllClassNames(project, processor))
+    override fun processAllAliases(project: Project, processor: Processor<String>): Boolean {
+        for (manager in list) {
+            if (!manager.processAllAliases(project, processor))
                 return false
         }
         return true
     }
 
-    override fun processClassesWithName(name: String, context: SearchContext, processor: Processor<LuaClass>): Boolean {
+    override fun processAliases(name: String, context: SearchContext, processor: Processor<in LuaTypeAlias>): Boolean {
         for (ep in list) {
-            if (!ep.processClassesWithName(name, context, processor))
+            if (!ep.processAliases(name, context, processor))
+                return false
+        }
+        return true
+    }
+
+    override fun processAllClasses(project: Project, processor: Processor<String>): Boolean {
+        for (ep in list) {
+            if (!ep.processAllClasses(project, processor))
+                return false
+        }
+        return true
+    }
+
+    override fun processClasses(name: String, context: SearchContext, processor: Processor<in LuaClass>): Boolean {
+        for (ep in list) {
+            if (!ep.processClasses(name, context, processor))
                 return false
         }
         return true
@@ -78,7 +103,7 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager() {
         return collection
     }
 
-    override fun processMember(type: ITyClass, fieldName: String, context: SearchContext, processor: Processor<LuaClassMember>): Boolean {
+    override fun processMember(type: ITyClass, fieldName: String, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean {
         for (manager in list) {
             if (!manager.processMember(type, fieldName, context, processor))
                 return false
@@ -86,26 +111,9 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager() {
         return true
     }
 
-    override fun processIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, processor: Processor<LuaClassMember>): Boolean {
+    override fun processIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean {
         for (manager in list) {
             if (!manager.processIndexer(type, indexTy, context, processor))
-                return false
-        }
-        return true
-    }
-
-    override fun findAlias(name: String, context: SearchContext): LuaTypeAlias? {
-        for (manager in list) {
-            val alias = manager.findAlias(name, context)
-            if (alias != null)
-                return alias
-        }
-        return null
-    }
-
-    override fun processAllAlias(project: Project, processor: Processor<String>): Boolean {
-        for (manager in list) {
-            if (!manager.processAllAlias(project, processor))
                 return false
         }
         return true

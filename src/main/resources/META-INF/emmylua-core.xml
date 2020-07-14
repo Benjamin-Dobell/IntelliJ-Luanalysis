@@ -228,8 +228,8 @@
         <lang.inspectionSuppressor language="Lua" implementationClass="com.tang.intellij.lua.codeInsight.inspection.LuaSuppressManager"/>
 
         <localInspection
-                implementationClass="com.tang.intellij.lua.codeInsight.inspection.DuplicateClassDeclaration"
-                displayName="Duplicate class"
+                implementationClass="com.tang.intellij.lua.codeInsight.inspection.DuplicateTypeDeclaration"
+                displayName="Duplicate type"
                 enabledByDefault="true"
                 level="ERROR"
                 groupName="Lua"/>

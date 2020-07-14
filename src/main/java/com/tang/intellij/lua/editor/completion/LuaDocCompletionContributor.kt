@@ -86,12 +86,12 @@ class LuaDocCompletionContributor : CompletionContributor() {
         extend(CompletionType.BASIC, SHOW_CLASS, object : CompletionProvider<CompletionParameters>() {
             override fun addCompletions(completionParameters: CompletionParameters, processingContext: ProcessingContext, completionResultSet: CompletionResultSet) {
                 val project = completionParameters.position.project
-                LuaShortNamesManager.getInstance(project).processAllClassNames(project, Processor{
+                LuaShortNamesManager.getInstance(project).processAllClasses(project, Processor{
                     completionResultSet.addElement(LookupElementBuilder.create(it).withIcon(LuaIcons.CLASS))
                     true
                 })
 
-                LuaShortNamesManager.getInstance(project).processAllAlias(project, Processor { key ->
+                LuaShortNamesManager.getInstance(project).processAllAliases(project, Processor { key ->
                     completionResultSet.addElement(LookupElementBuilder.create(key).withIcon(LuaIcons.Alias))
                     true
                 })

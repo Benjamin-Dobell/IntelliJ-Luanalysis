@@ -21,7 +21,7 @@ public interface LuaDocTagAlias extends LuaTypeAlias, LuaDocPsiElement, PsiNameI
   @NotNull
   PsiElement getId();
 
-  @Nullable
+  @NotNull
   PsiElement getNameIdentifier();
 
   @NotNull

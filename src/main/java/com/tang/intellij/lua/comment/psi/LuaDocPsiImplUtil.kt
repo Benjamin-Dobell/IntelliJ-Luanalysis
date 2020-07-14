@@ -441,7 +441,7 @@ fun isDeprecated(member: LuaClassMember): Boolean {
     return false
 }
 
-fun getNameIdentifier(g: LuaDocTagAlias): PsiElement? {
+fun getNameIdentifier(g: LuaDocTagAlias): PsiElement {
     return g.id
 }
 
