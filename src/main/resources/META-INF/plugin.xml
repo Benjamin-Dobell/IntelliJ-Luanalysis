@@ -17,7 +17,7 @@
 <idea-plugin xmlns:xi="http://www.w3.org/2001/XInclude">
     <id>au.com.glassechidna.luanalysis</id>
     <name>Luanalysis</name>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <vendor email="contact@glassechidna.com.au">Benjamin Dobell</vendor>
     <category>Custom Languages</category>
     <description><![CDATA[
@@ -25,6 +25,10 @@
     <p><a href="https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis">Source Code</a></p>
     ]]></description>
     <change-notes><![CDATA[
+    <strong>1.0.2</strong>
+    <ul>
+        <li>Same as 1.0.1, but not constrained to IntelliJ 201 (2020.1).</li>
+    </ul>
     <strong>1.0.1</strong>
     <ul>
         <li>Replaced duplicate class inspection with duplicate type inspection. Class/alias name collisions are now reported.</li>
@@ -39,7 +43,7 @@
     </ul>
     ]]>
     </change-notes>
-    <idea-version since-build="201" until-build="201.*"/>
+    <idea-version since-build="201"/>
     <xi:include href="emmylua-core.xml" xpointer="xpointer(/idea-plugin/*)"/>
     <depends optional="true" config-file="emmylua-project.xml">com.intellij.java</depends>
 </idea-plugin>

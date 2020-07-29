@@ -80,10 +80,14 @@ version = "${version}-IDEA${IDEA_VER}"
 def cfg = [
     ideaSDKVersion: ideaSDKVersion,
     sinceBuild: sinceBuild,
-    untilBuild: untilBuild,
     archiveName: archiveName,
     explicitJavaDependency: project.hasProperty('explicitJavaDependency') ? explicitJavaDependency : "true",
 ]
+
+if (project.hasProperty('untilBuild')) {
+    cfg.untilBuild = untilBuild
+}
+
 def rev = getRev()
 
 intellij {
@@ -114,7 +118,10 @@ compileTestKotlin {
 
 patchPluginXml {
     sinceBuild cfg.sinceBuild
-    untilBuild cfg.untilBuild
+
+    if (cfg.untilBuild) {
+        untilBuild cfg.untilBuild
+    }
 }
 
 publishPlugin {
