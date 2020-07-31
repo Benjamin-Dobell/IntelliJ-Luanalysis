@@ -148,6 +148,12 @@ class TypeSafetyTest : LuaInspectionsTestBase(
         check("recursive_alias.lua")
     }
 
+    fun testRequire() {
+        myFixture.configureByFile("requireB.lua")
+        myFixture.configureByFile("requireC.lua")
+        check("requireA.lua")
+    }
+
     fun testSelf() {
         check("self.lua")
     }

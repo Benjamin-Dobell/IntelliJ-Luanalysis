@@ -199,7 +199,7 @@ private fun inferFile(file: LuaPsiFile, context: SearchContext): ITy {
                 val stat = statStub?.psi
                 if (stat is LuaReturnStat)
                     context.withIndex(0) { guessReturnType(stat, context) }
-                else null
+                else Ty.VOID
             } else {
                 val lastChild = file.lastChild
                 var stat: LuaReturnStat? = null
@@ -209,7 +209,7 @@ private fun inferFile(file: LuaPsiFile, context: SearchContext): ITy {
                 }
                 if (stat != null)
                     context.withIndex(0) { guessReturnType(stat, context) }
-                else null
+                else Ty.VOID
             }
         }
     }) ?: Ty.UNKNOWN
