@@ -21,10 +21,9 @@ import com.intellij.openapi.util.io.FileUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceBase
 import com.tang.intellij.lua.lang.type.LuaString
-import com.tang.intellij.lua.psi.LuaCallExpr
-import com.tang.intellij.lua.psi.LuaExprStat
-import com.tang.intellij.lua.psi.LuaElementFactory
-import com.tang.intellij.lua.psi.resolveRequireFile
+import com.tang.intellij.lua.psi.*
+import com.tang.intellij.lua.search.SearchContext
+import com.tang.intellij.lua.ty.returnStatement
 
 /**
  *
@@ -53,7 +52,10 @@ class LuaRequireReference internal constructor(callExpr: LuaCallExpr) : PsiRefer
     }
 
     override fun isReferenceTo(element: PsiElement): Boolean {
-        return myElement.manager.areElementsEquivalent(element, resolve())
+        val resolved = if (element is LuaPsiFile) {
+            resolveRequireFile(pathString, myElement.project)
+        } else resolve()
+        return myElement.manager.areElementsEquivalent(element, resolved)
     }
 
     override fun getRangeInElement(): TextRange {
@@ -61,7 +63,27 @@ class LuaRequireReference internal constructor(callExpr: LuaCallExpr) : PsiRefer
     }
 
     override fun resolve(): PsiElement? {
-        return if (pathString == null) null else resolveRequireFile(pathString, myElement.project)
+        if (pathString == null) {
+            return null
+        }
+
+        val filePsi = resolveRequireFile(pathString, myElement.project)
+
+        if (filePsi != null) {
+            val returnStatement = filePsi.returnStatement()
+
+            if (returnStatement != null && returnStatement.exprList?.exprList?.size == 1) {
+                val resolvedNameExpr = returnStatement.exprList!!.exprList.first() as? LuaNameExpr
+
+                return if (resolvedNameExpr != null) {
+                    resolveInFile(resolvedNameExpr.name, resolvedNameExpr, SearchContext.get(myElement.project))
+                } else returnStatement
+            }
+
+            return returnStatement
+        }
+
+        return filePsi
     }
 
     override fun handleElementRename(newElementName: String): PsiElement {
