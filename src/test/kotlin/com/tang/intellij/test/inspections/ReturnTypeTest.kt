@@ -39,4 +39,17 @@ class ReturnTypeTest : LuaInspectionsTestBase(ReturnTypeInspection()) {
         local function test<error descr="Return type 'string' specified but no return values found.">()
         end</error>
     """)
+
+    fun `test implicit return void`() = checkByText("""
+        ---@return void
+        local function test()
+        end
+    """)
+
+    fun `test explicit return void`() = checkByText("""
+        ---@return void
+        local function test()
+            return
+        end
+    """)
 }

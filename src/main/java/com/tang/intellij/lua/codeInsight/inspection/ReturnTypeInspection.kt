@@ -152,14 +152,11 @@ class ReturnTypeInspection : StrictInspection() {
                         val type = if (bodyOwner is LuaClassMethodDef) {
                             guessSuperReturnTypes(bodyOwner, context)
                         } else {
-                            /*if (bodyOwner == null) {
-                                myHolder.registerProblem(o, "Return statement needs to be in function.")
-                            }*/
                             val returnDef = (bodyOwner as? LuaCommentOwner)?.comment?.tagReturn
                             returnDef?.type
                         }
 
-                        if (type != null && o.textLength != 0) {
+                        if (type != null && type != Ty.VOID && o.textLength != 0) {
                             myHolder.registerProblem(o, "Return type '%s' specified but no return values found.".format(type.displayName))
                         }
                     }
