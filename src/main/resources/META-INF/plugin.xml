@@ -17,7 +17,7 @@
 <idea-plugin xmlns:xi="http://www.w3.org/2001/XInclude">
     <id>au.com.glassechidna.luanalysis</id>
     <name>Luanalysis</name>
-    <version>1.0.3</version>
+    <version>1.1.0</version>
     <vendor email="contact@glassechidna.com.au">Benjamin Dobell</vendor>
     <category>Custom Languages</category>
     <description><![CDATA[
@@ -25,6 +25,13 @@
     <p><a href="https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis">Source Code</a></p>
     ]]></description>
     <change-notes><![CDATA[
+    <strong>1.1.0</strong>
+    <ul>
+        <li>Ctrl/Cmd + Click ("Go To") on a string literal argument of a require("file") now takes you to the return value of the referenced file, rather than simply opening the file.<li>
+        <li>Fixed type resolution of require("file") expressions, where the referenced file has no return statements.</li>
+        <li>Added/fixed support for negative number literal types.</li>
+        <li>Type inference will now handle unary minus (negate) expressions, where the operand is a number literal. String literals representing values that Lua will <em>silently coerce</em> to a number are also handled.</li>
+    </ul>
     <strong>1.0.3</strong>
     <ul>
         <li>Ensured "Return type 'void' specified but no return values found" annotation is no longer raised for functions annotated as ---@return void.</li>
