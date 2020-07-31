@@ -368,8 +368,11 @@ fun getType(booleanLiteral: LuaDocBooleanLiteralTy): ITy {
 }
 
 fun getType(numberLiteral: LuaDocNumberLiteralTy): ITy {
-    val n = LuaNumber.getValue(numberLiteral.value.text)
-    return if (n != null) TyPrimitiveLiteral.getTy(TyPrimitiveKind.Number, n.toString()) else Ty.UNKNOWN
+    val n = LuaNumber.getValue(numberLiteral.number.text)
+    val valueString = if (numberLiteral.negative != null) "-${n}" else n.toString()
+    return if (n != null) {
+        TyPrimitiveLiteral.getTy(TyPrimitiveKind.Number, valueString)
+    } else Ty.UNKNOWN
 }
 
 fun getType(stringLiteral: LuaDocStringLiteralTy): ITy {

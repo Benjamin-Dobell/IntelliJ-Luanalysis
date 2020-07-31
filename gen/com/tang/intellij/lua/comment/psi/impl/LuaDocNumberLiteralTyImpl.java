@@ -33,8 +33,14 @@ public class LuaDocNumberLiteralTyImpl extends LuaDocTyImpl implements LuaDocNum
   }
 
   @Override
+  @Nullable
+  public PsiElement getNegative() {
+    return findChildByType(MINUS);
+  }
+
+  @Override
   @NotNull
-  public PsiElement getValue() {
+  public PsiElement getNumber() {
     return notNullChild(findChildByType(NUMBER_LITERAL));
   }
 

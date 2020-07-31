@@ -1508,15 +1508,23 @@ public class LuaDocParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // NUMBER_LITERAL
+  // (MINUS)? NUMBER_LITERAL
   public static boolean number_literal_ty(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "number_literal_ty")) return false;
-    if (!nextTokenIsSmart(b, NUMBER_LITERAL)) return false;
+    if (!nextTokenIsSmart(b, MINUS, NUMBER_LITERAL)) return false;
     boolean r;
-    Marker m = enter_section_(b);
-    r = consumeTokenSmart(b, NUMBER_LITERAL);
-    exit_section_(b, m, NUMBER_LITERAL_TY, r);
+    Marker m = enter_section_(b, l, _NONE_, NUMBER_LITERAL_TY, "<number literal ty>");
+    r = number_literal_ty_0(b, l + 1);
+    r = r && consumeToken(b, NUMBER_LITERAL);
+    exit_section_(b, l, m, r, false, null);
     return r;
+  }
+
+  // (MINUS)?
+  private static boolean number_literal_ty_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "number_literal_ty_0")) return false;
+    consumeTokenSmart(b, MINUS);
+    return true;
   }
 
   static final Parser eol_recover_parser_ = new Parser() {

@@ -33,7 +33,7 @@ class LuaNumber(var value: BigDecimal = BigDecimal(0)) {
 				if (longValue != null) {
 					return LuaNumber(longValue.toBigDecimal())
 				}
-			} else {
+			} else if (!text.contains('-')) {
 				val components = text.split('e', 'E')
 				var doubleValue = components[0].toDoubleOrNull()
 

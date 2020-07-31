@@ -69,6 +69,7 @@ public interface LuaDocTypes {
   IElementType LCURLY = new LuaDocTokenType("{");
   IElementType LPAREN = new LuaDocTokenType("(");
   IElementType LT = new LuaDocTokenType("<");
+  IElementType MINUS = new LuaDocTokenType("MINUS");
   IElementType NUMBER_LITERAL = new LuaDocTokenType("NUMBER_LITERAL");
   IElementType OR = new LuaDocTokenType("|");
   IElementType PRIVATE = new LuaDocTokenType("PRIVATE");

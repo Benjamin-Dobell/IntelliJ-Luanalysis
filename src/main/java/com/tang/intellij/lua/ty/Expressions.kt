@@ -115,7 +115,24 @@ private fun LuaUnaryExpr.infer(context: SearchContext): ITy {
     return when (operator) {
         LuaTypes.MINUS -> { // Negative something
             val ty = infer(expr, context)
-            return if (ty is TyPrimitiveLiteral) ty.primitiveType else ty
+            return if (ty is TyPrimitiveLiteral) {
+                when (ty.primitiveKind) {
+                    TyPrimitiveKind.Number -> {
+                        val value = if (ty.value.startsWith("-")) ty.value.substring(1) else "-${ty.value}"
+                        TyPrimitiveLiteral.getTy(TyPrimitiveKind.Number, value)
+                    }
+                    TyPrimitiveKind.String -> { // Unfortunately, Lua has implicit string to number coercion
+                        val negative = ty.value.startsWith("-")
+                        val number = LuaNumber.getValue(if (negative) ty.value.substring(1) else ty.value)
+
+                        if (number != null) {
+                            val value = if (negative) number.toString() else "-${number}"
+                            TyPrimitiveLiteral.getTy(TyPrimitiveKind.Number, value)
+                        } else ty.primitiveType
+                    }
+                    else -> ty.primitiveType
+                }
+            } else ty
         }
         LuaTypes.GETN -> Ty.NUMBER // Table length is a number
         LuaTypes.NOT -> { // Returns a boolean; inverse of a boolean literal

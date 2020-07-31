@@ -11,7 +11,10 @@ public interface LuaDocNumberLiteralTy extends LuaDocTy {
   @NotNull
   ITy getType();
 
+  @Nullable
+  PsiElement getNegative();
+
   @NotNull
-  PsiElement getValue();
+  PsiElement getNumber();
 
 }

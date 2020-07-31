@@ -253,6 +253,7 @@ BOOLEAN=true|false
     "'"                        { yybegin(xSINGLE_QUOTED_STRING); yypushback(yylength()); }
     "`"                        { yybegin(xBACKTICK_QUOTED_STRING); return BACKTICK; }
     {BOOLEAN}                  { return BOOLEAN_LITERAL; }
+    "-"                        { return MINUS; }
     {NUMBER}                   { return NUMBER_LITERAL; }
     "fun"                      { return FUN; }
     "vararg"                   { _typeReq = true; return VARARG; }

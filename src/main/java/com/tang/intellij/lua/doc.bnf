@@ -130,13 +130,17 @@ par_ty ::= '(' ty ')' {
 snippet_ty ::= '`' SNIPPET '`' {
     methods = [getType content = 'SNIPPET']
 }
-boolean_literal_ty ::= BOOLEAN_LITERAL{
+boolean_literal_ty ::= BOOLEAN_LITERAL {
     methods = [getType value = 'BOOLEAN_LITERAL']
 }
-number_literal_ty ::= NUMBER_LITERAL{
-    methods = [getType value = 'NUMBER_LITERAL']
+number_literal_ty ::= (MINUS)? NUMBER_LITERAL {
+    methods = [
+        getType
+        negative = 'MINUS'
+        number = 'NUMBER_LITERAL'
+    ]
 }
-string_literal_ty ::= STRING_LITERAL{
+string_literal_ty ::= STRING_LITERAL {
     methods = [getType value = 'STRING_LITERAL']
 }
 private primitive_literal_ty ::= string_literal_ty | boolean_literal_ty | number_literal_ty

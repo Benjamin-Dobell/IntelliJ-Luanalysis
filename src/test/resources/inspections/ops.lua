@@ -79,4 +79,4 @@ falseLiteral = <error descr="Type mismatch. Required: 'false' Found: 'boolean'">
 
 -- minus
 aNumber = -theNumberOne
-theNumberOne = <error descr="Type mismatch. Required: '1' Found: 'number'">-theNumberOne</error>
+theNumberOne = <error descr="Type mismatch. Required: '1' Found: '-1'">-theNumberOne</error>
