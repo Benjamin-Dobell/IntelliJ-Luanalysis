@@ -30,6 +30,8 @@ shape2 = <error descr="Type mismatch. Required: 'Shape2' Found: 'Shape1'">shape1
 shape1 = shape2
 
 shape2 = <error descr="Type mismatch. Missing member: 'b' of: 'Shape2'">{a = 2}</error>
+shape2 = --[[---@type Shape2]] {a = 2}
+
 shape2 = {a = 2, b = "some string"}
 shape2 = {a = 2, b = <error descr="Type mismatch. Required: 'string' Found: '2'">2</error>}
 

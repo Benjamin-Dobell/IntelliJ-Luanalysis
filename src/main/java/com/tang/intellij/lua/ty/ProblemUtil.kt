@@ -106,7 +106,7 @@ object ProblemUtil {
 
                 if (source.isShape(context)) {
                     val baseIsShape = base.isShape(context)
-                    val sourceIsInline = source is TyTable && sourceElement is LuaTableExpr
+                    val sourceIsInline = source is TyTable && source.table == sourceElement
                     val indexes = mutableSetOf<Int>()
                     var foundNumberIndexer = false
 
@@ -224,7 +224,7 @@ object ProblemUtil {
             base.lazyInit(context)
         }
 
-        if (base.isShape(context) && sourceElement is LuaTableExpr) {
+        if (base.isShape(context) && source is TyTable && source.table == sourceElement) {
             val sourceSubstitutor = source.getMemberSubstitutor(context)
             val targetSubstitutor = target.getMemberSubstitutor(context)
 
@@ -285,7 +285,7 @@ object ProblemUtil {
         val tyProblems = mutableMapOf<String, Collection<Problem>>()
         val resolvedTarget = Ty.resolve(target, context)
 
-        if (sourceElement is LuaTableExpr && acceptsShape(resolvedTarget, context)) {
+        if (acceptsShape(resolvedTarget, context) && (source is ITyArray || (source is TyTable && source.table == sourceElement))) {
             if (TyUnion.isUnion(resolvedTarget, context) && resolvedTarget.contravariantOf(source, context, varianceFlags)) {
                 return true
             }
