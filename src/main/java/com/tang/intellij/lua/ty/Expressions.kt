@@ -323,14 +323,6 @@ private fun LuaCallExpr.infer(context: SearchContext): ITy {
         ret = ret.union(getReturnTy(substitutedSignature, context))
     }
 
-    // xxx.new()
-    if (expr is LuaIndexExpr) {
-        val fnName = expr.name
-        if (fnName != null && LuaSettings.isConstructorName(fnName)) {
-            ret = ret.union(expr.guessParentType(context))
-        }
-    }
-
     return if (Ty.isInvalid(ret)) Ty.UNKNOWN else TyMultipleResults.flatten(ret)
 }
 

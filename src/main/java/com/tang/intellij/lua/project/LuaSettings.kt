@@ -31,10 +31,8 @@ import java.nio.charset.Charset
  */
 @State(name = "LuaSettings", storages = [(Storage("emmy.xml"))])
 class LuaSettings : PersistentStateComponent<LuaSettings> {
-    //自定义require函数，参考constructorNames
+    //自定义require函数
     var requireLikeFunctionNames: Array<String> = arrayOf("require")
-
-    var constructorNames: Array<String> = arrayOf("new", "get")
 
     //Doc文档严格模式，对不合法的注解报错
     var isStrictDoc: Boolean = false
@@ -79,14 +77,6 @@ class LuaSettings : PersistentStateComponent<LuaSettings> {
         XmlSerializerUtil.copyBean(luaSettings, this)
     }
 
-    var constructorNamesString: String
-        get() {
-            return constructorNames.joinToString(";")
-        }
-        set(value) {
-            constructorNames = value.split(";").map { it.trim() }.toTypedArray()
-        }
-
     val attachDebugDefaultCharset: Charset get() {
         return Charset.forName(attachDebugDefaultCharsetName) ?: Charset.forName("UTF-8")
     }
@@ -101,10 +91,6 @@ class LuaSettings : PersistentStateComponent<LuaSettings> {
 
         val instance: LuaSettings
             get() = ServiceManager.getService(LuaSettings::class.java)
-
-        fun isConstructorName(name: String): Boolean {
-            return instance.constructorNames.contains(name)
-        }
 
         fun isRequireLikeFunctionName(name: String): Boolean {
             return instance.requireLikeFunctionNames.contains(name) || name == Constants.WORD_REQUIRE

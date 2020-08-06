@@ -43,7 +43,6 @@ import java.util.SortedMap;
 public class LuaSettingsPanel implements SearchableConfigurable, Configurable.NoScroll {
     private LuaSettings settings;
     private JPanel myPanel;
-    private JTextField constructorNames;
     private JCheckBox strictDoc;
     private JCheckBox smartCloseEnd;
     private JCheckBox showWordsInFile;
@@ -60,7 +59,6 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
 
     public LuaSettingsPanel(LuaSettings settings) {
         this.settings = settings;
-        constructorNames.setText(settings.getConstructorNamesString());
         strictDoc.setSelected(settings.isStrictDoc());
         smartCloseEnd.setSelected(settings.isSmartCloseEnd());
         showWordsInFile.setSelected(settings.isShowWordsInFile());
@@ -106,8 +104,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
 
     @Override
     public boolean isModified() {
-        return !StringUtil.equals(settings.getConstructorNamesString(), constructorNames.getText()) ||
-                !StringUtil.equals(settings.getRequireLikeFunctionNamesString(), requireFunctionNames.getText()) ||
+        return !StringUtil.equals(settings.getRequireLikeFunctionNamesString(), requireFunctionNames.getText()) ||
                 settings.getTooLargerFileThreshold() != getTooLargerFileThreshold() ||
                 settings.isStrictDoc() != strictDoc.isSelected() ||
                 settings.isSmartCloseEnd() != smartCloseEnd.isSelected() ||
@@ -124,8 +121,6 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
 
     @Override
     public void apply() {
-        settings.setConstructorNamesString(constructorNames.getText());
-        constructorNames.setText(settings.getConstructorNamesString());
         settings.setRequireLikeFunctionNamesString(requireFunctionNames.getText());
         requireFunctionNames.setText(settings.getRequireLikeFunctionNamesString());
         settings.setTooLargerFileThreshold(getTooLargerFileThreshold());
