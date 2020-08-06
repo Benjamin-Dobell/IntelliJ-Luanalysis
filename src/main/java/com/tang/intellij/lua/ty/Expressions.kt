@@ -287,7 +287,7 @@ private fun LuaCallExpr.getReturnTy(sig: IFunSignature, context: SearchContext):
     return if (context.supportsMultipleResults) {
         returnTy
     } else {
-        TyMultipleResults.getResult(returnTy, context.index) ?: Ty.NIL
+        TyMultipleResults.getResult(returnTy, context.index)
     }
 }
 
