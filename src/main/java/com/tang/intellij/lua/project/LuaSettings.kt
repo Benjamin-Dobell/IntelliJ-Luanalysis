@@ -49,8 +49,6 @@ class LuaSettings : PersistentStateComponent<LuaSettings> {
 
     var isUnknownIndexable: Boolean = true
 
-    var isRecognizeGlobalNameAsType = true
-
     var additionalSourcesRoot = arrayOf<String>()
 
     /**

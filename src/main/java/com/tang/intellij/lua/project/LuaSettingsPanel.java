@@ -48,7 +48,6 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
     private JCheckBox showWordsInFile;
     private JCheckBox nilStrict;
     private JCheckBox unknownIndexable;
-    private JCheckBox recognizeGlobalNameAsCheckBox;
     private LuaAdditionalSourcesRootPanel additionalRoots;
     private JCheckBox captureOutputDebugString;
     private JCheckBox captureStd;
@@ -64,7 +63,6 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
         showWordsInFile.setSelected(settings.isShowWordsInFile());
         nilStrict.setSelected(settings.isNilStrict());
         unknownIndexable.setSelected(settings.isUnknownIndexable());
-        recognizeGlobalNameAsCheckBox.setSelected(settings.isRecognizeGlobalNameAsType());
         additionalRoots.setRoots(settings.getAdditionalSourcesRoot());
         requireFunctionNames.setText(settings.getRequireLikeFunctionNamesString());
         tooLargerFileThreshold.setDocument(new IntegerDocument());
@@ -111,7 +109,6 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
                 settings.isShowWordsInFile() != showWordsInFile.isSelected() ||
                 settings.isNilStrict() != nilStrict.isSelected() ||
                 settings.isUnknownIndexable() != unknownIndexable.isSelected() ||
-                settings.isRecognizeGlobalNameAsType() != recognizeGlobalNameAsCheckBox.isSelected() ||
                 settings.getAttachDebugCaptureOutput() != captureOutputDebugString.isSelected() ||
                 settings.getAttachDebugCaptureStd() != captureStd.isSelected() ||
                 settings.getAttachDebugDefaultCharsetName() != defaultCharset.getSelectedItem() ||
@@ -129,7 +126,6 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
         settings.setShowWordsInFile(showWordsInFile.isSelected());
         settings.setNilStrict(nilStrict.isSelected());
         settings.setUnknownIndexable(unknownIndexable.isSelected());
-        settings.setRecognizeGlobalNameAsType(recognizeGlobalNameAsCheckBox.isSelected());
         settings.setAdditionalSourcesRoot(additionalRoots.getRoots());
         settings.setAttachDebugCaptureOutput(captureOutputDebugString.isSelected());
         settings.setAttachDebugCaptureStd(captureStd.isSelected());

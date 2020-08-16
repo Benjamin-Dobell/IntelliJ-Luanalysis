@@ -132,8 +132,6 @@ abstract class TyClass(override val className: String,
             return true
         if (!processor.process(alias))
             return false
-        if (!isGlobal && !isAnonymous && LuaSettings.instance.isRecognizeGlobalNameAsType)
-            return processor.process(getGlobalTypeName(className))
         return true
     }
 
@@ -252,12 +250,12 @@ abstract class TyClass(override val className: String,
             return createSerializedClass(tyName, null, nameDef.name, null, null, null, TyFlags.ANONYMOUS)
         }
 
-        fun createGlobalType(name: String, store: Boolean = false): ITy {
+        fun createGlobalType(name: String): ITy {
             return createSerializedClass(getGlobalTypeName(name), null, name, null, null, null, TyFlags.GLOBAL)
         }
 
-        fun createGlobalType(nameExpr: LuaNameExpr, store: Boolean): ITy {
-            return createGlobalType(nameExpr.name, store)
+        fun createGlobalType(nameExpr: LuaNameExpr): ITy {
+            return createGlobalType(nameExpr.name)
         }
 
         fun createSelfType(classTy: ITyClass): TyClass {

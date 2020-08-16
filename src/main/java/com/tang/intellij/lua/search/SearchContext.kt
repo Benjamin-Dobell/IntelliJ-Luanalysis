@@ -96,12 +96,9 @@ class SearchContext {
         private fun <T> withStub(ctx: SearchContext, defaultValue: T, action: (ctx: SearchContext) -> T): T {
             return with(ctx, defaultValue) {
                 val dumb = it.myDumb
-                val stub = it.myForStub
                 it.myDumb = true
-                it.myForStub = true
                 val ret = action(it)
                 it.myDumb = dumb
-                it.myForStub = stub
                 ret
             }
         }
@@ -121,7 +118,6 @@ class SearchContext {
     val supportsMultipleResults: Boolean get() = myMultipleResults
 
     private var myDumb = false
-    private var myForStub = false
     private var myIndex = 0
     private var myMultipleResults = false
     private var myInStack = false
@@ -172,8 +168,6 @@ class SearchContext {
 
     val isDumb: Boolean
         get() = myDumb || DumbService.isDumb(project)
-
-    val forStub get() = myForStub
 
     fun <T> withScope(scope: GlobalSearchScope, action: () -> T): T {
         val oriScope = myScope
