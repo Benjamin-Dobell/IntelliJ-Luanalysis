@@ -31,26 +31,26 @@ object LuaElementTypes {
             LuaTypes.MINUS, LuaTypes.GETN
     )}
 
-    val LOCAL_DEF = LuaPlaceholderStub.Type("LOCAL_DEF", ::LuaLocalDefImpl)
-    val SINGLE_ARG = LuaPlaceholderStub.Type("SINGLE_ARG", ::LuaSingleArgImpl)
-    val LIST_ARGS = LuaPlaceholderStub.Type("LIST_ARGS", ::LuaListArgsImpl)
+    val LOCAL_DEF = LuaPlaceholderStub.Type("LOCAL_DEF") { stub, type -> LuaLocalDefImpl(stub, type) }
+    val SINGLE_ARG = LuaPlaceholderStub.Type("SINGLE_ARG") { stub, type -> LuaSingleArgImpl(stub, type) }
+    val LIST_ARGS = LuaPlaceholderStub.Type("LIST_ARGS") { stub, type -> LuaListArgsImpl(stub, type) }
 
-    val EXPR_LIST = LuaPlaceholderStub.Type("EXPR_LIST", ::LuaExprListImpl)
-    val NAME_LIST = LuaPlaceholderStub.Type("NAME_LIST", ::LuaNameListImpl)
-    val ASSIGN_STAT = LuaPlaceholderStub.Type("ASSIGN_STAT", ::LuaAssignStatImpl)
-    val VAR_LIST = LuaPlaceholderStub.Type("VAR_LIST", ::LuaVarListImpl)
+    val EXPR_LIST = LuaPlaceholderStub.Type("EXPR_LIST") { stub, type -> LuaExprListImpl(stub, type) }
+    val NAME_LIST = LuaPlaceholderStub.Type("NAME_LIST") { stub, type -> LuaNameListImpl(stub, type) }
+    val ASSIGN_STAT = LuaPlaceholderStub.Type("ASSIGN_STAT") { stub, nodeType -> LuaAssignStatImpl(stub, nodeType) }
+    val VAR_LIST = LuaPlaceholderStub.Type("VAR_LIST") { stub, type -> LuaVarListImpl(stub, type) }
     val LOCAL_FUNC_DEF = LuaLocalFuncDefElementType()
-    val FUNC_BODY = LuaPlaceholderStub.Type("FUNC_BODY", ::LuaFuncBodyImpl)
-    val CLASS_METHOD_NAME = LuaPlaceholderStub.Type("CLASS_METHOD_NAME", ::LuaClassMethodNameImpl)
+    val FUNC_BODY = LuaPlaceholderStub.Type("FUNC_BODY") { stub, type -> LuaFuncBodyImpl(stub, type) }
+    val CLASS_METHOD_NAME = LuaPlaceholderStub.Type("CLASS_METHOD_NAME") { stub, type -> LuaClassMethodNameImpl(stub, type) }
 
     val CLOSURE_EXPR = LuaClosureExprType()
-    val PAREN_EXPR = LuaExprPlaceStub.Type("PAREN_EXPR", ::LuaParenExprImpl)
-    val CALL_EXPR = LuaExprPlaceStub.Type("CALL_EXPR", ::LuaCallExprImpl)
+    val PAREN_EXPR = LuaExprPlaceStub.Type("PAREN_EXPR") { stub, nodeType -> LuaParenExprImpl(stub, nodeType) }
+    val CALL_EXPR = LuaExprPlaceStub.Type("CALL_EXPR") { stub, nodeType -> LuaCallExprImpl(stub, nodeType) }
     val UNARY_EXPR = LuaUnaryExprType()
     val BINARY_EXPR = LuaBinaryExprType()
 
-    val RETURN_STAT = LuaPlaceholderStub.Type("RETURN_STAT", ::LuaReturnStatImpl)
-    val DO_STAT = LuaPlaceholderStub.Type("DO_STAT", ::LuaDoStatImpl)
-    val IF_STAT = LuaPlaceholderStub.Type("IF_STAT", ::LuaIfStatImpl)
-    val EXPR_STAT = LuaPlaceholderStub.Type("CALL_STAT", ::LuaExprStatImpl)
+    val RETURN_STAT = LuaPlaceholderStub.Type("RETURN_STAT") { stub, nodeType -> LuaReturnStatImpl(stub, nodeType) }
+    val DO_STAT = LuaPlaceholderStub.Type("DO_STAT") { stub, nodeType -> LuaDoStatImpl(stub, nodeType) }
+    val IF_STAT = LuaPlaceholderStub.Type("IF_STAT") { stub, nodeType -> LuaIfStatImpl(stub, nodeType) }
+    val EXPR_STAT = LuaPlaceholderStub.Type("CALL_STAT") { stub, nodeType -> LuaExprStatImpl(stub, nodeType) }
 }

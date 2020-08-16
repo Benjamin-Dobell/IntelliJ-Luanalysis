@@ -36,7 +36,7 @@ class LuaHighlightExitPointsHandler internal constructor(editor: Editor, file: P
         return listOf<PsiElement>(target)
     }
 
-    override fun selectTargets(list: List<PsiElement>, consumer: Consumer<List<PsiElement>>) {
+    override fun selectTargets(list: MutableList<out PsiElement>, consumer: Consumer<in MutableList<out PsiElement>>) {
 
     }
 

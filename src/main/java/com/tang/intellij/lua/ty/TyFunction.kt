@@ -273,7 +273,7 @@ class FunSignature(colonCall: Boolean,
                     colonCall,
                     functionTy.returnType,
                     functionTy.varargParam,
-                    functionTy.params,
+                    functionTy.params as Array<LuaParamInfo>, // Casting due to https://youtrack.jetbrains.com/issue/KT-40034
                     functionTy.genericDefList.map { TyParameter(it) }.toTypedArray()
             )
         }

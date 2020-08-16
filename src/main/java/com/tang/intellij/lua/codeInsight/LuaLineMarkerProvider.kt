@@ -193,10 +193,10 @@ class LuaLineMarkerProvider : LineMarkerProvider {
         return null
     }
 
-    override fun collectSlowLineMarkers(list: List<PsiElement>, collection: MutableCollection<LineMarkerInfo<*>>) {
-        for (element in list) {
+    override fun collectSlowLineMarkers(elements: MutableList<out PsiElement>, result: MutableCollection<in LineMarkerInfo<*>>) {
+        for (element in elements) {
             ProgressManager.checkCanceled()
-            collectNavigationMarkers(element, collection)
+            collectNavigationMarkers(element, result)
         }
     }
 }
