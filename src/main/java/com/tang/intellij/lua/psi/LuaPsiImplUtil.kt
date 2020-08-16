@@ -144,7 +144,7 @@ fun guessParentType(classMethodDef: LuaClassMethodDef, context: SearchContext): 
     }*/
 
     val expr = classMethodDef.classMethodName.expr
-    val parentTy = recursionGuard(expr, Computable {
+    val parentTy = recursionGuard(classMethodDef, Computable {
         val ty = expr.guessType(context)
         TyUnion.getPerfectClass(ty)
     })
