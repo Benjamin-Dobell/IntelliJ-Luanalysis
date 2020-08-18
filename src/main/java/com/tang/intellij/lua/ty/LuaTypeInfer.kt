@@ -21,7 +21,7 @@ import com.tang.intellij.lua.psi.LuaTypeGuessable
 import com.tang.intellij.lua.search.SearchContext
 
 class LuaTypeInfer : ILuaTypeInfer {
-    override fun inferType(target: LuaTypeGuessable, context: SearchContext): ITy {
+    override fun inferType(target: LuaTypeGuessable, context: SearchContext): ITy? {
         return inferInner(target, context)
     }
 }

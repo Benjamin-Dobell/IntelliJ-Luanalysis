@@ -23,23 +23,22 @@ genericAlias = {
 }
 
 genericAlias = {
-    parameterOrNumber = <error>'invalid'</error>,
+    parameterOrNumber = <error descr="Type mismatch. Required: 'AliasAsParam|number' Found: '\"invalid\"'">'invalid'</error>,
     aKnownStringLiteral = 'a'
 }
 
 genericAlias = {
     parameterOrNumber = 'three',
-    aKnownStringLiteral = <error>'invalid'</error>,
+    aKnownStringLiteral = <error descr="Type mismatch. Required: '\"a\"|\"b\"|\"c\"' Found: '\"invalid\"'">'invalid'</error>,
 }
 
-genericAlias = <error><error descr="Type mismatch. Required: 'string' Found: 'table'">{
-    parameterOrNumber = <error>'owner'</error>
+genericAlias = <error descr="Type mismatch. Missing member: 'aKnownStringLiteral' of: 'OurGenericShape<AliasAsParam>'"><error descr="Type mismatch. Required: 'string' Found: 'table'">{
+    parameterOrNumber = <error descr="Type mismatch. Required: 'AliasAsParam|number' Found: '\"owner\"'">'owner'</error>
 }</error></error>
 
 genericAlias = 'a string'
-genericAlias = <error>1</error>
-genericAlias = <error><error><error descr="Type mismatch. Required: 'string' Found: 'table'">{}</error></error></error>
+genericAlias = <error descr="Type mismatch. Required: 'OurGenericShape<AliasAsParam>|string' Found: '1'">1</error>
+genericAlias = <error descr="Type mismatch. Missing member: 'aKnownStringLiteral' of: 'OurGenericShape<AliasAsParam>'"><error descr="Type mismatch. Missing member: 'parameterOrNumber' of: 'OurGenericShape<AliasAsParam>'"><error descr="Type mismatch. Required: 'string' Found: 'table'">{}</error></error></error>
 
 ---@type GenericAlias<"different">
-local aDifferentGenericAlias =
-<error>genericAlias</error>
+local aDifferentGenericAlias = <error>genericAlias</error>

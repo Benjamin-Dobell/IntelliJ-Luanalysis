@@ -65,37 +65,39 @@ class LuaParameterHintsProvider : InlayParameterHintsProvider {
             val exprList = args.exprList
             val context = SearchContext.get(callExpr.getProject())
             val type = callExpr.guessParentType(context)
-            val ty = TyUnion.find(type, ITyFunction::class.java) ?: return list
 
-            // 是否是 inst:method() 被用为 inst.method(self) 形式
-            val isInstanceMethodUsedAsStaticMethod = ty.isColonCall && callExpr.isMethodDotCall
-            val searchContext = SearchContext.get(callExpr)
+            if (type != null) {
+                val ty = TyUnion.find(type, ITyFunction::class.java) ?: return list
 
-            val sig = ty.matchSignature(searchContext, callExpr)?.signature
+                // 是否是 inst:method() 被用为 inst.method(self) 形式
+                val isInstanceMethodUsedAsStaticMethod = ty.isColonCall && callExpr.isMethodDotCall
+                val searchContext = SearchContext.get(callExpr)
 
-            sig?.processParameters(null, callExpr.isMethodColonCall) { index, paramInfo ->
-                val expr = exprList.getOrNull(index) ?: return@processParameters false
-                val show =
-                if (index == 0 && isInstanceMethodUsedAsStaticMethod) {
+                val sig = ty.matchSignature(searchContext, callExpr)?.signature
+
+                sig?.processParameters(null, callExpr.isMethodColonCall) { index, paramInfo ->
+                    val expr = exprList.getOrNull(index) ?: return@processParameters false
+                    val show =
+                            if (index == 0 && isInstanceMethodUsedAsStaticMethod) {
+                                true
+                            } else PsiTreeUtil.instanceOf(expr, *EXPR_HINT)
+                    if (show)
+                        list.add(InlayInfo(paramInfo.name, expr.node.startOffset))
                     true
-                } else PsiTreeUtil.instanceOf(expr, *EXPR_HINT)
-                if (show)
-                    list.add(InlayInfo(paramInfo.name, expr.node.startOffset))
-                true
+                }
             }
         }
         else if (psi is LuaParamNameDef) {
             if (PARAMETER_TYPE_HINT.get()) {
-                val type = psi.guessType(SearchContext.get(psi.project))
-                if (!Ty.isInvalid(type)) {
-                    return listOf(InlayInfo("$TYPE_INFO_PREFIX${type.displayName}", psi.textOffset + psi.textLength))
+                psi.guessType(SearchContext.get(psi.project))?.let {
+                    return listOf(InlayInfo("$TYPE_INFO_PREFIX${it.displayName}", psi.textOffset + psi.textLength))
                 }
             }
         }
         else if (psi is LuaNameDef) {
             if (LOCAL_VARIABLE_HINT.get()) {
                 val type = psi.guessType(SearchContext.get(psi.project))
-                if (!Ty.isInvalid(type)) {
+                if (type != null) {
                     return listOf(InlayInfo("$TYPE_INFO_PREFIX${type.displayName}", psi.textOffset + psi.textLength))
                 }
             }
@@ -104,7 +106,7 @@ class LuaParameterHintsProvider : InlayParameterHintsProvider {
             val paren = psi.funcBody?.rparen
             if (FUNCTION_HINT.get() && paren != null) {
                 val type = psi.guessReturnType(SearchContext.get(psi.project))
-                if (!Ty.isInvalid(type)) {
+                if (type != null) {
                     return listOf(InlayInfo("$TYPE_INFO_PREFIX${type.displayName}", paren.textOffset + paren.textLength))
                 }
             }

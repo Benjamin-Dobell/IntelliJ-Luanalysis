@@ -56,6 +56,4 @@ interface LuaDocTableDefStub : StubElement<LuaDocTableDef> {
 class LuaDocTableDefStubImpl(
         override val className: String,
         parent: StubElement<*>
-) : LuaDocStubBase<LuaDocTableDef>(parent, LuaElementType.DOC_TABLE_DEF), LuaDocTableDefStub {
-
-}
+) : LuaDocStubBase<LuaDocTableDef>(parent, LuaElementType.DOC_TABLE_DEF), LuaDocTableDefStub

@@ -301,8 +301,7 @@ open class TySerializedClass(name: String,
     }
 }
 
-//todo Lazy class ty
-class TyLazyClass(name: String, params: Array<TyParameter>? = null) : TySerializedClass(name, params)
+class TyLazyClass(name: String) : TySerializedClass(name, null)
 
 fun createSerializedClass(name: String,
                           params: Array<TyParameter>? = null,
@@ -326,11 +325,11 @@ fun createTableGenericFromMembers(ty: ITy, context: SearchContext): ITyGeneric {
     val isEmpty = ty.processMembers(context) { _, _ -> false }
 
     if (isEmpty) {
-        return TySerializedGeneric(arrayOf(Ty.UNKNOWN, Ty.UNKNOWN), Ty.TABLE)
+        return TyGeneric(arrayOf(Ty.UNKNOWN, Ty.UNKNOWN), Ty.TABLE)
     }
 
-    var keyType: ITy = Ty.VOID
-    var elementType: ITy = Ty.VOID
+    var keyType: ITy? = null
+    var elementType: ITy? = null
 
     ty.processMembers(context) { prefixTy, classMember ->
         val name = classMember.name
@@ -340,52 +339,50 @@ fun createTableGenericFromMembers(ty: ITy, context: SearchContext): ITyGeneric {
             val exprList = classMember.exprList
 
             if (exprList.size == 2) {
-                keyType = keyType.union(context.withIndex(0) {
-                    exprList[0].guessType(context)
+                keyType = TyUnion.union(keyType, context.withIndex(0) {
+                    exprList[0].guessType(context) ?: Ty.UNKNOWN
                 })
-                elementType = elementType.union(context.withIndex(0) {
-                    exprList[1].guessType(context)
+                elementType = TyUnion.union(elementType, context.withIndex(0) {
+                    exprList[1].guessType(context) ?: Ty.UNKNOWN
                 })
             } else if (exprList.size == 1) {
                 if (name != null) {
-                    keyType = keyType.union(TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name))
+                    keyType = TyUnion.union(keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name))
                 } else {
-                    keyType = keyType.union(Ty.NUMBER)
+                    keyType = TyUnion.union(keyType, Ty.NUMBER)
                 }
 
-                elementType = elementType.union(exprList[0].guessType(context))
+                elementType = TyUnion.union(elementType, exprList[0].guessType(context) ?: Ty.UNKNOWN)
             }
         } else if (classMember is LuaIndexExpr) {
             val idExpr = classMember.idExpr
 
             if (name != null) {
-                keyType = keyType.union(TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name))
-                elementType = elementType.union(prefixTy.guessMemberType(name, context) ?: Ty.UNKNOWN)
+                keyType = TyUnion.union(keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name))
+                elementType = TyUnion.union(elementType, prefixTy.guessMemberType(name, context) ?: Ty.UNKNOWN)
             } else if (idExpr != null) {
-                val indexTy = idExpr.guessType(context)
-                keyType = keyType.union(indexTy)
-                elementType = elementType.union(prefixTy.guessIndexerType(indexTy, context) ?: Ty.UNKNOWN)
+                val indexTy = idExpr.guessType(context) ?: Ty.UNKNOWN
+                keyType = TyUnion.union(keyType, indexTy)
+                elementType = TyUnion.union(elementType, prefixTy.guessIndexerType(indexTy, context) ?: Ty.UNKNOWN)
             } else {
                 keyType = Ty.UNKNOWN
                 elementType = Ty.UNKNOWN
-                return@processMembers false
             }
         } else if (name != null) {
-            keyType = keyType.union(TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name))
-            elementType = elementType.union(classMember.guessType(context))
+            keyType = TyUnion.union(keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name))
+            elementType = TyUnion.union(elementType, classMember.guessType(context) ?: Ty.UNKNOWN)
         } else if (indexType != null) {
-            keyType = keyType.union(indexType.getType())
-            elementType = elementType.union(classMember.guessType(context))
+            keyType = TyUnion.union(keyType, indexType.getType())
+            elementType = TyUnion.union(elementType, classMember.guessType(context) ?: Ty.UNKNOWN)
         } else {
             keyType = Ty.UNKNOWN
             elementType = Ty.UNKNOWN
-            return@processMembers false
         }
 
-        true
+        keyType !is TyUnknown || elementType !is TyUnknown
     }
 
-    return TySerializedGeneric(arrayOf(keyType, elementType), Ty.TABLE)
+    return TyGeneric(arrayOf(keyType ?: Ty.UNKNOWN, elementType ?: Ty.UNKNOWN), Ty.TABLE)
 }
 
 fun getTableTypeName(table: LuaTableExpr): String {

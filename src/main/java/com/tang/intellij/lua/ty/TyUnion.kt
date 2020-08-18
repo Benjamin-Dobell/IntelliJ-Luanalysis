@@ -21,6 +21,8 @@ import com.intellij.psi.stubs.StubOutputStream
 import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.search.SearchContext
 import java.util.*
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 private val displayNameComparator: Comparator<ITy> = Comparator { a, b -> a.displayName.compareTo(b.displayName) }
 
@@ -129,31 +131,15 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
     }
 
     override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
-        var ty: ITy? = null
-
-        childSet.forEach {
-            val valueTy = it.guessMemberType(name, searchContext)
-
-            if (valueTy != null) {
-                ty = ty?.union(valueTy) ?: valueTy
-            }
+        return childSet.reduce<ITy?, ITy?> { ty, childTy ->
+            TyUnion.union(ty, childTy?.guessMemberType(name, searchContext))
         }
-
-        return ty
     }
 
     override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
-        var ty: ITy? = null
-
-        childSet.forEach {
-            val valueTy = it.guessIndexerType(indexTy, searchContext, exact)
-
-            if (valueTy != null) {
-                ty = ty?.union(valueTy) ?: valueTy
-            }
+        return childSet.reduce<ITy?, ITy?> { ty, childTy ->
+            TyUnion.union(ty, childTy?.guessIndexerType(indexTy, searchContext, exact))
         }
-
-        return ty
     }
 
     override fun accept(visitor: ITyVisitor) {
@@ -245,12 +231,26 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
             }
         }
 
+        @ExperimentalContracts
+        @JvmName("nullableUnion")
+        fun union(t1: ITy?, t2: ITy?): ITy? {
+            contract {
+                returns(null) implies (t1 == null && t2 == null)
+                returnsNotNull() implies (t1 != null || t2 != null)
+            }
+            return when {
+                t1 === null -> t2
+                t2 === null -> t1
+                else -> union(t1, t2)
+            }
+        }
+
         fun union(t1: ITy, t2: ITy): ITy {
             return when {
                 t1 == t2 -> t1
                 t1 is TyUnknown || t2 is TyUnknown -> Ty.UNKNOWN
-                isInvalid(t1) -> t2
-                isInvalid(t2) -> t1
+                t1 is TyVoid -> t2
+                t2 is TyVoid -> t1
                 t1 is TyUnion -> t1.union(t2)
                 t2 is TyUnion -> t2.union(t1)
                 else -> {
@@ -308,7 +308,10 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
                         else -> clazz = it
                     }
                 }
-                clazz == null
+
+                if (clazz != null) {
+                    return@each
+                }
             }
             return clazz ?: global ?: anonymous
         }

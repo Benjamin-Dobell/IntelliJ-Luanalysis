@@ -40,7 +40,7 @@ public interface LuaLocalFuncDef extends LuaFuncBodyOwner, LuaCommentOwner, LuaD
   @NotNull
   SearchScope getUseScope();
 
-  @NotNull
+  @Nullable
   ITy guessReturnType(@NotNull SearchContext searchContext);
 
   @NotNull

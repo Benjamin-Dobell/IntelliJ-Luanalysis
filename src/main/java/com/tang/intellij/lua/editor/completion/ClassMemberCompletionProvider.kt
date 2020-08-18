@@ -55,8 +55,8 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
         if (indexExpr is LuaIndexExpr) {
             val isColon = indexExpr.colon != null
             val project = indexExpr.project
-            val contextTy = LuaPsiTreeUtil.findContextClass(indexExpr)
             val context = SearchContext.get(project)
+            val contextTy = LuaPsiTreeUtil.findContextClass(indexExpr, context)
             val prefixType = indexExpr.guessParentType(context)
             if (!Ty.isInvalid(prefixType)) {
                 complete(isColon, project, contextTy, prefixType, completionResultSet, completionResultSet.prefixMatcher, null)
@@ -74,7 +74,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
                     val txt = it.name
                     if (it is LuaTypeGuessable && txt != null && prefixName != txt && matcher.prefixMatches(txt)) {
                         val type = it.guessType(context)
-                        if (!Ty.isInvalid(prefixType)) {
+                        if (type != null) {
                             val prefixMatcher = completionResultSet.prefixMatcher
                             val resultSet = completionResultSet.withPrefixMatcher("$prefixName*$postfixName")
                             complete(isColon, project, contextTy, type, resultSet, prefixMatcher, object : HandlerProcessor() {
@@ -142,7 +142,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
                             project: Project,
                             handlerProcessor: HandlerProcessor?) {
         val context = SearchContext.get(project)
-        val type = member.guessType(context)
+        val type = member.guessType(context) ?: Ty.UNKNOWN
         val bold = thisType == callType
         val className = thisType.displayName
         if (type is ITyFunction) {

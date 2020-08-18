@@ -44,18 +44,16 @@ class LuaRainbowVisitor : RainbowVisitor() {
 
             val context = PsiTreeUtil.findFirstParent(resolve) { it is LuaFuncBodyOwner }
             if (context != null) {
-                val rainbowElement = element
-
                 val name = when (resolve) {
                     is LuaNameDef -> resolve.name
-                    else -> rainbowElement.text
+                    else -> element.text
                 }
                 val key = when (resolve) {
                     is LuaParamNameDef -> LuaHighlightingData.PARAMETER
                     else -> null
                 }
 
-                val info = getInfo(context, rainbowElement, name, key)
+                val info = getInfo(context, element, name, key)
                 addInfo(info)
             }
         }

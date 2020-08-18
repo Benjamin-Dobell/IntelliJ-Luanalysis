@@ -19,13 +19,14 @@ package com.tang.intellij.lua.psi;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  *
  * Created by tangzx on 2016/12/1.
  */
 public interface LuaTypeGuessable extends LuaPsiElement {
-    @NotNull
+    @Nullable
     default ITy guessType(@NotNull SearchContext context) {
         return SearchContext.Companion.infer(this, context);
     }

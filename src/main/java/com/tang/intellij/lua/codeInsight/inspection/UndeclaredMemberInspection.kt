@@ -32,7 +32,7 @@ class UndeclaredMemberInspection : StrictInspection() {
             object : LuaVisitor() {
                 override fun visitIndexExpr(o: LuaIndexExpr) {
                     val context = SearchContext.get(o)
-                    val prefix = o.prefixExpr.guessType(context)
+                    val prefix = o.prefixExpr.guessType(context) ?: Ty.UNKNOWN
                     val memberName = o.name
 
                     Ty.eachResolved(prefix, context) { prefixTy ->

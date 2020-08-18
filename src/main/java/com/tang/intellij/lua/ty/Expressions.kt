@@ -31,10 +31,12 @@ import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.impl.LuaNameExprMixin
 import com.tang.intellij.lua.search.GuardType
 import com.tang.intellij.lua.search.SearchContext
+import kotlin.contracts.ExperimentalContracts
 
-fun inferExpr(expr: LuaExpr?, context: SearchContext): ITy {
-    if (expr == null)
-        return Ty.UNKNOWN
+fun inferExpr(expr: LuaExpr?, context: SearchContext): ITy? {
+    if (expr == null) {
+        return null
+    }
 
     if (expr.comment != null) {
         val typeCast = PsiTreeUtil.getChildrenOfTypeAsList(expr.comment, LuaDocTagTypeImpl::class.java).firstOrNull()
@@ -62,6 +64,10 @@ fun inferExpr(expr: LuaExpr?, context: SearchContext): ITy {
 
     if (ty == null) {
         ty = inferExprInner(expr, context)
+
+        if (ty == null) {
+            return null
+        }
     }
 
     val notTypeCast = PsiTreeUtil.getChildrenOfTypeAsList(expr.comment, LuaDocTagNotImpl::class.java).firstOrNull()
@@ -93,7 +99,7 @@ fun inferExpr(expr: LuaExpr?, context: SearchContext): ITy {
     return ty
 }
 
-private fun inferExprInner(expr: LuaPsiElement, context: SearchContext): ITy {
+private fun inferExprInner(expr: LuaPsiElement, context: SearchContext): ITy? {
     return when (expr) {
         is LuaUnaryExpr -> expr.infer(context)
         is LuaBinaryExpr -> expr.infer(context)
@@ -104,11 +110,11 @@ private fun inferExprInner(expr: LuaPsiElement, context: SearchContext): ITy {
         is LuaNameExpr -> expr.infer(context)
         is LuaLiteralExpr -> expr.infer()
         is LuaIndexExpr -> expr.infer(context)
-        else -> Ty.UNKNOWN
+        else -> null
     }
 }
 
-private fun LuaUnaryExpr.infer(context: SearchContext): ITy {
+private fun LuaUnaryExpr.infer(context: SearchContext): ITy? {
     val stub = stub
     val operator = if (stub != null) stub.opType else unaryOp.node.firstChildNode.elementType
 
@@ -136,7 +142,7 @@ private fun LuaUnaryExpr.infer(context: SearchContext): ITy {
         }
         LuaTypes.GETN -> Ty.NUMBER // Table length is a number
         LuaTypes.NOT -> { // Returns a boolean; inverse of a boolean literal
-            return when (infer(expr, context).booleanType) {
+            return when (infer(expr, context)?.booleanType) {
                 Ty.TRUE -> Ty.FALSE
                 Ty.FALSE -> Ty.TRUE
                 else -> Ty.BOOLEAN
@@ -146,7 +152,7 @@ private fun LuaUnaryExpr.infer(context: SearchContext): ITy {
     }
 }
 
-private fun LuaBinaryExpr.infer(context: SearchContext): ITy {
+private fun LuaBinaryExpr.infer(context: SearchContext): ITy? {
     val stub = stub
     val operator = if (stub != null) stub.opType else {
         val firstChild = firstChild
@@ -164,16 +170,20 @@ private fun LuaBinaryExpr.infer(context: SearchContext): ITy {
         //&, <<, |, >>, ~, ^,    +, -, *, /, //, %
             LuaTypes.BIT_AND, LuaTypes.BIT_LTLT, LuaTypes.BIT_OR, LuaTypes.BIT_RTRT, LuaTypes.BIT_TILDE, LuaTypes.EXP,
             LuaTypes.PLUS, LuaTypes.MINUS, LuaTypes.MULT, LuaTypes.DIV, LuaTypes.DOUBLE_DIV, LuaTypes.MOD -> guessBinaryOpType(this, context)
-            else -> Ty.UNKNOWN
+            else -> null
         }
     }
 }
 
-private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, context:SearchContext): ITy {
+private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, context:SearchContext): ITy? {
     val lhs = binaryExpr.left
     val rhs = binaryExpr.right
 
     val lty = infer(lhs, context)
+
+    if (lty == null) {
+        return null
+    }
 
     //and
     if (operator == LuaTypes.AND) {
@@ -181,6 +191,12 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
             Ty.TRUE -> infer(rhs, context)
             Ty.FALSE -> lty
             else -> {
+                val rhsTy = infer(rhs, context)
+
+                if (rhsTy == null) {
+                    return null
+                }
+
                 val tys = mutableListOf<ITy>()
                 TyUnion.each(lty) {
                     if (it == Ty.BOOLEAN) {
@@ -189,7 +205,7 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
                         tys.add(it)
                     }
                 }
-                tys.add(infer(rhs, context))
+                tys.add(rhsTy)
                 TyUnion.union(tys)
             }
         }
@@ -200,6 +216,12 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
         Ty.TRUE -> lty
         Ty.FALSE -> infer(rhs, context)
         else -> {
+            val rhsTy = infer(rhs, context)
+
+            if (rhsTy == null) {
+                return null
+            }
+
             val tys = mutableListOf<ITy>()
             TyUnion.each(lty) {
                 if (it == Ty.BOOLEAN) {
@@ -208,13 +230,13 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
                     tys.add(it)
                 }
             }
-            tys.add(infer(rhs, context))
+            tys.add(rhsTy)
             TyUnion.union(tys)
         }
     }
 }
 
-private fun guessBinaryOpType(binaryExpr : LuaBinaryExpr, context:SearchContext): ITy {
+private fun guessBinaryOpType(binaryExpr : LuaBinaryExpr, context:SearchContext): ITy? {
     val type = infer(binaryExpr.left, context)
     return if (type is TyPrimitiveLiteral) type.primitiveType else type
 }
@@ -227,17 +249,19 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
         // self type
         if (this.isMethodColonCall) {
             this.prefixExpr?.let { prefix ->
-                list.add(prefix.guessType(context))
+                list.add(prefix.guessType(context) ?: Ty.UNKNOWN)
             }
         }
 
         for (i in 0 until argList.size - 1) {
-            context.withIndex(0) { list.add(argList[i].guessType(context)) }
+            context.withIndex(0) {
+                list.add(argList[i].guessType(context) ?: Ty.UNKNOWN)
+            }
         }
 
         argList.lastOrNull()?.let {
             context.withMultipleResults {
-                val lastArgTy = it.guessType(context)
+                val lastArgTy = it.guessType(context) ?: Ty.UNKNOWN
 
                 if (lastArgTy is TyMultipleResults) {
                     list.addAll(lastArgTy.list)
@@ -281,17 +305,17 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
     return selfSubstitutor
 }
 
-private fun LuaCallExpr.getReturnTy(sig: IFunSignature, context: SearchContext): ITy {
+private fun LuaCallExpr.getReturnTy(sig: IFunSignature, context: SearchContext): ITy? {
     val substitutor = createSubstitutor(sig, context)
-    val returnTy = sig.returnTy?.substitute(substitutor) ?: Ty.UNKNOWN
-    return if (context.supportsMultipleResults) {
+    val returnTy = sig.returnTy?.substitute(substitutor)
+    return if (returnTy == null || context.supportsMultipleResults) {
         returnTy
     } else {
         TyMultipleResults.getResult(returnTy, context.index)
     }
 }
 
-private fun LuaCallExpr.infer(context: SearchContext): ITy {
+private fun LuaCallExpr.infer(context: SearchContext): ITy? {
     val luaCallExpr = this
     // xxx()
     val expr = luaCallExpr.expr
@@ -308,73 +332,85 @@ private fun LuaCallExpr.infer(context: SearchContext): ITy {
         if (file != null)
             return file.guessType(context)
 
-        return Ty.UNKNOWN
+        return null
     }
 
     var ret: ITy = Ty.VOID
     val ty = infer(expr, context)
-    Ty.eachResolved(ty, context) {
-        val substitutedSignature = it.matchSignature(context, this)?.substitutedSignature
 
-        if (substitutedSignature == null) {
-            return Ty.UNKNOWN
-        }
-
-        ret = ret.union(getReturnTy(substitutedSignature, context))
+    if (ty == null) {
+        return null
     }
 
-    return if (Ty.isInvalid(ret)) Ty.UNKNOWN else TyMultipleResults.flatten(ret)
+    Ty.eachResolved(ty, context) {
+        val returnTy = it.matchSignature(context, this)?.substitutedSignature?.let {
+            getReturnTy(it, context)
+        }
+
+        if (returnTy == null) {
+            return null
+        }
+
+        ret = ret.union(returnTy)
+    }
+
+    return TyMultipleResults.flatten(ret)
 }
 
-private fun LuaNameExpr.infer(context: SearchContext): ITy {
-    val set = recursionGuard(this, Computable {
+private fun LuaNameExpr.infer(context: SearchContext): ITy? {
+    return recursionGuard(this, Computable {
         if (name == Constants.WORD_SELF) {
             val methodDef = PsiTreeUtil.getStubOrPsiParentOfType(this, LuaClassMethodDef::class.java)
             if (methodDef != null && !methodDef.isStatic) {
                 val methodName = methodDef.classMethodName
                 val expr = methodName.expr
                 val methodClassType = expr.guessType(context) as? ITyClass
+
                 if (methodClassType != null) {
                     return@Computable TyClass.createSelfType(methodClassType)
                 }
             }
         }
 
-        var type:ITy = Ty.VOID
-
         context.withRecursionGuard(this, GuardType.GlobalName) {
             val multiResolve = multiResolve(this, context)
             var maxTimes = 10
+
+            var type: ITy? = null
+
             for (element in multiResolve) {
                 val set = getType(context, element)
-                type = type.union(set)
+
+                if (set == null) {
+                    type = null
+                    break
+                }
+
+                type = TyUnion.union(type, set)
+
                 if (--maxTimes == 0)
                     break
             }
+
             type
-        }
-
-        if (Ty.isInvalid(type)) {
-            type = getType(context, this)
-        }
-
-        type
+        } ?: getType(context, this)
     })
-    return set ?: Ty.UNKNOWN
 }
 
-private fun getType(context: SearchContext, def: PsiElement): ITy {
-    when (def) {
+private fun getType(context: SearchContext, def: PsiElement): ITy? {
+    return when (def) {
         is LuaNameExpr -> {
             //todo stub.module -> ty
-            val stub = def.stub
-            stub?.module?.let {
+            def.stub?.module?.let {
                 val memberType = createSerializedClass(it).guessMemberType(def.name, context)
-                if (memberType != null && !Ty.isInvalid(memberType))
+
+                if (memberType != null) {
                     return memberType
+                }
             }
 
-            var type: ITy = def.docTy ?: Ty.VOID
+            var type: ITy? = def.docTy
+
             //guess from value expr
             if (Ty.isInvalid(type) /*&& !context.forStub*/) {
                 val stat = def.assignStat
@@ -390,18 +426,19 @@ private fun getType(context: SearchContext, def: PsiElement): ITy {
             }
 
             //Global
-            if (isGlobal(def) && def.docTy == null && type !is ITyPrimitive) {
+            if (type != null && isGlobal(def) && def.docTy == null && type !is ITyPrimitive) {
                 //use globalClassTy to store class members, that's very important
                 type = type.union(TyClass.createGlobalType(def))
             }
-            return if (Ty.isInvalid(type)) Ty.UNKNOWN else type
+
+            type
         }
-        is LuaTypeGuessable -> return def.guessType(context)
-        else -> return Ty.UNKNOWN
+        is LuaTypeGuessable -> def.guessType(context)
+        else -> null
     }
 }
 
-private fun isGlobal(nameExpr: LuaNameExpr):Boolean {
+private fun isGlobal(nameExpr: LuaNameExpr): Boolean {
     val minx = nameExpr as LuaNameExprMixin
     val gs = minx.greenStub
     return gs?.isGlobal ?: (resolveLocal(nameExpr, null) == null)
@@ -424,8 +461,8 @@ fun LuaLiteralExpr.infer(): ITy {
     }
 }
 
-private fun LuaIndexExpr.infer(context: SearchContext): ITy {
-    val retTy = recursionGuard(this, Computable {
+private fun LuaIndexExpr.infer(context: SearchContext): ITy? {
+    return recursionGuard(this, Computable {
         val indexExpr = this
 
         //from @type annotation
@@ -435,43 +472,39 @@ private fun LuaIndexExpr.infer(context: SearchContext): ITy {
 
         // xxx.yyy = zzz
         //from value
-        var result: ITy = Ty.VOID
-        val assignStat = indexExpr.assignStat
-        if (assignStat != null) {
-            result = context.withIndex(assignStat.getIndexFor(indexExpr), false) {
-                assignStat.valueExprList?.guessTypeAt(context) ?: Ty.VOID
+        var result: ITy? = indexExpr.assignStat?.let {
+            context.withIndex(it.getIndexFor(indexExpr), false) {
+                it.valueExprList?.guessTypeAt(context)
             }
         }
 
         val prefixType = indexExpr.guessParentType(context)
 
         Ty.eachResolved(prefixType, context) { ty ->
-            result = result.union(guessFieldType(indexExpr, ty, context))
+            result = TyUnion.union(result, guessFieldType(indexExpr, ty, context))
         }
 
-        if (Ty.isInvalid(result)) Ty.UNKNOWN else result
+        result
     })
-
-    return retTy ?: Ty.VOID
 }
 
-private fun guessFieldType(indexExpr: LuaIndexExpr, ty: ITy, context: SearchContext): ITy {
+private fun guessFieldType(indexExpr: LuaIndexExpr, ty: ITy, context: SearchContext): ITy? {
     val fieldName = indexExpr.name
     val indexTy = indexExpr.idExpr?.guessType(context)
 
     // _G.var = {}  <==>  var = {}
     if ((ty as? TyClass)?.className == Constants.WORD_G) {
-        return if (fieldName != null) TyClass.createGlobalType(fieldName) else Ty.VOID
+        return fieldName?.let { TyClass.createGlobalType(it) }
     }
 
     return fieldName?.let {
         ty.guessMemberType(it, context)
     } ?: indexTy?.let {
         ty.guessIndexerType(it, context)
-    } ?: Ty.VOID
+    }
 }
 
-private fun LuaTableExpr.infer(context: SearchContext): ITy {
+private fun LuaTableExpr.infer(context: SearchContext): ITy? {
     val list = this.tableFieldList
 
     if (list.size == 0) {
@@ -494,9 +527,15 @@ private fun LuaTableExpr.infer(context: SearchContext): ITy {
                         return TyArray(ty)
                     }
                 } else {
-                    return TyArray(context.withIndex(0) {
+                    val elementTy = context.withIndex(0) {
                         valueExpr.guessType(context)
-                    })
+                    }
+
+                    if (elementTy == null) {
+                        return null
+                    }
+
+                    return TyArray(elementTy)
                 }
             }
         }

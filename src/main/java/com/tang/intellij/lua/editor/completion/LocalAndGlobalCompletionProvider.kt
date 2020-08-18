@@ -56,6 +56,11 @@ class LocalAndGlobalCompletionProvider(private val mask: Int) : ClassMemberCompl
             }
             is LuaTypeGuessable -> {
                 val type = psi.guessType(ctx)
+
+                if (type == null) {
+                    return
+                }
+
                 var isFn = false
                 TyUnion.each(type) {
                     if (it is ITyFunction) {
@@ -86,7 +91,7 @@ class LocalAndGlobalCompletionProvider(private val mask: Int) : ClassMemberCompl
             val moduleName = nameExpr.moduleName
             if (moduleName != null) {
                 val ty = TyLazyClass(moduleName)
-                val contextTy = LuaPsiTreeUtil.findContextClass(nameExpr)
+                val contextTy = LuaPsiTreeUtil.findContextClass(nameExpr, SearchContext.get(nameExpr.project))
                 addClass(contextTy, ty, cur.project, MemberCompletionMode.Dot, completionResultSet, completionResultSet.prefixMatcher, null)
             }
         }

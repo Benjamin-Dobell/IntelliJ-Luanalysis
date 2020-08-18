@@ -61,7 +61,7 @@ import com.tang.intellij.lua.ty.*
  *     foo = ?? -- foo should be type of `Bar`
  * }
  */
-private fun LuaExpr.shouldBeInternal(context: SearchContext): ITy {
+private fun LuaExpr.shouldBeInternal(context: SearchContext): ITy? {
     val p1 = parent
     if (p1 is LuaExprList) {
         val p2 = p1.parent
@@ -79,37 +79,52 @@ private fun LuaExpr.shouldBeInternal(context: SearchContext): ITy {
         if (p2 is LuaCallExpr) {
             val idx = p1.getIndexFor(this)
             val fTy = infer(p2.expr, context)
-            var ret: ITy = Ty.VOID
-            Ty.eachResolved(fTy, context) {
-                if (it is ITyFunction) {
-                    var sig = it.matchSignature(context, p2)?.signature ?: it.mainSignature
-                    val substitutor = p2.createSubstitutor(sig, context)
-                    sig = sig.substitute(substitutor)
-                    ret = ret.union(sig.getParamTy(idx))
+
+            if (fTy != null) {
+                var ret: ITy = Ty.VOID
+                Ty.eachResolved(fTy, context) {
+                    if (it is ITyFunction) {
+                        var sig = it.matchSignature(context, p2)?.signature ?: it.mainSignature
+                        val substitutor = p2.createSubstitutor(sig, context)
+                        sig = sig.substitute(substitutor)
+                        ret = ret.union(sig.getParamTy(idx))
+                    }
                 }
+                return ret
             }
-            return if (Ty.isInvalid(ret)) Ty.UNKNOWN else ret
         }
     } else if (p1 is LuaTableField) {
         val memberName = p1.name
         val tbl = p1.parent
         if (memberName != null && tbl is LuaTableExpr) {
-            var fieldType: ITy = Ty.VOID
             val tyTbl = tbl.shouldBe(context)
+
+            if (tyTbl == null) {
+                return null
+            }
+
+            var fieldType: ITy = Ty.VOID
             tyTbl.eachTopClass(Processor { type ->
-                type.guessMemberType(memberName, context)?.let { fieldType = fieldType.union(it) }
-                true
+                val classFieldTy = type.guessMemberType(memberName, context)
+
+                if (classFieldTy == null) {
+                    false
+                } else {
+                    fieldType = fieldType.union(classFieldTy)
+                    true
+                }
             })
-            return if (Ty.isInvalid(fieldType)) Ty.UNKNOWN else fieldType
+            return fieldType
         }
     }
-    return Ty.UNKNOWN
+    return null
 }
 
-fun LuaExpr.shouldBe(context: SearchContext): ITy {
+fun LuaExpr.shouldBe(context: SearchContext): ITy? {
     return context.withInferenceGuard(this) {
-        val ty = shouldBeInternal(context)
-        TyAliasSubstitutor.substitute(ty, context)
+        shouldBeInternal(context)?.let {
+            TyAliasSubstitutor.substitute(it, context)
+        }
     }
 }
 
@@ -211,15 +226,15 @@ fun LuaExprList.getExprAt(idx: Int): LuaExpr? {
     return exprStubList.getOrNull(idx)
 }
 
-fun LuaExprList.guessType(context: SearchContext):ITy {
+fun LuaExprList.guessType(context: SearchContext): ITy? {
     val exprList = exprStubList
-    return if (exprList.size == 1)
+    return if (exprList.size == 1) {
         exprList.first().guessType(context)
-    else {
+    } else {
         val list = mutableListOf<ITy>()
         var variadic = false
         exprList.forEachIndexed { index, luaExpr ->
-            val ty = luaExpr.guessType(context)
+            val ty = luaExpr.guessType(context) ?: Ty.UNKNOWN
 
             if (ty is TyMultipleResults) {
                 if (index == exprList.size - 1) {

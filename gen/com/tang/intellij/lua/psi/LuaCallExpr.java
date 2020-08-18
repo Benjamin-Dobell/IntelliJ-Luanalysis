@@ -17,7 +17,7 @@ public interface LuaCallExpr extends LuaExpr, StubBasedPsiElement<LuaExprStub> {
   @NotNull
   LuaExpr getExpr();
 
-  @NotNull
+  @Nullable
   ITy guessParentType(@NotNull SearchContext context);
 
   @Nullable

@@ -142,7 +142,7 @@ object ProblemUtil {
                             indexes.add(index)
                         }
 
-                        val sourceFieldTypes = sourceMember.guessType(context).let {
+                        val sourceFieldTypes = (sourceMember.guessType(context) ?: Ty.UNKNOWN).let {
                             if (it is TyMultipleResults) it.list else listOf(it)
                         }
 
@@ -191,7 +191,7 @@ object ProblemUtil {
 
             if (sourceElement is LuaTableExpr) {
                 sourceElement.tableFieldList.forEach { sourceField ->
-                    val sourceFieldTypes = sourceField.guessType(context).let {
+                    val sourceFieldTypes = (sourceField.guessType(context) ?: Ty.UNKNOWN).let {
                         if (it is TyMultipleResults) it.list else listOf(it)
                     }
 
@@ -238,7 +238,13 @@ object ProblemUtil {
                 }
 
                 val targetMemberTy = targetMember.guessType(context).let {
-                    if (targetSubstitutor != null) it.substitute(targetSubstitutor) else it
+                    if (it == null) {
+                        return@processMembers true
+                    }
+
+                    if (targetSubstitutor != null) {
+                        it.substitute(targetSubstitutor)
+                    } else it
                 }
 
                 if (sourceMember == null) {
@@ -255,7 +261,7 @@ object ProblemUtil {
                     return@processMembers true
                 }
 
-                val sourceMemberTy = sourceMember.guessType(context).let {
+                val sourceMemberTy = (sourceMember.guessType(context) ?: Ty.UNKNOWN).let {
                     if (sourceSubstitutor != null) it.substitute(sourceSubstitutor) else it
                 }
 

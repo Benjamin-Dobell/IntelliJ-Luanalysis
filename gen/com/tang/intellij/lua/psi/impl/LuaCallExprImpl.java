@@ -52,7 +52,7 @@ public class LuaCallExprImpl extends LuaCallExprMixin implements LuaCallExpr {
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ITy guessParentType(@NotNull SearchContext context) {
     return LuaPsiImplUtilKt.guessParentType(this, context);
   }

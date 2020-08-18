@@ -67,6 +67,11 @@ class TableCompletionProvider : ClassMemberCompletionProvider() {
             val project = table.project
             val prefixMatcher = completionResultSet.prefixMatcher
             val ty = table.shouldBe(SearchContext.get(project))
+
+            if (ty == null) {
+                return
+            }
+
             ty.eachTopClass(Processor { luaType ->
                 val context = SearchContext.get(project)
                 luaType.processMembers(context) { curType, member ->

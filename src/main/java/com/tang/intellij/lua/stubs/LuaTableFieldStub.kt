@@ -50,7 +50,7 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
     override fun createStub(field: LuaTableField, parentStub: StubElement<*>): LuaTableFieldStub {
         val className = findTableExprTypeName(field)
         val indexTy = field.idExpr?.let {
-            SearchContext.withStub(it.project, it.containingFile, Ty.UNKNOWN) { context ->
+            SearchContext.withDumb(it.project, Ty.UNKNOWN) { context ->
                 it.guessType(context)
             }
         }

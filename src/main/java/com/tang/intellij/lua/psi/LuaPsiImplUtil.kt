@@ -144,11 +144,11 @@ fun guessParentType(classMethodDef: LuaClassMethodDef, context: SearchContext): 
     }*/
 
     val expr = classMethodDef.classMethodName.expr
-    val parentTy = recursionGuard(classMethodDef, Computable {
-        val ty = expr.guessType(context)
-        TyUnion.getPerfectClass(ty)
-    })
-    return parentTy ?: Ty.UNKNOWN
+    return recursionGuard(classMethodDef, Computable {
+        expr.guessType(context)?.let {
+            TyUnion.getPerfectClass(it)
+        }
+    }) ?: Ty.UNKNOWN
 }
 
 fun guessParentType(luaClosureExpr: LuaClosureExpr, context: SearchContext): ITy {
@@ -210,7 +210,7 @@ fun guessParentType(funcDef: LuaFuncDef, searchContext: SearchContext): ITyClass
  * *
  * @return LuaType
  */
-fun guessParentType(callExpr: LuaCallExpr, context: SearchContext): ITy {
+fun guessParentType(callExpr: LuaCallExpr, context: SearchContext): ITy? {
     return callExpr.expr.guessType(context)
 }
 
@@ -256,7 +256,7 @@ fun isFunctionCall(callExpr: LuaCallExpr): Boolean {
     return callExpr.expr is LuaNameExpr
 }
 
-fun guessTypeAt(list: LuaExprList, context: SearchContext): ITy {
+fun guessTypeAt(list: LuaExprList, context: SearchContext): ITy? {
     val exprList = list.exprStubList
 
     val expr = exprList.getOrNull(context.index) ?: exprList.lastOrNull()
@@ -273,9 +273,11 @@ fun guessTypeAt(list: LuaExprList, context: SearchContext): ITy {
                 nameSize - exprList.size
             } else 0
         }
-        return context.withIndex(index, context.supportsMultipleResults) { expr.guessType(context) }
+        return context.withIndex(index, context.supportsMultipleResults) {
+            expr.guessType(context)
+        }
     }
-    return Ty.UNKNOWN
+    return null
 }
 
 fun guessParentType(indexExpr: LuaIndexExpr, context: SearchContext): ITy {
@@ -381,7 +383,7 @@ fun getParamNameDefList(forAStat: LuaForAStat): List<LuaParamNameDef> {
     return list
 }
 
-fun guessReturnType(owner: LuaFuncBodyOwner, searchContext: SearchContext): ITy {
+fun guessReturnType(owner: LuaFuncBodyOwner, searchContext: SearchContext): ITy? {
     return inferReturnTy(owner, searchContext)
 }
 
@@ -496,8 +498,7 @@ fun getNameIdentifier(tableField: LuaTableField): PsiElement? {
 }
 
 fun guessParentType(tableField: LuaTableField, context: SearchContext): ITy {
-    val tbl = PsiTreeUtil.getParentOfType(tableField, LuaTableExpr::class.java)!!
-    return tbl.guessType(context)
+    return PsiTreeUtil.getParentOfType(tableField, LuaTableExpr::class.java)?.guessType(context) ?: Ty.UNKNOWN
 }
 
 fun guessIndexType(tableField: LuaTableField, context: SearchContext): ITy? {
@@ -529,7 +530,7 @@ fun guessIndexType(tableField: LuaTableField, context: SearchContext): ITy? {
     }
 }
 
-fun guessType(tableField: LuaTableField, context: SearchContext): ITy {
+fun guessType(tableField: LuaTableField, context: SearchContext): ITy? {
     val stub = tableField.stub
     //from comment
     val docTy = if (stub != null) stub.docTy else tableField.comment?.docTy
@@ -537,11 +538,7 @@ fun guessType(tableField: LuaTableField, context: SearchContext): ITy {
         return docTy
 
     //guess from value
-    val valueExpr = PsiTreeUtil.getStubChildOfType(tableField, LuaExpr::class.java)
-    if (valueExpr != null) {
-        return valueExpr.guessType(context)
-    }
-    return Ty.UNKNOWN
+    return PsiTreeUtil.getStubChildOfType(tableField, LuaExpr::class.java)?.guessType(context)
 }
 
 fun getName(tableField: LuaTableField): String? {
@@ -624,28 +621,30 @@ fun getName(nameExpr: LuaNameExpr): String {
     return nameExpr.id.text
 }
 
-fun guessReturnType(returnStat: LuaReturnStat?, context: SearchContext): ITy {
-    if (returnStat != null) {
-        if (returnStat.comment != null) {
-            val returnType = PsiTreeUtil.getChildrenOfTypeAsList(returnStat.comment, LuaDocTagTypeImpl::class.java).firstOrNull()
+fun guessReturnType(returnStat: LuaReturnStat, context: SearchContext): ITy? {
+    if (returnStat.comment != null) {
+        val returnType = PsiTreeUtil.getChildrenOfTypeAsList(returnStat.comment, LuaDocTagTypeImpl::class.java).firstOrNull()
 
-            if (returnType != null) {
-                return if (context.supportsMultipleResults) {
-                    returnType.getType()
-                } else returnType.getType(context.index)
+        if (returnType != null) {
+            return if (context.supportsMultipleResults) {
+                returnType.getType()
+            } else {
+                returnType.getType(context.index)
             }
         }
-
-        val returnExpr = returnStat.exprList
-        if (returnExpr != null) {
-            return if (context.supportsMultipleResults)
-                returnExpr.guessType(context)
-            else
-                returnExpr.guessTypeAt(context)
-        }
-        return Ty.VOID
     }
-    return Ty.UNKNOWN
+
+    val returnExpr = returnStat.exprList
+
+    if (returnExpr != null) {
+        return if (context.supportsMultipleResults) {
+            returnExpr.guessType(context)
+        } else {
+            returnExpr.guessTypeAt(context)
+        }
+    }
+
+    return Ty.VOID
 }
 
 fun getNameIdentifier(label: LuaLabelStat): PsiElement? {
@@ -670,9 +669,6 @@ fun getVisibility(member: LuaClassMember): Visibility {
 
 fun getVisibility(classMethodDef: LuaClassMethodDef): Visibility {
     val stub = classMethodDef.stub
-    if (stub != null) {
-
-    }
     return getVisibility(classMethodDef as LuaClassMember)
 }
 

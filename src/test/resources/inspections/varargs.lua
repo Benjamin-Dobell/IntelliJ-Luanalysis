@@ -120,7 +120,7 @@ mergedLiteralMap.a = one
 mergedLiteralMap.a = three
 mergedLiteralMap.a = <error descr="Type mismatch. Required: '1|2|3|4' Found: '5'">5</error>
 
-<error descr="No such member 'e' found on type 'table<\"a\"|\"b\"|\"c\"|\"d\", 1|2|3|4>'">mergedLiteralMap.e</error> = <error descr="Type mismatch. Required: 'nil' Found: '1'">one</error>
+<error descr="No such member 'e' found on type 'table<\"a\"|\"b\"|\"c\"|\"d\", 1|2|3|4>'">mergedLiteralMap.e</error> = one
 
 local mergedStringStringMap = merge(stringStringTable, stringStringTable)
 
@@ -144,7 +144,7 @@ typeMergedLiteralMap.a = one
 typeMergedLiteralMap.a = three
 typeMergedLiteralMap.a = <error descr="Type mismatch. Required: '1|2|3|4' Found: '5'">5</error>
 
-<error descr="No such member 'e' found on type 'table<\"a\"|\"b\"|\"c\"|\"d\", 1|2|3|4>'">typeMergedLiteralMap.e</error> = <error descr="Type mismatch. Required: 'nil' Found: '1'">one</error>
+<error descr="No such member 'e' found on type 'table<\"a\"|\"b\"|\"c\"|\"d\", 1|2|3|4>'">typeMergedLiteralMap.e</error> = one
 
 local typeMergedStringStringMap = typeMerge(stringStringTable, stringStringTable)
 
@@ -168,7 +168,7 @@ overloadMergedLiteralMap.a = one
 overloadMergedLiteralMap.a = three
 overloadMergedLiteralMap.a = <error descr="Type mismatch. Required: '1|2|3|4' Found: '5'">5</error>
 
-<error descr="No such member 'e' found on type 'table<\"a\"|\"b\"|\"c\"|\"d\", 1|2|3|4>'">overloadMergedLiteralMap.e</error> = <error descr="Type mismatch. Required: 'nil' Found: '1'">one</error>
+<error descr="No such member 'e' found on type 'table<\"a\"|\"b\"|\"c\"|\"d\", 1|2|3|4>'">overloadMergedLiteralMap.e</error> = one
 
 local overloadMergedStringStringMap = overloadMerge(stringStringTable, stringStringTable)
 

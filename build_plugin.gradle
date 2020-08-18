@@ -101,14 +101,14 @@ intellij {
 compileKotlin {
     kotlinOptions {
         jvmTarget = "1.8"
-        freeCompilerArgs = ['-Xjvm-default=enable']
+        freeCompilerArgs = ['-Xjvm-default=enable', '-Xopt-in=kotlin.contracts.ExperimentalContracts']
     }
 }
 
 compileTestKotlin {
     kotlinOptions {
         jvmTarget = "1.8"
-        freeCompilerArgs = ['-Xjvm-default=enable']
+        freeCompilerArgs = ['-Xjvm-default=enable', '-Xopt-in=kotlin.contracts.ExperimentalContracts']
     }
 }
 

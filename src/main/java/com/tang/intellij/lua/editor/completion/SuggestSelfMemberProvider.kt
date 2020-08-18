@@ -39,7 +39,7 @@ class SuggestSelfMemberProvider : ClassMemberCompletionProvider() {
             val project = position.project
             val searchContext = SearchContext.get(project)
             methodDef.guessClassType(searchContext)?.let { type ->
-                val contextTy = LuaPsiTreeUtil.findContextClass(position)
+                val contextTy = LuaPsiTreeUtil.findContextClass(position, searchContext)
                 type.processMembers(searchContext) { curType, member ->
                     val curClass = (if (curType is ITyGeneric) curType.base else type) as? ITyClass
                     if (curClass != null && member.name != null && curClass.isVisibleInScope(project, contextTy, member.visibility)) {

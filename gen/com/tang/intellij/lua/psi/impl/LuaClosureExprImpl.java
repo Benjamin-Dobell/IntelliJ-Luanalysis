@@ -52,7 +52,7 @@ public class LuaClosureExprImpl extends LuaClosureExprMixin implements LuaClosur
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ITy guessReturnType(@NotNull SearchContext searchContext) {
     return LuaPsiImplUtilKt.guessReturnType(this, searchContext);
   }

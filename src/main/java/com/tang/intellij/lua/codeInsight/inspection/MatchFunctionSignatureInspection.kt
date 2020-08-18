@@ -49,7 +49,7 @@ class MatchFunctionSignatureInspection : StrictInspection() {
 
                     val searchContext = SearchContext.get(o)
                     val prefixExpr = o.expr
-                    var resolvedTy = Ty.resolve(prefixExpr.guessType(searchContext), searchContext)
+                    var resolvedTy = prefixExpr.guessType(searchContext)?.let { Ty.resolve(it, searchContext) } ?: Ty.UNKNOWN
 
                     if (resolvedTy is TyUnion && resolvedTy.size == 2 && resolvedTy.getChildTypes().last().isAnonymous) {
                         resolvedTy = resolvedTy.getChildTypes().first()
@@ -82,7 +82,7 @@ class MatchFunctionSignatureInspection : StrictInspection() {
                                     myHolder.registerProblem(o, "Unknown function '$memberName'.")
                                 }
                             } else if (idExpr != null) {
-                                val indexTy = idExpr.guessType(searchContext)
+                                val indexTy = idExpr.guessType(searchContext) ?: Ty.UNKNOWN
 
                                 TyUnion.each(indexTy) {
                                     val method = parentType.findIndexer(it, searchContext)?.guessType(searchContext) as? ITyFunction

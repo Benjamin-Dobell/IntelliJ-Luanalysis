@@ -68,17 +68,21 @@ class AssignTypeInspection : StrictInspection() {
                             val targetMemberType = if (memberName != null) {
                                 targetTy.guessMemberType(memberName, context)
                             } else {
-                                idExpr?.let { targetTy.guessIndexerType(it.guessType(context), context) }
-                            } ?: Ty.NIL
+                                idExpr?.guessType(context)?.let {
+                                    targetTy.guessIndexerType(it, context)
+                                }
+                            }
 
-                            val processor = unionAwareProblemProcessor(fieldOwnerType, targetTy, context, processProblem)
-                            val flags = if (targetTy is ITyArray) varianceFlags or TyVarianceFlags.STRICT_NIL else varianceFlags
-                            ProblemUtil.contravariantOf(targetMemberType, sourceTy, context, flags, targetElement, expressionElement, processor)
+                            if (targetMemberType != null) {
+                                val processor = unionAwareProblemProcessor(fieldOwnerType, targetTy, context, processProblem)
+                                val flags = if (targetTy is ITyArray) varianceFlags or TyVarianceFlags.STRICT_NIL else varianceFlags
+                                ProblemUtil.contravariantOf(targetMemberType, sourceTy, context, flags, targetElement, expressionElement, processor)
+                            }
                         }
                     } else {
                         val variableType = assignee.guessType(context)
 
-                        if (variableType is TyTable && value is TyTable && variableType.table == value.table) {
+                        if (variableType == null || (variableType is TyTable && value is TyTable && variableType.table == value.table)) {
                             return
                         }
 
@@ -91,7 +95,7 @@ class AssignTypeInspection : StrictInspection() {
                         return
                     }
 
-                    val searchContext = SearchContext.get(expressions.first().project)
+                    val searchContext = SearchContext.get(expressions.first())
                     var assigneeIndex = 0
                     var variadicTy: ITy? = null
                     var lastExpressionFirstAssigneeIndex = 0
@@ -104,6 +108,11 @@ class AssignTypeInspection : StrictInspection() {
                         } else {
                             searchContext.withIndex(0) { expression.guessType(searchContext) }
                         }
+
+                        if (expressionType == null) {
+                            return
+                        }
+
                         val varianceFlags = if (expression is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
 
                         var multipleResults = expressionType as? TyMultipleResults

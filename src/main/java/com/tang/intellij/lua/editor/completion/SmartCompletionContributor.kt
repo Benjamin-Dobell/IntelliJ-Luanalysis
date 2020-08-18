@@ -38,6 +38,11 @@ class SmartCompletionContributor : CompletionContributor() {
                 val expr = PsiTreeUtil.getParentOfType(id, LuaNameExpr::class.java) ?: return
                 val context = SearchContext.get(expr.project)
                 val ty = expr.shouldBe(context)
+
+                if (ty == null) {
+                    return
+                }
+
                 Ty.eachResolved(ty, context) {
                     when (it) {
                         is TySnippet -> {

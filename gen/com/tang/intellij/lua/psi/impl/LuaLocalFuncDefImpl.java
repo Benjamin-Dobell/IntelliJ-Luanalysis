@@ -95,7 +95,7 @@ public class LuaLocalFuncDefImpl extends StubBasedPsiElementBase<LuaLocalFuncDef
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ITy guessReturnType(@NotNull SearchContext searchContext) {
     return LuaPsiImplUtilKt.guessReturnType(this, searchContext);
   }

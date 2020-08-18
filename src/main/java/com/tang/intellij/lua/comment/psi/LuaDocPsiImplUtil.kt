@@ -50,9 +50,9 @@ fun getReference(docClassNameRef: LuaDocClassNameRef): PsiReference {
     return LuaClassNameReference(docClassNameRef)
 }
 
-fun resolveType(nameRef: LuaDocClassNameRef): ITy {
+fun resolveType(nameRef: LuaDocClassNameRef, context: SearchContext): ITy {
     if (nameRef.id.text == Constants.WORD_SELF) {
-        val contextClass = LuaPsiTreeUtil.findContextClass(nameRef) as? ITyClass
+        val contextClass = LuaPsiTreeUtil.findContextClass(nameRef, context) as? ITyClass
         return if (contextClass != null) TyClass.createSelfType(contextClass) else Ty.UNKNOWN
     }
 
@@ -322,7 +322,9 @@ fun getType(luaDocArrTy: LuaDocArrTy): ITy {
 }
 
 fun getType(luaDocGeneralTy: LuaDocGeneralTy): ITy {
-    return resolveType(luaDocGeneralTy.classNameRef)
+    return SearchContext.withDumb(luaDocGeneralTy.project, null) {
+        resolveType(luaDocGeneralTy.classNameRef, it)
+    } ?: TyLazyClass(luaDocGeneralTy.classNameRef.id.text)
 }
 
 fun getType(luaDocFunctionTy: LuaDocFunctionTy): ITy {
@@ -356,7 +358,11 @@ fun getReturnType(luaDocFunctionTy: LuaDocFunctionTy): ITy? {
 }
 
 fun getType(luaDocGenericTy: LuaDocGenericTy): ITy {
-    return TyDocGeneric(luaDocGenericTy)
+    val paramTys = luaDocGenericTy.tyList.map { it.getType() }.toTypedArray()
+    val baseTy = SearchContext.withDumb(luaDocGenericTy.project, null) {
+        luaDocGenericTy.classNameRef.resolveType(it)
+    } ?: TyLazyClass(luaDocGenericTy.classNameRef.id.text)
+    return TyGeneric(paramTys, baseTy)
 }
 
 fun getType(luaDocParTy: LuaDocParTy): ITy {
@@ -384,12 +390,9 @@ fun getType(snippet: LuaDocSnippetTy): ITy {
 }
 
 fun getType(unionTy: LuaDocUnionTy): ITy {
-    val list = unionTy.tyList
-    var retTy: ITy = Ty.VOID
-    for (ty in list) {
-        retTy = retTy.union(ty.getType())
-    }
-    return if (Ty.isInvalid(retTy)) Ty.UNKNOWN else retTy
+    return unionTy.tyList.fold<LuaDocTy, ITy?>(null, { ty, docTy ->
+        TyUnion.union(ty, docTy.getType())
+    }) ?: Ty.UNKNOWN
 }
 
 fun getReference(see: LuaDocTagSee): PsiReference? {

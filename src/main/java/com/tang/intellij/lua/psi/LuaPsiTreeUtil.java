@@ -165,16 +165,13 @@ public class LuaPsiTreeUtil {
     }
 
     @NotNull
-    public static ITy findContextClass(PsiElement current) {
-        //todo module ty
-        SearchContext context = SearchContext.Companion.get(current.getProject());
-
+    public static ITy findContextClass(PsiElement current, SearchContext context) {
         while (!(current instanceof PsiFile)) {
             if (current instanceof LuaFuncBodyOwner) {
                 LuaFuncBodyOwner funcBodyOwner = (LuaFuncBodyOwner) current;
                 ITy ty = funcBodyOwner.guessParentType(context);
 
-                if (ty != Ty.Companion.getUNKNOWN()) {
+                if (ty != null) {
                     return ty;
                 }
             } else if (current instanceof LuaAssignStat) {

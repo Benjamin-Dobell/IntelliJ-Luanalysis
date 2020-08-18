@@ -60,8 +60,7 @@ class LuaParamInfo(var name: String = "", var ty: ITy = Ty.UNKNOWN) {
 
     companion object {
         fun createSelf(thisType: ITy? = null): LuaParamInfo {
-            val pi = LuaParamInfo(Constants.WORD_SELF, thisType ?: Ty.UNKNOWN)
-            return pi
+            return LuaParamInfo(Constants.WORD_SELF, thisType ?: Ty.UNKNOWN)
         }
 
         fun deserialize(stubInputStream: StubInputStream): LuaParamInfo {

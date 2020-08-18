@@ -47,13 +47,11 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
     }
 
     override fun getQuickNavigateInfo(element: PsiElement?, originalElement: PsiElement?): String? {
-        if (element != null) {
-            when (element) {
-                is LuaTypeGuessable -> {
-                    val ty = element.guessType(SearchContext.get(element.project))
-                    return buildString {
-                        renderTy(this, ty, renderer)
-                    }
+        if (element is LuaTypeGuessable) {
+            val ty = element.guessType(SearchContext.get(element.project))
+            if (ty != null) {
+                return buildString {
+                    renderTy(this, ty, renderer)
                 }
             }
         }
@@ -82,7 +80,7 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
 
                 renderDefinition(sb) {
                     sb.append("local <b>${element.name}</b>:")
-                    val ty = element.guessType(SearchContext.get(element.project))
+                    val ty = element.guessType(SearchContext.get(element.project)) ?: Ty.UNKNOWN
                     renderTy(sb, ty, tyRenderer)
                 }
 
@@ -105,7 +103,7 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
     private fun renderClassMember(sb: StringBuilder, classMember: LuaClassMember) {
         val context = SearchContext.get(classMember.project)
         val parentType = classMember.guessClassType(context)
-        val ty = classMember.guessType(context)
+        val ty = classMember.guessType(context) ?: Ty.UNKNOWN
         val tyRenderer = renderer
 
         renderDefinition(sb) {
@@ -167,7 +165,7 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
         if (docParamDef != null) {
             renderDocParam(sb, docParamDef, tyRenderer, true)
         } else {
-            val ty = infer(paramNameDef, SearchContext.get(paramNameDef.project))
+            val ty = infer(paramNameDef, SearchContext.get(paramNameDef.project)) ?: Ty.UNKNOWN
             sb.append("<b>param</b> <code>${paramNameDef.name}</code> : ")
             renderTy(sb, ty, tyRenderer)
         }

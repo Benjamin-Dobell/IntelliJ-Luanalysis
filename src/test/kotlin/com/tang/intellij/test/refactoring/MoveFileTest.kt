@@ -35,10 +35,12 @@ class MoveFileTest : MultiFileTestCase() {
             val file = myPsiManager.findFile(child!!)!!
 
             val child1 = rootDir.findChild(targetDirName)
-            assertNotNull("File $targetDirName not found", child1)
-            val targetDirectory = myPsiManager.findDirectory(child1!!)
+            assertNotNull("Directory $targetDirName not found", child1)
 
-            MoveFilesOrDirectoriesProcessor(myProject, arrayOf<PsiElement>(file), targetDirectory,
+            val targetDirectory = myPsiManager.findDirectory(child1!!)
+            assertNotNull("Failed to obtain directory reference to $child1", targetDirectory)
+
+            MoveFilesOrDirectoriesProcessor(myProject, arrayOf<PsiElement>(file), targetDirectory!!,
                     false, false, null, null).run()
 
             FileDocumentManager.getInstance().saveAllDocuments()

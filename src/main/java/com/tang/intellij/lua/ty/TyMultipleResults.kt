@@ -219,7 +219,7 @@ class TyMultipleResults : Ty {
                             tyList[i] = tyList[i].union(multipleResultsVariadicTy)
                         }
 
-                        variadicTy = variadicTy?.union(multipleResultsVariadicTy) ?: multipleResultsVariadicTy
+                        variadicTy = TyUnion.union(variadicTy, multipleResultsVariadicTy)
                     }
                 } else {
                     if (tyList.isEmpty()) {

@@ -28,10 +28,13 @@ import com.tang.intellij.lua.comment.psi.LuaDocClassRef
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.LuaCallExpr
 import com.tang.intellij.lua.psi.LuaClassMember
+import com.tang.intellij.lua.psi.LuaPsiTreeUtil.findGenericDef
 import com.tang.intellij.lua.psi.LuaTableExpr
 import com.tang.intellij.lua.psi.argList
 import com.tang.intellij.lua.psi.search.LuaShortNamesManager
 import com.tang.intellij.lua.search.SearchContext
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 enum class TyKind {
     Unknown,
@@ -136,9 +139,7 @@ interface ITy : Comparable<ITy> {
                 }
             }
 
-            if (valueTy != null) {
-                ty = ty?.union(valueTy) ?: valueTy
-            }
+            ty = TyUnion.union(ty, valueTy)
         }
 
         return ty
@@ -235,6 +236,10 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
             context.withMultipleResults { luaExpr.guessType(context) }
         else
             context.withIndex(0) { luaExpr.guessType(context) }
+
+        if (ty == null) {
+            return null
+        }
 
         if (!context.supportsMultipleResults && ty is TyMultipleResults) {
             if (index == args.lastIndex) {
@@ -608,11 +613,16 @@ abstract class Ty(override val kind: TyKind) : ITy {
         fun create(classRef: LuaDocClassRef): ITy {
             val simpleType = Ty.create(classRef.classNameRef.id.text)
             return if (classRef.tyList.size > 0) {
-                TySerializedGeneric(classRef.tyList.map { it.getType() }.toTypedArray(), simpleType)
+                TyGeneric(classRef.tyList.map { it.getType() }.toTypedArray(), simpleType)
             } else simpleType
         }
 
+        @ExperimentalContracts
         fun isInvalid(ty: ITy?): Boolean {
+            contract {
+                returns(true) implies (ty == null || ty is TyVoid)
+                returns(false) implies (ty != null && ty !is TyVoid)
+            }
             return ty == null || ty is TyVoid
         }
 
@@ -667,23 +677,29 @@ abstract class Ty(override val kind: TyKind) : ITy {
                 val base = if (memberTy is ITyGeneric) memberTy.base else memberTy
 
                 if (visitedTys.add(base)) {
-                    val aliasTy = if (base is ITyAlias) {
+                    val referencedTy = if (base is ITyAlias) {
                         base
                     } else if (base is ITyClass) {
                         base.lazyInit(context)
 
                         if (!base.isAnonymous && !base.isGlobal) {
-                            val aliasTy = LuaShortNamesManager.getInstance(context.project).findAlias(base.className, context)
-                            aliasTy?.type as? ITyAlias
+                            val genericTy = findGenericDef(base.className, context)?.type
+
+                            if (genericTy != null) {
+                                genericTy
+                            } else {
+                                val aliasTy = LuaShortNamesManager.getInstance(context.project).findAlias(base.className, context)
+                                aliasTy?.type as? ITyAlias
+                            }
                         } else {
-                            null
+                            base
                         }
                     } else {
-                        null
+                        base
                     }
 
-                    val resolvedMemberTy = if (aliasTy != null) {
-                        val params = aliasTy.params
+                    val resolvedMemberTy = if (referencedTy is ITyAlias) {
+                        val params = referencedTy.params
 
                         if (params?.size ?: 0 > 0) {
                             val paramMap = mutableMapOf<String, ITy>()
@@ -700,17 +716,17 @@ abstract class Ty(override val kind: TyKind) : ITy {
                                 }
                             }
 
-                            aliasTy.ty.substitute(TyParameterSubstitutor(paramMap))
+                            referencedTy.ty.substitute(TyParameterSubstitutor(paramMap))
                         } else {
-                            aliasTy.ty
+                            referencedTy.ty
                         }
                     } else {
-                        base
+                        referencedTy
                     }
 
                     if (resolvedMemberTy is TyUnion) {
                         memberTys.addAll(resolvedMemberTy.getChildTypes())
-                    } else if (resolvedMemberTy !== base) {
+                    } else if (resolvedMemberTy !== base && resolvedMemberTy != null) {
                         memberTys.add(resolvedMemberTy)
                     } else {
                         fn(memberTy)

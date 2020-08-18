@@ -14,7 +14,7 @@ public interface LuaExprList extends LuaPsiElement, StubBasedPsiElement<LuaPlace
   @NotNull
   List<LuaExpr> getExprList();
 
-  @NotNull
+  @Nullable
   ITy guessTypeAt(@NotNull SearchContext context);
 
 }

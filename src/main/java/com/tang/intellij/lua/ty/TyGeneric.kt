@@ -109,7 +109,7 @@ interface ITyGeneric : ITy {
     }
 }
 
-abstract class TyGeneric(final override val params: Array<ITy>, final override val base: ITy) : Ty(TyKind.Generic), ITyGeneric {
+class TyGeneric(override val params: Array<ITy>, override val base: ITy) : Ty(TyKind.Generic), ITyGeneric {
 
     override fun equals(other: Any?): Boolean {
         return other is ITyGeneric && other.base == base && other.displayName == displayName
@@ -167,21 +167,24 @@ abstract class TyGeneric(final override val params: Array<ITy>, final override v
             val otherMemberSubstitutor = resolvedOther.getMemberSubstitutor(context)
 
             return processMembers(context, { _, classMember ->
-                val indexTy = classMember.guessIndexType(context)
+                val memberTy = classMember.guessType(context)?.substitute(memberSubstitutor)
 
+                if (memberTy == null) {
+                    return@processMembers true
+                }
+
+                val indexTy = classMember.guessIndexType(context)
                 val otherMember = if (indexTy != null) {
                     resolvedOther.findIndexer(indexTy, context, false)
                 } else {
                     classMember.name?.let { resolvedOther.findMember(it, context) }
                 }
 
-                val memberTy = classMember.guessType(context).substitute(memberSubstitutor)
-
                 if (otherMember == null) {
                     return@processMembers TyUnion.find(memberTy, TyNil::class.java) != null
                 }
 
-                val otherMemberTy = otherMember.guessType(context).let {
+                val otherMemberTy = (otherMember.guessType(context) ?: Ty.UNKNOWN).let {
                     if (otherMemberSubstitutor != null) it.substitute(otherMemberSubstitutor) else it
                 }
 
@@ -291,10 +294,6 @@ abstract class TyGeneric(final override val params: Array<ITy>, final override v
     }
 }
 
-class TyDocGeneric(luaDocGenericTy: LuaDocGenericTy) : TyGeneric(luaDocGenericTy.tyList.map { it.getType() }.toTypedArray(), luaDocGenericTy.classNameRef.resolveType())
-
-class TySerializedGeneric(params: Array<ITy>, base: ITy) : TyGeneric(params, base)
-
 object TyGenericSerializer : TySerializer<ITyGeneric>() {
     override fun deserializeTy(flags: Int, stream: StubInputStream): ITyGeneric {
         val base = Ty.deserialize(stream)
@@ -303,7 +302,7 @@ object TyGenericSerializer : TySerializer<ITyGeneric>() {
         for (i in 0 until size) {
             params.add(Ty.deserialize(stream))
         }
-        return TySerializedGeneric(params.toTypedArray(), base)
+        return TyGeneric(params.toTypedArray(), base)
     }
 
     override fun serializeTy(ty: ITyGeneric, stream: StubOutputStream) {

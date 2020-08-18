@@ -51,9 +51,14 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
         val luaArgs = PsiTreeUtil.findElementOfClassAtOffset(file, context.offset, LuaArgs::class.java, false)
         if (luaArgs != null) {
             val callExpr = luaArgs.parent as LuaCallExpr
-            val isColonStyle = callExpr.isMethodColonCall
             val searchContext = SearchContext.get(context.project)
             val type = callExpr.guessParentType(searchContext)
+
+            if (type == null) {
+                return null
+            }
+
+            val isColonStyle = callExpr.isMethodColonCall
             val list = mutableListOf<ParameterInfoType>()
             TyUnion.each(type) { ty ->
                 ty.processSignatures(searchContext, Processor {

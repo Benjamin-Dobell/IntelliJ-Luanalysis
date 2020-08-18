@@ -17,7 +17,7 @@ public interface LuaClosureExpr extends LuaExpr, LuaFuncBodyOwner, LuaExprStubEl
   @NotNull
   List<LuaParamNameDef> getParamNameDefList();
 
-  @NotNull
+  @Nullable
   ITy guessReturnType(@NotNull SearchContext searchContext);
 
   @NotNull

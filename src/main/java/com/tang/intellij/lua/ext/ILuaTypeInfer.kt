@@ -21,20 +21,19 @@ import com.intellij.openapi.progress.ProgressManager
 import com.tang.intellij.lua.psi.LuaTypeGuessable
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.ITy
-import com.tang.intellij.lua.ty.Ty
 
 interface ILuaTypeInfer {
     companion object {
         private val EP_NAME = ExtensionPointName.create<ILuaTypeInfer>("com.tang.intellij.lua.luaTypeInfer")
 
-        fun infer(target: LuaTypeGuessable, context: SearchContext): ITy {
+        fun infer(target: LuaTypeGuessable, context: SearchContext): ITy? {
             for (typeInfer in EP_NAME.extensions) {
                 ProgressManager.checkCanceled()
                 return typeInfer.inferType(target, context)
             }
-            return Ty.UNKNOWN
+            return null
         }
     }
 
-    fun inferType(target: LuaTypeGuessable, context: SearchContext): ITy
+    fun inferType(target: LuaTypeGuessable, context: SearchContext): ITy?
 }

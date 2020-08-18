@@ -273,7 +273,7 @@ class FunSignature(colonCall: Boolean,
                     colonCall,
                     functionTy.returnType,
                     functionTy.varargParam,
-                    functionTy.params as Array<LuaParamInfo>, // Casting due to https://youtrack.jetbrains.com/issue/KT-40034
+                    functionTy.params as? Array<LuaParamInfo>, // Casting due to https://youtrack.jetbrains.com/issue/KT-40034
                     functionTy.genericDefList.map { TyParameter(it) }.toTypedArray()
             )
         }
@@ -347,8 +347,8 @@ abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
         processSignatures(context, Processor { sig ->
             if (other == Ty.FUNCTION) {
                 val multipleResults = sig.returnTy as? TyMultipleResults
-                matched = multipleResults?.variadic == true && multipleResults.list.size == 1 && multipleResults.list.first() == Ty.UNKNOWN
-                        && (sig.params?.size ?: 0) == 0 && sig.varargTy == Ty.UNKNOWN
+                matched = multipleResults?.variadic == true && multipleResults.list.size == 1 && multipleResults.list.first() is TyUnknown
+                        && (sig.params?.size ?: 0) == 0 && sig.varargTy is TyUnknown
             } else {
                 other.processSignatures(context, Processor { otherSig ->
                     matched = sig.contravariantOf(otherSig, context, flags)
@@ -394,7 +394,7 @@ class TyPsiFunction(private val colonCall: Boolean, val psi: LuaFuncBodyOwner, f
         object : FunSignatureBase(colonCall, psi.params, psi.tyParams) {
             override val returnTy: ITy by lazy {
                 val context = SearchContext.get(psi.project)
-                var returnTy = context.withMultipleResults { psi.guessReturnType(context) }
+                var returnTy = context.withMultipleResults { psi.guessReturnType(context) ?: Ty.UNKNOWN }
                 /**
                  * todo optimize this bug solution
                  * local function test()

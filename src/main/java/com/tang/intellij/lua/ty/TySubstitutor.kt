@@ -110,7 +110,7 @@ class GenericAnalyzer(params: Array<TyParameter>?, private val searchContext: Se
                 }
             } else if (it is ITyClass && TyArray.isArray(it, searchContext)) {
                 it.processMembers(searchContext) { _, member ->
-                    warp(member.guessType(searchContext)) {
+                    warp(member.guessType(searchContext) ?: Ty.UNKNOWN) {
                         Ty.resolve(array.base, searchContext).accept(this)
                     }
                     true
@@ -215,7 +215,7 @@ open class TySubstitutor : ITySubstitutor {
         val substitutedBase = generic.base.substitute(this)
 
         return if (paramsSubstituted || substitutedBase !== generic.base) {
-            TySerializedGeneric(substitutedParams.toTypedArray(), substitutedBase)
+            TyGeneric(substitutedParams.toTypedArray(), substitutedBase)
         } else {
             generic
         }

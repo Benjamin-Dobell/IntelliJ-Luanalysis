@@ -43,14 +43,18 @@ class LuaClassMethodType : LuaStubElementType<LuaClassMethodStub, LuaClassMethod
         val expr = methodName.expr
         val classNameSet = mutableListOf<ITyClass>()
 
-        val ty = SearchContext.withStub(methodDef.project, methodDef.containingFile, Ty.UNKNOWN) {
+        SearchContext.withDumb(methodDef.project, null) {
             SearchContext.infer(expr, it)
+        }?.let {
+            TyUnion.each(it) {
+                if (it is ITyClass)
+                    classNameSet.add(it)
+            }
         }
-        TyUnion.each(ty) {
-            if (it is ITyClass)
-                classNameSet.add(it)
+
+        if (classNameSet.isEmpty()) {
+            classNameSet.add(createSerializedClass(expr.text))
         }
-        if (classNameSet.isEmpty()) classNameSet.add(createSerializedClass(expr.text))
 
         var flags = 0
 

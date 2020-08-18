@@ -65,7 +65,7 @@ class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
 
             if ((index is TyPrimitive && index.primitiveKind == TyPrimitiveKind.Number)
                     || (index is TyPrimitiveLiteral && index.primitiveKind == TyPrimitiveKind.Number)) {
-                val otherFieldTypes = otherMember.guessType(context).let {
+                val otherFieldTypes = (otherMember.guessType(context) ?: Ty.UNKNOWN).let {
                     if (it is TyMultipleResults) it.list else listOf(it)
                 }
 

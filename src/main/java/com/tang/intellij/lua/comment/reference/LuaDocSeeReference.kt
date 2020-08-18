@@ -48,8 +48,9 @@ class LuaDocSeeReference(see: LuaDocTagSee) :
 
     override fun multiResolve(incomplete: Boolean): Array<ResolveResult> {
         val list = mutableListOf<ResolveResult>()
-        val type = myElement.classNameRef?.resolveType() as ITyClass
-        LuaClassMemberIndex.processMember(type, id.text, SearchContext.get(myElement.project), Processor {
+        val searchContext = SearchContext.get(myElement.project)
+        val type = myElement.classNameRef?.resolveType(searchContext) as ITyClass
+        LuaClassMemberIndex.processMember(type, id.text, searchContext, Processor {
             list.add(PsiElementResolveResult(it))
             true
         })
