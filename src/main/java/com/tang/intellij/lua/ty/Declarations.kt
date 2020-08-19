@@ -198,7 +198,7 @@ private fun LuaTableField.infer(context: SearchContext): ITy? {
 }
 
 fun LuaPsiFile.returnStatement(): LuaReturnStat? {
-    if (this.moduleName != null) {
+    if (this.getModuleName(SearchContext.get(this.project)) != null) {
         return null
     }
 
@@ -221,7 +221,7 @@ fun LuaPsiFile.returnStatement(): LuaReturnStat? {
 
 private fun inferFile(file: LuaPsiFile, context: SearchContext): ITy {
     return recursionGuard(file, Computable {
-        val moduleName = file.moduleName
+        val moduleName = file.getModuleName(context)
         if (moduleName != null)
             TyLazyClass(moduleName)
         else {
@@ -294,7 +294,7 @@ private fun resolveParamType(paramNameDef: LuaParamNameDef, context: SearchConte
     // module fun
     // function method(self) end
     if (paramOwner is LuaFuncDef && paramName == Constants.WORD_SELF) {
-        val moduleName = paramNameDef.moduleName
+        val moduleName = paramNameDef.getModuleName(context)
         if (moduleName != null) {
             return TyLazyClass(moduleName)
         }

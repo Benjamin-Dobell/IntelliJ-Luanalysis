@@ -23,6 +23,7 @@ import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.impl.LuaFuncDefImpl
+import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.stubs.index.StubKeys
 import com.tang.intellij.lua.ty.IFunSignature
@@ -41,9 +42,12 @@ class LuaFuncType : LuaStubElementType<LuaFuncStub, LuaFuncDef>("Global Function
 
     override fun createStub(funcDef: LuaFuncDef, stubElement: StubElement<*>): LuaFuncStub {
         val nameRef = funcDef.nameIdentifier!!
-        var moduleName = Constants.WORD_G
         val file = funcDef.containingFile
-        if (file is LuaPsiFile) moduleName = file.moduleName ?: Constants.WORD_G
+        val moduleName = (file as? LuaPsiFile)?.let {
+            SearchContext.withDumb(funcDef.project, null) {
+                file.getModuleName(it)
+            }
+        } ?: Constants.WORD_G
         val retDocTy = funcDef.comment?.tagReturn?.type
         val params = funcDef.params
         val tyParams = funcDef.tyParams

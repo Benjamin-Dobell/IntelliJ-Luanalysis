@@ -31,7 +31,6 @@ import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.impl.LuaNameExprMixin
 import com.tang.intellij.lua.search.GuardType
 import com.tang.intellij.lua.search.SearchContext
-import kotlin.contracts.ExperimentalContracts
 
 fun inferExpr(expr: LuaExpr?, context: SearchContext): ITy? {
     if (expr == null) {

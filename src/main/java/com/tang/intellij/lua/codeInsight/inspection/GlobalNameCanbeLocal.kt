@@ -31,10 +31,11 @@ class GlobalNameCanbeLocal : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
         return object : LuaVisitor() {
             override fun visitNameExpr(o: LuaNameExpr) {
+                val context = SearchContext.get(o.project)
                 val stat = o.assignStat
-                if (stat != null && o.moduleName == null) {
+                if (stat != null && o.getModuleName(context) == null) {
                     val name = o.name
-                    val resolve = resolveInFile(name, o, SearchContext.get(o.project))
+                    val resolve = resolveInFile(name, o, context)
                     if (resolve == null) {
                         val scope = GlobalSearchScope.allScope(o.project)
                         val searchScope = scope.intersectWith(GlobalSearchScope.notScope(GlobalSearchScope.fileScope(o.containingFile)))

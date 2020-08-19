@@ -37,7 +37,12 @@ class LuaShortNameIndex : StringStubIndexExtension<NavigatablePsiElement>() {
         val instance = LuaShortNameIndex()
 
         fun find(key: String, searchContext: SearchContext): Collection<NavigatablePsiElement> {
-            return if (searchContext.isDumb) emptyList() else instance.get(key, searchContext.project, searchContext.scope)
+            return if (searchContext.isDumb) {
+                emptyList()
+            } else {
+                assertNotCreatingStub()
+                instance.get(key, searchContext.project, searchContext.scope)
+            }
         }
     }
 }

@@ -30,6 +30,12 @@ import com.tang.intellij.lua.psi.LuaTableField
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
 
+fun assertNotCreatingStub() {
+    Thread.currentThread().getStackTrace().forEach {
+        assert(!it.methodName.contains("createStub")) { "Illegal attempt to access an index whilst indexing" }
+    }
+}
+
 class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
     override fun getKey() = StubKeys.CLASS_MEMBER
 
@@ -42,6 +48,9 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
         private fun processKey(key: String, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean {
             if (context.isDumb)
                 return false
+
+            assertNotCreatingStub()
+
             val all = LuaClassMemberIndex.instance.get(key.hashCode(), context.project, context.scope)
             return ContainerUtil.process(all, processor)
         }

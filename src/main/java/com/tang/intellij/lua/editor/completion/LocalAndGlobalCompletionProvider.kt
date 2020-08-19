@@ -88,10 +88,11 @@ class LocalAndGlobalCompletionProvider(private val mask: Int) : ClassMemberCompl
 
         //module members
         if (nameExpr is LuaNameExpr) {
-            val moduleName = nameExpr.moduleName
+            val context = SearchContext.get(nameExpr.project)
+            val moduleName = nameExpr.getModuleName(context)
             if (moduleName != null) {
                 val ty = TyLazyClass(moduleName)
-                val contextTy = LuaPsiTreeUtil.findContextClass(nameExpr, SearchContext.get(nameExpr.project))
+                val contextTy = LuaPsiTreeUtil.findContextClass(nameExpr, context)
                 addClass(contextTy, ty, cur.project, MemberCompletionMode.Dot, completionResultSet, completionResultSet.prefixMatcher, null)
             }
         }

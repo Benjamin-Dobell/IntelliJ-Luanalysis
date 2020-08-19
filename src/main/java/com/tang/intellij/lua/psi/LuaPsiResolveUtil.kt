@@ -93,7 +93,7 @@ fun resolve(nameExpr: LuaNameExpr, context: SearchContext): PsiElement? {
     //global
     if (resolveResult == null || resolveResult is LuaNameExpr) {
         val refName = nameExpr.name
-        val moduleName = nameExpr.moduleName ?: Constants.WORD_G
+        val moduleName = nameExpr.getModuleName(context) ?: Constants.WORD_G
         LuaClassMemberIndex.processMember(moduleName, refName, context, Processor {
             resolveResult = it
             false
@@ -111,7 +111,7 @@ fun multiResolve(ref: LuaNameExpr, context: SearchContext): Array<PsiElement> {
         list.add(resolveResult)
     } else {
         val refName = ref.name
-        val module = ref.moduleName ?: Constants.WORD_G
+        val module = ref.getModuleName(context) ?: Constants.WORD_G
         LuaClassMemberIndex.processMember(module, refName, context, Processor {
             list.add(it)
             true

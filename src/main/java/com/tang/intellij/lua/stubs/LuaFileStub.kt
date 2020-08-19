@@ -23,9 +23,11 @@ import com.intellij.psi.StubBuilder
 import com.intellij.psi.stubs.*
 import com.intellij.psi.tree.IStubFileElementType
 import com.intellij.util.io.StringRef
+import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.lang.LuaLanguage
 import com.tang.intellij.lua.lang.LuaParserDefinition
 import com.tang.intellij.lua.psi.LuaPsiFile
+import com.tang.intellij.lua.search.SearchContext
 
 /**
 
@@ -61,7 +63,12 @@ class LuaFileElementType : IStubFileElementType<LuaFileStub>(LuaLanguage.INSTANC
             override fun createStubForFile(file: PsiFile): StubElement<*> {
                 if (file is LuaPsiFile){
                     isTooLarger = file.tooLarger
-                    return LuaFileStub(file, file.moduleName)
+
+                    val moduleName = SearchContext.withDumb(file.project, null) {
+                        file.getModuleName(it)
+                    }
+
+                    return LuaFileStub(file, moduleName)
                 }
                 return super.createStubForFile(file)
             }

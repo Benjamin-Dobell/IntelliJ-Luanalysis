@@ -30,6 +30,7 @@ import com.tang.intellij.lua.comment.psi.api.LuaComment
 import com.tang.intellij.lua.lang.LuaFileType
 import com.tang.intellij.lua.lang.LuaLanguage
 import com.tang.intellij.lua.project.LuaSettings
+import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.LuaFileStub
 
 /**
@@ -54,11 +55,10 @@ open class LuaPsiFile(fileViewProvider: FileViewProvider) : PsiFileBase(fileView
         } else super.setName(name)
     }
 
-    val moduleName: String?
-        get() {
-            val stub = stub as? LuaFileStub
-            return if (stub != null) stub.module else findCachedModuleName()
-        }
+    fun getModuleName(context: SearchContext): String? {
+        val stub = if (!context.isDumb) stub as? LuaFileStub else null
+        return if (stub != null) stub.module else findCachedModuleName()
+    }
 
     /**
      * Lua language version

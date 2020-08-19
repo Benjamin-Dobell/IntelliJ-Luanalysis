@@ -20,6 +20,7 @@ import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.lang.LuaLanguageLevel
 import com.tang.intellij.lua.project.LuaSettings
+import com.tang.intellij.lua.search.SearchContext
 
 /**
  * LuaPsiElement
@@ -27,11 +28,8 @@ import com.tang.intellij.lua.project.LuaSettings
  */
 interface LuaPsiElement : NavigatablePsiElement
 
-val LuaPsiElement.moduleName: String? get() {
-    val file = containingFile
-    if (file is LuaPsiFile)
-        return file.moduleName
-    return null
+fun LuaPsiElement.getModuleName(context: SearchContext): String? {
+    return (containingFile as? LuaPsiFile)?.getModuleName(context)
 }
 
 val LuaPsiElement.languageLevel: LuaLanguageLevel get() {

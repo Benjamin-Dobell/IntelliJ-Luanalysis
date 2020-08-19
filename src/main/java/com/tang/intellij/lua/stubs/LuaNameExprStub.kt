@@ -45,8 +45,12 @@ class LuaNameExprType : LuaStubElementType<LuaNameExprStub, LuaNameExpr>("NAME_E
     override fun createStub(luaNameExpr: LuaNameExpr, stubElement: StubElement<*>): LuaNameExprStub {
         val psiFile = luaNameExpr.containingFile
         val name = luaNameExpr.name
-        val module = if (psiFile is LuaPsiFile) psiFile.moduleName ?: Constants.WORD_G else Constants.WORD_G
-        val isGlobal = SearchContext.withDumb(luaNameExpr.project, null) { resolveLocal(luaNameExpr) } == null
+        val module = SearchContext.withDumb(luaNameExpr.project, null) {
+            (psiFile as? LuaPsiFile)?.getModuleName(it)
+        } ?: Constants.WORD_G
+        val isGlobal = SearchContext.withDumb(luaNameExpr.project, null) {
+            resolveLocal(luaNameExpr, it)
+        } == null
 
         val stat = luaNameExpr.assignStat
         val docTy = stat?.comment?.ty

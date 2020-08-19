@@ -47,7 +47,9 @@ class LuaAnnotator : Annotator {
             psiElement.accept(docVisitor)
         } else if (psiElement is LuaPsiElement) {
             val psiFile = psiElement.containingFile
-            isModuleFile = if (psiFile is LuaPsiFile) { psiFile.moduleName != null } else false
+            isModuleFile = (psiFile as? LuaPsiFile)?.let {
+                psiFile.getModuleName(SearchContext.get(psiFile.project))
+            } != null
             psiElement.accept(luaVisitor)
         }
         myHolder = null
@@ -130,7 +132,9 @@ class LuaAnnotator : Annotator {
         override fun visitNameExpr(o: LuaNameExpr) {
             val id = o.id
 
-            val res = resolve(o, SearchContext.get(o.project))
+            val context = SearchContext.get(o.project)
+            val res = resolve(o, context)
+
             if (res != null) { //std api highlighting
                 val containingFile = res.containingFile
                 if (LuaFileUtil.isStdLibFile(containingFile.virtualFile, o.project)) {
@@ -148,7 +152,7 @@ class LuaAnnotator : Annotator {
                 }
             } else if (res is LuaFuncDef) {
                 val resolvedFile = res.containingFile
-                if (resolvedFile !is LuaPsiFile || resolvedFile.moduleName == null) {
+                if (resolvedFile !is LuaPsiFile || resolvedFile.getModuleName(context) == null) {
                     val annotation = createInfoAnnotation(id, "Global function : \"${res.name}\"")
                     annotation.textAttributes = LuaHighlightingData.GLOBAL_FUNCTION
                 } else {
