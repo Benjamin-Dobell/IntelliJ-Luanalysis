@@ -37,6 +37,11 @@ local function acceptsNumberStringVariadicBoolean(arg1, arg2, ...) end
 ---@param arg2 string
 local function acceptsNumberString(arg1, arg2) end
 
+---@return number, string
+local function returnsNumberString()
+    return 1, "a string"
+end
+
 ---@return number, string, boolean...
 local function returnsNumberStringVariadicBoolean()
     return 1, "a string", true
@@ -63,18 +68,21 @@ acceptsNumberStringVariadicBoolean(1, "a string", true)
 acceptsNumberStringVariadicBoolean(returnsNumberStringVariadicBoolean())
 acceptsNumberStringVariadicBoolean(returnsNumberStringVariadicBoolean(), <error descr="Type mismatch. Required: 'string' Found: 'true'">true</error>)
 acceptsNumberStringVariadicBoolean(1, returnStringVariadicBoolean())
+
+acceptsNumberString(returnsNumberString())
+acceptsNumberString((returnsNumberString())<error descr="Missing argument: arg2: string">)</error> -- Expect error
 acceptsNumberString(returnsNumberStringVariadicBoolean())
 acceptsNumberString(<weak_warning descr="1 result is an excess argument.">returnsNumberStringBoolean()</weak_warning>)
 
 
 ---@return number, number
 local function returnsNumberNumber()
-return 0, 0
+    return 0, 0
 end
 
 ---@return string, string
 local function returnsStringString()
-return "a", "a"
+    return "a", "a"
 end
 
 local returnsNumberNumberOrStringString = {returnsNumberNumber, returnsStringString}
@@ -95,7 +103,7 @@ end
 
 ---@return 1, 2, 3
 local function returns123()
-return 1, 2, 3
+    return 1, 2, 3
 end
 
 ---@type number[]

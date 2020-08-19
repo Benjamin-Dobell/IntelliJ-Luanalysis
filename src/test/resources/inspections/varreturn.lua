@@ -86,3 +86,12 @@ nilOrNumber = implicitNilOrNumber1
 nilOrBoolean = <error descr="Type mismatch. Required: 'boolean|nil' Found: '1|2|nil'">implicitNilOrNumber1</error>
 nilOrNumber = implicitNilOrNumber2
 nilOrBoolean = <error descr="Type mismatch. Required: 'boolean|nil' Found: '1|2|nil'">implicitNilOrNumber2</error>
+
+---@type fun(): boolean...
+local booleanVarreturn
+
+---@type fun(a: boolean | nil): void
+local nilOrBooleanParameter
+
+nilOrBooleanParameter(booleanVarreturn()<error descr="Missing argument: a: boolean|nil">)</error> -- Expect error
+nilOrBooleanParameter((booleanVarreturn()))

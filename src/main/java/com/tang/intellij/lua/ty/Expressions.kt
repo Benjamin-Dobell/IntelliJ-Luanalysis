@@ -105,7 +105,11 @@ private fun inferExprInner(expr: LuaPsiElement, context: SearchContext): ITy? {
         is LuaCallExpr -> expr.infer(context)
         is LuaClosureExpr -> infer(expr, context)
         is LuaTableExpr -> expr.infer(context)
-        is LuaParenExpr -> infer(expr.expr, context)
+        is LuaParenExpr -> {
+            context.withIndex(0, false) {
+                infer(expr.expr, context)
+            }
+        }
         is LuaNameExpr -> expr.infer(context)
         is LuaLiteralExpr -> expr.infer()
         is LuaIndexExpr -> expr.infer(context)
