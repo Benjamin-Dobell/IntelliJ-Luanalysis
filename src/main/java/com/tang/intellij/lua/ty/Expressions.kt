@@ -310,8 +310,11 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
 
 private fun LuaCallExpr.getReturnTy(sig: IFunSignature, context: SearchContext): ITy? {
     val substitutor = createSubstitutor(sig, context)
-    val returnTy = sig.returnTy?.substitute(substitutor)
-    return if (returnTy == null || context.supportsMultipleResults) {
+    val returnTy = sig.returnTy?.let {
+        it.substitute(substitutor)
+    } ?: TyMultipleResults(listOf(Ty.UNKNOWN), true)
+
+    return if (context.supportsMultipleResults) {
         returnTy
     } else {
         TyMultipleResults.getResult(returnTy, context.index)
@@ -346,6 +349,10 @@ private fun LuaCallExpr.infer(context: SearchContext): ITy? {
     }
 
     Ty.eachResolved(ty, context) {
+        if (ty == Ty.FUNCTION) {
+            return TyMultipleResults(listOf(Ty.UNKNOWN), true)
+        }
+
         val returnTy = it.matchSignature(context, this)?.substitutedSignature?.let {
             getReturnTy(it, context)
         }

@@ -67,3 +67,18 @@ end)
 local invalidHandler
 
 EventManager.addNumberArgHandler("oneArgEvent", <error descr="Type mismatch. Required: 'fun(arg1: number)' Found: 'fun(arg1: boolean)'">invalidHandler</error>)
+
+---@type function
+local func
+
+---@type fun
+local func2
+
+---@type std__Packed<any>
+local packedAny
+
+packedAny = table.pack(func())
+packedAny = table.pack(func2())
+
+func = <error descr="Type mismatch. Required: 'function' Found: 'std__Packed<any>'">table.pack(func())</error>
+func = <error descr="Type mismatch. Required: 'function' Found: 'std__Packed<any>'">table.pack(func2())</error>
