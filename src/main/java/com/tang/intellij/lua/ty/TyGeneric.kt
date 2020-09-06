@@ -145,7 +145,22 @@ class TyGeneric(override val params: Array<ITy>, override val base: ITy) : Ty(Ty
     }
 
     override fun getSuperClass(context: SearchContext): ITy? {
-        return base.getSuperClass(context)
+        val superClass = base.getSuperClass(context)
+
+        if (superClass is ITyGeneric) {
+            val baseParams = base.getParams(context)
+            val paramMap = mutableMapOf<String, ITy>()
+
+            baseParams?.forEachIndexed { index, baseParam ->
+                if (index < params.size) {
+                    paramMap[baseParam.className] = params[index]
+                }
+            }
+
+            return superClass.substitute(TyParameterSubstitutor(paramMap))
+        }
+
+        return superClass
     }
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
@@ -225,17 +240,19 @@ class TyGeneric(override val params: Array<ITy>, override val base: ITy) : Ty(Ty
             otherParams = resolvedOther.getParams(context)
         }
 
-        if (otherBase != null && otherParams != null
-                && params.size == otherParams.size
-                && resolvedBase.contravariantOf(otherBase, context, flags)
-                && params.asSequence().zip(otherParams.asSequence()).all { (param, otherParam) ->
+        if (otherBase != null) {
+            if (otherBase.equals(resolvedBase, context)) {
+                return params.size == otherParams?.size
+                        && params.asSequence().zip(otherParams.asSequence()).all { (param, otherParam) ->
                     // Params are always invariant as we don't support use-site variance nor immutable/read-only annotations
                     param.equals(otherParam, context)
                             || (flags and TyVarianceFlags.STRICT_UNKNOWN == 0 && otherParam is TyUnknown)
-                            || ((contravariantParams || (flags and TyVarianceFlags.ABSTRACT_PARAMS != 0 && param is TyParameter))
-                                && param.contravariantOf(otherParam, context, flags))
-                }) {
-            return true
+                            || (
+                                (contravariantParams || (flags and TyVarianceFlags.ABSTRACT_PARAMS != 0 && param is TyParameter))
+                                && param.contravariantOf(otherParam, context, flags)
+                            )
+                }
+            }
         }
 
         return super.contravariantOf(resolvedOther, context, flags)

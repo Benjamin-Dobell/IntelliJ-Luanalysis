@@ -19,11 +19,11 @@ local genericC
 genericA = genericB
 genericA = genericC
 
-genericB = <error>genericA</error>
+genericB = <error descr="Type mismatch. Required: 'GenericB<string>' Found: 'GenericA<string>'">genericA</error>
 genericB = genericC
 
-genericC = genericA
-genericC = genericB
+genericC = <error descr="Type mismatch. Required: 'GenericC<string>' Found: 'GenericA<string>'">genericA</error>
+genericC = <error descr="Type mismatch. Required: 'GenericC<string>' Found: 'GenericB<string>'">genericB</error>
 
 
 ---@class ClassA : GenericA<string>
@@ -47,11 +47,11 @@ local classC
 classA = classB
 classA = classC
 
-classB = classA
+classB = <error descr="Type mismatch. Required: 'ClassB' Found: 'ClassA'">classA</error>
 classB = classC
 
-classC = classA
-classC = classB
+classC = <error descr="Type mismatch. Required: 'ClassC' Found: 'ClassA'">classA</error>
+classC = <error descr="Type mismatch. Required: 'ClassC' Found: 'ClassB'">classB</error>
 
 genericA = classA
 genericA = classB
@@ -79,8 +79,8 @@ local classGenC
 classGenA = classGenB
 classGenA = classGenC
 
-classGenB = classGenA
+classGenB = <error descr="Type mismatch. Required: 'ClassGenB<string>' Found: 'ClassGenA<string>'">classGenA</error>
 classGenB = classGenC
 
-classGenC = classGenA
-classGenC = classGenB
+classGenC = <error descr="Type mismatch. Required: 'ClassGenC<string>' Found: 'ClassGenA<string>'">classGenA</error>
+classGenC = <error descr="Type mismatch. Required: 'ClassGenC<string>' Found: 'ClassGenB<string>'">classGenB</error>

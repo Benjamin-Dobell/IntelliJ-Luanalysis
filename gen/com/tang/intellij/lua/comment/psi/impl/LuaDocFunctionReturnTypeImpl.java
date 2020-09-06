@@ -8,17 +8,17 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.comment.psi.LuaDocTypes.*;
+import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.tang.intellij.lua.comment.psi.*;
-import com.tang.intellij.lua.ty.ITy;
 
-public class LuaDocParTyImpl extends LuaDocTyImpl implements LuaDocParTy {
+public class LuaDocFunctionReturnTypeImpl extends ASTWrapperPsiElement implements LuaDocFunctionReturnType {
 
-  public LuaDocParTyImpl(@NotNull ASTNode node) {
+  public LuaDocFunctionReturnTypeImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull LuaDocVisitor visitor) {
-    visitor.visitParTy(this);
+    visitor.visitFunctionReturnType(this);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
@@ -28,14 +28,8 @@ public class LuaDocParTyImpl extends LuaDocTyImpl implements LuaDocParTy {
 
   @Override
   @NotNull
-  public LuaDocTy getTy() {
-    return notNullChild(PsiTreeUtil.getChildOfType(this, LuaDocTy.class));
-  }
-
-  @Override
-  @NotNull
-  public ITy getType() {
-    return LuaDocPsiImplUtilKt.getType(this);
+  public List<LuaDocReturnList> getReturnListList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, LuaDocReturnList.class);
   }
 
 }

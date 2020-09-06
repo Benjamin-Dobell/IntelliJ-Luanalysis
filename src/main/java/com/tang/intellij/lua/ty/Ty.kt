@@ -443,7 +443,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
                     list.add(it.displayName)
             }
         }
-        return list.joinToString("|")
+        return list.joinToString(" | ")
     }
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
@@ -459,8 +459,8 @@ abstract class Ty(override val kind: TyKind) : ITy {
             return contravariantOf(resolvedOther, context, flags)
         }
 
-        if (other is TyUnion) {
-            TyUnion.each(other) {
+        if (resolvedOther is TyUnion) {
+            TyUnion.each(resolvedOther) {
                 if (it !is TySnippet && !contravariantOf(it, context, flags)) {
                     return false
                 }

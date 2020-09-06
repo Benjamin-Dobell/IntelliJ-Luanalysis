@@ -67,7 +67,6 @@ private fun inferReturnTyInner(owner: LuaFuncBodyOwner, searchContext: SearchCon
     if (comment != null) {
         val returnDef = PsiTreeUtil.findChildOfType(comment, LuaDocTagReturn::class.java)
         if (returnDef != null) {
-            //return returnDef.resolveTypeAt(searchContext.index)
             return returnDef.type
         }
     }
@@ -300,32 +299,37 @@ private fun resolveParamType(paramNameDef: LuaParamNameDef, context: SearchConte
         }
     }
 
-    //for
+    //for (iterator support)
     if (paramOwner is LuaForBStat) {
         val exprList = paramOwner.exprList
-        val callExpr = PsiTreeUtil.findChildOfType(exprList, LuaCallExpr::class.java)
         val paramIndex = paramOwner.getIndexFor(paramNameDef)
 
-        // iterator support
-        val type = context.withMultipleResults {
-            callExpr?.guessType(context)
+        val iterator: ITyFunction?
+
+        val callExpr = exprList?.exprList?.first() as? LuaCallExpr
+
+        if (callExpr != null) {
+            iterator = context.withMultipleResults {
+                callExpr.guessType(context)
+            }?.let {
+                TyMultipleResults.getResult(it, 0) as? ITyFunction
+            }
+        } else {
+            iterator = (exprList?.exprList?.first() as? LuaTypeGuessable)?.guessType(context) as? ITyFunction
         }
-        if (type != null) {
+
+        if (iterator != null) {
             var result: ITy = Ty.VOID
-            TyUnion.each(type) {
-                if (it is ITyFunction) {
-                    val returnTy = it.mainSignature.returnTy
+            val returnTy = iterator.mainSignature.returnTy?.not(Ty.NIL)?.let { TyMultipleResults.flatten(it) }
 
-                    if (returnTy == null) {
-                        return null
-                    }
+            if (returnTy == null) {
+                return null
+            }
 
-                    if (returnTy is TyMultipleResults) {
-                        result = result.union(returnTy.list.getOrNull(paramIndex) ?: Ty.UNKNOWN)
-                    } else if (paramIndex == 0) {
-                        result = result.union(returnTy)
-                    }
-                }
+            if (returnTy is TyMultipleResults) {
+                result = result.union(returnTy.list.getOrNull(paramIndex) ?: Ty.UNKNOWN)
+            } else if (paramIndex == 0) {
+                result = result.union(returnTy)
             }
 
             return result

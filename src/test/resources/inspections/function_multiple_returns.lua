@@ -96,8 +96,8 @@ for _, fun in ipairs(returnsNumberNumberOrStringString) do
     numberOrString = numberOrString1
     numberOrString = numberOrString2
 
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'number|string'">numberOrString1</error>
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'number|string'">numberOrString2</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'number | string'">numberOrString1</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'number | string'">numberOrString2</error>
 end
 
 
@@ -120,4 +120,4 @@ end
 local inferredNumberOrString = <weak_warning descr="Insufficient assignees, values will be discarded.">returnStringOrGeneric(returns123)</weak_warning>
 
 numberOrString = inferredNumberOrString
-aNumber = <error descr="Type mismatch. Required: 'number' Found: '1|string'">inferredNumberOrString</error> -- Expect error
+aNumber = <error descr="Type mismatch. Required: 'number' Found: '1 | string'">inferredNumberOrString</error> -- Expect error

@@ -16,13 +16,14 @@ function GenericSelfA:colonMethod()
     ---@type GenericSelfA<string>
     local someGenericSelfA
 
-    someGenericSelfA = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: '[local self]'">self</error>
-    self = <error descr="Type mismatch. Required: '[local self]' Found: 'GenericSelfA<string>'">someSelfA</error>
-    selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'GenericSelfA<string>' ">someSelfA</error>
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: '[local self]'">self</error>
+    someGenericSelfA = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: '[local self]'">selfTypedVar</error>
+    self = <error descr="Type mismatch. Required: '[local self]' Found: 'GenericSelfA<string>'">someGenericSelfA</error>
+    selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'GenericSelfA<string>'">someGenericSelfA</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: '[local self]'">selfTypedVar</error>
 
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'T : string'">self.a</error>
-    aString = self.a
+
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'T : string'">selfTypedVar.a</error>
+    aString = selfTypedVar.a
 
     return self
 end
@@ -30,39 +31,37 @@ end
 ---@return self
 function GenericSelfA.dotMethod()
     ---@type self
-    local selfTypedVar = self
+    local selfTypedVar = <warning descr="Undeclared variable 'self'.">self</warning>
 
     ---@type GenericSelfA<string>
     local someGenericSelfA
 
-    someGenericSelfA = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: '[local self]'">self</error>
-    self = <error descr="Type mismatch. Required: '[local self]' Found: 'GenericSelfA<string>'">someSelfA</error>
-    selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'GenericSelfA<string>' ">someSelfA</error>
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: '[local self]'">self</error>
+    someGenericSelfA = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: '[local self]'">selfTypedVar</error>
+    selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'GenericSelfA<string>'">someGenericSelfA</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: '[local self]'">selfTypedVar</error>
 
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'T : string'">self.a</error>
-    aString = self.a
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'T : string'">selfTypedVar.a</error>
+    aString = selfTypedVar.a
 
-    return self
+    return selfTypedVar
 end
 
 ---@return self
 GenericSelfA.lambdaMethod = function()
     ---@type self
-    local selfTypedVar = self
+    local selfTypedVar = <warning descr="Undeclared variable 'self'.">self</warning>
 
     ---@type GenericSelfA<string>
     local someGenericSelfA
 
-    someGenericSelfA = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: '[local self]'">self</error>
-    self = <error descr="Type mismatch. Required: '[local self]' Found: 'GenericSelfA<string>'">someSelfA</error>
-    selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'GenericSelfA<string>' ">someSelfA</error>
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: '[local self]'">self</error>
+    someGenericSelfA = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: '[local self]'">selfTypedVar</error>
+    selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'GenericSelfA<string>'">someGenericSelfA</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: '[local self]'">selfTypedVar</error>
 
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'T : string'">self.a</error>
-    aString = self.a
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'T : string'">selfTypedVar.a</error>
+    aString = selfTypedVar.a
 
-    return self
+    return selfTypedVar
 end
 
 ---@type GenericSelfA<string>
@@ -78,34 +77,34 @@ local selfBString
 ---@type GenericSelfB<"string literal">
 local selfBStringLiteral
 
-selfBString = <error descr="Type mismatch. Required: 'GenericSelfB<string>' Found: 'GenericSelfB<T>'">GenericSelfB:colonMethod()</error>
-selfBString = <error descr="Type mismatch. Required: 'GenericSelfB<string>' Found: 'GenericSelfB<T>'">GenericSelfB:dotMethod()</error>
-selfBString = <error descr="Type mismatch. Required: 'GenericSelfB<string>' Found: 'GenericSelfB<T>'">GenericSelfB:lambdaMethod()</error>
+selfBString = <error descr="Type mismatch. Required: 'GenericSelfB<string>' Found: 'GenericSelfB<T : string>'">GenericSelfB:colonMethod()</error>
+selfBString = <error descr="Type mismatch. Required: 'GenericSelfB<string>' Found: 'GenericSelfB<T : string>'">GenericSelfB.dotMethod()</error>
+selfBString = <error descr="Type mismatch. Required: 'GenericSelfB<string>' Found: 'GenericSelfB<T : string>'">GenericSelfB.lambdaMethod()</error>
 
-selfAString = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: 'GenericSelfA<T>'">GenericSelfA:colonMethod()</error>
-selfAString = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: 'GenericSelfA<T>'">GenericSelfA:dotMethod()</error>
-selfAString = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: 'GenericSelfA<T>'">GenericSelfA:lambdaMethod()</error>
+selfAString = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: 'GenericSelfA<T : string>'">GenericSelfA:colonMethod()</error>
+selfAString = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: 'GenericSelfA<T : string>'">GenericSelfA.dotMethod()</error>
+selfAString = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: 'GenericSelfA<T : string>'">GenericSelfA.lambdaMethod()</error>
 
-selfBString = selfB:colonMethod()
-selfBString = selfB:dotMethod()
-selfBString = selfB:lambdaMethod()
+selfBString = selfBString:colonMethod()
+selfBString = selfBString.dotMethod()
+selfBString = selfBString.lambdaMethod()
 
-selfAString = selfB:colonMethod()
-selfAString = selfB:dotMethod()
-selfAString = selfB:lambdaMethod()
+selfAString = selfBString:colonMethod()
+selfAString = selfBString.dotMethod()
+selfAString = selfBString.lambdaMethod()
 
 selfBString = <error descr="Type mismatch. Required: 'GenericSelfB<string>' Found: 'GenericSelfA<string>'">selfAString:colonMethod()</error>
-selfBString = <error descr="Type mismatch. Required: 'GenericSelfB<string>' Found: 'GenericSelfA<string>'">selfAString:dotMethod()</error>
-selfBString = <error descr="Type mismatch. Required: 'GenericSelfB<string>' Found: 'GenericSelfA<string>'">selfAString:lambdaMethod()</error>
+selfBString = <error descr="Type mismatch. Required: 'GenericSelfB<string>' Found: 'GenericSelfA<string>'">selfAString.dotMethod()</error>
+selfBString = <error descr="Type mismatch. Required: 'GenericSelfB<string>' Found: 'GenericSelfA<string>'">selfAString.lambdaMethod()</error>
 
 selfBStringLiteral = selfBStringLiteral:colonMethod()
-selfBStringLiteral = selfBStringLiteral:dotMethod()
-selfBStringLiteral = selfBStringLiteral:lambdaMethod()
+selfBStringLiteral = selfBStringLiteral.dotMethod()
+selfBStringLiteral = selfBStringLiteral.lambdaMethod()
 
-selfAString = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: 'GenericSelfB<\"string literal\">'">selfBStringLiteral:colonMethod()
-selfAString = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: 'GenericSelfB<\"string literal\">'">selfBStringLiteral:dotMethod()
-selfAString = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: 'GenericSelfB<\"string literal\">'">selfBStringLiteral:lambdaMethod()
+selfAString = <error>selfBStringLiteral:colonMethod()</error>
+selfAString = <error>selfBStringLiteral.dotMethod()</error>
+selfAString = <error>selfBStringLiteral.lambdaMethod()</error>
 
-selfBString = <error descr="Type mismatch. Required: 'GenericSelfB<string>' Found: 'GenericSelfB<\"string literal\">'">selfBStringLiteral:colonMethod()
-selfBString = <error descr="Type mismatch. Required: 'GenericSelfB<string>' Found: 'GenericSelfB<\"string literal\">'">selfBStringLiteral:dotMethod()
-selfBString = <error descr="Type mismatch. Required: 'GenericSelfB<string>' Found: 'GenericSelfB<\"string literal\">'">selfBStringLiteral:lambdaMethod()
+selfBString = <error>selfBStringLiteral:colonMethod()</error>
+selfBString = <error>selfBStringLiteral.dotMethod()</error>
+selfBString = <error>selfBStringLiteral.lambdaMethod()</error>

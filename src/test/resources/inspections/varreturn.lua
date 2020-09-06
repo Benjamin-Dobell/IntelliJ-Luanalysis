@@ -14,7 +14,7 @@ local nilOrBoolean
 local varreturnFunction
 
 aNumber, nilOrBoolean, nilOrBoolean = varreturnFunction()
-aNumber, nilOrBoolean, nilOrBoolean, <error descr="Type mismatch. Required: 'nil|number' Found: 'boolean|nil'">nilOrNumber</error>, nilOrBoolean = <error descr="Result 4, type mismatch. Required: 'nil|number' Found: 'boolean|nil'">varreturnFunction()</error>
+aNumber, nilOrBoolean, nilOrBoolean, <error descr="Type mismatch. Required: 'nil | number' Found: 'boolean | nil'">nilOrNumber</error>, nilOrBoolean = <error descr="Result 4, type mismatch. Required: 'nil | number' Found: 'boolean | nil'">varreturnFunction()</error>
 
 
 ---@param numberParam number
@@ -34,7 +34,7 @@ local function varreturnFunction2()
 end
 
 aNumber, nilOrBoolean, nilOrBoolean = varreturnFunction2()
-aNumber, nilOrBoolean, nilOrBoolean, <error descr="Type mismatch. Required: 'nil|number' Found: 'boolean|nil'">nilOrNumber</error>, nilOrBoolean = <error descr="Result 4, type mismatch. Required: 'nil|number' Found: 'boolean|nil'">varreturnFunction2()</error>
+aNumber, nilOrBoolean, nilOrBoolean, <error descr="Type mismatch. Required: 'nil | number' Found: 'boolean | nil'">nilOrNumber</error>, nilOrBoolean = <error descr="Result 4, type mismatch. Required: 'nil | number' Found: 'boolean | nil'">varreturnFunction2()</error>
 
 ---@param a number
 ---@param b string
@@ -52,7 +52,7 @@ acceptsNumberVariadicString(<error descr="Variadic result, type mismatch. Requir
 local varreturnFunction3
 
 nilOrBoolean, nilOrBoolean = varreturnFunction3()
-nilOrBoolean, nilOrBoolean, <error descr="Type mismatch. Required: 'nil|number' Found: 'boolean|nil'">nilOrNumber</error>, nilOrBoolean = <error descr="Result 3, type mismatch. Required: 'nil|number' Found: 'boolean|nil'">varreturnFunction3()</error>
+nilOrBoolean, nilOrBoolean, <error descr="Type mismatch. Required: 'nil | number' Found: 'boolean | nil'">nilOrNumber</error>, nilOrBoolean = <error descr="Result 3, type mismatch. Required: 'nil | number' Found: 'boolean | nil'">varreturnFunction3()</error>
 
 ---@return boolean...
 local function varreturnFunction4()
@@ -68,7 +68,7 @@ local function varreturnFunction4()
 end
 
 nilOrBoolean, nilOrBoolean = varreturnFunction4()
-nilOrBoolean, nilOrBoolean, <error descr="Type mismatch. Required: 'nil|number' Found: 'boolean|nil'">nilOrNumber</error>, nilOrBoolean = <error descr="Result 3, type mismatch. Required: 'nil|number' Found: 'boolean|nil'">varreturnFunction4()</error>
+nilOrBoolean, nilOrBoolean, <error descr="Type mismatch. Required: 'nil | number' Found: 'boolean | nil'">nilOrNumber</error>, nilOrBoolean = <error descr="Result 3, type mismatch. Required: 'nil | number' Found: 'boolean | nil'">varreturnFunction4()</error>
 
 ---@generic T
 ---@param list T[]
@@ -78,14 +78,14 @@ local function genericVarreturn(list)
 end
 
 nilOrNumber, nilOrNumber = genericVarreturn({1, 2})
-nilOrNumber, <error descr="Type mismatch. Required: 'boolean|nil' Found: '1|2|nil'">nilOrBoolean</error> = <error descr="Result 2, type mismatch. Required: 'boolean|nil' Found: '1|2|nil'">genericVarreturn({1, 2})</error>
+nilOrNumber, <error descr="Type mismatch. Required: 'boolean | nil' Found: '1 | 2 | nil'">nilOrBoolean</error> = <error descr="Result 2, type mismatch. Required: 'boolean | nil' Found: '1 | 2 | nil'">genericVarreturn({1, 2})</error>
 
 local implicitNilOrNumber1, implicitNilOrNumber2 = genericVarreturn({ 1, 2})
 
 nilOrNumber = implicitNilOrNumber1
-nilOrBoolean = <error descr="Type mismatch. Required: 'boolean|nil' Found: '1|2|nil'">implicitNilOrNumber1</error>
+nilOrBoolean = <error descr="Type mismatch. Required: 'boolean | nil' Found: '1 | 2 | nil'">implicitNilOrNumber1</error>
 nilOrNumber = implicitNilOrNumber2
-nilOrBoolean = <error descr="Type mismatch. Required: 'boolean|nil' Found: '1|2|nil'">implicitNilOrNumber2</error>
+nilOrBoolean = <error descr="Type mismatch. Required: 'boolean | nil' Found: '1 | 2 | nil'">implicitNilOrNumber2</error>
 
 ---@type fun(): boolean...
 local booleanVarreturn
@@ -93,5 +93,5 @@ local booleanVarreturn
 ---@type fun(a: boolean | nil): void
 local nilOrBooleanParameter
 
-nilOrBooleanParameter(booleanVarreturn()<error descr="Missing argument: a: boolean|nil">)</error> -- Expect error
+nilOrBooleanParameter(booleanVarreturn()<error descr="Missing argument: a: boolean | nil">)</error> -- Expect error
 nilOrBooleanParameter((booleanVarreturn()))

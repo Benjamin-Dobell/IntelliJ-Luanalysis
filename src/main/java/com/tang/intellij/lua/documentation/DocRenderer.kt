@@ -135,13 +135,13 @@ fun renderComment(sb: StringBuilder, comment: LuaComment?, tyRenderer: ITyRender
 }
 
 private fun renderReturn(sb: StringBuilder, tagReturn: LuaDocTagReturn, tyRenderer: ITyRenderer) {
-    val typeList = tagReturn.typeList
-    if (typeList != null) {
-        val list = typeList.tyList
+    val returnType = tagReturn.functionReturnType
+    if (returnType != null) {
+        val list = returnType.returnListList
         if (list.size > 1)
             sb.append("(")
-        list.forEachIndexed { index, luaDocTy ->
-            renderTypeUnion(if (index != 0) ", " else null, null, sb, luaDocTy, tyRenderer)
+        list.forEachIndexed { index, returnList ->
+            renderTypeUnion(if (index != 0) ", " else null, null, sb, returnList, tyRenderer)
             sb.append(" ")
         }
         if (list.size > 1)
@@ -211,7 +211,7 @@ fun renderDocParam(sb: StringBuilder, child: LuaDocTagParam, tyRenderer: ITyRend
     if (paramNameRef != null) {
         if (paramTitle)
             sb.append("<b>param</b> ")
-        sb.append("<code>${paramNameRef.text}</code> : ")
+        sb.append("<code>${paramNameRef.text}</code>: ")
         renderTypeUnion(null, null, sb, child.ty, tyRenderer)
         renderCommentString(" - ", null, sb, child.commentString)
     }
@@ -228,12 +228,22 @@ fun renderCommentString(prefix: String?, postfix: String?, sb: StringBuilder, ch
     }
 }
 
-private fun renderTypeUnion(prefix: String?, postfix: String?, sb: StringBuilder, type: LuaDocTy?, tyRenderer: ITyRenderer) {
+private fun renderTypeUnion(prefix: String?, postfix: String?, sb: StringBuilder, type: LuaDocType?, tyRenderer: ITyRenderer) {
     if (type != null) {
         if (prefix != null) sb.append(prefix)
 
         val ty = type.getType()
+        val parenthesesRequired = ty is TyFunction || ty is TyMultipleResults
+
+        if (parenthesesRequired) {
+            sb.append('(')
+        }
+
         renderTy(sb, ty, tyRenderer)
+
+        if (parenthesesRequired) {
+            sb.append(')')
+        }
 
         if (postfix != null) sb.append(postfix)
     }

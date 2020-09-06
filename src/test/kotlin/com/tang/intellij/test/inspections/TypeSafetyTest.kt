@@ -16,14 +16,12 @@
 
 package com.tang.intellij.test.inspections
 
-import com.tang.intellij.lua.codeInsight.inspection.AssignTypeInspection
-import com.tang.intellij.lua.codeInsight.inspection.MatchFunctionSignatureInspection
-import com.tang.intellij.lua.codeInsight.inspection.ReturnTypeInspection
-import com.tang.intellij.lua.codeInsight.inspection.UndeclaredMemberInspection
+import com.tang.intellij.lua.codeInsight.inspection.*
 import com.tang.intellij.lua.codeInsight.inspection.doc.GenericConstraintInspection
 import com.tang.intellij.lua.codeInsight.inspection.doc.GenericParameterShadowed
 import com.tang.intellij.lua.lang.LuaLanguageLevel
 import com.tang.intellij.lua.project.LuaSettings
+import com.tang.intellij.lua.project.StdLibraryProvider
 
 class TypeSafetyTest : LuaInspectionsTestBase(
         AssignTypeInspection(),
@@ -31,7 +29,8 @@ class TypeSafetyTest : LuaInspectionsTestBase(
         GenericParameterShadowed(),
         MatchFunctionSignatureInspection(),
         ReturnTypeInspection(),
-        UndeclaredMemberInspection()
+        UndeclaredMemberInspection(),
+        UndeclaredVariableInspection()
 ) {
     fun check(filename: String, checkWarn: Boolean = true, checkInfo: Boolean = false, checkWeakWarn: Boolean = false) {
         LuaSettings.instance.isNilStrict = true
@@ -76,7 +75,7 @@ class TypeSafetyTest : LuaInspectionsTestBase(
     }
 
     fun testGenericAlias() {
-        // TODO: There's a bug in IntelliJ's XML descr attribute parsing. Once fixed we should add descr.
+        // TODO: Add descr to <error> tags once https://youtrack.jetbrains.com/issue/IJSDK-799 is resolved
         check("generic_alias.lua")
     }
 
@@ -84,10 +83,10 @@ class TypeSafetyTest : LuaInspectionsTestBase(
         check("generic_class_constraints.lua")
     }
 
-    // TODO: Uncomment once https://youtrack.jetbrains.com/issue/IJSDK-799 is resolved.
-    /*fun testGenericClassCovariance() {
+    fun testGenericClassCovariance() {
+        // TODO: Add descr to <error> tags once https://youtrack.jetbrains.com/issue/IJSDK-799 is resolved
         check("generic_class_covariance.lua")
-    }*/
+    }
 
     fun testGenericClassFields() {
         check("generic_class_fields.lua")
@@ -97,10 +96,10 @@ class TypeSafetyTest : LuaInspectionsTestBase(
         check("generic_class_scope.lua")
     }
 
-    // TODO: Uncomment once https://youtrack.jetbrains.com/issue/IJSDK-799 is resolved.
-    /*fun testGenericSelf() {
-        check("generic_self.lua")
-    }*/
+    fun testGenericSelf() {
+        // TODO: Add descr to <error> tags once https://youtrack.jetbrains.com/issue/IJSDK-799 is resolved
+        check("generic_self.lua", true)
+    }
 
     fun testImplicitTypes() {
         check("implicit_types.lua")
@@ -125,10 +124,12 @@ class TypeSafetyTest : LuaInspectionsTestBase(
     fun testModules() {
         myFixture.configureByFiles("moduleA.lua", "moduleA_reference.lua")
         LuaSettings.instance.languageLevel = LuaLanguageLevel.LUA51
+        StdLibraryProvider.reload()
         LuaSettings.instance.isNilStrict = true
         enableInspection()
         myFixture.checkHighlighting(true, false, false)
         LuaSettings.instance.languageLevel = LuaLanguageLevel.LUA53
+        StdLibraryProvider.reload()
         LuaSettings.instance.isNilStrict = false
     }
 
@@ -155,7 +156,7 @@ class TypeSafetyTest : LuaInspectionsTestBase(
     }
 
     fun testSelf() {
-        check("self.lua")
+        check("self.lua", true)
     }
 
     fun testShape() {
@@ -187,7 +188,7 @@ class TypeSafetyTest : LuaInspectionsTestBase(
     }
 
     fun testUnions() {
-        // TODO: As above, there's a bug in IntelliJ's XML descr attribute parsing. Once fixed we should add descr.
+        // TODO: Add descr to <error> tags once https://youtrack.jetbrains.com/issue/IJSDK-799 is resolved
         check("unions.lua")
     }
 

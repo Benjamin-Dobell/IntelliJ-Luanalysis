@@ -46,11 +46,11 @@ local infiniteAlias1
 ---@type InfiniteAlias2
 local infiniteAlias2
 
-infiniteAlias1 = <error descr="Type mismatch. Required: 'number|string' Found: 'table'">{}</error>
+infiniteAlias1 = <error descr="Type mismatch. Required: 'number | string' Found: 'table'">{}</error>
 infiniteAlias1 = 1
 infiniteAlias1 = 'string'
 infiniteAlias1 = infiniteAlias2
-infiniteAlias2 = <error descr="Type mismatch. Required: 'number|string' Found: 'table'">{}</error>
+infiniteAlias2 = <error descr="Type mismatch. Required: 'number | string' Found: 'table'">{}</error>
 infiniteAlias2 = 1
 infiniteAlias2 = 'string'
 infiniteAlias2 = infiniteAlias1
@@ -107,8 +107,8 @@ value = {
         }
     }
 }
-value = <error descr="Type mismatch. Required: 'JSONValue[]|boolean|nil|number|string|table<string, JSONValue>' Found: 'fun(): void'">function() end</error>
-value = <error descr="Type mismatch. Required: 'JSONValue[]|boolean|nil|number|string|table<string, JSONValue>' Found: 'thread'">coroutine.create(function() end)</error>
-value = <error descr="Type mismatch. Required: 'JSONValue[]|boolean|nil|number|string|table<string, JSONValue>' Found: 'table'">{
+value = <error descr="Type mismatch. Required: 'JSONValue[] | boolean | nil | number | string | table<string, JSONValue>' Found: 'fun(): void'">function() end</error>
+value = <error descr="Type mismatch. Required: 'JSONValue[] | boolean | nil | number | string | table<string, JSONValue>' Found: 'thread'">coroutine.create(function() end)</error>
+value = <error descr="Type mismatch. Required: 'JSONValue[] | boolean | nil | number | string | table<string, JSONValue>' Found: 'table'">{
     [3] = "bad"
 }</error>

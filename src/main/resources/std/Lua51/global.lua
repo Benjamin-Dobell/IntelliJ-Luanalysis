@@ -113,8 +113,8 @@ function getfenv(f) end
 --- will iterate over the key–value pairs (1,`t[1]`), (2,`t[2]`), ..., up to
 --- the first absent index.
 ---@generic V
----@param t table<number, V>|V[]
----@return fun(tbl: table<number, V>):number, V
+---@param t V[]
+---@return (fun(tab: V[], k: nil | number): nil | (number, V)), V[], number
 function ipairs(t) end
 
 ---
@@ -210,10 +210,11 @@ function module(name, ...) end
 --- The behavior of `next` is undefined if, during the traversal, you assign
 --- any value to a non-existent field in the table. You may however modify
 --- existing fields. In particular, you may set existing fields to nil.
----@overload fun(table:table):any
----@param table table
----@param index any
----@return any
+---@overload fun<K, V>(table: table<K, V>): nil | (K, V)
+---@generic K, V
+---@param table table<K, V>
+---@param index K
+---@return nil | (K, V)
 function next(table, index) end
 
 ---
@@ -228,8 +229,8 @@ function next(table, index) end
 --- See function `next` for the caveats of modifying the table during its
 --- traversal.
 ---@generic K, V
----@param t table<K, V>|V[]
----@return fun(tbl: table<K, V>):K, V
+---@param t table<K, V>
+---@return (fun(tab: table<K, V>, k: nil | K): nil | (K, V)), table<K, V>, K
 function pairs(t) end
 
 ---
@@ -239,11 +240,11 @@ function pairs(t) end
 --- boolean), which is true if the call succeeds without errors. In such case,
 --- `pcall` also returns all results from the call, after this first result. In
 --- case of any error, `pcall` returns **false** plus the error message.
----@overload fun(f: (fun: void), ...: any): boolean, nil | string
+---@overload fun(f: (fun: void), ...: any): true | (false, string)
 ---@generic T
 ---@param f fun: T
 ---@vararg any
----@return boolean, T
+---@return (true, T) | (false, string)
 function pcall(f, ...) end
 
 ---

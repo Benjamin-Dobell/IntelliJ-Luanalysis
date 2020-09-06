@@ -36,17 +36,33 @@ class TyMultipleResults : Ty {
 
     override fun substitute(substitutor: ITySubstitutor): ITy {
         var resultsSubstituted = false
-        val substitutedResults = list.map {
-            val substitutedResult = it.substitute(substitutor)
+        var resultVariadic = variadic
+
+        val substitutedResults = list.withIndex().flatMap {
+            val substitutedResult = it.value.substitute(substitutor)
 
             if (substitutedResult !== it) {
                 resultsSubstituted = true
             }
 
-            substitutedResult
+            if (substitutedResult is TyMultipleResults) {
+                if (variadic) {
+                    var aggregateTy: ITy = Ty.VOID
+                    substitutedResult.list.map {
+                        aggregateTy = aggregateTy.union(it)
+                        aggregateTy
+                    }
+                } else {
+                    if (substitutedResult.variadic && it.index == list.lastIndex) {
+                        resultVariadic = true
+                    }
+
+                    substitutedResult.list
+                }
+            } else listOf(substitutedResult)
         }
         return if (resultsSubstituted) {
-            TyMultipleResults(substitutedResults, variadic)
+            TyMultipleResults(substitutedResults, resultVariadic)
         } else {
             this
         }
@@ -201,6 +217,8 @@ class TyMultipleResults : Ty {
             var variadicTy: ITy? = null
 
             TyUnion.each(ty) {
+                val resultCount: Number
+
                 if (it is TyMultipleResults) {
                     val multipleResults = it
 
@@ -220,13 +238,22 @@ class TyMultipleResults : Ty {
                         }
 
                         variadicTy = TyUnion.union(variadicTy, multipleResultsVariadicTy)
+                        resultCount = tyList.size
+                    } else {
+                        resultCount = multipleResults.list.size
                     }
                 } else {
+                    resultCount = 1
+
                     if (tyList.isEmpty()) {
                         tyList.add(it)
                     } else {
                         tyList[0] = tyList[0].union(it)
                     }
+                }
+
+                for (i in resultCount until tyList.size) {
+                    tyList[i] = TyUnion.union(tyList[i], Ty.NIL)
                 }
             }
 

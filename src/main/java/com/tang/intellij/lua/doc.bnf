@@ -123,8 +123,7 @@ arr_ty ::= ty '[]' {
 general_ty ::= class_name_ref {
     methods = [getType]
 }
-par_ty ::= '(' ty ')' {
-    pin = 1
+par_ty ::= ('(' ty ')') { // NOTE: Brackets are necessary to prevent GrammarKit (automatically) pinning to the left parenthesis.
     methods = [getType]
 }
 snippet_ty ::= '`' SNIPPET '`' {
@@ -206,13 +205,17 @@ private function_generic ::= '<' generic_def (',' generic_def)* '>' {
 function_params ::= '(' function_param_list? ')' {
     pin = 1
 }
-function_return_list ::= ':' type_list ELLIPSIS ? {
-    pin = 1
+type_list ::= ty(',' ty)*
+return_list ::= (type_list ELLIPSIS?) | ('(' type_list ELLIPSIS? ')') {
     methods = [
+        getType
         varreturn = 'ELLIPSIS'
     ]
+    implements = ['com.tang.intellij.lua.comment.psi.LuaDocType']
 }
-function_ty ::= fun function_generic? function_params? function_return_list? {
+function_return_type ::= return_list ('|' return_list)* {
+}
+function_ty ::= fun function_generic? function_params? (':' function_return_type)? {
     methods = [
         getType
         getParams
@@ -222,7 +225,7 @@ function_ty ::= fun function_generic? function_params? function_return_list? {
     pin = 1
 }
 
-union_ty ::= ty ('|' ty)+ {
+union_ty ::= ty (('|' ty))+ {
     methods = [getType]
 }
 access_modifier ::= PRIVATE | PUBLIC | PROTECTED | TAG_NAME_PRIVATE | TAG_NAME_PUBLIC | TAG_NAME_PROTECTED
@@ -282,8 +285,7 @@ tag_vararg ::= TAG_NAME_VARARG ty comment_string? {
 }
 
 //--- return
-type_list ::= ty(',' ty)*
-tag_return ::= TAG_NAME_RETURN type_list ELLIPSIS? comment_string? {
+tag_return ::= TAG_NAME_RETURN function_return_type comment_string? {
     pin = 1
     methods = [
         resolveTypeAt

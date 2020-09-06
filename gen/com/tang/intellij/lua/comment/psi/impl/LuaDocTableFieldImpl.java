@@ -95,7 +95,8 @@ public class LuaDocTableFieldImpl extends StubBasedPsiElementBase<LuaDocTableFie
   }
 
   @Override
-  public @Nullable ITy guessType(@NotNull SearchContext context) {
+  @NotNull
+  public ITy guessType(@NotNull SearchContext context) {
     return LuaDocPsiImplUtilKt.guessType(this, context);
   }
 

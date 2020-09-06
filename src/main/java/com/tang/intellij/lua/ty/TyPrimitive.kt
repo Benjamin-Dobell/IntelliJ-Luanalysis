@@ -96,6 +96,10 @@ class TyPrimitiveClass(override val primitiveKind: TyPrimitiveKind,
 
     override fun doLazyInit(searchContext: SearchContext) { }
 
+    override fun accept(visitor: ITyVisitor) {
+        visitor.visitTy(this)
+    }
+
     override fun equals(other: Any?): Boolean {
         return other is TyPrimitiveClass && other.primitiveKind == primitiveKind
     }
@@ -105,8 +109,8 @@ class TyPrimitiveClass(override val primitiveKind: TyPrimitiveKind,
     }
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
-        return super.contravariantOf(other, context, flags)
-                || (other is ITyPrimitive && other.primitiveKind == primitiveKind)
+        return (other is ITyPrimitive && other.primitiveKind == primitiveKind) ||
+                super.contravariantOf(other, context, flags)
     }
 }
 

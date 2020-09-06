@@ -10,15 +10,16 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.comment.psi.LuaDocTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.tang.intellij.lua.comment.psi.*;
+import com.tang.intellij.lua.ty.ITy;
 
-public class LuaDocFunctionReturnListImpl extends ASTWrapperPsiElement implements LuaDocFunctionReturnList {
+public class LuaDocReturnListImpl extends ASTWrapperPsiElement implements LuaDocReturnList {
 
-  public LuaDocFunctionReturnListImpl(@NotNull ASTNode node) {
+  public LuaDocReturnListImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull LuaDocVisitor visitor) {
-    visitor.visitFunctionReturnList(this);
+    visitor.visitReturnList(this);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
@@ -27,9 +28,15 @@ public class LuaDocFunctionReturnListImpl extends ASTWrapperPsiElement implement
   }
 
   @Override
-  @Nullable
+  @NotNull
   public LuaDocTypeList getTypeList() {
-    return PsiTreeUtil.getChildOfType(this, LuaDocTypeList.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, LuaDocTypeList.class));
+  }
+
+  @Override
+  @NotNull
+  public ITy getType() {
+    return LuaDocPsiImplUtilKt.getType(this);
   }
 
   @Override

@@ -27,39 +27,37 @@ end
 ---@return self
 function SelfA.dotMethod()
     ---@type self
-    local selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'SelfA|[global self]'">self</error>
+    local selfTypedVar = <warning descr="Undeclared variable 'self'.">self</warning>
 
     ---@type SelfA
     local someSelfA
 
-    someSelfA = <error descr="Type mismatch. Required: 'SelfA' Found: 'SelfA|[global self]'">self</error>
-    self = someSelfA
+    someSelfA = selfTypedVar
     selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'SelfA'">someSelfA</error>
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'SelfA|[global self]'">self</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: '[local self]'">selfTypedVar</error>
 
-    aNumber = <error descr="No such member 'a' found on type '[global self]'"><error descr="Type mismatch. Required: 'number' Found: 'string'">self.a</error></error>
-    aString = <error descr="No such member 'a' found on type '[global self]'">self.a</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">selfTypedVar.a</error>
+    aString = selfTypedVar.a
 
-    return <error descr="Type mismatch. Required: '[local self]' Found: 'SelfA|[global self]'">self</error>
+    return selfTypedVar
 end
 
 ---@return self
 SelfA.lambdaMethod = function()
     ---@type self
-    local selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'SelfA|[global self]'">self</error>
+    local selfTypedVar = <warning descr="Undeclared variable 'self'.">self</warning>
 
     ---@type SelfA
     local someSelfA
 
-    someSelfA = <error descr="Type mismatch. Required: 'SelfA' Found: 'SelfA|[global self]'">self</error>
-    self = someSelfA
+    someSelfA = selfTypedVar
     selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'SelfA'">someSelfA</error>
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'SelfA|[global self]'">self</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: '[local self]'">selfTypedVar</error>
 
-    aNumber = <error descr="No such member 'a' found on type '[global self]'"><error descr="Type mismatch. Required: 'number' Found: 'string'">self.a</error></error>
-    aString = <error descr="No such member 'a' found on type '[global self]'">self.a</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">selfTypedVar.a</error>
+    aString = selfTypedVar.a
 
-    return <error descr="Type mismatch. Required: '[local self]' Found: 'SelfA|[global self]'">self</error>
+    return selfTypedVar
 end
 
 ---@type SelfA

@@ -94,6 +94,10 @@ abstract class TyClass(override val className: String,
 
         val resolvedOther = Ty.resolve(other, context)
 
+        if (this === resolvedOther) {
+            return true
+        }
+
         if (resolvedOther is ITyClass) {
             lazyInit(context)
             resolvedOther.lazyInit(context)

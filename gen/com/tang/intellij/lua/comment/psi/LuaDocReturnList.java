@@ -6,12 +6,15 @@ import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 import com.tang.intellij.lua.ty.ITy;
 
-public interface LuaDocParTy extends LuaDocTy {
+public interface LuaDocReturnList extends LuaDocType {
 
   @NotNull
-  LuaDocTy getTy();
+  LuaDocTypeList getTypeList();
 
   @NotNull
   ITy getType();
+
+  @Nullable
+  PsiElement getVarreturn();
 
 }

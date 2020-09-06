@@ -5,12 +5,9 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface LuaDocFunctionReturnList extends LuaDocPsiElement {
+public interface LuaDocFunctionReturnType extends LuaDocPsiElement {
 
-  @Nullable
-  LuaDocTypeList getTypeList();
-
-  @Nullable
-  PsiElement getVarreturn();
+  @NotNull
+  List<LuaDocReturnList> getReturnListList();
 
 }

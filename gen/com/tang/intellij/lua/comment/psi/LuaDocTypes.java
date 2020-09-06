@@ -17,7 +17,7 @@ public interface LuaDocTypes {
   IElementType COMMENT_STRING = LuaParserDefinitionKt.createDocType("COMMENT_STRING");
   IElementType FUNCTION_PARAM = LuaParserDefinitionKt.createDocType("FUNCTION_PARAM");
   IElementType FUNCTION_PARAMS = LuaParserDefinitionKt.createDocType("FUNCTION_PARAMS");
-  IElementType FUNCTION_RETURN_LIST = LuaParserDefinitionKt.createDocType("FUNCTION_RETURN_LIST");
+  IElementType FUNCTION_RETURN_TYPE = LuaParserDefinitionKt.createDocType("FUNCTION_RETURN_TYPE");
   IElementType FUNCTION_TY = LuaParserDefinitionKt.createDocType("FUNCTION_TY");
   IElementType GENERAL_TY = LuaParserDefinitionKt.createDocType("GENERAL_TY");
   IElementType GENERIC_DEF = LuaParserDefinitionKt.createDocType("GENERIC_DEF");
@@ -25,6 +25,7 @@ public interface LuaDocTypes {
   IElementType NUMBER_LITERAL_TY = LuaParserDefinitionKt.createDocType("NUMBER_LITERAL_TY");
   IElementType PARAM_NAME_REF = LuaParserDefinitionKt.createDocType("PARAM_NAME_REF");
   IElementType PAR_TY = LuaParserDefinitionKt.createDocType("PAR_TY");
+  IElementType RETURN_LIST = LuaParserDefinitionKt.createDocType("RETURN_LIST");
   IElementType SNIPPET_TY = LuaParserDefinitionKt.createDocType("SNIPPET_TY");
   IElementType STRING_LITERAL_TY = LuaParserDefinitionKt.createDocType("STRING_LITERAL_TY");
   IElementType TABLE_DEF = LuaParserDefinitionKt.createDocType("TABLE_DEF");
@@ -134,8 +135,8 @@ public interface LuaDocTypes {
       else if (type == FUNCTION_PARAMS) {
         return new LuaDocFunctionParamsImpl(node);
       }
-      else if (type == FUNCTION_RETURN_LIST) {
-        return new LuaDocFunctionReturnListImpl(node);
+      else if (type == FUNCTION_RETURN_TYPE) {
+        return new LuaDocFunctionReturnTypeImpl(node);
       }
       else if (type == FUNCTION_TY) {
         return new LuaDocFunctionTyImpl(node);
@@ -157,6 +158,9 @@ public interface LuaDocTypes {
       }
       else if (type == PAR_TY) {
         return new LuaDocParTyImpl(node);
+      }
+      else if (type == RETURN_LIST) {
+        return new LuaDocReturnListImpl(node);
       }
       else if (type == SNIPPET_TY) {
         return new LuaDocSnippetTyImpl(node);

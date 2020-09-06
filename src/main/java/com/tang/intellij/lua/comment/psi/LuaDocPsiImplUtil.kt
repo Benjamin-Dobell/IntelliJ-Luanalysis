@@ -141,31 +141,25 @@ fun getType(vararg: LuaDocVarargParam): ITy {
     return vararg.ty?.getType() ?: Ty.UNKNOWN
 }
 
-/**
- * 获取返回类型
- * @param tagReturn 返回定义
- *
- * @return 类型集合
- */
-fun resolveTypeAt(tagReturn: LuaDocTagReturn, index: Int): ITy {
-    val typeList = tagReturn.typeList
-    if (typeList != null) {
-        val list = typeList.tyList
-        if (list.size > index) {
-            return list[index].getType()
-        }
+fun getType(returnList: LuaDocReturnList): ITy {
+    val list = returnList.typeList.tyList.map { it.getType() }
+    val variadic = returnList.varreturn != null
+
+    return if (list.size == 1 && !variadic) {
+        list.first()
+    } else {
+        TyMultipleResults(list, variadic)
     }
-    return Ty.UNKNOWN
+}
+
+private fun getReturnType(functionReturnType: LuaDocFunctionReturnType): ITy? {
+    return functionReturnType.returnListList.fold(null as ITy?, { returnTy, returnList ->
+        TyUnion.union(returnTy, getType(returnList))
+    })
 }
 
 fun getType(tagReturn: LuaDocTagReturn): ITy {
-    val tyList = tagReturn.typeList?.tyList
-    val variadic = tagReturn.varreturn != null
-    if (tyList != null && tyList.isNotEmpty()) {
-        val tupleList = tyList.map { it.getType() }
-        return if (tupleList.size == 1 && !variadic) tupleList.first() else TyMultipleResults(tupleList, variadic)
-    }
-    return Ty.VOID
+    return tagReturn.functionReturnType?.let { getReturnType(it) } ?: Ty.VOID
 }
 
 /**
@@ -344,17 +338,7 @@ fun getVarargParam(luaDocFunctionTy: LuaDocFunctionTy): ITy? {
 }
 
 fun getReturnType(luaDocFunctionTy: LuaDocFunctionTy): ITy? {
-    return luaDocFunctionTy.functionReturnList?.let {
-        val list = it.typeList?.tyList?.map { it.getType() }
-        val variadic = it.varreturn != null
-
-        return when {
-            list == null -> null
-            list.isEmpty() -> null
-            list.size == 1 && !variadic -> list.first()
-            else -> TyMultipleResults(list, variadic)
-        }
-    }
+    return luaDocFunctionTy.functionReturnType?.let { getReturnType(it) }
 }
 
 fun getType(luaDocGenericTy: LuaDocGenericTy): ITy {

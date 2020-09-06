@@ -74,7 +74,7 @@ local oneOrTwo
 local oneOrFour
 
 aNumber = vector[oneOrTwo]
-aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean|number'">vector[oneOrFour]</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean | number'">vector[oneOrFour]</error>
 
 
 ---@alias AOrB 'a' | 'b'

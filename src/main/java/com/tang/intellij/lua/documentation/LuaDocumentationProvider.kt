@@ -79,7 +79,7 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
             is LuaNameDef -> { //local xx
 
                 renderDefinition(sb) {
-                    sb.append("local <b>${element.name}</b>:")
+                    sb.append("local <b>${element.name}</b>: ")
                     val ty = element.guessType(SearchContext.get(element.project)) ?: Ty.UNKNOWN
                     renderTy(sb, ty, tyRenderer)
                 }
@@ -118,7 +118,7 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
                             renderSignature(sb, ty.mainSignature, tyRenderer)
                         }
                         else -> {
-                            append(".${classMember.name}:")
+                            append(".${classMember.name}: ")
                             renderTy(sb, ty, tyRenderer)
                         }
                     }
@@ -132,7 +132,7 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
                         when (ty) {
                             is TyFunction -> renderSignature(sb, ty.mainSignature, tyRenderer)
                             else -> {
-                                append(":")
+                                append(": ")
                                 renderTy(sb, ty, tyRenderer)
                             }
                         }

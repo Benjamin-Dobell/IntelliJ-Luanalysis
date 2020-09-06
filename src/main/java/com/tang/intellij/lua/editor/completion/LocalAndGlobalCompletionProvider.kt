@@ -52,7 +52,13 @@ class LocalAndGlobalCompletionProvider(private val mask: Int) : ClassMemberCompl
         }
         when (psi) {
             is LuaFuncBodyOwner -> {
-                addTy(psi.guessType(ctx) as ITyFunction)
+                psi.guessType(ctx)?.let {
+                    TyUnion.each(it) {
+                        if (it is ITyFunction) {
+                            addTy(it)
+                        }
+                    }
+                }
             }
             is LuaTypeGuessable -> {
                 val type = psi.guessType(ctx)

@@ -70,10 +70,12 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                 u.acceptChildren(object : TyVisitor() {
                     override fun visitTy(ty: ITy) {
                         val s = render(ty)
-                        if (s.isNotEmpty()) list.add(s)
+                        if (s.isNotEmpty()) {
+                            list.add(if (ty is TyFunction || ty is TyMultipleResults) "(${s})" else s)
+                        }
                     }
                 })
-                sb.append(if (list.isEmpty()) Constants.WORD_ANY else list.joinToString("|"))
+                sb.append(if (list.isEmpty()) Constants.WORD_ANY else list.joinToString(" | "))
             }
 
             override fun visitFun(f: ITyFunction) {
@@ -98,13 +100,11 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
             }
 
             override fun visitMultipleResults(multipleResults: TyMultipleResults) {
-                sb.append("(")
                 val list = multipleResults.list.map { render(it) }
                 sb.append(list.joinToString(", "))
                 if (multipleResults.variadic) {
                     sb.append("...")
                 }
-                sb.append(")")
             }
         })
     }
@@ -141,7 +141,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
 
         signature.returnTy?.let {
             sb.append(": ")
-            if (it is TyParameter && it.superClass != null) {
+            if (it is TyUnion || (it is TyParameter && it.superClass != null)) {
                 sb.append("(")
                 render(it, sb)
                 sb.append(")")

@@ -109,7 +109,7 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
                 if (idx > 0) append(", ")
                 if (idx == index) start = length
                 append(pi.name)
-                append(":")
+                append(": ")
                 append(pi.ty.displayName)
                 if (idx == index) end = length
                 true

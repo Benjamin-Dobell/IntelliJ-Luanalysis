@@ -42,7 +42,7 @@ public class LuaDocVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
-  public void visitFunctionReturnList(@NotNull LuaDocFunctionReturnList o) {
+  public void visitFunctionReturnType(@NotNull LuaDocFunctionReturnType o) {
     visitPsiElement(o);
   }
 
@@ -73,6 +73,10 @@ public class LuaDocVisitor extends PsiElementVisitor {
 
   public void visitParamNameRef(@NotNull LuaDocParamNameRef o) {
     visitPsiElement(o);
+  }
+
+  public void visitReturnList(@NotNull LuaDocReturnList o) {
+    visitType(o);
   }
 
   public void visitSnippetTy(@NotNull LuaDocSnippetTy o) {

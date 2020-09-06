@@ -12,15 +12,13 @@ public interface LuaDocTagReturn extends LuaDocTag {
   LuaDocCommentString getCommentString();
 
   @Nullable
-  LuaDocTypeList getTypeList();
+  LuaDocFunctionReturnType getFunctionReturnType();
 
-  @NotNull
-  ITy resolveTypeAt(int index);
+  //WARNING: resolveTypeAt(...) is skipped
+  //matching resolveTypeAt(LuaDocTagReturn, ...)
+  //methods are not found in LuaDocPsiImplUtilKt
 
   @NotNull
   ITy getType();
-
-  @Nullable
-  PsiElement getVarreturn();
 
 }

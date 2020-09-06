@@ -13,7 +13,7 @@ public interface LuaDocFunctionTy extends LuaDocTy {
   LuaDocFunctionParams getFunctionParams();
 
   @Nullable
-  LuaDocFunctionReturnList getFunctionReturnList();
+  LuaDocFunctionReturnType getFunctionReturnType();
 
   @NotNull
   List<LuaDocGenericDef> getGenericDefList();

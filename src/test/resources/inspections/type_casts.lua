@@ -8,7 +8,7 @@ end
 function wantsNumber(n)
 end
 
-wantsNumber(<error descr="Type mismatch. Required: 'number' Found: 'number|string'">stringOrNumber(false)</error>)
+wantsNumber(<error descr="Type mismatch. Required: 'number' Found: 'number | string'">stringOrNumber(false)</error>)
 wantsNumber(--[[---@type number]] stringOrNumber(false))
 wantsNumber(--[[---@not string]] stringOrNumber(false))
 wantsNumber(<error descr="Type mismatch. Required: 'number' Found: 'string'">--[[---@not number]] stringOrNumber(false)</error>)
@@ -46,7 +46,7 @@ aString, <error descr="Type mismatch. Required: 'number' Found: 'string'">aNumbe
 ---@type number|nil
 local numberOrNil
 
-wantsNumber(<error descr="Type mismatch. Required: 'number' Found: 'nil|number'">numberOrNil</error>)
+wantsNumber(<error descr="Type mismatch. Required: 'number' Found: 'nil | number'">numberOrNil</error>)
 wantsNumber(--[[---@not nil]] numberOrNil)
 
 ---@param returnNumbers boolean
@@ -56,10 +56,10 @@ return stringOrNumber(returnNumbers), stringOrNumber(returnNumbers)
 end
 
 
-<error descr="Type mismatch. Required: 'number' Found: 'number|string'">aNumber</error>, <error descr="Type mismatch. Required: 'number' Found: 'number|string'">aNumber</error> = <error descr="Result 1, type mismatch. Required: 'number' Found: 'number|string'"><error descr="Result 2, type mismatch. Required: 'number' Found: 'number|string'">multiReturn2(true)</error></error>
+<error descr="Type mismatch. Required: 'number' Found: 'number | string'">aNumber</error>, <error descr="Type mismatch. Required: 'number' Found: 'number | string'">aNumber</error> = <error descr="Result 1, type mismatch. Required: 'number' Found: 'number | string'"><error descr="Result 2, type mismatch. Required: 'number' Found: 'number | string'">multiReturn2(true)</error></error>
 aNumber, aNumber = --[[---@not string, string]] multiReturn2(true)
 aNumber, aString = --[[---@not string, number]] multiReturn2(true)
-aNumber = <error descr="Type mismatch. Required: 'number' Found: 'number|string'">multiReturn2(true)</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'number | string'">multiReturn2(true)</error>
 aNumber = --[[---@not string]] multiReturn2(true)
 
 
@@ -98,18 +98,18 @@ nilOrNumber = g
 nilOrNumber = h
 nilOrNumber = i
 
-aNumber = <error descr="Type mismatch. Required: 'number' Found: 'nil|number'">g</error>
-aNumber = <error descr="Type mismatch. Required: 'number' Found: 'nil|number'">h</error>
-aNumber = <error descr="Type mismatch. Required: 'number' Found: 'nil|number'">i</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'nil | number'">g</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'nil | number'">h</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'nil | number'">i</error>
 
 ---@type nil | string
 local nilOrString
 
 local j, k, l = --[[---@type string...]] table.unpack(stringOrNumberArray, 1, 3)
 
-nilOrNumber = <error descr="Type mismatch. Required: 'nil|number' Found: 'nil|string'">j</error>
-nilOrNumber = <error descr="Type mismatch. Required: 'nil|number' Found: 'nil|string'">k</error>
-nilOrNumber = <error descr="Type mismatch. Required: 'nil|number' Found: 'nil|string'">l</error>
+nilOrNumber = <error descr="Type mismatch. Required: 'nil | number' Found: 'nil | string'">j</error>
+nilOrNumber = <error descr="Type mismatch. Required: 'nil | number' Found: 'nil | string'">k</error>
+nilOrNumber = <error descr="Type mismatch. Required: 'nil | number' Found: 'nil | string'">l</error>
 
 nilOrString = j
 nilOrString = k

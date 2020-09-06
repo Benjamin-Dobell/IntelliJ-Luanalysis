@@ -41,7 +41,7 @@ public interface LuaDocTableField extends LuaDocPsiElement, LuaClassField, PsiNa
   @Nullable
   LuaDocTy getValueType();
 
-  @Nullable
+  @NotNull
   ITy guessType(@NotNull SearchContext context);
 
   boolean isDeprecated();

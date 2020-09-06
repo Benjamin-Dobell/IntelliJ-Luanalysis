@@ -28,6 +28,7 @@ import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass
 import com.tang.intellij.lua.comment.psi.LuaDocTagGenericList
 import com.tang.intellij.lua.comment.psi.api.LuaComment
+import com.tang.intellij.lua.comment.psi.impl.LuaDocTagTypeImpl
 import com.tang.intellij.lua.lang.type.LuaString
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.LuaFuncBodyOwnerStub
@@ -60,6 +61,10 @@ import com.tang.intellij.lua.ty.*
  * local tbl = {
  *     foo = ?? -- foo should be type of `Bar`
  * }
+ *
+ * 4.
+ * ---@type fun(a: number, b: string): void
+ * return function(a, b) end
  */
 private fun LuaExpr.shouldBeInternal(context: SearchContext): ITy? {
     val p1 = parent
@@ -73,6 +78,14 @@ private fun LuaExpr.shouldBeInternal(context: SearchContext): ITy? {
             val receiver = p2.nameList?.nameDefList?.getOrNull(0)
             if (receiver != null)
                 return infer(receiver, context)
+        } else if (p2 is LuaReturnStat) {
+            val returnType = PsiTreeUtil.getChildrenOfTypeAsList(p2.comment, LuaDocTagTypeImpl::class.java).firstOrNull()
+
+            if (returnType != null) {
+                return if (context.supportsMultipleResults) {
+                    returnType.getType()
+                } else returnType.getType(context.index)
+            }
         }
     } else if (p1 is LuaArgs) {
         val p2 = p1.parent

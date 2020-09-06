@@ -129,13 +129,13 @@ end
 -- T = 1|2
 anything = fn6(number1, number2)
 anyNumber = fn6(number1, number2)
-anyString = <error descr="Type mismatch. Required: 'string' Found: '1|2'">fn6(number1, number2)</error>
-number1 = <error descr="Type mismatch. Required: '1' Found: '1|2'">fn6(number1, number2)</error>
-number2 = <error descr="Type mismatch. Required: '2' Found: '1|2'">fn6(number1, number2)</error>
+anyString = <error descr="Type mismatch. Required: 'string' Found: '1 | 2'">fn6(number1, number2)</error>
+number1 = <error descr="Type mismatch. Required: '1' Found: '1 | 2'">fn6(number1, number2)</error>
+number2 = <error descr="Type mismatch. Required: '2' Found: '1 | 2'">fn6(number1, number2)</error>
 
 -- T = 1|"string1"
-anyNumber = <error descr="Type mismatch. Required: 'number' Found: '\"string1\"|1'">fn6(number1, string1)</error>
-anyString = <error descr="Type mismatch. Required: 'string' Found: '\"string1\"|1'">fn6(number1, string1)</error>
+anyNumber = <error descr="Type mismatch. Required: 'number' Found: '\"string1\" | 1'">fn6(number1, string1)</error>
+anyString = <error descr="Type mismatch. Required: 'string' Found: '\"string1\" | 1'">fn6(number1, string1)</error>
 number1OrString1 = fn6(number1, string1)
 
 -- T = number
@@ -198,8 +198,8 @@ local stringOrNumber
 -- T = commonAncestor(arg1, arg2) = number|string
 anything = fn7(number1, string1, stringOrNumberStringOrNumberTable)
 stringOrNumber = fn7(number1, string1, stringOrNumberStringOrNumberTable)
-anyNumber = <error descr="Type mismatch. Required: 'number' Found: 'number|string'">fn7(number1, number2, stringOrNumberStringOrNumberTable)</error>
-anyString = <error descr="Type mismatch. Required: 'string' Found: 'number|string'">fn7(number1, number2, stringOrNumberStringOrNumberTable)</error>
+anyNumber = <error descr="Type mismatch. Required: 'number' Found: 'number | string'">fn7(number1, number2, stringOrNumberStringOrNumberTable)</error>
+anyString = <error descr="Type mismatch. Required: 'string' Found: 'number | string'">fn7(number1, number2, stringOrNumberStringOrNumberTable)</error>
 
 
 ---@generic K, V
@@ -215,10 +215,10 @@ end
 local stringNumberTable
 
 -- K = string, V = number
-stringOrNumber = <error descr="Type mismatch. Required: 'number|string' Found: 'table<string, number>'">fn8(anyString, number1, stringNumberTable)</error>
+stringOrNumber = <error descr="Type mismatch. Required: 'number | string' Found: 'table<string, number>'">fn8(anyString, number1, stringNumberTable)</error>
 stringNumberTable = fn8(anyString, number1, stringNumberTable)
 stringNumberTable = fn8(string1, number1, stringNumberTable)
-stringNumberTable = fn8(anyString, number1, <error descr="Type mismatch. Required: 'table<number|string, number>' Found: 'number[]'">numberArray</error>)
+stringNumberTable = fn8(anyString, number1, <error descr="Type mismatch. Required: 'table<number | string, number>' Found: 'number[]'">numberArray</error>)
 stringNumberTable = <error descr="Type mismatch. Required: 'table<string, number>' Found: 'table<number, number>'">fn8(anyNumber, number1, numberArray)</error>
 
 
@@ -261,8 +261,8 @@ local fn11
 -- K = 1|2,
 fn11({a = 1, b = 2}, function(key, value)
     anyString = key
-    anyNumber = <error descr="Type mismatch. Required: 'number' Found: '\"a\"|\"b\"'">key</error>
-    anyString = <error descr="Type mismatch. Required: 'string' Found: '1|2'">value</error>
+    anyNumber = <error descr="Type mismatch. Required: 'number' Found: '\"a\" | \"b\"'">key</error>
+    anyString = <error descr="Type mismatch. Required: 'string' Found: '1 | 2'">value</error>
     anyNumber = value
 end)
 
@@ -275,9 +275,9 @@ end)
 
 fn11({a = "a", b = "b"}, function(key, value)
     anyString = key
-    anyNumber = <error descr="Type mismatch. Required: 'number' Found: '\"a\"|\"b\"'">key</error>
+    anyNumber = <error descr="Type mismatch. Required: 'number' Found: '\"a\" | \"b\"'">key</error>
     anyString = value
-    anyNumber = <error descr="Type mismatch. Required: 'number' Found: '\"a\"|\"b\"'">value</error>
+    anyNumber = <error descr="Type mismatch. Required: 'number' Found: '\"a\" | \"b\"'">value</error>
 end)
 
 fn11(stringStringTable, function(key, value)
@@ -288,17 +288,17 @@ fn11(stringStringTable, function(key, value)
 end)
 
 fn11({[1] = "a", [2] = "b"}, function(key, value)
-    anyString = <error descr="Type mismatch. Required: 'string' Found: '1|2'">key</error>
+    anyString = <error descr="Type mismatch. Required: 'string' Found: '1 | 2'">key</error>
     anyNumber = key
     anyString = value
-    anyNumber = <error descr="Type mismatch. Required: 'number' Found: '\"a\"|\"b\"'">value</error>
+    anyNumber = <error descr="Type mismatch. Required: 'number' Found: '\"a\" | \"b\"'">value</error>
 end)
 
 fn11({"a", "b"}, function(key, value)
     anyString = <error descr="Type mismatch. Required: 'string' Found: 'number'">key</error>
     anyNumber = key
     anyString = value
-    anyNumber = <error descr="Type mismatch. Required: 'number' Found: '\"a\"|\"b\"'">value</error>
+    anyNumber = <error descr="Type mismatch. Required: 'number' Found: '\"a\" | \"b\"'">value</error>
 end)
 
 fn11(numberArray, function(key, value)
@@ -332,13 +332,13 @@ local mergedLiteralMap = merge({a = 1, b = 2}, {c = 3, d = 4})
 
 mergedLiteralArr[1] = one
 mergedLiteralArr[1] = three
-mergedLiteralArr[1] = <error descr="Type mismatch. Required: '1|2|3|4' Found: '5'">5</error>
+mergedLiteralArr[1] = <error descr="Type mismatch. Required: '1 | 2 | 3 | 4' Found: '5'">5</error>
 
 mergedLiteralMap.a = one
 mergedLiteralMap.a = three
-mergedLiteralMap.a = <error descr="Type mismatch. Required: '1|2|3|4' Found: '5'">5</error>
+mergedLiteralMap.a = <error descr="Type mismatch. Required: '1 | 2 | 3 | 4' Found: '5'">5</error>
 
-<error descr="No such member 'e' found on type 'table<\"a\"|\"b\"|\"c\"|\"d\", 1|2|3|4>'">mergedLiteralMap.e</error> = one
+<error descr="No such member 'e' found on type 'table<\"a\" | \"b\" | \"c\" | \"d\", 1 | 2 | 3 | 4>'">mergedLiteralMap.e</error> = one
 
 local mergedStringStringMap = merge(stringStringTable, stringStringTable)
 
@@ -356,13 +356,13 @@ local typeMergedLiteralMap = typeMerge({a = 1, b = 2}, {c = 3, d = 4})
 
 typeMergedLiteralArr[1] = one
 typeMergedLiteralArr[1] = three
-typeMergedLiteralArr[1] = <error descr="Type mismatch. Required: '1|2|3|4' Found: '5'">5</error>
+typeMergedLiteralArr[1] = <error descr="Type mismatch. Required: '1 | 2 | 3 | 4' Found: '5'">5</error>
 
 typeMergedLiteralMap.a = one
 typeMergedLiteralMap.a = three
-typeMergedLiteralMap.a = <error descr="Type mismatch. Required: '1|2|3|4' Found: '5'">5</error>
+typeMergedLiteralMap.a = <error descr="Type mismatch. Required: '1 | 2 | 3 | 4' Found: '5'">5</error>
 
-<error descr="No such member 'e' found on type 'table<\"a\"|\"b\"|\"c\"|\"d\", 1|2|3|4>'">typeMergedLiteralMap.e</error> = one
+<error descr="No such member 'e' found on type 'table<\"a\" | \"b\" | \"c\" | \"d\", 1 | 2 | 3 | 4>'">typeMergedLiteralMap.e</error> = one
 
 local typeMergedStringStringMap = typeMerge(stringStringTable, stringStringTable)
 
@@ -381,13 +381,13 @@ local overloadMergedLiteralMap = overloadMerge({a = 1, b = 2}, {c = 3, d = 4})
 
 overloadMergedLiteralArr[1] = one
 overloadMergedLiteralArr[1] = three
-overloadMergedLiteralArr[1] = <error descr="Type mismatch. Required: '1|2|3|4' Found: '5'">5</error>
+overloadMergedLiteralArr[1] = <error descr="Type mismatch. Required: '1 | 2 | 3 | 4' Found: '5'">5</error>
 
 overloadMergedLiteralMap.a = one
 overloadMergedLiteralMap.a = three
-overloadMergedLiteralMap.a = <error descr="Type mismatch. Required: '1|2|3|4' Found: '5'">5</error>
+overloadMergedLiteralMap.a = <error descr="Type mismatch. Required: '1 | 2 | 3 | 4' Found: '5'">5</error>
 
-<error descr="No such member 'e' found on type 'table<\"a\"|\"b\"|\"c\"|\"d\", 1|2|3|4>'">overloadMergedLiteralMap.e</error> = one
+<error descr="No such member 'e' found on type 'table<\"a\" | \"b\" | \"c\" | \"d\", 1 | 2 | 3 | 4>'">overloadMergedLiteralMap.e</error> = one
 
 local overloadMergedStringStringMap = overloadMerge(stringStringTable, stringStringTable)
 
@@ -461,17 +461,17 @@ function genericParameterMultipleResults(f, ...)
 end
 
 anyBoolean, anyString, anyNumber = genericParameterMultipleResults(returnsStringNumber)
-anyBoolean, anyString, <error descr="Type mismatch. Required: 'string' Found: 'number'">anyString</error> = <error descr="Result 2, type mismatch. Required: 'string' Found: 'number'">genericParameterMultipleResults(returnsStringNumber)</error>
-anyBoolean, anyBoolean, anyString, anyNumber = genericParameterMultipleResults(returnsStringNumber), genericParameterMultipleResults(returnsStringNumber)
+anyBoolean, anyString, <error descr="Type mismatch. Required: 'string' Found: 'number'">anyString</error> = <error descr="Result 3, type mismatch. Required: 'string' Found: 'number'">genericParameterMultipleResults(returnsStringNumber)</error>
+anyBoolean, anyBoolean, anyString, anyNumber = (returnsStringNumber), genericParameterMultipleResults(returnsStringNumber)
 
 anyBoolean, anyNumber = genericParameterMultipleResults(returnsNumberVariadicBoolean)
 anyBoolean, anyNumber, nilOrBoolean, nilOrBoolean = genericParameterMultipleResults(returnsNumberVariadicBoolean)
-anyBoolean, anyNumber, <error descr="Type mismatch. Required: 'nil|string' Found: 'boolean|nil'">nilOrString</error> = <error descr="Result 2, type mismatch. Required: 'nil|string' Found: 'boolean|nil'">genericParameterMultipleResults(returnsNumberVariadicBoolean)</error>
+anyBoolean, anyNumber, <error descr="Type mismatch. Required: 'nil | string' Found: 'boolean | nil'">nilOrString</error> = <error descr="Result 3, type mismatch. Required: 'nil | string' Found: 'boolean | nil'">genericParameterMultipleResults(returnsNumberVariadicBoolean)</error>
 anyBoolean, anyBoolean, anyNumber, nilOrBoolean, nilOrBoolean = genericParameterMultipleResults(returnsNumberVariadicBoolean), genericParameterMultipleResults(returnsNumberVariadicBoolean)
-anyBoolean, anyBoolean, anyNumber, nilOrBoolean, <error descr="Type mismatch. Required: 'nil|string' Found: 'boolean|nil'">nilOrString</error> = genericParameterMultipleResults(returnsNumberVariadicBoolean), <error descr="Result 4, type mismatch. Required: 'nil|string' Found: 'boolean|nil'">genericParameterMultipleResults(returnsNumberVariadicBoolean)</error>
+anyBoolean, anyBoolean, anyNumber, nilOrBoolean, <error descr="Type mismatch. Required: 'nil | string' Found: 'boolean | nil'">nilOrString</error> = genericParameterMultipleResults(returnsNumberVariadicBoolean), <error descr="Result 4, type mismatch. Required: 'nil | string' Found: 'boolean | nil'">genericParameterMultipleResults(returnsNumberVariadicBoolean)</error>
 
 anyBoolean, anyString, anyString, anyNumber = genericParameterMultipleResults(chainedMultipleResults)
-anyBoolean, anyString, anyString, <error descr="Type mismatch. Required: 'string' Found: 'number'">anyString</error> = <error descr="Result 3, type mismatch. Required: 'string' Found: 'number'">genericParameterMultipleResults(chainedMultipleResults)</error>
+anyBoolean, anyString, anyString, <error descr="Type mismatch. Required: 'string' Found: 'number'">anyString</error> = <error descr="Result 4, type mismatch. Required: 'string' Found: 'number'">genericParameterMultipleResults(chainedMultipleResults)</error>
 anyBoolean, anyBoolean, anyString, anyString, anyNumber = genericParameterMultipleResults(chainedMultipleResults), genericParameterMultipleResults(chainedMultipleResults)
 
 ---@generic T
@@ -482,4 +482,4 @@ function variadicGenericParameterMultipleResults(f, ...)
 end
 
 anyBoolean, nilOrString, nilOrNumberOrString, nilOrNumberOrString = variadicGenericParameterMultipleResults(returnsStringNumber)
-anyBoolean, nilOrString, <error descr="Type mismatch. Required: 'nil|number' Found: 'nil|number|string'">nilOrNumber</error> = <error descr="Result 2, type mismatch. Required: 'nil|number' Found: 'nil|number|string'">variadicGenericParameterMultipleResults(returnsStringNumber)</error>
+anyBoolean, nilOrString, <error descr="Type mismatch. Required: 'nil | number' Found: 'nil | number | string'">nilOrNumber</error> = <error descr="Result 3, type mismatch. Required: 'nil | number' Found: 'nil | number | string'">variadicGenericParameterMultipleResults(returnsStringNumber)</error>

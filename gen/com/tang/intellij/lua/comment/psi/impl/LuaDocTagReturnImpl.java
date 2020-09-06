@@ -35,26 +35,14 @@ public class LuaDocTagReturnImpl extends ASTWrapperPsiElement implements LuaDocT
 
   @Override
   @Nullable
-  public LuaDocTypeList getTypeList() {
-    return PsiTreeUtil.getChildOfType(this, LuaDocTypeList.class);
-  }
-
-  @Override
-  @NotNull
-  public ITy resolveTypeAt(int index) {
-    return LuaDocPsiImplUtilKt.resolveTypeAt(this, index);
+  public LuaDocFunctionReturnType getFunctionReturnType() {
+    return PsiTreeUtil.getChildOfType(this, LuaDocFunctionReturnType.class);
   }
 
   @Override
   @NotNull
   public ITy getType() {
     return LuaDocPsiImplUtilKt.getType(this);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getVarreturn() {
-    return findChildByType(ELLIPSIS);
   }
 
 }

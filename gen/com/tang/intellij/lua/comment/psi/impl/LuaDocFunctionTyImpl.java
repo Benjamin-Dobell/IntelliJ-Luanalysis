@@ -35,8 +35,8 @@ public class LuaDocFunctionTyImpl extends LuaDocTyImpl implements LuaDocFunction
 
   @Override
   @Nullable
-  public LuaDocFunctionReturnList getFunctionReturnList() {
-    return PsiTreeUtil.getChildOfType(this, LuaDocFunctionReturnList.class);
+  public LuaDocFunctionReturnType getFunctionReturnType() {
+    return PsiTreeUtil.getChildOfType(this, LuaDocFunctionReturnType.class);
   }
 
   @Override
