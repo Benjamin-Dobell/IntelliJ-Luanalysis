@@ -32,7 +32,7 @@ object LuaCommentUtil {
 
     fun findOwner(element: LuaDocPsiElement): LuaCommentOwner? {
         val comment = findContainer(element)
-        return if (comment.parent is LuaCommentOwner) comment.parent as LuaCommentOwner else null
+        return comment.parent as? LuaCommentOwner
     }
 
     fun findContainer(psi: LuaDocPsiElement): LuaComment {

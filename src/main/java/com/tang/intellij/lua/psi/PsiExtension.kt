@@ -390,7 +390,7 @@ val LuaComment.ty: ITy? get() {
 }
 
 val LuaDocTagClass.overloads: Array<IFunSignature>? get() {
-    return LuaCommentUtil.findOwner(this)?.comment?.overloads
+    return LuaCommentUtil.findContainer(this).overloads
 }
 
 val LuaDocTagClass.aliasName: String? get() {

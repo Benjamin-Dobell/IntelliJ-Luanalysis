@@ -35,3 +35,15 @@ local callable
 
 classWithFields = callable(1, 2)
 emptyClass = <error descr="Type mismatch. Required: 'EmptyClass' Found: 'ClassWithFields'">callable(1, 2)</error>
+
+---@class DeclarationlessCallable
+---@overload fun(): DeclarationlessCallable
+
+---@type DeclarationlessCallable
+local DeclarationlessCallable
+
+---@type DeclarationlessCallable
+local declarationlessCallable
+
+declarationlessCallable = DeclarationlessCallable()
+callable = <error descr="Type mismatch. Required: 'Callable' Found: 'DeclarationlessCallable'">DeclarationlessCallable()</error>
