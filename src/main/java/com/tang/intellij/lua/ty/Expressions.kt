@@ -541,11 +541,9 @@ private fun LuaTableExpr.infer(context: SearchContext): ITy? {
                         valueExpr.guessType(context)
                     }
 
-                    if (elementTy == null) {
-                        return null
+                    if (elementTy != null) {
+                        return TyArray(elementTy)
                     }
-
-                    return TyArray(elementTy)
                 }
             }
         }
