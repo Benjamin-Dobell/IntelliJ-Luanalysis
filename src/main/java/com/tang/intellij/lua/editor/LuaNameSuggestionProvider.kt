@@ -45,7 +45,7 @@ class LuaNameSuggestionProvider : NameSuggestionProvider {
             is ITyClass -> {
                 if (!type.isAnonymous && type !is TyDocTable)
                     collector(fixName(type.className), "", false)
-                Ty.processSuperClass(type, context) { superType ->
+                Ty.processSuperClasses(type, context) { superType ->
                     val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass
                     if (superClass != null && !superClass.isAnonymous) {
                         collector(fixName(superClass.className), "", false)

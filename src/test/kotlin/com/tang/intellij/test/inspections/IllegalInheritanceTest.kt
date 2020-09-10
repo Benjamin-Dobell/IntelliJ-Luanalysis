@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017. tangzx(love.tangzx@qq.com)
+ * Copyright (c) 2020
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-/*
 package com.tang.intellij.test.inspections
 
-import com.tang.intellij.lua.codeInsight.inspection.UndeclaredVariableInspection
+import com.tang.intellij.lua.codeInsight.inspection.doc.IllegalInheritanceInspection
 
-class UndeclaredVariableTest : LuaInspectionsTestBase(UndeclaredVariableInspection()) {
-
-    fun testUndeclaredVariable() = checkByText("""
-         print(<warning>MyUndeclaredVariable</warning>)
-    """)
-
-}*/
+class IllegalInheritanceTest : LuaInspectionsTestBase(IllegalInheritanceInspection()) {
+    fun testIllegalInheritance() {
+        checkByFile("illegal_inheritance.lua")
+    }
+}

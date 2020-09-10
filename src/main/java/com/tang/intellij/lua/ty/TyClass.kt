@@ -25,7 +25,6 @@ import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.psi.LuaDocTableDef
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass
-import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.search.LuaClassInheritorsSearch
 import com.tang.intellij.lua.psi.search.LuaShortNamesManager
@@ -163,7 +162,7 @@ abstract class TyClass(override val className: String,
 
         // super
         if (deep) {
-            return processSuperClass(this, context) {
+            return processSuperClasses(this, context) {
                 it.processMembers(context, processor, false)
             }
         }

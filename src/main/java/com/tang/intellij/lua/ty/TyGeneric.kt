@@ -20,7 +20,6 @@ import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.comment.psi.LuaDocGenericDef
-import com.tang.intellij.lua.comment.psi.LuaDocGenericTy
 import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.readTyNullable
@@ -302,7 +301,7 @@ class TyGeneric(override val params: Array<ITy>, override val base: ITy) : Ty(Ty
 
         // super
         if (deep) {
-            return Ty.processSuperClass(this, context) {
+            return Ty.processSuperClasses(this, context) {
                 it.processMembers(context, processor, false)
             }
         }

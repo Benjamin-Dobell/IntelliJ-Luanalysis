@@ -73,10 +73,10 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
                     if (!notFound)
                         return false
 
-                    return Ty.processSuperClass(type, context) { superType ->
+                    return Ty.processSuperClasses(type, context) { superType ->
                         val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass
                         if (superClass != null) {
-                            processClassKey(superClass, superClass.className, key, context, processor, deep)
+                            processClassKey(superClass, superClass.className, key, context, processor, false)
                         } else true
                     }
                 }

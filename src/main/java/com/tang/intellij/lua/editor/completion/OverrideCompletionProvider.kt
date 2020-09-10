@@ -48,7 +48,7 @@ class OverrideCompletionProvider : LuaCompletionProvider() {
                     m.name?.let { memberNameSet.add(it) }
                     true
                 }, false)
-                Ty.processSuperClass(classType, context) { sup ->
+                Ty.processSuperClasses(classType, context) { sup ->
                     val clazz = (if (sup is ITyGeneric) sup.base else sup) as? ITyClass
                     if (clazz != null) {
                         addOverrideMethod(completionParameters, completionResultSet, memberNameSet, clazz)

@@ -270,7 +270,7 @@ private fun resolveParamType(paramNameDef: LuaParamNameDef, context: SearchConte
         val methodName = paramOwner.name
         var set: ITy = Ty.UNKNOWN
         if (classType != null && methodName != null) {
-            Ty.processSuperClass(classType, context) { superType ->
+            Ty.processSuperClasses(classType, context) { superType ->
                 val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass
                 val superMethod = superClass?.findMember(methodName, context)
                 if (superMethod is LuaClassMethod) {
@@ -279,7 +279,7 @@ private fun resolveParamType(paramNameDef: LuaParamNameDef, context: SearchConte
                         if (paramName == param.name) {
                             set = param.ty
                             if (set != Ty.UNKNOWN)
-                                return@processSuperClass false
+                                return@processSuperClasses false
                         }
                     }
                 }

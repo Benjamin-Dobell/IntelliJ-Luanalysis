@@ -322,6 +322,12 @@
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.doc.UnresolvedClassInspection"/>
 
         <localInspection
+                displayName="Illegal inheritance in emmy doc"
+                enabledByDefault="true"
+                groupName="Lua > Emmy doc"
+                implementationClass="com.tang.intellij.lua.codeInsight.inspection.doc.IllegalInheritanceInspection"/>
+
+        <localInspection
                 displayName="Generic constraint type mismatch in emmy doc"
                 enabledByDefault="true"
                 groupName="Lua > Emmy doc"

@@ -1,7 +1,7 @@
 <component name="CopyrightManager">
-  <settings default="EmmyLua">
+  <settings default="Luanalysis">
     <module2copyright>
-      <element module="All" copyright="EmmyLua" />
+      <element module="All" copyright="Luanalysis" />
     </module2copyright>
   </settings>
 </component>
