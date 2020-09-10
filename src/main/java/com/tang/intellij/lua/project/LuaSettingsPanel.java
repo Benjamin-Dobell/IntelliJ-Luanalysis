@@ -48,6 +48,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
     private JCheckBox showWordsInFile;
     private JCheckBox nilStrict;
     private JCheckBox unknownIndexable;
+    private JCheckBox unknownCallable;
     private LuaAdditionalSourcesRootPanel additionalRoots;
     private JCheckBox captureOutputDebugString;
     private JCheckBox captureStd;
@@ -63,6 +64,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
         showWordsInFile.setSelected(settings.isShowWordsInFile());
         nilStrict.setSelected(settings.isNilStrict());
         unknownIndexable.setSelected(settings.isUnknownIndexable());
+        unknownCallable.setSelected(settings.isUnknownCallable());
         additionalRoots.setRoots(settings.getAdditionalSourcesRoot());
         requireFunctionNames.setText(settings.getRequireLikeFunctionNamesString());
         tooLargerFileThreshold.setDocument(new IntegerDocument());
@@ -109,6 +111,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
                 settings.isShowWordsInFile() != showWordsInFile.isSelected() ||
                 settings.isNilStrict() != nilStrict.isSelected() ||
                 settings.isUnknownIndexable() != unknownIndexable.isSelected() ||
+                settings.isUnknownCallable() != unknownCallable.isSelected() ||
                 settings.getAttachDebugCaptureOutput() != captureOutputDebugString.isSelected() ||
                 settings.getAttachDebugCaptureStd() != captureStd.isSelected() ||
                 settings.getAttachDebugDefaultCharsetName() != defaultCharset.getSelectedItem() ||
@@ -126,6 +129,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
         settings.setShowWordsInFile(showWordsInFile.isSelected());
         settings.setNilStrict(nilStrict.isSelected());
         settings.setUnknownIndexable(unknownIndexable.isSelected());
+        settings.setUnknownCallable(unknownCallable.isSelected());
         settings.setAdditionalSourcesRoot(additionalRoots.getRoots());
         settings.setAttachDebugCaptureOutput(captureOutputDebugString.isSelected());
         settings.setAttachDebugCaptureStd(captureStd.isSelected());

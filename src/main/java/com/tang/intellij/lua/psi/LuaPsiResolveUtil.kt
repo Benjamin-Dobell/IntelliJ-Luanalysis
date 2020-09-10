@@ -118,6 +118,12 @@ fun multiResolve(ref: LuaNameExpr, context: SearchContext): Array<PsiElement> {
             list.add(it)
             true
         })
+        if (list.isEmpty() && refName == Constants.WORD_MODULE && module != Constants.WORD_G) {
+            LuaClassMemberIndex.processMember(Constants.WORD_G, refName, context, Processor {
+                list.add(it)
+                true
+            })
+        }
     }
     return list.toTypedArray()
 }

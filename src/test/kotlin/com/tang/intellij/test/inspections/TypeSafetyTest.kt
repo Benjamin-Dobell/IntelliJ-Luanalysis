@@ -34,8 +34,12 @@ class TypeSafetyTest : LuaInspectionsTestBase(
 ) {
     fun check(filename: String, checkWarn: Boolean = true, checkInfo: Boolean = false, checkWeakWarn: Boolean = false) {
         LuaSettings.instance.isNilStrict = true
+        LuaSettings.instance.isUnknownCallable = false
+        LuaSettings.instance.isUnknownIndexable = false
         checkByFile(filename, checkWarn, checkInfo, checkWeakWarn)
         LuaSettings.instance.isNilStrict = false
+        LuaSettings.instance.isUnknownCallable = true
+        LuaSettings.instance.isUnknownIndexable = true
     }
 
     fun testAlias() {
@@ -122,15 +126,16 @@ class TypeSafetyTest : LuaInspectionsTestBase(
     }
 
     fun testModules() {
-        myFixture.configureByFiles("moduleA.lua", "moduleA_reference.lua")
         LuaSettings.instance.languageLevel = LuaLanguageLevel.LUA51
         StdLibraryProvider.reload()
         LuaSettings.instance.isNilStrict = true
+        LuaSettings.instance.isUnknownCallable = false
+        LuaSettings.instance.isUnknownIndexable = false
+        myFixture.configureByFiles("moduleA.lua", "moduleA_reference.lua")
         enableInspection()
         myFixture.checkHighlighting(true, false, false)
         LuaSettings.instance.languageLevel = LuaLanguageLevel.LUA53
         StdLibraryProvider.reload()
-        LuaSettings.instance.isNilStrict = false
     }
 
     fun testNumbers() {

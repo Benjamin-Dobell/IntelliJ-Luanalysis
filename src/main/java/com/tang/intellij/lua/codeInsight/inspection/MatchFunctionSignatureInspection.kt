@@ -19,6 +19,7 @@ package com.tang.intellij.lua.codeInsight.inspection
 import com.intellij.codeInspection.LocalInspectionToolSession
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElementVisitor
+import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
@@ -55,48 +56,54 @@ class MatchFunctionSignatureInspection : StrictInspection() {
                         resolvedTy = resolvedTy.getChildTypes().first()
                     }
 
-                    var problemReported = false
-                    val signatureMatch = resolvedTy.matchSignature(searchContext, o) { _, sourceElement, message, highlightType ->
-                        myHolder.registerProblem(sourceElement, message, highlightType)
-                        problemReported = true
-                    }
+                    TyUnion.each(resolvedTy) {
+                        if (it == Ty.FUNCTION || (it is TyUnknown && LuaSettings.instance.isUnknownCallable)) {
+                            return@each
+                        }
 
-                    if (signatureMatch != null || problemReported) {
-                        return
-                    }
+                        var problemReported = false
+                        val signatureMatch = it.matchSignature(searchContext, o) { _, sourceElement, message, highlightType ->
+                            myHolder.registerProblem(sourceElement, message, highlightType)
+                            problemReported = true
+                        }
 
-                    if (prefixExpr is LuaIndexExpr) {
-                        // Get parent type
-                        val parentType = prefixExpr.guessParentType(searchContext)
+                        if (signatureMatch != null || problemReported) {
+                            return
+                        }
 
-                        if (parentType is TyClass) {
-                            val memberName = prefixExpr.name
-                            val idExpr = prefixExpr.idExpr
+                        if (prefixExpr is LuaIndexExpr) {
+                            // Get parent type
+                            val parentType = prefixExpr.guessParentType(searchContext)
 
-                            if (memberName != null) {
-                                val method = parentType.findSuperMember(memberName, searchContext)?.guessType(searchContext) as? ITyFunction
+                            if (parentType is TyClass) {
+                                val memberName = prefixExpr.name
+                                val idExpr = prefixExpr.idExpr
 
-                                if (method != null) {
-                                    method.matchSignature(searchContext, o, myHolder)
-                                } else {
-                                    myHolder.registerProblem(o, "Unknown function '$memberName'.")
-                                }
-                            } else if (idExpr != null) {
-                                val indexTy = idExpr.guessType(searchContext) ?: Ty.UNKNOWN
-
-                                TyUnion.each(indexTy) {
-                                    val method = parentType.findIndexer(it, searchContext)?.guessType(searchContext) as? ITyFunction
+                                if (memberName != null) {
+                                    val method = parentType.findSuperMember(memberName, searchContext)?.guessType(searchContext) as? ITyFunction
 
                                     if (method != null) {
                                         method.matchSignature(searchContext, o, myHolder)
                                     } else {
-                                        myHolder.registerProblem(o, "Unknown function '[${it.displayName}]'")
+                                        myHolder.registerProblem(o, "Unknown function '$memberName'.")
+                                    }
+                                } else if (idExpr != null) {
+                                    val indexTy = idExpr.guessType(searchContext) ?: Ty.UNKNOWN
+
+                                    TyUnion.each(indexTy) {
+                                        val method = parentType.findIndexer(it, searchContext)?.guessType(searchContext) as? ITyFunction
+
+                                        if (method != null) {
+                                            method.matchSignature(searchContext, o, myHolder)
+                                        } else {
+                                            myHolder.registerProblem(o, "Unknown function '[${it.displayName}]'")
+                                        }
                                     }
                                 }
                             }
+                        } else {
+                            myHolder.registerProblem(o, "Unknown function '%s'.".format(prefixExpr.lastChild.text))
                         }
-                    } else if (resolvedTy == Ty.NIL) {
-                        myHolder.registerProblem(o, "Unknown function '%s'.".format(prefixExpr.lastChild.text))
                     }
                 }
             }

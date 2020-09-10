@@ -241,20 +241,18 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
             return null
         }
 
-        if (!context.supportsMultipleResults && ty is TyMultipleResults) {
-            if (index == args.lastIndex) {
-                val concreteResults = if (ty.variadic) {
-                    multipleResultsVariadicTypeInfo = MatchFunctionSignatureInspection.ConcreteTypeInfo(luaExpr, ty.list.last())
-                    ty.list.dropLast(1)
-                } else {
-                    ty.list
-                }
-
-                concreteArgTypes.addAll(concreteResults.map { MatchFunctionSignatureInspection.ConcreteTypeInfo(luaExpr, it) })
-            } else if (ty.list.size > 1 || !ty.variadic) {
-                concreteArgTypes.add(MatchFunctionSignatureInspection.ConcreteTypeInfo(luaExpr, ty.list.first()))
+        if (ty is TyMultipleResults && index == args.lastIndex) {
+            val concreteResults = if (ty.variadic) {
+                multipleResultsVariadicTypeInfo = MatchFunctionSignatureInspection.ConcreteTypeInfo(luaExpr, ty.list.last())
+                ty.list.dropLast(1)
+            } else {
+                ty.list
             }
-        } else concreteArgTypes.add(MatchFunctionSignatureInspection.ConcreteTypeInfo(luaExpr, ty))
+
+            concreteArgTypes.addAll(concreteResults.map { MatchFunctionSignatureInspection.ConcreteTypeInfo(luaExpr, it) })
+        } else {
+            concreteArgTypes.add(MatchFunctionSignatureInspection.ConcreteTypeInfo(luaExpr, TyMultipleResults.getResult(ty, 0)))
+        }
     }
 
     val variadicArg: MatchFunctionSignatureInspection.ConcreteTypeInfo? = multipleResultsVariadicTypeInfo
@@ -323,7 +321,9 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
         if (parameterCount < concreteArgTypes.size) {
             if (varargParamTy != null) {
                 for (i in parameterCount until args.size) {
-                    val argType = concreteArgTypes.get(i).ty
+                    val argType = concreteArgTypes.get(i).ty.let {
+                        if (it is TyMultipleResults) it.list.first() else it
+                    }
                     val argExpr = args.get(i)
                     val varianceFlags = if (argExpr is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
 
@@ -434,13 +434,23 @@ abstract class Ty(override val kind: TyKind) : ITy {
     override fun toString(): String {
         val list = mutableListOf<String>()
         TyUnion.each(this) { //尽量不使用Global
-            if (!it.isAnonymous && !(it is ITyClass && it.isGlobal))
-                list.add(it.displayName)
+            if (!it.isAnonymous && !(it is ITyClass && it.isGlobal)) {
+                if (it is ITyFunction || it is TyMultipleResults) {
+                    list.add("(${it.displayName})")
+                } else {
+                    list.add(it.displayName)
+                }
+            }
         }
         if (list.isEmpty()) { //使用Global
             TyUnion.each(this) {
-                if (!it.isAnonymous && (it is ITyClass && it.isGlobal))
-                    list.add(it.displayName)
+                if (!it.isAnonymous && (it is ITyClass && it.isGlobal)) {
+                    if (it is ITyFunction || it is TyMultipleResults) {
+                        list.add("(${it.displayName})")
+                    } else {
+                        list.add(it.displayName)
+                    }
+                }
             }
         }
         return list.joinToString(" | ")
@@ -689,7 +699,12 @@ abstract class Ty(override val kind: TyKind) : ITy {
                                 genericTy
                             } else {
                                 val aliasTy = LuaShortNamesManager.getInstance(context.project).findAlias(base.className, context)
-                                aliasTy?.type as? ITyAlias
+
+                                if (aliasTy != null) {
+                                    aliasTy.type
+                                } else {
+                                    base
+                                }
                             }
                         } else {
                             base

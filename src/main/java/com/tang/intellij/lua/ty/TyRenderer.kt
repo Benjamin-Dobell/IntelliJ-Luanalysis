@@ -71,7 +71,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                     override fun visitTy(ty: ITy) {
                         val s = render(ty)
                         if (s.isNotEmpty()) {
-                            list.add(if (ty is TyFunction || ty is TyMultipleResults) "(${s})" else s)
+                            list.add(if (ty is ITyFunction || ty is TyMultipleResults) "(${s})" else s)
                         }
                     }
                 })

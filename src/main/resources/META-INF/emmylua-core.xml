@@ -271,30 +271,30 @@
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.LanguageLevelInspection"/>
         <localInspection
                 displayName="Match function signature"
-                enabledByDefault="false"
+                enabledByDefault="true"
                 groupName="Lua > Lint > Type safety"
                 level="ERROR"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.MatchFunctionSignatureInspection"/>
         <localInspection
                 displayName="Undeclared variable"
-                enabledByDefault="false"
+                enabledByDefault="true"
                 groupName="Lua > Lint > Type safety"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.UndeclaredVariableInspection"/>
         <localInspection
                 displayName="Undeclared member"
-                enabledByDefault="false"
+                enabledByDefault="true"
                 groupName="Lua > Lint > Type safety"
                 level="ERROR"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.UndeclaredMemberInspection"/>
         <localInspection
                 displayName="Return type"
-                enabledByDefault="false"
+                enabledByDefault="true"
                 groupName="Lua > Lint > Type safety"
                 level="ERROR"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.ReturnTypeInspection"/>
         <localInspection
                 displayName="Assign type"
-                enabledByDefault="false"
+                enabledByDefault="true"
                 groupName="Lua > Lint > Type safety"
                 level="ERROR"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.AssignTypeInspection"/>

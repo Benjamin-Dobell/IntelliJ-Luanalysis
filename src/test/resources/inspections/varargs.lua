@@ -176,3 +176,40 @@ overloadMergedStringStringMap.a = "a string"
 overloadMergedStringStringMap.a = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>
 overloadMergedStringStringMap['a'] = "a string"
 overloadMergedStringStringMap['a'] = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>
+
+
+---@generic T
+---@vararg T
+---@return T[]
+local function varargsToArray(...)
+return {...}
+end
+
+---@class SomeClassWantingArrays
+local SomeClassWantingArrays = {}
+
+---@param a string[]
+function SomeClassWantingArrays.acceptsStringArray(a)
+end
+
+---@param a number[]
+function SomeClassWantingArrays.acceptsNumberArray(a)
+end
+
+---@param a string[]
+---@overload fun(): boolean
+local function acceptsStringArray(a)
+end
+
+---@param a number[]
+---@overload fun(): boolean
+local function acceptsNumberArray(a)
+end
+
+---@vararg string
+local function acceptsVarString(...)
+    SomeClassWantingArrays.acceptsStringArray({...})
+    acceptsStringArray(varargsToArray(...))
+    SomeClassWantingArrays.acceptsNumberArray({<error descr="Type mismatch. Required: 'number' Found: 'string'">...</error>})
+    acceptsNumberArray(<error descr="Type mismatch. Required: 'number[]' Found: 'string[]'">varargsToArray(...)</error>)
+end

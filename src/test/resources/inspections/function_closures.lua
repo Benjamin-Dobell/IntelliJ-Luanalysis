@@ -71,7 +71,7 @@ local closureInternalTypeInspections = function(param)
     param = "okay"
     param = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>
 
-    --@type fun(): boolean
+    ---@type fun(): boolean
     local sometimes
 
     if sometimes() then
