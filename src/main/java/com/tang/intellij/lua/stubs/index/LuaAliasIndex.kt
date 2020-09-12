@@ -29,8 +29,6 @@ class LuaAliasIndex : StringStubIndexExtension<LuaDocTagAlias>() {
             if (context.isDumb)
                 return null
 
-            assertNotCreatingStub()
-
             return instance.get(name, context.project, context.scope)?.firstOrNull()
         }
     }

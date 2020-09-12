@@ -57,15 +57,11 @@ class LuaClassIndex : StringStubIndexExtension<LuaDocTagClass>() {
         }
 
         fun process(key: String, project: Project, scope: GlobalSearchScope, processor: Processor<LuaDocTagClass>): Boolean {
-            assertNotCreatingStub()
-
             val collection = instance.get(key, project, scope)
             return ContainerUtil.process(collection, processor)
         }
 
         fun processKeys(project: Project, processor: Processor<String>): Boolean {
-            assertNotCreatingStub()
-
             val scope = ProjectAndLibrariesScope(project)
             val allKeys = instance.getAllKeys(project)
             for (key in allKeys) {

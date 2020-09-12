@@ -64,7 +64,7 @@ class LuaShortNamesManagerImpl : LuaShortNamesManager() {
     }
 
     override fun getClassMembers(clazzName: String, context: SearchContext): Collection<LuaClassMember> {
-        return LuaClassMemberIndex.instance.get(clazzName.hashCode(), context.project, context.scope)
+        return LuaClassMemberIndex.getMembers(clazzName, context)
     }
 
     override fun processMember(type: ITyClass, fieldName: String, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean {

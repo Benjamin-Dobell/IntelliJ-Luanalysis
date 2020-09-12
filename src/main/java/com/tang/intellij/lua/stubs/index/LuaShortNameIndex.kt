@@ -40,7 +40,6 @@ class LuaShortNameIndex : StringStubIndexExtension<NavigatablePsiElement>() {
             return if (searchContext.isDumb) {
                 emptyList()
             } else {
-                assertNotCreatingStub()
                 instance.get(key, searchContext.project, searchContext.scope)
             }
         }
