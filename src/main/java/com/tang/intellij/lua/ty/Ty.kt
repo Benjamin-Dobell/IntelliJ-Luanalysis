@@ -232,14 +232,13 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
     var multipleResultsVariadicTypeInfo: MatchFunctionSignatureInspection.ConcreteTypeInfo? = null
 
     args.forEachIndexed { index, luaExpr ->
-        val ty = if (index == args.lastIndex)
-            context.withMultipleResults { luaExpr.guessType(context) }
-        else
-            context.withIndex(0) { luaExpr.guessType(context) }
-
-        if (ty == null) {
-            return null
-        }
+        // TODO: unknown vs. any - should be unknown
+        val ty = (
+                if (index == args.lastIndex)
+                    context.withMultipleResults { luaExpr.guessType(context) }
+                else
+                    context.withIndex(0) { luaExpr.guessType(context) }
+                ) ?: Ty.UNKNOWN
 
         if (ty is TyMultipleResults && index == args.lastIndex) {
             val concreteResults = if (ty.variadic) {

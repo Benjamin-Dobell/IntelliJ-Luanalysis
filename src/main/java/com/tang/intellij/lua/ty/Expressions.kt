@@ -32,11 +32,7 @@ import com.tang.intellij.lua.psi.impl.LuaNameExprMixin
 import com.tang.intellij.lua.search.GuardType
 import com.tang.intellij.lua.search.SearchContext
 
-fun inferExpr(expr: LuaExpr?, context: SearchContext): ITy? {
-    if (expr == null) {
-        return null
-    }
-
+fun inferExpr(expr: LuaExpr, context: SearchContext): ITy? {
     if (expr.comment != null) {
         val typeCast = PsiTreeUtil.getChildrenOfTypeAsList(expr.comment, LuaDocTagTypeImpl::class.java).firstOrNull()
 

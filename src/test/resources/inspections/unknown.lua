@@ -10,9 +10,13 @@ local aString
 ---@type any
 local unknown
 
+local implicitUnknown = <warning descr="Undeclared variable 'notAVarA'.">notAVarA</warning>
+
 wantsNumber(aNumber)
 wantsNumber(<error descr="Type mismatch. Required: 'number' Found: 'string'">aString</error>)
 wantsNumber(unknown)
+wantsNumber(implicitUnknown)
+wantsNumber(<warning descr="Undeclared variable 'notAVarA'.">notAVarA</warning>)
 
 aNumber = aNumber
 aNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">aString</error>

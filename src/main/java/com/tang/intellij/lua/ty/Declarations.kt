@@ -132,8 +132,10 @@ private fun LuaNameDef.infer(context: SearchContext): ITy? {
     val parent = this.parent
     if (parent is LuaTableField) {
         val expr = PsiTreeUtil.findChildOfType(parent, LuaExpr::class.java)
-        if (expr != null)
-            type = infer(expr, context)
+        if (expr != null) {
+            // TODO: unknown vs. any - should be unknown
+            type = infer(expr, context) ?: Ty.UNKNOWN
+        }
     } else {
         val docTy = this.docTy
 
@@ -152,9 +154,10 @@ private fun LuaNameDef.infer(context: SearchContext): ITy? {
             val exprList = localDef.exprList
 
             type = if (nameList != null && exprList != null) {
+                // TODO: unknown vs. any - should be unknown
                 context.withIndex(index, false) {
                     exprList.guessTypeAt(context)
-                }
+                } ?: Ty.UNKNOWN
             } else Ty.VOID
 
             if (type is TyPrimitiveLiteral) {
