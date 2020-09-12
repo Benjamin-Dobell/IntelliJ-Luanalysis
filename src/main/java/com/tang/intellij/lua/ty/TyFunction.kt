@@ -207,7 +207,7 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
             } else it.displayName
         }
 
-        "fun${paramsComponent}${returnTypeName?.let {": " + it}}"
+        "fun${paramsComponent}${returnTypeName?.let {": " + it} ?: ""}"
     }
 
     override val paramSignature: String get() {
