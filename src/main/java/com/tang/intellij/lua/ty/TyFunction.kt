@@ -40,19 +40,19 @@ interface IFunSignature {
 
 fun IFunSignature.processParameters(callExpr: LuaCallExpr, processor: (index:Int, param: LuaParamInfo) -> Boolean) {
     val expr = callExpr.expr
-    val thisTy = if (expr is LuaIndexExpr) {
-        expr.guessType(SearchContext.get(expr.project))
+    val selfTy = if (expr is LuaIndexExpr) {
+        expr.guessParentType(SearchContext.get(expr.project))
     } else null
-    processParameters(thisTy, callExpr.isMethodColonCall, processor)
+    processParameters(selfTy, callExpr.isMethodColonCall, processor)
 }
 
-fun IFunSignature.processParameters(thisTy: ITy?, colonStyle: Boolean, processor: (index:Int, param: LuaParamInfo) -> Boolean) {
+fun IFunSignature.processParameters(selfTy: ITy?, colonStyle: Boolean, processor: (index:Int, param: LuaParamInfo) -> Boolean) {
     var index = 0
     var pIndex = 0
     if (colonStyle && !colonCall) {
         pIndex++
     } else if (!colonStyle && colonCall) {
-        val pi = LuaParamInfo.createSelf(thisTy)
+        val pi = LuaParamInfo.createSelf(selfTy)
         if (!processor(index++, pi)) return
     }
 

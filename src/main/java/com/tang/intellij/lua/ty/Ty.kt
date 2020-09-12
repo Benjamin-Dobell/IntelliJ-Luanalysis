@@ -281,7 +281,12 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                 problemElement = problemElement ?: call.lastChild
 
                 candidateFailed = true
-                signatureProblems?.add(Problem(null, problemElement, "Missing argument: ${pi.name}: ${pi.ty}"))
+
+                if (!call.isMethodColonCall && i == 0 && pi.name == Constants.WORD_SELF) {
+                    signatureProblems?.add(Problem(null, problemElement, "Missing self argument.\n\nDid you mean to call the method with a colon?"))
+                } else {
+                    signatureProblems?.add(Problem(null, problemElement, "Missing argument: ${pi.name}: ${pi.ty}"))
+                }
 
                 if (typeInfo == null) {
                     return@processParameters true
@@ -295,11 +300,15 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
 
             if (processProblem != null) {
                 val contravariant = ProblemUtil.contravariantOf(paramType, argType, context, varianceFlags, null, argExpr) { _, element, message, highlightProblem ->
-                    val contextualMessage = if (i >= args.size &&
+                    var contextualMessage = message
+
+                    if (i >= args.size &&
                             (concreteArgTypes.size > args.size || (variadicArg != null && concreteArgTypes.size >= args.size))) {
-                        "Result ${i + 1}, ${message.decapitalize()}"
-                    } else {
-                        message
+                        contextualMessage = "Result ${i + 1}, ${message.decapitalize()}"
+                    }
+
+                    if (!call.isMethodColonCall && i == 0 && pi.name == Constants.WORD_SELF) {
+                        contextualMessage += ".\n\nDid you mean to call the method with a colon?"
                     }
 
                     signatureProblems?.add(Problem(null, element, contextualMessage, highlightProblem))

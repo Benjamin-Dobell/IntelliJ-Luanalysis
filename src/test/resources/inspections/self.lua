@@ -93,3 +93,26 @@ selfA = selfB:lambdaMethod()
 selfB = <error descr="Type mismatch. Required: 'SelfB' Found: 'SelfA'">selfA:colonMethod()</error>
 selfB = <error descr="Type mismatch. Required: 'SelfB' Found: 'SelfA'">selfA:dotMethod()</error>
 selfB = <error descr="Type mismatch. Required: 'SelfB' Found: 'SelfA'">selfA:lambdaMethod()</error>
+
+
+---@class ClassWithInstanceMethods
+local ClassWithInstanceMethods = {}
+
+function ClassWithInstanceMethods:withoutParam()
+end
+
+---@param a string
+function ClassWithInstanceMethods:withParam(a)
+end
+
+---@type ClassWithInstanceMethods
+local classWithInstanceMethods
+
+classWithInstanceMethods.withoutParam(<error descr="Missing self argument.
+
+Did you mean to call the method with a colon?">)</error>
+classWithInstanceMethods.withParam(<error descr="Type mismatch. Required: 'ClassWithInstanceMethods' Found: '\"abc\"'.
+
+Did you mean to call the method with a colon?">"abc"</error><error descr="Missing argument: a: string">)</error>
+classWithInstanceMethods.withoutParam(classWithInstanceMethods)
+classWithInstanceMethods.withParam(classWithInstanceMethods, "abc")
