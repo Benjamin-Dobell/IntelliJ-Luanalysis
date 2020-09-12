@@ -134,10 +134,8 @@ private fun LuaExpr.shouldBeInternal(context: SearchContext): ITy? {
 }
 
 fun LuaExpr.shouldBe(context: SearchContext): ITy? {
-    return context.withInferenceGuard(this) {
-        shouldBeInternal(context)?.let {
-            TyAliasSubstitutor.substitute(it, context)
-        }
+    return shouldBeInternal(context)?.let {
+        TyAliasSubstitutor.substitute(it, context)
     }
 }
 

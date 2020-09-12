@@ -183,38 +183,41 @@ class SearchContext {
         if (guardExists(psi, type)) {
             return null
         }
+
         val guard = createGuard(psi, type)
-        if (guard != null)
-            myGuardList.add(guard)
-        val result = action()
-        if (guard != null)
+        myGuardList.add(guard)
+        try {
+            return action()
+        } finally {
             myGuardList.remove(guard)
-        return result
+        }
     }
 
-    fun withInferenceGuard(psi: PsiElement, action: () -> ITy?): ITy? {
-        val guard = createGuard(psi, GuardType.Inference)
-        if (guard != null)
-            myGuardList.add(guard)
-        val result = action()
-        if (guard != null)
-            myGuardList.remove(guard)
-        return result
-    }
-
-    private fun inferAndCache(psi: LuaTypeGuessable): ITy? {
+    private fun withInferenceGuard(psi: PsiElement, action: () -> ITy?): ITy? {
         if (guardExists(psi, GuardType.Inference)) {
             return null
         }
 
-        return if (index == -1) {
-            val result = ILuaTypeInfer.infer(psi, this)
-            if (result != null) {
-                myInferCache[psi] = result
+        val guard = createGuard(psi, GuardType.Inference)
+        myGuardList.add(guard)
+        try {
+            return action()
+        } finally {
+            myGuardList.remove(guard)
+        }
+    }
+
+    private fun inferAndCache(psi: LuaTypeGuessable): ITy? {
+        return withInferenceGuard(psi) {
+            if (index == -1) {
+                val result = ILuaTypeInfer.infer(psi, this)
+                if (result != null) {
+                    myInferCache[psi] = result
+                }
+                result
+            } else {
+                ILuaTypeInfer.infer(psi, this)
             }
-            result
-        } else {
-            ILuaTypeInfer.infer(psi, this)
         }
     }
 

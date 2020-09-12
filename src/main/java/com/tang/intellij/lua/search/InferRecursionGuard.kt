@@ -26,20 +26,20 @@ enum class GuardType {
     Inference
 }
 
-open class InferRecursionGuard(val psi: PsiElement) {
+open class InferRecursionGuard(val psi: PsiElement, val type: GuardType) {
     open fun check(psi: PsiElement, type: GuardType): Boolean {
-        return this.psi == psi
+        return this.psi == psi && this.type == type
     }
 }
 
-fun createGuard(psi: PsiElement, type: GuardType): InferRecursionGuard? {
+fun createGuard(psi: PsiElement, type: GuardType): InferRecursionGuard {
     if (type == GuardType.GlobalName && psi is LuaNameExpr) {
         return GlobalSearchGuard(psi)
     }
-    return InferRecursionGuard(psi)
+    return InferRecursionGuard(psi, type)
 }
 
-class GlobalSearchGuard(psi: LuaNameExpr) : InferRecursionGuard(psi) {
+class GlobalSearchGuard(psi: LuaNameExpr) : InferRecursionGuard(psi, GuardType.GlobalName) {
     private val name = psi.name
 
     override fun check(psi: PsiElement, type: GuardType): Boolean {
