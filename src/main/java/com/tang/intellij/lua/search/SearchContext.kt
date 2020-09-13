@@ -24,7 +24,6 @@ import com.intellij.psi.search.ProjectAndLibrariesScope
 import com.tang.intellij.lua.ext.ILuaTypeInfer
 import com.tang.intellij.lua.psi.LuaTypeGuessable
 import com.tang.intellij.lua.ty.ITy
-import com.tang.intellij.lua.ty.Ty
 import java.util.*
 
 /**
@@ -114,7 +113,6 @@ class SearchContext {
     private var myIndex = 0
     private var myMultipleResults = false
     private var myInStack = false
-    private val myGuardList = mutableListOf<InferRecursionGuard>()
     private val myInferCache = mutableMapOf<LuaTypeGuessable, ITy>()
     private var myScope: GlobalSearchScope? = null
 
@@ -170,45 +168,8 @@ class SearchContext {
         return ret
     }
 
-    private fun guardExists(psi: PsiElement, type: GuardType): Boolean {
-        myGuardList.forEach {
-            if (it.check(psi, type)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    fun withRecursionGuard(psi: PsiElement, type: GuardType, action: () -> ITy?): ITy? {
-        if (guardExists(psi, type)) {
-            return null
-        }
-
-        val guard = createGuard(psi, type)
-        myGuardList.add(guard)
-        try {
-            return action()
-        } finally {
-            myGuardList.remove(guard)
-        }
-    }
-
-    private fun withInferenceGuard(psi: PsiElement, action: () -> ITy?): ITy? {
-        if (guardExists(psi, GuardType.Inference)) {
-            return null
-        }
-
-        val guard = createGuard(psi, GuardType.Inference)
-        myGuardList.add(guard)
-        try {
-            return action()
-        } finally {
-            myGuardList.remove(guard)
-        }
-    }
-
     private fun inferAndCache(psi: LuaTypeGuessable): ITy? {
-        return withInferenceGuard(psi) {
+        return withRecursionGuard("inferAndCache", psi) {
             if (index == -1) {
                 val result = ILuaTypeInfer.infer(psi, this)
                 if (result != null) {

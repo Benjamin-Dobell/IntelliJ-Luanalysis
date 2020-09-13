@@ -24,8 +24,8 @@ import com.tang.intellij.lua.comment.psi.LuaDocTagField
 import com.tang.intellij.lua.comment.psi.LuaDocTagReturn
 import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.psi.*
-import com.tang.intellij.lua.search.GuardType
 import com.tang.intellij.lua.search.SearchContext
+import com.tang.intellij.lua.search.withRecursionGuard
 import com.tang.intellij.lua.stubs.LuaFuncBodyOwnerStub
 
 fun infer(element: LuaTypeGuessable?, context: SearchContext): ITy? {
@@ -72,7 +72,7 @@ private fun inferReturnTyInner(owner: LuaFuncBodyOwner, searchContext: SearchCon
     }
 
     //infer from return stat
-    return searchContext.withRecursionGuard(owner, GuardType.RecursionCall) {
+    return withRecursionGuard("inferReturnTyInner", owner) {
         var type: ITy? = Ty.VOID
 
         owner.acceptChildren(object : LuaRecursiveVisitor() {

@@ -29,8 +29,8 @@ import com.tang.intellij.lua.lang.type.LuaString
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.impl.LuaNameExprMixin
-import com.tang.intellij.lua.search.GuardType
 import com.tang.intellij.lua.search.SearchContext
+import com.tang.intellij.lua.search.withSearchGuard
 
 fun inferExpr(expr: LuaExpr, context: SearchContext): ITy? {
     if (expr.comment != null) {
@@ -378,7 +378,7 @@ private fun LuaNameExpr.infer(context: SearchContext): ITy? {
             }
         }
 
-        context.withRecursionGuard(this, GuardType.GlobalName) {
+        withSearchGuard(this) {
             val multiResolve = multiResolve(this, context)
             var maxTimes = 10
 
