@@ -40,7 +40,7 @@ class LuaDocTagClassType : LuaStubElementType<LuaDocTagClassStub, LuaDocTagClass
     }
 
     override fun createStub(luaDocTagClass: LuaDocTagClass, stubElement: StubElement<*>): LuaDocTagClassStub {
-        val params = luaDocTagClass.genericDefList.map { TyParameter(it) }.toTypedArray()
+        val params = luaDocTagClass.genericDefList.map { TyGenericParameter(it) }.toTypedArray()
         val superClass = luaDocTagClass.superClassRef?.let { Ty.create(it) }
         val signatures = luaDocTagClass.overloads
         val aliasName: String? = luaDocTagClass.aliasName
@@ -49,7 +49,7 @@ class LuaDocTagClassType : LuaStubElementType<LuaDocTagClassStub, LuaDocTagClass
 
     override fun serialize(luaDocClassStub: LuaDocTagClassStub, stubOutputStream: StubOutputStream) {
         stubOutputStream.writeName(luaDocClassStub.className)
-        stubOutputStream.writeTyParamsNullable(luaDocClassStub.params)
+        stubOutputStream.writeGenericParamsNullable(luaDocClassStub.params)
         stubOutputStream.writeName(luaDocClassStub.aliasName)
         stubOutputStream.writeTyNullable(luaDocClassStub.superClass)
         stubOutputStream.writeSignaturesNullable(luaDocClassStub.signatures)
@@ -59,7 +59,7 @@ class LuaDocTagClassType : LuaStubElementType<LuaDocTagClassStub, LuaDocTagClass
 
     override fun deserialize(stubInputStream: StubInputStream, stubElement: StubElement<*>): LuaDocTagClassStub {
         val className = stubInputStream.readName()
-        val params = stubInputStream.readTyParamsNullable()
+        val params = stubInputStream.readGenericParamsNullable()
         val aliasName = stubInputStream.readName()
         val superClass = stubInputStream.readTyNullable()
         val signatures = stubInputStream.readSignatureNullable()
@@ -94,7 +94,7 @@ class LuaDocTagClassType : LuaStubElementType<LuaDocTagClassStub, LuaDocTagClass
 
 interface LuaDocTagClassStub : StubElement<LuaDocTagClass> {
     val className: String
-    val params: Array<TyParameter>?
+    val params: Array<TyGenericParameter>?
     val aliasName: String?
     val superClass: ITy?
     val signatures: Array<IFunSignature>?
@@ -104,7 +104,7 @@ interface LuaDocTagClassStub : StubElement<LuaDocTagClass> {
 }
 
 class LuaDocTagClassStubImpl(override val className: String,
-                             override val params: Array<TyParameter>?,
+                             override val params: Array<TyGenericParameter>?,
                              override val aliasName: String?,
                              override val superClass: ITy?,
                              override val signatures: Array<IFunSignature>?,

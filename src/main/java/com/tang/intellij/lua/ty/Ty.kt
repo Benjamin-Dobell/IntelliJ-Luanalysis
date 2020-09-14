@@ -33,6 +33,7 @@ import com.tang.intellij.lua.psi.LuaTableExpr
 import com.tang.intellij.lua.psi.argList
 import com.tang.intellij.lua.psi.search.LuaShortNamesManager
 import com.tang.intellij.lua.search.SearchContext
+import java.lang.IllegalStateException
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -100,7 +101,7 @@ interface ITy : Comparable<ITy> {
 
     fun getSuperClass(context: SearchContext): ITy?
 
-    fun getParams(context: SearchContext): Array<TyParameter>?
+    fun getParams(context: SearchContext): Array<TyGenericParameter>?
 
     fun visitSuper(searchContext: SearchContext, processor: Processor<ITyClass>)
 
@@ -523,7 +524,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
         return null
     }
 
-    override fun getParams(context: SearchContext): Array<TyParameter>? {
+    override fun getParams(context: SearchContext): Array<TyGenericParameter>? {
         return null
     }
 
@@ -660,10 +661,16 @@ abstract class Ty(override val kind: TyKind) : ITy {
             val flags = stream.readInt()
             return when (kind) {
                 TyKind.Nil -> NIL
+                TyKind.Unknown -> UNKNOWN
                 TyKind.Void -> VOID
                 else -> {
                     val serializer = getSerializer(kind)
-                    serializer?.deserialize(flags, stream) ?: UNKNOWN
+
+                    if (serializer == null) {
+                        throw IllegalStateException("Cannot deserialize unknown type of kind ${kind}")
+                    }
+
+                    serializer.deserialize(flags, stream)
                 }
             }
         }
@@ -675,7 +682,6 @@ abstract class Ty(override val kind: TyKind) : ITy {
                 val superType = cur.getSuperClass(searchContext)
                 if (superType != null) {
                     if (!processedName.add(superType.displayName)) {
-                        // todo: Infinite inheritance
                         return true
                     }
                     if (!processor(superType))

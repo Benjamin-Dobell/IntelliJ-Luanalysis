@@ -26,10 +26,10 @@ import com.tang.intellij.lua.psi.LuaLocalFuncDef
 import com.tang.intellij.lua.psi.LuaParamInfo
 import com.tang.intellij.lua.psi.impl.LuaLocalFuncDefImpl
 import com.tang.intellij.lua.psi.overloads
-import com.tang.intellij.lua.psi.tyParams
+import com.tang.intellij.lua.psi.genericParams
 import com.tang.intellij.lua.ty.IFunSignature
 import com.tang.intellij.lua.ty.ITy
-import com.tang.intellij.lua.ty.TyParameter
+import com.tang.intellij.lua.ty.TyGenericParameter
 
 class LuaLocalFuncDefElementType
     : LuaStubElementType<LuaLocalFuncDefStub, LuaLocalFuncDef>("LOCAL_FUNC_DEF") {
@@ -38,7 +38,7 @@ class LuaLocalFuncDefElementType
         stream.writeTyNullable(stub.returnDocTy)
         stream.writeTyNullable(stub.varargTy)
         stream.writeParamInfoArray(stub.params)
-        stream.writeTyParamsNullable(stub.tyParams)
+        stream.writeGenericParamsNullable(stub.genericParams)
         stream.writeSignatures(stub.overloads)
     }
 
@@ -50,13 +50,13 @@ class LuaLocalFuncDefElementType
     override fun createStub(def: LuaLocalFuncDef, parentStub: StubElement<*>?): LuaLocalFuncDefStub {
         val retDocTy = def.comment?.tagReturn?.type
         val params = def.params
-        val tyParams = def.tyParams
+        val genericParams = def.genericParams
         val overloads = def.overloads
         return LuaLocalFuncDefStub(def.name!!,
                 retDocTy,
                 def.varargType,
                 params,
-                tyParams,
+                genericParams,
                 overloads,
                 parentStub,
                 this)
@@ -67,13 +67,13 @@ class LuaLocalFuncDefElementType
         val retDocTy = stream.readTyNullable()
         val varargTy = stream.readTyNullable()
         val params = stream.readParamInfoArray()
-        val tyParams = stream.readTyParamsNullable()
+        val genericParams = stream.readGenericParamsNullable()
         val overloads = stream.readSignatures()
         return LuaLocalFuncDefStub(StringRef.toString(name),
                 retDocTy,
                 varargTy,
                 params,
-                tyParams,
+                genericParams,
                 overloads,
                 parentStub,
                 this)
@@ -93,7 +93,7 @@ class LuaLocalFuncDefStub(
         override val returnDocTy: ITy?,
         override val varargTy: ITy?,
         override val params: Array<LuaParamInfo>,
-        override val tyParams: Array<TyParameter>?,
+        override val genericParams: Array<TyGenericParameter>?,
         override val overloads: Array<IFunSignature>,
         parent: StubElement<*>?,
         type: LuaStubElementType<*, *>

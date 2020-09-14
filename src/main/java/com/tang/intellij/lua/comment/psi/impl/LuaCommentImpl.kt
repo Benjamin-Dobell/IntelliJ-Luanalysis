@@ -209,7 +209,7 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
 
         return object : TySubstitutor() {
             override fun substitute(clazz: ITyClass): ITy {
-                return map[clazz.className]?.let { TyParameter(it) } ?: super.substitute(clazz)
+                return map[clazz.className]?.let { TyGenericParameter(it) } ?: super.substitute(clazz)
             }
         }
     }

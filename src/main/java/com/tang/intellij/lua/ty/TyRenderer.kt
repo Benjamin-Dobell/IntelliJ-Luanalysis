@@ -47,7 +47,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                         val baseName = if (base is ITyClass) base.className else base.displayName
                         sb.append("${baseName}${renderParamsList(list)}")
                     }
-                    is TyParameter -> {
+                    is TyGenericParameter -> {
 
                     }
                     is TySnippet -> sb.append(ty.toString())
@@ -124,7 +124,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                 sb.append(": ")
 
                 val paramTy = it.ty
-                if (paramTy is TyParameter && paramTy.superClass != null) {
+                if (paramTy is TyGenericParameter && paramTy.superClass != null) {
                     sb.append("(")
                     render(paramTy, sb)
                     sb.append(")")
@@ -141,7 +141,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
 
         signature.returnTy?.let {
             sb.append(": ")
-            if (it is TyUnion || (it is TyParameter && it.superClass != null)) {
+            if (it is TyUnion || (it is TyGenericParameter && it.superClass != null)) {
                 sb.append("(")
                 render(it, sb)
                 sb.append(")")
@@ -166,7 +166,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                 }
                 "{ ${list.joinToString(", ")} }"
             }
-            clazz is TyParameter -> clazz.superClass?.let { "${clazz.varName} : ${it.displayName}" } ?: clazz.varName
+            clazz is TyGenericParameter -> clazz.superClass?.let { "${clazz.varName} : ${it.displayName}" } ?: clazz.varName
             clazz.hasFlag(TyFlags.ANONYMOUS_TABLE) -> renderType(Constants.WORD_TABLE)
             clazz.isAnonymous -> "[local ${clazz.varName}]"
             clazz.isGlobal -> "[global ${clazz.varName}]"

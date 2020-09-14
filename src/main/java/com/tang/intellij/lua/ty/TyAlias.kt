@@ -21,17 +21,17 @@ import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.search.SearchContext
-import com.tang.intellij.lua.stubs.readTyParamsNullable
-import com.tang.intellij.lua.stubs.writeTyParamsNullable
+import com.tang.intellij.lua.stubs.readGenericParamsNullable
+import com.tang.intellij.lua.stubs.writeGenericParamsNullable
 
 interface ITyAlias : ITy {
     val name: String
-    val params: Array<TyParameter>?
+    val params: Array<TyGenericParameter>?
     val ty: ITy
 }
 
 class TyAlias(override val name: String,
-              override val params: Array<TyParameter>?,
+              override val params: Array<TyGenericParameter>?,
               override val ty: ITy
 ) : Ty(TyKind.Alias), ITyAlias {
 
@@ -67,7 +67,7 @@ class TyAlias(override val name: String,
         visitor.visitAlias(this)
     }
 
-    override fun getParams(context: SearchContext): Array<TyParameter>? {
+    override fun getParams(context: SearchContext): Array<TyGenericParameter>? {
         return params
     }
 
@@ -83,14 +83,14 @@ class TyAlias(override val name: String,
 object TyAliasSerializer : TySerializer<ITyAlias>() {
     override fun deserializeTy(flags: Int, stream: StubInputStream): ITyAlias {
         val name = stream.readName()
-        val params = stream.readTyParamsNullable()
+        val params = stream.readGenericParamsNullable()
         val ty = Ty.deserialize(stream)
         return TyAlias(StringRef.toString(name), params, ty)
     }
 
     override fun serializeTy(ty: ITyAlias, stream: StubOutputStream) {
         stream.writeName(ty.name)
-        stream.writeTyParamsNullable(ty.params)
+        stream.writeGenericParamsNullable(ty.params)
         Ty.serialize(ty.ty, stream)
     }
 }

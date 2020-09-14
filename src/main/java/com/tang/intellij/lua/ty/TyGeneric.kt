@@ -29,11 +29,11 @@ fun genericParameterName(def: LuaDocGenericDef): String {
     return "${def.id.text}@${def.node.startOffset}@${def.containingFile.name}"
 }
 
-class TyParameter(val name: String, varName: String, superClass: ITy? = null) : TySerializedClass(name, emptyArray(), varName, superClass, null) {
+class TyGenericParameter(val name: String, varName: String, superClass: ITy? = null) : TySerializedClass(name, emptyArray(), varName, superClass, null) {
     constructor(def: LuaDocGenericDef) : this(genericParameterName(def), def.id.text, def.classRef?.let { Ty.create(it) })
 
     override fun equals(other: Any?): Boolean {
-        return other is TyParameter
+        return other is TyGenericParameter
                 && super.equals(other)
                 && superClass?.equals(other.superClass) ?: (other.superClass == null)
     }
@@ -70,15 +70,15 @@ class TyParameter(val name: String, varName: String, superClass: ITy? = null) : 
     override fun doLazyInit(searchContext: SearchContext) {}
 }
 
-object TyGenericParamSerializer : TySerializer<TyParameter>() {
-    override fun deserializeTy(flags: Int, stream: StubInputStream): TyParameter {
+object TyGenericParamSerializer : TySerializer<TyGenericParameter>() {
+    override fun deserializeTy(flags: Int, stream: StubInputStream): TyGenericParameter {
         val name = StringRef.toString(stream.readName())
         val varName = StringRef.toString(stream.readName())
         val superClass = stream.readTyNullable()
-        return TyParameter(name, varName, superClass)
+        return TyGenericParameter(name, varName, superClass)
     }
 
-    override fun serializeTy(ty: TyParameter, stream: StubOutputStream) {
+    override fun serializeTy(ty: TyGenericParameter, stream: StubOutputStream) {
         stream.writeName(ty.name)
         stream.writeName(ty.varName)
         stream.writeTyNullable(ty.superClass)
@@ -247,7 +247,7 @@ class TyGeneric(override val params: Array<ITy>, override val base: ITy) : Ty(Ty
                     param.equals(otherParam, context)
                             || (flags and TyVarianceFlags.STRICT_UNKNOWN == 0 && otherParam is TyUnknown)
                             || (
-                                (contravariantParams || (flags and TyVarianceFlags.ABSTRACT_PARAMS != 0 && param is TyParameter))
+                                (contravariantParams || (flags and TyVarianceFlags.ABSTRACT_PARAMS != 0 && param is TyGenericParameter))
                                 && param.contravariantOf(otherParam, context, flags)
                             )
                 }

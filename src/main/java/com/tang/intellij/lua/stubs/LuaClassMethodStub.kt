@@ -69,14 +69,14 @@ class LuaClassMethodType : LuaStubElementType<LuaClassMethodStub, LuaClassMethod
         val retDocTy = methodDef.comment?.tagReturn?.type
         val params = methodDef.params
         val overloads = methodDef.overloads
-        val tyParams = methodDef.tyParams
+        val genericParams = methodDef.genericParams
 
         return LuaClassMethodStubImpl(flags,
                 id?.text ?: "",
                 classNameSet.toTypedArray(),
                 retDocTy,
                 params,
-                tyParams,
+                genericParams,
                 overloads,
                 methodDef.varargType,
                 stubElement)
@@ -99,7 +99,7 @@ class LuaClassMethodType : LuaStubElementType<LuaClassMethodStub, LuaClassMethod
         stubOutputStream.writeShort(stub.flags)
         stubOutputStream.writeTyNullable(stub.returnDocTy)
         stubOutputStream.writeParamInfoArray(stub.params)
-        stubOutputStream.writeTyParamsNullable(stub.tyParams)
+        stubOutputStream.writeGenericParamsNullable(stub.genericParams)
         stubOutputStream.writeTyNullable(stub.varargTy)
         stubOutputStream.writeSignatures(stub.overloads)
     }
@@ -120,7 +120,7 @@ class LuaClassMethodType : LuaStubElementType<LuaClassMethodStub, LuaClassMethod
         val flags = stubInputStream.readShort()
         val retDocTy = stubInputStream.readTyNullable()
         val params = stubInputStream.readParamInfoArray()
-        val tyParams = stubInputStream.readTyParamsNullable()
+        val genericParams = stubInputStream.readGenericParamsNullable()
         val varargTy = stubInputStream.readTyNullable()
         val overloads = stubInputStream.readSignatures()
 
@@ -129,7 +129,7 @@ class LuaClassMethodType : LuaStubElementType<LuaClassMethodStub, LuaClassMethod
                 classes,
                 retDocTy,
                 params,
-                tyParams,
+                genericParams,
                 overloads,
                 varargTy,
                 stubElement)
@@ -166,7 +166,7 @@ class LuaClassMethodStubImpl(override val flags: Int,
                              override val classes: Array<ITyClass>,
                              override val returnDocTy: ITy?,
                              override val params: Array<LuaParamInfo>,
-                             override val tyParams: Array<TyParameter>?,
+                             override val genericParams: Array<TyGenericParameter>?,
                              override val overloads: Array<IFunSignature>,
                              override val varargTy: ITy?,
                              parent: StubElement<*>)

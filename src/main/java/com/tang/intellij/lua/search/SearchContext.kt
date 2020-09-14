@@ -169,16 +169,14 @@ class SearchContext {
     }
 
     private fun inferAndCache(psi: LuaTypeGuessable): ITy? {
-        return withRecursionGuard("inferAndCache", psi) {
-            if (index == -1) {
-                val result = ILuaTypeInfer.infer(psi, this)
-                if (result != null) {
-                    myInferCache[psi] = result
-                }
-                result
-            } else {
-                ILuaTypeInfer.infer(psi, this)
+        return if (index == -1) {
+            val result = ILuaTypeInfer.infer(psi, this)
+            if (result != null) {
+                myInferCache[psi] = result
             }
+            result
+        } else {
+            ILuaTypeInfer.infer(psi, this)
         }
     }
 

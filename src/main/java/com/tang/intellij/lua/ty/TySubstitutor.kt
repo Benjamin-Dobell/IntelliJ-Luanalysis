@@ -29,7 +29,7 @@ interface ITySubstitutor {
     fun substitute(ty: ITy): ITy
 }
 
-class GenericAnalyzer(params: Array<TyParameter>?, private val searchContext: SearchContext) : TyVisitor() {
+class GenericAnalyzer(params: Array<TyGenericParameter>?, private val searchContext: SearchContext) : TyVisitor() {
     val map: MutableMap<String, ITy> = mutableMapOf()
 
     private val substitutor = TyParameterSubstitutor(map)
@@ -71,7 +71,7 @@ class GenericAnalyzer(params: Array<TyParameter>?, private val searchContext: Se
             }
         }
 
-        if (clazz is TyParameter) {
+        if (clazz is TyGenericParameter) {
             val genericName = clazz.className
             val constraint = constraints.get(genericName)
 
@@ -298,7 +298,7 @@ class TySelfSubstitutor(val context: SearchContext, val call: LuaCallExpr?, val 
 
 class TyParameterSubstitutor(val map: Map<String, ITy>) : TySubstitutor() {
     override fun substitute(clazz: ITyClass): ITy {
-        return if (clazz is TyParameter) map.get(clazz.className) ?: clazz else clazz
+        return if (clazz is TyGenericParameter) map.get(clazz.className) ?: clazz else clazz
     }
 }
 

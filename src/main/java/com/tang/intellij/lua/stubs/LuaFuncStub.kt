@@ -28,7 +28,7 @@ import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.stubs.index.StubKeys
 import com.tang.intellij.lua.ty.IFunSignature
 import com.tang.intellij.lua.ty.ITy
-import com.tang.intellij.lua.ty.TyParameter
+import com.tang.intellij.lua.ty.TyGenericParameter
 
 /**
 
@@ -50,7 +50,7 @@ class LuaFuncType : LuaStubElementType<LuaFuncStub, LuaFuncDef>("Global Function
         } ?: Constants.WORD_G
         val retDocTy = funcDef.comment?.tagReturn?.type
         val params = funcDef.params
-        val tyParams = funcDef.tyParams
+        val genericParams = funcDef.genericParams
         val overloads = funcDef.overloads
 
         var flags = BitUtil.set(0, funcDef.visibility.bitMask, true)
@@ -62,7 +62,7 @@ class LuaFuncType : LuaStubElementType<LuaFuncStub, LuaFuncDef>("Global Function
                 retDocTy,
                 funcDef.varargType,
                 params,
-                tyParams,
+                genericParams,
                 overloads,
                 stubElement)
     }
@@ -79,7 +79,7 @@ class LuaFuncType : LuaStubElementType<LuaFuncStub, LuaFuncDef>("Global Function
         stream.writeTyNullable(stub.returnDocTy)
         stream.writeTyNullable(stub.varargTy)
         stream.writeParamInfoArray(stub.params)
-        stream.writeTyParamsNullable(stub.tyParams)
+        stream.writeGenericParamsNullable(stub.genericParams)
         stream.writeSignatures(stub.overloads)
     }
 
@@ -90,7 +90,7 @@ class LuaFuncType : LuaStubElementType<LuaFuncStub, LuaFuncDef>("Global Function
         val retDocTy = stream.readTyNullable()
         val varargTy = stream.readTyNullable()
         val params = stream.readParamInfoArray()
-        val tyParams = stream.readTyParamsNullable()
+        val genericParams = stream.readGenericParamsNullable()
         val overloads = stream.readSignatures()
         return LuaFuncStubImpl(StringRef.toString(name),
                 StringRef.toString(module),
@@ -98,7 +98,7 @@ class LuaFuncType : LuaStubElementType<LuaFuncStub, LuaFuncDef>("Global Function
                 retDocTy,
                 varargTy,
                 params,
-                tyParams,
+                genericParams,
                 overloads,
                 stubElement)
     }
@@ -129,7 +129,7 @@ class LuaFuncStubImpl(override val name: String,
                       override val returnDocTy: ITy?,
                       override val varargTy: ITy?,
                       override val params: Array<LuaParamInfo>,
-                      override val tyParams: Array<TyParameter>?,
+                      override val genericParams: Array<TyGenericParameter>?,
                       override val overloads: Array<IFunSignature>,
                       parent: StubElement<*>)
     : StubBase<LuaFuncDef>(parent, LuaTypes.FUNC_DEF as IStubElementType<*, *>), LuaFuncStub {

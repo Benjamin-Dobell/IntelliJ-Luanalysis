@@ -270,7 +270,7 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
             }
         }
 
-        val genericAnalyzer = GenericAnalyzer(sig.tyParameters, context)
+        val genericAnalyzer = GenericAnalyzer(sig.genericParams, context)
 
         var processedIndex = -1
         sig.processParameters { index, param ->
@@ -291,7 +291,7 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
         }
 
         val map = genericAnalyzer.map.toMutableMap()
-        sig.tyParameters?.forEach {
+        sig.genericParams?.forEach {
             val superCls = it.superClass
             if (superCls != null && Ty.isInvalid(map[it.name])) map[it.name] = superCls
         }

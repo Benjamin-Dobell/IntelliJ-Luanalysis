@@ -77,7 +77,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
         }
 
         private fun processClassKey(cls: ITyClass, key: String, context: SearchContext, processor: Processor<in LuaClassMember>, deep: Boolean = true): Boolean {
-            return if (cls is TyParameter)
+            return if (cls is TyGenericParameter)
                 (cls.superClass as? ITyClass)?.let { processClassKey(it, it.className, key, context, processor, deep) } ?: true
             else processClassKey(cls, cls.className, key, context, processor, deep)
         }

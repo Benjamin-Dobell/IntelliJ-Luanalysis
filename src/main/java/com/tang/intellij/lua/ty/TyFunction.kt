@@ -30,7 +30,7 @@ interface IFunSignature {
     val params: Array<LuaParamInfo>?
     val displayName: String
     val paramSignature: String
-    val tyParameters: Array<TyParameter>?
+    val genericParams: Array<TyGenericParameter>?
     val varargTy: ITy?
 
     fun substitute(substitutor: ITySubstitutor): IFunSignature
@@ -108,17 +108,17 @@ fun IFunSignature.hasVarargs(): Boolean {
     return this.varargTy != null
 }
 
-fun IFunSignature.isGeneric() = tyParameters?.isNotEmpty() == true
+fun IFunSignature.isGeneric() = genericParams?.isNotEmpty() == true
 
 abstract class FunSignatureBase(override val colonCall: Boolean,
                                 override val params: Array<LuaParamInfo>?,
-                                override val tyParameters: Array<TyParameter>? = null
+                                override val genericParams: Array<TyGenericParameter>? = null
 ) : IFunSignature {
     override fun equals(other: Any?): Boolean {
         if (other is IFunSignature) {
             return colonCall == other.colonCall
                     && params?.let { other.params?.contentEquals(it) ?: false } ?: (other.params == null)
-                    && tyParameters?.let { other.tyParameters?.contentEquals(it) ?: false } ?: (other.tyParameters == null)
+                    && genericParams?.let { other.genericParams?.contentEquals(it) ?: false } ?: (other.genericParams == null)
                     && returnTy == other.returnTy
                     && varargTy == other.varargTy
         }
@@ -158,13 +158,13 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
             return false
         }
 
-        return tyParameters?.let { params ->
-            other.tyParameters?.let { otherParams ->
+        return genericParams?.let { params ->
+            other.genericParams?.let { otherParams ->
                 params.size == otherParams.size && otherParams.asSequence().zip(params.asSequence()).all { (param, otherParam) ->
                     param.equals(otherParam, context)
                 }
             } ?: false
-        } ?: (other.tyParameters == null)
+        } ?: (other.genericParams == null)
     }
 
     override fun hashCode(): Int {
@@ -172,7 +172,7 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
         params?.forEach {
             code = code * 31 + it.hashCode()
         }
-        tyParameters?.forEach {
+        genericParams?.forEach {
             code = code * 31 + it.hashCode()
         }
         code = code * 31 + (returnTy?.hashCode() ?: 0)
@@ -193,7 +193,7 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
 
         val paramsText = namedParams.map {
             val paramTy = it.second
-            val typeText = if (paramTy is TyParameter && paramTy.superClass != null) {
+            val typeText = if (paramTy is TyGenericParameter && paramTy.superClass != null) {
                 "(${paramTy.displayName})"
             } else paramTy.displayName
             "${it.first}: ${typeText}"
@@ -202,7 +202,7 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
         val paramsComponent = if (paramsText.length > 0) "(${paramsText})" else ""
 
         val returnTypeName = returnTy?.let {
-            if (it is TyParameter && it.superClass != null) {
+            if (it is TyGenericParameter && it.superClass != null) {
                 "(${it.displayName})"
             } else it.displayName
         }
@@ -241,7 +241,7 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
                     substitutedReturnTy,
                     substitutedVarargTy,
                     substitutedParams?.toTypedArray(),
-                    tyParameters)
+                    genericParams)
         } else {
             this
         }
@@ -276,8 +276,8 @@ class FunSignature(colonCall: Boolean,
                    override val returnTy: ITy?,
                    override val varargTy: ITy?,
                    params: Array<LuaParamInfo>?,
-                   tyParameters: Array<TyParameter>? = null
-) : FunSignatureBase(colonCall, params, tyParameters) {
+                   genericParams: Array<TyGenericParameter>? = null
+) : FunSignatureBase(colonCall, params, genericParams) {
 
     companion object {
         fun create(colonCall: Boolean, functionTy: LuaDocFunctionTy): IFunSignature {
@@ -286,7 +286,7 @@ class FunSignature(colonCall: Boolean,
                     functionTy.returnType,
                     functionTy.varargParam,
                     functionTy.params as? Array<LuaParamInfo>, // Casting due to https://youtrack.jetbrains.com/issue/KT-40034
-                    functionTy.genericDefList.map { TyParameter(it) }.toTypedArray()
+                    functionTy.genericDefList.map { TyGenericParameter(it) }.toTypedArray()
             )
         }
 
@@ -295,6 +295,7 @@ class FunSignature(colonCall: Boolean,
             stream.writeTyNullable(sig.returnTy)
             stream.writeTyNullable(sig.varargTy)
             stream.writeParamInfoArrayNullable(sig.params)
+            stream.writeGenericParamsNullable(sig.genericParams)
         }
 
         fun deserialize(stream: StubInputStream): IFunSignature {
@@ -302,7 +303,8 @@ class FunSignature(colonCall: Boolean,
             val ret = stream.readTyNullable()
             val varargTy = stream.readTyNullable()
             val params = stream.readParamInfoArrayNullable()
-            return FunSignature(colonCall, ret, varargTy, params)
+            val genericParams = stream.readGenericParamsNullable()
+            return FunSignature(colonCall, ret, varargTy, params, genericParams)
         }
     }
 }
@@ -403,7 +405,7 @@ class TyPsiFunction(private val colonCall: Boolean, val psi: LuaFuncBodyOwner, f
 
     override val mainSignature: IFunSignature by lazy {
 
-        object : FunSignatureBase(colonCall, psi.params, psi.tyParams) {
+        object : FunSignatureBase(colonCall, psi.params, psi.genericParams) {
             override val returnTy: ITy by lazy {
                 val context = SearchContext.get(psi.project)
                 var returnTy = context.withMultipleResults { psi.guessReturnType(context) ?: Ty.UNKNOWN }

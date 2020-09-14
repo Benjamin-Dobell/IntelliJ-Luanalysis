@@ -36,7 +36,7 @@ interface ITyClass : ITy {
     val varName: String
     var superClass: ITy?
     var aliasName: String?
-    var params: Array<TyParameter>?
+    var params: Array<TyGenericParameter>?
     var signatures: Array<IFunSignature>?
 
     fun lazyInit(searchContext: SearchContext)
@@ -66,7 +66,7 @@ fun ITyClass.isVisibleInScope(project: Project, contextTy: ITy, visibility: Visi
 }
 
 abstract class TyClass(override val className: String,
-                       override var params: Array<TyParameter>? = null,
+                       override var params: Array<TyGenericParameter>? = null,
                        override val varName: String = "",
                        override var superClass: ITy? = null,
                        override var signatures: Array<IFunSignature>? = null
@@ -222,7 +222,7 @@ abstract class TyClass(override val className: String,
         return superClass
     }
 
-    override fun getParams(context: SearchContext): Array<TyParameter>? {
+    override fun getParams(context: SearchContext): Array<TyGenericParameter>? {
         lazyInit(context)
         return params
     }
@@ -270,7 +270,7 @@ abstract class TyClass(override val className: String,
 
 class TyPsiDocClass(tagClass: LuaDocTagClass) : TyClass(
         tagClass.name,
-        tagClass.genericDefList.map { TyParameter(it) }.toTypedArray(),
+        tagClass.genericDefList.map { TyGenericParameter(it) }.toTypedArray(),
         "",
         tagClass.superClassRef?.let { Ty.create(it) },
         tagClass.overloads
@@ -284,7 +284,7 @@ class TyPsiDocClass(tagClass: LuaDocTagClass) : TyClass(
 }
 
 open class TySerializedClass(name: String,
-                             params: Array<TyParameter>? = null,
+                             params: Array<TyGenericParameter>? = null,
                              varName: String = name,
                              superClass: ITy? = null,
                              signatures: Array<IFunSignature>? = null,
@@ -307,7 +307,7 @@ open class TySerializedClass(name: String,
 class TyLazyClass(name: String) : TySerializedClass(name, null)
 
 fun createSerializedClass(name: String,
-                          params: Array<TyParameter>? = null,
+                          params: Array<TyGenericParameter>? = null,
                           varName: String = name,
                           superClass: ITy? = null,
                           signatures: Array<IFunSignature>? = null,
@@ -486,7 +486,7 @@ class TySerializedDocTable(name: String) : TySerializedClass(name) {
 object TyClassSerializer : TySerializer<ITyClass>() {
     override fun deserializeTy(flags: Int, stream: StubInputStream): ITyClass {
         val className = stream.readName()
-        val params = stream.readTyParamsNullable()
+        val params = stream.readGenericParamsNullable()
         val varName = stream.readName()
         val superClass = stream.readTyNullable()
         val signatures = stream.readSignatureNullable()
@@ -502,7 +502,7 @@ object TyClassSerializer : TySerializer<ITyClass>() {
 
     override fun serializeTy(ty: ITyClass, stream: StubOutputStream) {
         stream.writeName(ty.className)
-        stream.writeTyParamsNullable(ty.params)
+        stream.writeGenericParamsNullable(ty.params)
         stream.writeName(ty.varName)
         stream.writeTyNullable(ty.superClass)
         stream.writeSignaturesNullable(ty.signatures)

@@ -210,7 +210,7 @@ fun getType(tagClass: LuaDocTagClass): ITyClass {
 }
 
 fun getType(genericDef: LuaDocGenericDef): ITyClass {
-    return TyParameter(genericDef)
+    return TyGenericParameter(genericDef)
 }
 
 fun isDeprecated(tagClass: LuaDocTagClass): Boolean {
@@ -437,5 +437,5 @@ fun getNameIdentifier(g: LuaDocTagAlias): PsiElement {
 
 fun getType(alias: LuaDocTagAlias): ITy {
     val stub = alias.stub
-    return stub?.type ?: TyAlias(alias.name, alias.genericDefList.map { TyParameter(it) }.toTypedArray(), alias.ty?.getType() ?: Ty.UNKNOWN)
+    return stub?.type ?: TyAlias(alias.name, alias.genericDefList.map { TyGenericParameter(it) }.toTypedArray(), alias.ty?.getType() ?: Ty.UNKNOWN)
 }

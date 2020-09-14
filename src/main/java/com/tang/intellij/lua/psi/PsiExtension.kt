@@ -303,19 +303,19 @@ val LuaFuncBodyOwner.overloads: Array<IFunSignature> get() {
     return (this as? LuaCommentOwner)?.comment?.overloads ?: arrayOf()
 }
 
-val LuaFuncBodyOwner.tyParams: Array<TyParameter>? get() {
+val LuaFuncBodyOwner.genericParams: Array<TyGenericParameter>? get() {
     if (this is StubBasedPsiElementBase<*>) {
         val stub = this.stub
         if (stub is LuaFuncBodyOwnerStub<*>) {
-            return stub.tyParams
+            return stub.genericParams
         }
     }
 
-    val list = mutableListOf<TyParameter>()
+    val list = mutableListOf<TyGenericParameter>()
     if (this is LuaCommentOwner) {
         comment?.findTags(LuaDocTagGenericList::class.java)?.forEach {
             it.genericDefList.forEach { genericDef ->
-                list.add(TyParameter(genericDef))
+                list.add(TyGenericParameter(genericDef))
             }
         }
     }
