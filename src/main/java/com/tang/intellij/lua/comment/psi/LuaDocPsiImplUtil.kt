@@ -35,6 +35,7 @@ import com.tang.intellij.lua.lang.type.LuaNumber
 import com.tang.intellij.lua.lang.type.LuaString
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
+import com.tang.intellij.lua.search.withRecursionGuard
 import com.tang.intellij.lua.ty.*
 import javax.swing.Icon
 
@@ -316,8 +317,10 @@ fun getType(luaDocArrTy: LuaDocArrTy): ITy {
 }
 
 fun getType(luaDocGeneralTy: LuaDocGeneralTy): ITy {
-    return SearchContext.withDumb(luaDocGeneralTy.project, null) {
-        resolveType(luaDocGeneralTy.classNameRef, it)
+    return withRecursionGuard("getType", luaDocGeneralTy) {
+        SearchContext.withDumb(luaDocGeneralTy.project, null) {
+            resolveType(luaDocGeneralTy.classNameRef, it)
+        }
     } ?: TyLazyClass(luaDocGeneralTy.classNameRef.id.text)
 }
 
@@ -343,8 +346,10 @@ fun getReturnType(luaDocFunctionTy: LuaDocFunctionTy): ITy? {
 
 fun getType(luaDocGenericTy: LuaDocGenericTy): ITy {
     val paramTys = luaDocGenericTy.tyList.map { it.getType() }.toTypedArray()
-    val baseTy = SearchContext.withDumb(luaDocGenericTy.project, null) {
-        luaDocGenericTy.classNameRef.resolveType(it)
+    val baseTy = withRecursionGuard("getType", luaDocGenericTy) {
+        SearchContext.withDumb(luaDocGenericTy.project, null) {
+            luaDocGenericTy.classNameRef.resolveType(it)
+        }
     } ?: TyLazyClass(luaDocGenericTy.classNameRef.id.text)
     return TyGeneric(paramTys, baseTy)
 }
