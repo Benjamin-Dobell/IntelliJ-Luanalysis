@@ -17,6 +17,7 @@
 package com.tang.intellij.lua.codeInsight.inspection
 
 import com.intellij.codeInspection.LocalInspectionToolSession
+import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiFile
@@ -66,9 +67,9 @@ class ReturnTypeInspection : StrictInspection() {
                         val varianceFlags = if (element is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
                         ProblemUtil.contravariantOf(targetType, concreteTypes[i], context, varianceFlags, null, element) { targetElement, sourceElement, message, highlightType ->
                             val sourceMessage = if (concreteTypes.size > 1) "Result ${i + 1}, ${message.decapitalize()}" else message
-                            myHolder.registerProblem(sourceElement, sourceMessage, highlightType)
+                            myHolder.registerProblem(sourceElement, sourceMessage, highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
                             if (targetElement != null && targetElement != sourceElement) {
-                                myHolder.registerProblem(targetElement, message, highlightType)
+                                myHolder.registerProblem(targetElement, message, highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
                             }
                         }
                     }

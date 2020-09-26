@@ -34,7 +34,7 @@ class AssignTypeInspection : StrictInspection() {
                         return processProblem
                     }
 
-                    return { targetElement: PsiElement?, sourceElement: PsiElement, message: String, highlightType: ProblemHighlightType ->
+                    return { targetElement: PsiElement?, sourceElement: PsiElement, message: String, highlightType: ProblemHighlightType? ->
                         val tyMessage = "${message} on union member ${targetTy.displayName}"
                         processProblem(targetElement, sourceElement, tyMessage, highlightType)
                     }
@@ -171,10 +171,10 @@ class AssignTypeInspection : StrictInspection() {
                                 val inspectionTargetElement = if (assignees.size > 1) assignee else null
                                 inspectAssignee(assignee, value, varianceFlags, inspectionTargetElement, expression, searchContext) { targetElement, sourceElement, message, highlightType ->
                                     val sourceMessage = if (assignees.size > 1 && values.size > 1) "Result ${valueIndex + 1}, ${message.decapitalize()}" else message
-                                    myHolder.registerProblem(sourceElement, sourceMessage, highlightType)
+                                    myHolder.registerProblem(sourceElement, sourceMessage, highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
 
                                     if (targetElement != null && targetElement != sourceElement) {
-                                        myHolder.registerProblem(targetElement, message, highlightType)
+                                        myHolder.registerProblem(targetElement, message, highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
                                     }
                                 }
                             }
@@ -195,10 +195,10 @@ class AssignTypeInspection : StrictInspection() {
                                 inspectAssignee(assignee, variadicTy, 0, assignee, expressions.last(), searchContext) { targetElement, sourceElement, message, highlightType ->
                                     val resultIndex = assigneeIndex - lastExpressionFirstAssigneeIndex + 1
                                     val sourceMessage = if (assignees.size > 1) "Result ${resultIndex}, ${message.decapitalize()}" else message
-                                    myHolder.registerProblem(sourceElement, sourceMessage, highlightType)
+                                    myHolder.registerProblem(sourceElement, sourceMessage, highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
 
                                     if (targetElement != null && targetElement != sourceElement) {
-                                        myHolder.registerProblem(targetElement, message, highlightType)
+                                        myHolder.registerProblem(targetElement, message, highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
                                     }
                                 }
 

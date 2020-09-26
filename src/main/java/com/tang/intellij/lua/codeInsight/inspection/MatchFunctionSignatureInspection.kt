@@ -17,6 +17,7 @@
 package com.tang.intellij.lua.codeInsight.inspection
 
 import com.intellij.codeInspection.LocalInspectionToolSession
+import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElementVisitor
 import com.tang.intellij.lua.project.LuaSettings
@@ -63,7 +64,7 @@ class MatchFunctionSignatureInspection : StrictInspection() {
 
                         var problemReported = false
                         val signatureMatch = it.matchSignature(searchContext, o) { _, sourceElement, message, highlightType ->
-                            myHolder.registerProblem(sourceElement, message, highlightType)
+                            myHolder.registerProblem(sourceElement, message, highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
                             problemReported = true
                         }
 

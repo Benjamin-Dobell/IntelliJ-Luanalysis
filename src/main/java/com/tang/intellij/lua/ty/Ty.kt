@@ -73,7 +73,7 @@ class TyVarianceFlags {
     companion object {
         const val STRICT_UNKNOWN = 0x1
         const val ABSTRACT_PARAMS = 0x2 // A generic is to be considered contravariant if its TyParameter generic parameters are contravariant.
-        const val WIDEN_TABLES = 0x4 // Generics (and arrays) are to be considered contravariant if their generic parameters (or base) are contravariant.
+        const val WIDEN_TABLES = 0x4 // Generics (and arrays) are to be considered contravariant if their generic parameters (or base) are contravariant. Additionally, shapes are contravariant if their fields are contravariant.
         const val STRICT_NIL = 0x8 // In certain contexts nil is always strict, irrespective of the user's 'Strict nil checks' setting.
     }
 }
@@ -300,7 +300,7 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
             val varianceFlags = if (argExpr is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
 
             if (processProblem != null) {
-                val contravariant = ProblemUtil.contravariantOf(paramType, argType, context, varianceFlags, null, argExpr) { _, element, message, highlightProblem ->
+                val contravariant = ProblemUtil.contravariantOf(paramType, argType, context, varianceFlags, null, argExpr) { _, element, message, highlightType ->
                     var contextualMessage = message
 
                     if (i >= args.size &&
@@ -312,7 +312,7 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                         contextualMessage += ".\n\nDid you mean to call the method with a colon?"
                     }
 
-                    signatureProblems?.add(Problem(null, element, contextualMessage, highlightProblem))
+                    signatureProblems?.add(Problem(null, element, contextualMessage, highlightType))
                 }
 
                 if (!contravariant) {
@@ -337,8 +337,8 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                     val varianceFlags = if (argExpr is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
 
                     if (processProblem != null) {
-                        val contravariant = ProblemUtil.contravariantOf(varargParamTy, argType, context, varianceFlags, null, argExpr) { _, element, message, highlightProblem ->
-                            signatureProblems?.add(Problem(null, element, message, highlightProblem))
+                        val contravariant = ProblemUtil.contravariantOf(varargParamTy, argType, context, varianceFlags, null, argExpr) { _, element, message, highlightType ->
+                            signatureProblems?.add(Problem(null, element, message, highlightType))
                         }
 
                         if (!contravariant) {
@@ -363,9 +363,9 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
             }
         } else if (varargParamTy != null && variadicArg != null) {
             if (processProblem != null) {
-                val contravariant = ProblemUtil.contravariantOf(varargParamTy, variadicArg.ty, context, 0, null, variadicArg.param) { _, element, message, highlightProblem ->
+                val contravariant = ProblemUtil.contravariantOf(varargParamTy, variadicArg.ty, context, 0, null, variadicArg.param) { _, element, message, highlightType ->
                     val contextualMessage = "Variadic result, ${message.decapitalize()}"
-                    signatureProblems?.add(Problem(null, element, contextualMessage, highlightProblem))
+                    signatureProblems?.add(Problem(null, element, contextualMessage, highlightType))
                 }
 
                 if (!contravariant) {
@@ -407,7 +407,7 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
 
 fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, problemsHolder: ProblemsHolder): SignatureMatchResult? {
     return matchSignature(context, call) { _, sourceElement, message, highlightType ->
-        problemsHolder.registerProblem(sourceElement, message, highlightType)
+        problemsHolder.registerProblem(sourceElement, message, highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
     }
 }
 
@@ -489,27 +489,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
         }
 
         if (isShape(context)) {
-            return processMembers(context, { _, classMember ->
-                val indexTy = classMember.guessIndexType(context)
-
-                val memberTy = if (indexTy != null) {
-                    guessIndexerType(indexTy, context)
-                } else {
-                    classMember.name?.let { guessMemberType(it, context) }
-                } ?: Ty.UNKNOWN
-
-                val otherMemberTy = if (indexTy != null) {
-                    other.guessIndexerType(indexTy, context, true)
-                } else {
-                    classMember.name?.let { other.guessMemberType(it, context) }
-                }
-
-                if (otherMemberTy == null) {
-                    return@processMembers TyUnion.find(memberTy, TyNil::class.java) != null
-                }
-
-                memberTy.contravariantOf(otherMemberTy, context, flags)
-            }, true)
+            return ProblemUtil.contravariantOfShape(this, resolvedOther, context, flags)
         } else {
             val otherSuper = other.getSuperClass(context)
             return otherSuper != null && contravariantOf(otherSuper, context, flags)
