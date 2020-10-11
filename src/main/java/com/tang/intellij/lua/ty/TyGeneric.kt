@@ -104,7 +104,7 @@ interface ITyGeneric : ITy {
             }
         }
 
-        return TyChainSubstitutor.chain(super.getMemberSubstitutor(context), TyParameterSubstitutor(paramMap))!!
+        return TyChainSubstitutor.chain(super.getMemberSubstitutor(context), TyParameterSubstitutor(context, paramMap))!!
     }
 }
 
@@ -156,7 +156,7 @@ class TyGeneric(override val params: Array<ITy>, override val base: ITy) : Ty(Ty
                 }
             }
 
-            return superClass.substitute(TyParameterSubstitutor(paramMap))
+            return superClass.substitute(TyParameterSubstitutor(context, paramMap))
         }
 
         return superClass

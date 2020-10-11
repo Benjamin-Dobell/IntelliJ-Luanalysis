@@ -22,6 +22,8 @@ import com.tang.intellij.lua.psi.prefixExpr
 import com.tang.intellij.lua.search.SearchContext
 
 interface ITySubstitutor {
+    val searchContext: SearchContext
+
     fun substitute(alias: ITyAlias): ITy
     fun substitute(function: ITyFunction): ITy
     fun substitute(clazz: ITyClass): ITy
@@ -29,10 +31,10 @@ interface ITySubstitutor {
     fun substitute(ty: ITy): ITy
 }
 
-class GenericAnalyzer(params: Array<TyGenericParameter>?, private val searchContext: SearchContext) : TyVisitor() {
+class GenericAnalyzer(params: Array<TyGenericParameter>?, val searchContext: SearchContext) : TyVisitor() {
     val map: MutableMap<String, ITy> = mutableMapOf()
 
-    private val substitutor = TyParameterSubstitutor(map)
+    private val substitutor = TyParameterSubstitutor(searchContext, map)
     private val constraints : Map<String, ITy>
 
     private var cur: ITy
@@ -87,7 +89,7 @@ class GenericAnalyzer(params: Array<TyGenericParameter>?, private val searchCont
                     } else if (currentType.contravariantOf(mappedType, searchContext, TyVarianceFlags.STRICT_UNKNOWN)) {
                         currentType
                     } else {
-                        mappedType.union(currentType)
+                        mappedType.union(currentType, searchContext)
                     }
                 } else {
                     constraint
@@ -189,7 +191,7 @@ class GenericAnalyzer(params: Array<TyGenericParameter>?, private val searchCont
     }
 }
 
-open class TySubstitutor : ITySubstitutor {
+open class TySubstitutor(override val searchContext: SearchContext) : ITySubstitutor {
     override fun substitute(ty: ITy) = ty
 
     override fun substitute(alias: ITyAlias): ITy {
@@ -209,7 +211,7 @@ open class TySubstitutor : ITySubstitutor {
                 paramsSubstituted = true
             }
 
-            TyMultipleResults.getResult(substitutedParam)
+            TyMultipleResults.getResult(searchContext, substitutedParam)
         }
 
         val substitutedBase = generic.base.substitute(this)
@@ -245,7 +247,7 @@ open class TySubstitutor : ITySubstitutor {
     }
 }
 
-class TyAliasSubstitutor private constructor(val context: SearchContext) : TySubstitutor() {
+class TyAliasSubstitutor private constructor(searchContext: SearchContext) : TySubstitutor(searchContext) {
     val processedNames = mutableSetOf<String>()
 
     override fun substitute(alias: ITyAlias): ITy {
@@ -263,7 +265,7 @@ class TyAliasSubstitutor private constructor(val context: SearchContext) : TySub
 
         if (base is ITyAlias) {
             return if (processedNames.add(base.name)) {
-                val resolved = base.ty.substitute(generic.getMemberSubstitutor(context)).substitute(this)
+                val resolved = base.ty.substitute(generic.getMemberSubstitutor(searchContext)).substitute(this)
                 processedNames.remove(base.name)
                 resolved
             } else Ty.VOID
@@ -273,7 +275,7 @@ class TyAliasSubstitutor private constructor(val context: SearchContext) : TySub
     }
 
     override fun substitute(clazz: ITyClass): ITy {
-        return clazz.recoverAlias(context, this)
+        return clazz.recoverAlias(searchContext, this)
     }
 
     companion object {
@@ -283,9 +285,9 @@ class TyAliasSubstitutor private constructor(val context: SearchContext) : TySub
     }
 }
 
-class TySelfSubstitutor(val context: SearchContext, val call: LuaCallExpr?, val self: ITy? = null) : TySubstitutor() {
+class TySelfSubstitutor(context: SearchContext, val call: LuaCallExpr?, val self: ITy? = null) : TySubstitutor(context) {
     private val selfType: ITy by lazy {
-        self ?: (call?.prefixExpr?.guessType(context) ?: Ty.UNKNOWN)
+        self ?: (call?.prefixExpr?.guessType(searchContext) ?: Ty.UNKNOWN)
     }
 
     override fun substitute(clazz: ITyClass): ITy {
@@ -296,7 +298,7 @@ class TySelfSubstitutor(val context: SearchContext, val call: LuaCallExpr?, val 
     }
 }
 
-class TyParameterSubstitutor(val map: Map<String, ITy>) : TySubstitutor() {
+class TyParameterSubstitutor(searchContext: SearchContext, val map: Map<String, ITy>) : TySubstitutor(searchContext) {
     override fun substitute(clazz: ITyClass): ITy {
         return if (clazz is TyGenericParameter) map.get(clazz.className) ?: clazz else clazz
     }
@@ -305,7 +307,11 @@ class TyParameterSubstitutor(val map: Map<String, ITy>) : TySubstitutor() {
 class TyChainSubstitutor private constructor(a: ITySubstitutor, b: ITySubstitutor) : ITySubstitutor {
     val substitutors = mutableListOf<ITySubstitutor>()
 
+    override val searchContext: SearchContext
+
     init {
+        searchContext = a.searchContext
+
         substitutors.add(a)
         substitutors.add(b)
     }

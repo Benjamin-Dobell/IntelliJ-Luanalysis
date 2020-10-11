@@ -88,7 +88,7 @@ class LuaNameExprType : LuaStubElementType<LuaNameExprStub, LuaNameExpr>("NAME_E
     }
 
     override fun indexStub(luaNameStub: LuaNameExprStub, indexSink: IndexSink) {
-        if (luaNameStub.isGlobal &&luaNameStub.isName) {
+        if (luaNameStub.isGlobal && luaNameStub.isName) {
             val module = luaNameStub.module
 
             LuaClassMemberIndex.indexMemberStub(indexSink, module, luaNameStub.name)

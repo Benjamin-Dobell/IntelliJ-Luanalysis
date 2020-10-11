@@ -42,7 +42,7 @@ fun inferExpr(expr: LuaExpr, context: SearchContext): ITy? {
             return if (context.supportsMultipleResults) {
                 castTy
             } else {
-                TyMultipleResults.getResult(castTy, context.index)
+                TyMultipleResults.getResult(context, castTy, context.index)
             }
         }
     }
@@ -75,12 +75,12 @@ fun inferExpr(expr: LuaExpr, context: SearchContext): ITy? {
         }
 
         if (notTy is TyMultipleResults) {
-            val flattenedTy = TyMultipleResults.flatten(ty)
+            val flattenedTy = TyMultipleResults.flatten(context, ty)
 
             if (flattenedTy is TyMultipleResults) {
-                return TyMultipleResults(flattenedTy.convolve(notTy) { resultTy, notResultTy ->
+                return TyMultipleResults(flattenedTy.convolve(context, notTy) { resultTy, notResultTy ->
                     if (notResultTy != null) {
-                        resultTy.not(notResultTy)
+                        resultTy.not(notResultTy, context)
                     } else {
                         resultTy
                     }
@@ -88,7 +88,7 @@ fun inferExpr(expr: LuaExpr, context: SearchContext): ITy? {
             }
         }
 
-        return TyMultipleResults.getResult(ty).not(TyMultipleResults.getResult(notTy))
+        return TyMultipleResults.getResult(context, ty).not(TyMultipleResults.getResult(context, notTy), context)
     }
 
     return ty
@@ -174,7 +174,7 @@ private fun LuaBinaryExpr.infer(context: SearchContext): ITy? {
     }
 }
 
-private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, context:SearchContext): ITy? {
+private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, context: SearchContext): ITy? {
     val lhs = binaryExpr.left
     val rhs = binaryExpr.right
 
@@ -205,7 +205,7 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
                     }
                 }
                 tys.add(rhsTy)
-                TyUnion.union(tys)
+                TyUnion.union(tys, context)
             }
         }
     }
@@ -230,7 +230,7 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
                 }
             }
             tys.add(rhsTy)
-            TyUnion.union(tys)
+            TyUnion.union(tys, context)
         }
     }
 }
@@ -296,9 +296,7 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
             if (superCls != null && Ty.isInvalid(map[it.name])) map[it.name] = superCls
         }
 
-        val parameterSubstitutor = TyParameterSubstitutor(map)
-
-        return TyChainSubstitutor.chain(selfSubstitutor, parameterSubstitutor)!!
+        return TyChainSubstitutor.chain(selfSubstitutor, TyParameterSubstitutor(context, map))!!
     }
 
     return selfSubstitutor
@@ -313,7 +311,7 @@ private fun LuaCallExpr.getReturnTy(sig: IFunSignature, context: SearchContext):
     return if (context.supportsMultipleResults) {
         returnTy
     } else {
-        TyMultipleResults.getResult(returnTy, context.index)
+        TyMultipleResults.getResult(context, returnTy, context.index)
     }
 }
 
@@ -357,10 +355,10 @@ private fun LuaCallExpr.infer(context: SearchContext): ITy? {
             return null
         }
 
-        ret = ret.union(returnTy)
+        ret = ret.union(returnTy, context)
     }
 
-    return TyMultipleResults.flatten(ret)
+    return TyMultipleResults.flatten(context, ret)
 }
 
 private fun LuaNameExpr.infer(context: SearchContext): ITy? {
@@ -392,7 +390,7 @@ private fun LuaNameExpr.infer(context: SearchContext): ITy? {
                     break
                 }
 
-                type = TyUnion.union(type, set)
+                type = TyUnion.union(type, set, context)
 
                 if (--maxTimes == 0)
                     break
@@ -433,8 +431,10 @@ private fun getType(context: SearchContext, def: PsiElement): ITy? {
 
             //Global
             if (type != null && isGlobal(def) && def.docTy == null && type !is ITyPrimitive) {
-                //use globalClassTy to store class members, that's very important
-                type = type.union(TyClass.createGlobalType(def))
+                // Explicitly instantiating a union (not calling the type.union()) as the global type resolves to type,
+                // and hence we would have just got type back. We're creating a union because we need to ensure members
+                // are indexed against the global name (for completion) as well as the other type (for type resolution).
+                type = TyUnion(listOf(type, TyClass.createGlobalType(def)))
             }
 
             type
@@ -487,7 +487,7 @@ private fun LuaIndexExpr.infer(context: SearchContext): ITy? {
         val prefixType = indexExpr.guessParentType(context)
 
         Ty.eachResolved(prefixType, context) { ty ->
-            result = TyUnion.union(result, guessFieldType(indexExpr, ty, context))
+            result = TyUnion.union(result, guessFieldType(indexExpr, ty, context), context)
         }
 
         result

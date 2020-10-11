@@ -44,5 +44,5 @@ interface LuaComment : PsiComment, LuaDocPsiElement {
     val overloads: Array<IFunSignature>?
     fun guessType(context: SearchContext): ITy
     fun isOverride(): Boolean
-    fun createSubstitutor(): ITySubstitutor?
+    fun createSubstitutor(context: SearchContext): ITySubstitutor?
 }

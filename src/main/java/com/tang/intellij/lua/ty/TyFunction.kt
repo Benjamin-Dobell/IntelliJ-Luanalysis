@@ -234,7 +234,7 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
         }
 
         val substitutedReturnTy = returnTy?.substitute(substitutor)
-        val substitutedVarargTy = varargTy?.let { TyMultipleResults.getResult(it.substitute(substitutor)) }
+        val substitutedVarargTy = varargTy?.let { TyMultipleResults.getResult(substitutor.searchContext, it.substitute(substitutor)) }
 
         return if (paramsSubstituted || substitutedReturnTy !== returnTy || substitutedVarargTy !== varargTy) {
             FunSignature(colonCall,

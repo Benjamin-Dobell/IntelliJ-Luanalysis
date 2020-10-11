@@ -91,9 +91,9 @@ interface ITy : Comparable<ITy> {
 
     fun equals(other: ITy, context: SearchContext): Boolean
 
-    fun union(ty: ITy): ITy
+    fun union(ty: ITy, context: SearchContext): ITy
 
-    fun not(ty: ITy): ITy
+    fun not(ty: ITy, context: SearchContext): ITy
 
     fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean
 
@@ -140,7 +140,7 @@ interface ITy : Comparable<ITy> {
                 }
             }
 
-            ty = TyUnion.union(ty, valueTy)
+            ty = TyUnion.union(ty, valueTy, searchContext)
         }
 
         return ty
@@ -251,7 +251,7 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
 
             concreteArgTypes.addAll(concreteResults.map { MatchFunctionSignatureInspection.ConcreteTypeInfo(luaExpr, it) })
         } else {
-            concreteArgTypes.add(MatchFunctionSignatureInspection.ConcreteTypeInfo(luaExpr, TyMultipleResults.getResult(ty, 0)))
+            concreteArgTypes.add(MatchFunctionSignatureInspection.ConcreteTypeInfo(luaExpr, TyMultipleResults.getResult(context, ty, 0)))
         }
     }
 
@@ -432,12 +432,12 @@ abstract class Ty(override val kind: TyKind) : ITy {
     override fun acceptChildren(visitor: ITyVisitor) {
     }
 
-    override fun union(ty: ITy): ITy {
-        return TyUnion.union(this, ty)
+    override fun union(ty: ITy, context: SearchContext): ITy {
+        return TyUnion.union(this, ty, context)
     }
 
-    override fun not(ty: ITy): ITy {
-        return TyUnion.not(this, ty)
+    override fun not(ty: ITy, context: SearchContext): ITy {
+        return TyUnion.not(this, ty, context)
     }
 
     override fun toString(): String {
@@ -725,7 +725,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
                                 }
                             }
 
-                            referencedTy.ty.substitute(TyParameterSubstitutor(paramMap))
+                            referencedTy.ty.substitute(TyParameterSubstitutor(context, paramMap))
                         } else {
                             referencedTy.ty
                         }
@@ -735,7 +735,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
 
                     if (resolvedMemberTy is TyUnion) {
                         memberTys.addAll(resolvedMemberTy.getChildTypes())
-                    } else if (resolvedMemberTy !== base && resolvedMemberTy != null) {
+                    } else if (resolvedMemberTy !== base) {
                         memberTys.add(resolvedMemberTy)
                     } else {
                         fn(memberTy)
@@ -752,7 +752,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
             var resolvedTy: ITy = Ty.VOID
 
             eachResolved(ty, context) {
-                resolvedTy = resolvedTy.union(it)
+                resolvedTy = resolvedTy.union(it, context)
             }
 
             return resolvedTy

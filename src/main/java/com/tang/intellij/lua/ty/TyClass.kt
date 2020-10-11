@@ -145,16 +145,15 @@ abstract class TyClass(override val className: String,
         val project = context.project
 
         val manager = LuaShortNamesManager.getInstance(project)
-        val members = manager.getClassMembers(clazzName, context)
-        val list = mutableListOf<LuaClassMember>()
-        list.addAll(members)
+        val members = mutableListOf<LuaClassMember>()
+        members.addAll(manager.getClassMembers(clazzName, context))
 
-        processAlias(Processor { alias ->
+        processAlias({ alias ->
             val classMembers = manager.getClassMembers(alias, context)
-            list.addAll(classMembers)
+            members.addAll(classMembers)
         })
 
-        for (member in list) {
+        for (member in members) {
             if (!processor(this, member)) {
                 return false
             }
@@ -162,8 +161,41 @@ abstract class TyClass(override val className: String,
 
         // super
         if (deep) {
+            val memberNames = mutableListOf<String>()
+            val memberIndexTys = mutableListOf<ITy>()
+
+            for (member in members) {
+                val memberName = member.name
+
+                if (memberName != null) {
+                    memberNames.add(memberName)
+                } else {
+                    member.guessIndexType(context)?.let {
+                        memberIndexTys.add(it)
+                    }
+                }
+            }
+
             return processSuperClasses(this, context) {
-                it.processMembers(context, processor, false)
+                it.processMembers(context, { superClass, superMember ->
+                    val superMemberName = superMember.name
+
+                    val memberOverridden = if (superMemberName != null) {
+                        memberNames.contains(superMemberName)
+                    } else {
+                        superMember.guessIndexType(context)?.let { superMemberIndexTy ->
+                            memberIndexTys.find { memberIndexTy ->
+                                memberIndexTy === superMemberIndexTy || memberIndexTy.contravariantOf(superMemberIndexTy, context, 0)
+                            } != null
+                        } ?: false
+                    }
+
+                    if (memberOverridden) {
+                        true
+                    } else {
+                        processor(this, superMember)
+                    }
+                }, false)
             }
         }
 
@@ -342,41 +374,55 @@ fun createTableGenericFromMembers(ty: ITy, context: SearchContext): ITyGeneric {
             val exprList = classMember.exprList
 
             if (exprList.size == 2) {
-                keyType = TyUnion.union(keyType, context.withIndex(0) {
-                    exprList[0].guessType(context) ?: Ty.UNKNOWN
-                })
-                elementType = TyUnion.union(elementType, context.withIndex(0) {
-                    exprList[1].guessType(context) ?: Ty.UNKNOWN
-                })
+                keyType = context.withIndex(0) {
+                    exprList[0].guessType(context)?.let {
+                        TyUnion.union(keyType, it, context)
+                    } ?: Ty.UNKNOWN
+                }
+                elementType = context.withIndex(0) {
+                    exprList[1].guessType(context)?.let {
+                        TyUnion.union(elementType, it, context)
+                    } ?: Ty.UNKNOWN
+                }
             } else if (exprList.size == 1) {
                 if (name != null) {
-                    keyType = TyUnion.union(keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name))
+                    keyType = TyUnion.union(keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name), context)
                 } else {
-                    keyType = TyUnion.union(keyType, Ty.NUMBER)
+                    keyType = TyUnion.union(keyType, Ty.NUMBER, context)
                 }
 
-                elementType = TyUnion.union(elementType, exprList[0].guessType(context) ?: Ty.UNKNOWN)
+                elementType = exprList[0].guessType(context)?.let {
+                    TyUnion.union(elementType, it, context)
+                } ?: Ty.UNKNOWN
             }
         } else if (classMember is LuaIndexExpr) {
             val idExpr = classMember.idExpr
 
             if (name != null) {
-                keyType = TyUnion.union(keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name))
-                elementType = TyUnion.union(elementType, prefixTy.guessMemberType(name, context) ?: Ty.UNKNOWN)
+                keyType = TyUnion.union(keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name), context)
+                elementType = prefixTy.guessMemberType(name, context)?.let {
+                    TyUnion.union(elementType, it, context)
+                } ?: Ty.UNKNOWN
             } else if (idExpr != null) {
                 val indexTy = idExpr.guessType(context) ?: Ty.UNKNOWN
-                keyType = TyUnion.union(keyType, indexTy)
-                elementType = TyUnion.union(elementType, prefixTy.guessIndexerType(indexTy, context) ?: Ty.UNKNOWN)
+                keyType = TyUnion.union(keyType, indexTy, context)
+                elementType = prefixTy.guessIndexerType(indexTy, context)?.let {
+                    TyUnion.union(elementType, it, context)
+                } ?: Ty.UNKNOWN
             } else {
                 keyType = Ty.UNKNOWN
                 elementType = Ty.UNKNOWN
             }
         } else if (name != null) {
-            keyType = TyUnion.union(keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name))
-            elementType = TyUnion.union(elementType, classMember.guessType(context) ?: Ty.UNKNOWN)
+            keyType = TyUnion.union(keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name), context)
+            elementType = classMember.guessType(context)?.let {
+                TyUnion.union(elementType, it, context)
+            } ?: Ty.UNKNOWN
         } else if (indexType != null) {
-            keyType = TyUnion.union(keyType, indexType.getType())
-            elementType = TyUnion.union(elementType, classMember.guessType(context) ?: Ty.UNKNOWN)
+            keyType = TyUnion.union(keyType, indexType.getType(), context)
+            elementType = classMember.guessType(context)?.let {
+                TyUnion.union(elementType, it, context)
+            } ?: Ty.UNKNOWN
         } else {
             keyType = Ty.UNKNOWN
             elementType = Ty.UNKNOWN

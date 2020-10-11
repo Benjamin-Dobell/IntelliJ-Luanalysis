@@ -56,7 +56,7 @@ class AssignTypeInspection : StrictInspection() {
                                     return
                                 }
                                 if (value is TyUnion) value.getChildTypes().fold(Ty.VOID as ITy) { acc, ty ->
-                                    if (ty == Ty.NIL) acc else acc.union(ty)
+                                    if (ty == Ty.NIL) acc else acc.union(ty, context)
                                 } else {
                                     value
                                 }
@@ -130,11 +130,11 @@ class AssignTypeInspection : StrictInspection() {
                             if (isLastValue) {
                                 if (variadicTy == null && isLastExpression && multipleResults?.variadic == true) {
                                     variadicTy = if (value is TyMultipleResults) {
-                                        TyMultipleResults.getResult(value)
+                                        TyMultipleResults.getResult(searchContext, value)
                                     } else value
 
                                     if (LuaSettings.instance.isNilStrict) {
-                                        variadicTy = Ty.NIL.union(variadicTy)
+                                        variadicTy = Ty.NIL.union(variadicTy, searchContext)
                                     }
                                 }
 
@@ -159,7 +159,7 @@ class AssignTypeInspection : StrictInspection() {
                             val assignee = assignees[assigneeIndex++]
 
                             if (variadicTy != null) {
-                                variadicTy = variadicTy.union(value)
+                                variadicTy = variadicTy.union(value, searchContext)
                                 value = variadicTy
                             }
 

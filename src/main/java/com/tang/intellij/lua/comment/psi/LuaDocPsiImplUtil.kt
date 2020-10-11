@@ -125,13 +125,15 @@ fun getVisibility(tagField: LuaDocTagField): Visibility {
  * @return 类型集合
  */
 fun getType(tagParamDec: LuaDocTagParam): ITy {
-    val type = tagParamDec.ty?.getType()
-    if (type != null) {
-        val substitutor = LuaCommentUtil.findContainer(tagParamDec).createSubstitutor()
-        if (substitutor != null)
-            return type.substitute(substitutor)
-    }
-    return type ?: Ty.UNKNOWN
+    return tagParamDec.ty?.getType()?.let { ty ->
+        val substitutor = SearchContext.withDumb(tagParamDec.project, null) { context ->
+            LuaCommentUtil.findContainer(tagParamDec).createSubstitutor(context)
+        }
+
+        if (substitutor != null) {
+            ty.substitute(substitutor)
+        } else ty
+    } ?: Ty.UNKNOWN
 }
 
 fun getType(vararg: LuaDocTagVararg): ITy {
@@ -154,9 +156,11 @@ fun getType(returnList: LuaDocReturnList): ITy {
 }
 
 private fun getReturnType(functionReturnType: LuaDocFunctionReturnType): ITy? {
-    return functionReturnType.returnListList.fold(null as ITy?, { returnTy, returnList ->
-        TyUnion.union(returnTy, getType(returnList))
-    })
+    return SearchContext.withDumb(functionReturnType.project, null) { context ->
+        functionReturnType.returnListList.fold(null as ITy?, { returnTy, returnList ->
+            TyUnion.union(returnTy, getType(returnList), context)
+        })
+    }
 }
 
 fun getType(tagReturn: LuaDocTagReturn): ITy {
@@ -380,7 +384,9 @@ fun getType(snippet: LuaDocSnippetTy): ITy {
 
 fun getType(unionTy: LuaDocUnionTy): ITy {
     return unionTy.tyList.fold<LuaDocTy, ITy?>(null, { ty, docTy ->
-        TyUnion.union(ty, docTy.getType())
+        SearchContext.withDumb(unionTy.project, null) { context ->
+            TyUnion.union(ty, docTy.getType(), context)
+        }
     }) ?: Ty.UNKNOWN
 }
 

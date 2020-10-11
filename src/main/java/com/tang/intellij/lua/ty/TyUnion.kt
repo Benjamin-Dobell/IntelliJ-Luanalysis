@@ -21,12 +21,25 @@ import com.intellij.psi.stubs.StubOutputStream
 import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.search.SearchContext
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
 private val displayNameComparator: Comparator<ITy> = Comparator { a, b -> a.displayName.compareTo(b.displayName) }
 
-class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKind.Union) {
+class TyUnion : Ty {
+    private val childSet: TreeSet<ITy>
+
+    private constructor(childSet: TreeSet<ITy>) : super(TyKind.Union) {
+        if (childSet.size < 2) {
+            throw IllegalArgumentException("Unions must contain two or more types. ${childSet.size} were provided.")
+        }
+
+        this.childSet = childSet
+    }
+
+    constructor(childTys: Collection<ITy>) : this(sortedSetOf(displayNameComparator).also { it.addAll(childTys) })
+
     fun getChildTypes() = childSet
 
     val size:Int
@@ -51,7 +64,7 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
             return resolvedType ?: Ty.BOOLEAN
         }
 
-    override fun union(ty: ITy): TyUnion {
+    override fun union(ty: ITy, context: SearchContext): ITy {
         if (ty == Ty.VOID) {
             return this
         }
@@ -65,38 +78,42 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
             unionTys.add(ty)
         }
 
-        return TyUnion.union(unionTys) as TyUnion
+        return TyUnion.union(unionTys, context)
     }
 
-    override fun not(ty: ITy): ITy {
-        val unionTys = mutableListOf<ITy>()
-        unionTys.addAll(childSet)
+    override fun not(ty: ITy, context: SearchContext): ITy {
+        val childTys = mutableListOf<ITy>()
+        childTys.addAll(childSet)
 
         val notTypes = if (ty is TyUnion) ty.childSet else listOf(ty)
 
-        notTypes.forEach {
-            unionTys.remove(it)
-
-            if (it == Ty.FALSE) {
-                if (unionTys.remove(Ty.BOOLEAN)) {
-                    unionTys.add(Ty.TRUE)
+        notTypes.forEach { notTy ->
+            if (!childTys.remove(notTy)) {
+                if (notTy == Ty.FALSE) {
+                    if (childTys.remove(Ty.BOOLEAN)) {
+                        childTys.add(Ty.TRUE)
+                    }
+                } else if (notTy == Ty.TRUE) {
+                    if (childTys.remove(Ty.BOOLEAN)) {
+                        childTys.add(Ty.FALSE)
+                    }
+                } else if (notTy == Ty.BOOLEAN) {
+                    childTys.remove(Ty.TRUE)
+                    childTys.remove(Ty.FALSE)
+                } else {
+                    childTys.removeIf { childTy ->
+                        notTy.contravariantOf(childTy, context, TyVarianceFlags.STRICT_NIL)
+                    }
                 }
-            } else if (it == Ty.TRUE) {
-                if (unionTys.remove(Ty.BOOLEAN)) {
-                    unionTys.add(Ty.FALSE)
-                }
-            } else if (it == Ty.BOOLEAN) {
-                unionTys.remove(Ty.TRUE)
-                unionTys.remove(Ty.FALSE)
             }
         }
 
-        return if (unionTys.size == 1) {
-            unionTys.first()
-        } else if (unionTys.size == 0) {
+        return if (childTys.size == 1) {
+            childTys.first()
+        } else if (childTys.size == 0) {
             Ty.VOID
         } else {
-            TyUnion.union(unionTys)
+            TyUnion.union(childTys, context)
         }
     }
 
@@ -118,7 +135,7 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
         }
 
         return if (substituted) {
-            TyUnion.union(substitutedChildren)
+            TyUnion.union(substitutedChildren, substitutor.searchContext)
         } else this
     }
 
@@ -132,13 +149,13 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
 
     override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
         return childSet.reduce<ITy?, ITy?> { ty, childTy ->
-            TyUnion.union(ty, childTy?.guessMemberType(name, searchContext))
+            TyUnion.union(ty, childTy?.guessMemberType(name, searchContext), searchContext)
         }
     }
 
     override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
         return childSet.reduce<ITy?, ITy?> { ty, childTy ->
-            TyUnion.union(ty, childTy?.guessIndexerType(indexTy, searchContext, exact))
+            TyUnion.union(ty, childTy?.guessIndexerType(indexTy, searchContext, exact), searchContext)
         }
     }
 
@@ -152,13 +169,13 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
 
     override fun equals(other: ITy, context: SearchContext): Boolean {
         val resolvedTy = childSet.reduce { resolved, ty ->
-            resolved.union(Ty.resolve(ty, context))
+            resolved.union(Ty.resolve(ty, context), context)
         }
 
         val otherResolvedTy = Ty.resolve(other, context).let {
             if (it is TyUnion) {
                 it.childSet.reduce { resolved, ty ->
-                    resolved.union(Ty.resolve(ty, context))
+                    resolved.union(Ty.resolve(ty, context), context)
                 }
             } else it
         }
@@ -233,7 +250,7 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
 
         @ExperimentalContracts
         @JvmName("nullableUnion")
-        fun union(t1: ITy?, t2: ITy?): ITy? {
+        fun union(t1: ITy?, t2: ITy?, context: SearchContext): ITy? {
             contract {
                 returns(null) implies (t1 == null && t2 == null)
                 returnsNotNull() implies (t1 != null || t2 != null)
@@ -241,42 +258,63 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
             return when {
                 t1 === null -> t2
                 t2 === null -> t1
-                else -> union(t1, t2)
+                else -> union(t1, t2, context)
             }
         }
 
-        fun union(t1: ITy, t2: ITy): ITy {
+        fun union(t1: ITy, t2: ITy, context: SearchContext): ITy {
             return when {
                 t1 == t2 -> t1
                 t1 is TyUnknown || t2 is TyUnknown -> Ty.UNKNOWN
                 t1 is TyVoid -> t2
                 t2 is TyVoid -> t1
-                t1 is TyUnion -> t1.union(t2)
-                t2 is TyUnion -> t2.union(t1)
+                t1 is TyUnion -> t1.union(t2, context)
+                t2 is TyUnion -> t2.union(t1, context)
                 else -> {
-                    TyUnion.union(listOf(t1, t2))
+                    union(listOf(t1, t2), context)
                 }
             }
         }
 
-        fun union(tys: Iterable<ITy>): ITy {
-            val childSet = sortedSetOf(displayNameComparator)
+        fun union(tys: Iterable<ITy>, context: SearchContext): ITy {
+            val expandedTys = mutableListOf<ITy>()
 
             tys.forEach {
                 if (it is TyUnion) {
-                    childSet.addAll(it.childSet)
+                    expandedTys.addAll(it.childSet)
                 } else if (it != Ty.VOID) {
-                    childSet.add(it)
+                    expandedTys.add(it)
                 }
             }
 
-            if (childSet.contains(Ty.TRUE) && childSet.contains(Ty.FALSE)) {
-                childSet.add(Ty.BOOLEAN)
-            }
+            val childSet = sortedSetOf(displayNameComparator)
 
-            if (childSet.contains(Ty.BOOLEAN)) {
-                childSet.remove(Ty.TRUE)
-                childSet.remove(Ty.FALSE)
+            expandedTys.forEach {
+                val covariant = childSet.contains(it) || childSet.find { childTy ->
+                    childTy.contravariantOf(it, context, TyVarianceFlags.STRICT_NIL)
+                } != null
+
+                if (!covariant) {
+                    if (it == Ty.TRUE) {
+                        if (childSet.remove(Ty.FALSE)) {
+                            childSet.add(Ty.BOOLEAN)
+                        } else {
+                            childSet.add(Ty.TRUE)
+                        }
+                    } else if (it == Ty.FALSE) {
+                        if (childSet.remove(Ty.TRUE)) {
+                            childSet.add(Ty.BOOLEAN)
+                        } else {
+                            childSet.add(Ty.FALSE)
+                        }
+                    } else {
+                        childSet.removeIf { childTy ->
+                            it.contravariantOf(childTy, context, TyVarianceFlags.STRICT_NIL)
+                        }
+
+                        childSet.add(it)
+                    }
+                }
             }
 
             return if (childSet.size == 1) {
@@ -288,16 +326,21 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
 
         // NOTE: This is *not* set subtraction because TyUnion can only represent a union of types, not a true type set.
         // i.e. if t2 contains a type that is covariant of a type in t1, this case is not handled.
-        fun not(t1: ITy, t2: ITy): ITy {
+        fun not(t1: ITy, t2: ITy, context: SearchContext): ITy {
             return when {
-                t1 is TyUnion -> t1.not(t2)
-                t1 == t2 || t2 is TyUnknown || (t2 is TyUnion && t2.childSet.contains(t1)) -> Ty.VOID
+                t1 is TyUnion -> t1.not(t2, context)
+                t2 is TyUnion -> {
+                    if (t2.childSet.contains(t1)
+                            || t2.childSet.find { childTy -> childTy.contravariantOf(t1, context, TyVarianceFlags.STRICT_NIL) } != null) {
+                        Ty.VOID
+                    } else t1
+                }
+                t2 is TyUnknown || t1 == t2 -> Ty.VOID
                 else -> t1
             }
         }
 
         fun getPerfectClass(ty: ITy): ITyClass? {
-            var clazz: ITyClass? = null
             var anonymous: ITyClass? = null
             var global: ITyClass? = null
             each(ty) {
@@ -305,15 +348,11 @@ class TyUnion private constructor(private val childSet: TreeSet<ITy>) : Ty(TyKin
                     when {
                         it.isAnonymous -> anonymous = it
                         it.isGlobal -> global = it
-                        else -> clazz = it
+                        else -> return it
                     }
                 }
-
-                if (clazz != null) {
-                    return@each
-                }
             }
-            return clazz ?: global ?: anonymous
+            return global ?: anonymous
         }
     }
 }
@@ -325,11 +364,13 @@ object TyUnionSerializer : TySerializer<TyUnion>() {
     }
 
     override fun deserializeTy(flags: Int, stream: StubInputStream): TyUnion {
-        val tys = mutableListOf<ITy>()
         val size = stream.readInt()
+        val tys = ArrayList<ITy>(size)
+
         for (i in 0 until size) {
             tys.add(Ty.deserialize(stream))
         }
-        return TyUnion.union(tys) as TyUnion
+
+        return TyUnion(tys)
     }
 }

@@ -7,6 +7,9 @@ local anyNumber
 ---@type string
 local anyString
 
+---@type boolean
+local anyBoolean
+
 ---@type 1
 local number1
 

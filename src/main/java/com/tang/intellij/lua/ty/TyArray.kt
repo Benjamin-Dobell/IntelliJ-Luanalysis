@@ -74,7 +74,7 @@ class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
                         return@processMembers false
                     }
 
-                    indexedMemberType = indexedMemberType.union(otherFieldTy)
+                    indexedMemberType = indexedMemberType.union(otherFieldTy, context)
                 }
             }
             true
@@ -90,7 +90,7 @@ class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
     }
 
     override fun substitute(substitutor: ITySubstitutor): ITy {
-        val substitutedBase = TyMultipleResults.getResult(base.substitute(substitutor))
+        val substitutedBase = TyMultipleResults.getResult(substitutor.searchContext, base.substitute(substitutor))
 
         return if (substitutedBase !== base) {
             TyArray(substitutedBase)

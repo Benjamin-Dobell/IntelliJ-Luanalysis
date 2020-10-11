@@ -100,7 +100,7 @@ private fun LuaExpr.shouldBeInternal(context: SearchContext): ITy? {
                         var sig = it.matchSignature(context, p2)?.signature ?: it.mainSignature
                         val substitutor = p2.createSubstitutor(sig, context)
                         sig = sig.substitute(substitutor)
-                        ret = ret.union(sig.getParamTy(idx))
+                        ret = ret.union(sig.getParamTy(idx), context)
                     }
                 }
                 return ret
@@ -123,7 +123,7 @@ private fun LuaExpr.shouldBeInternal(context: SearchContext): ITy? {
                 if (classFieldTy == null) {
                     false
                 } else {
-                    fieldType = fieldType.union(classFieldTy)
+                    fieldType = fieldType.union(classFieldTy, context)
                     true
                 }
             })

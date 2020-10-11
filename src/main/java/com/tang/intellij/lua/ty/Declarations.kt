@@ -99,7 +99,7 @@ private fun inferReturnTyInner(owner: LuaFuncBodyOwner, searchContext: SearchCon
                          *
                          * type of r is an anonymous ty
                          */
-                        type = type!!.union(it)
+                        type = type!!.union(it, searchContext)
                     }
                 }
             }
@@ -315,7 +315,7 @@ private fun resolveParamType(paramNameDef: LuaParamNameDef, context: SearchConte
             iterator = context.withMultipleResults {
                 callExpr.guessType(context)
             }?.let {
-                TyMultipleResults.getResult(it, 0) as? ITyFunction
+                TyMultipleResults.getResult(context, it, 0) as? ITyFunction
             }
         } else {
             iterator = (exprList?.exprList?.first() as? LuaTypeGuessable)?.guessType(context) as? ITyFunction
@@ -323,16 +323,20 @@ private fun resolveParamType(paramNameDef: LuaParamNameDef, context: SearchConte
 
         if (iterator != null) {
             var result: ITy = Ty.VOID
-            val returnTy = iterator.mainSignature.returnTy?.not(Ty.NIL)?.let { TyMultipleResults.flatten(it) }
+            val returnTy = iterator.mainSignature.returnTy?.not(Ty.NIL, context)?.let {
+                TyMultipleResults.flatten(context, it)
+            }
 
             if (returnTy == null) {
                 return null
             }
 
             if (returnTy is TyMultipleResults) {
-                result = result.union(returnTy.list.getOrNull(paramIndex) ?: Ty.UNKNOWN)
+                result = returnTy.list.getOrNull(paramIndex)?.let {
+                    result.union(it, context)
+                } ?: Ty.UNKNOWN
             } else if (paramIndex == 0) {
-                result = result.union(returnTy)
+                result = result.union(returnTy, context)
             }
 
             return result
@@ -362,7 +366,7 @@ private fun resolveParamType(paramNameDef: LuaParamNameDef, context: SearchConte
         Ty.eachResolved(shouldBe, context) {
             if (it is ITyFunction) {
                 val paramIndex = paramOwner.getIndexFor(paramNameDef)
-                ret = ret.union(it.mainSignature.getParamTy(paramIndex))
+                ret = ret.union(it.mainSignature.getParamTy(paramIndex), context)
             }
         }
 
