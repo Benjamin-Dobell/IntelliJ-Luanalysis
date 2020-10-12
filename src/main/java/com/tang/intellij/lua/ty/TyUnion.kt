@@ -18,6 +18,7 @@ package com.tang.intellij.lua.ty
 
 import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
+import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.search.SearchContext
 import java.util.*
@@ -291,7 +292,9 @@ class TyUnion : Ty {
 
             expandedTys.forEach {
                 val covariant = childSet.contains(it) || childSet.find { childTy ->
-                    childTy.contravariantOf(it, context, TyVarianceFlags.STRICT_NIL)
+                    recursionGuard(childTy, {
+                        childTy.contravariantOf(it, context, TyVarianceFlags.STRICT_NIL)
+                    }) ?: false
                 } != null
 
                 if (!covariant) {
@@ -309,7 +312,9 @@ class TyUnion : Ty {
                         }
                     } else {
                         childSet.removeIf { childTy ->
-                            it.contravariantOf(childTy, context, TyVarianceFlags.STRICT_NIL)
+                            recursionGuard(childTy, {
+                                it.contravariantOf(childTy, context, TyVarianceFlags.STRICT_NIL)
+                            }) ?: false
                         }
 
                         childSet.add(it)

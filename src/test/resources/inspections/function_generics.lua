@@ -252,7 +252,7 @@ stringStringTable = <error descr="Type mismatch. Required: 'table<string, string
 
 ---@generic T : boolean
 local function fn10()
-    ---@generic <error descr="Generic parameters cannot be shadowed, 'T' was previously defined on line 250">T : string</error>
+    ---@generic <error descr="Generic parameters cannot be shadowed, 'T' was previously defined on line 253">T : string</error>
     local function fn10Nested(arg)
     end
 end
@@ -465,7 +465,7 @@ end
 
 anyBoolean, anyString, anyNumber = genericParameterMultipleResults(returnsStringNumber)
 anyBoolean, anyString, <error descr="Type mismatch. Required: 'string' Found: 'number'">anyString</error> = <error descr="Result 3, type mismatch. Required: 'string' Found: 'number'">genericParameterMultipleResults(returnsStringNumber)</error>
-anyBoolean, anyBoolean, anyString, anyNumber = (returnsStringNumber), genericParameterMultipleResults(returnsStringNumber)
+anyBoolean, anyBoolean, anyString, anyNumber = genericParameterMultipleResults(returnsStringNumber), genericParameterMultipleResults(returnsStringNumber)
 
 anyBoolean, anyNumber = genericParameterMultipleResults(returnsNumberVariadicBoolean)
 anyBoolean, anyNumber, nilOrBoolean, nilOrBoolean = genericParameterMultipleResults(returnsNumberVariadicBoolean)

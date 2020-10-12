@@ -229,7 +229,7 @@ abstract class TyClass(override val className: String,
     }
 
     override fun lazyInit(searchContext: SearchContext) {
-        if (!_lazyInitialized) {
+        if (!_lazyInitialized && !searchContext.isDumb) {
             _lazyInitialized = true
             doLazyInit(searchContext)
         }
