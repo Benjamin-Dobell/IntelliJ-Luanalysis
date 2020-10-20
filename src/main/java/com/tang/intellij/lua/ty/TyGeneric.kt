@@ -86,7 +86,7 @@ object TyGenericParamSerializer : TySerializer<TyGenericParameter>() {
 }
 
 interface ITyGeneric : ITy {
-    val params: Array<ITy>
+    val params: Array<out ITy>
     val base: ITy
 
     fun getParamTy(index: Int): ITy {
@@ -108,7 +108,7 @@ interface ITyGeneric : ITy {
     }
 }
 
-class TyGeneric(override val params: Array<ITy>, override val base: ITy) : Ty(TyKind.Generic), ITyGeneric {
+class TyGeneric(override val params: Array<out ITy>, override val base: ITy) : Ty(TyKind.Generic), ITyGeneric {
 
     override fun equals(other: Any?): Boolean {
         return other is ITyGeneric && other.base == base && other.displayName == displayName

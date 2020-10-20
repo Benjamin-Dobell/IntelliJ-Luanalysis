@@ -40,12 +40,17 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                     is TyUnknown -> sb.append(renderType(Constants.WORD_ANY))
                     is TyNil -> sb.append(renderType(Constants.WORD_NIL))
                     is ITyGeneric -> {
-                        val list = mutableListOf<String>()
-                        ty.params.forEach { list.add(it.displayName) }
-
                         val base = ty.base
-                        val baseName = if (base is ITyClass) base.className else base.displayName
-                        sb.append("${baseName}${renderParamsList(list)}")
+
+                        if (base is TyDocTable) {
+                            visitClass(base)
+                        } else {
+                            val list = mutableListOf<String>()
+                            ty.params.forEach { list.add(it.displayName) }
+
+                            val baseName = if (base is ITyClass) base.className else base.displayName
+                            sb.append("${baseName}${renderParamsList(list)}")
+                        }
                     }
                     is TyGenericParameter -> {
 
@@ -160,13 +165,19 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
             clazz is TyDocTable -> {
                 val context = SearchContext.get(clazz.table.project)
                 val list = mutableListOf<String>()
-                clazz.table.tableFieldList.forEach {
-                    val key = it.name ?: "[${render(it.guessIndexType(context) ?: Ty.VOID)}]"
-                    it.valueType?.let { ty -> list.add("${key}: ${render(ty.getType())}") }
+                clazz.table.tableFieldList.forEach { field ->
+                    val key = field.name ?: "[${render(field.guessIndexType(context) ?: Ty.VOID)}]"
+                    field.valueType?.let { fieldValue ->
+                        val fieldTy = fieldValue.getType()
+                        val renderedFieldTy = (fieldTy as? TyGenericParameter)?.varName ?: render(fieldTy)
+                        list.add("${key}: ${renderedFieldTy}")
+                    }
                 }
                 "{ ${list.joinToString(", ")} }"
             }
-            clazz is TyGenericParameter -> clazz.superClass?.let { "${clazz.varName} : ${it.displayName}" } ?: clazz.varName
+            clazz is TyGenericParameter -> {
+                clazz.superClass?.let { "${clazz.varName} : ${it.displayName}" } ?: clazz.varName
+            }
             clazz.hasFlag(TyFlags.ANONYMOUS_TABLE) -> renderType(Constants.WORD_TABLE)
             clazz.isAnonymous -> "[local ${clazz.varName}]"
             clazz.isGlobal -> "[global ${clazz.varName}]"

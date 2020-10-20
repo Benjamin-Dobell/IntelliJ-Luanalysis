@@ -242,8 +242,9 @@ private fun guessBinaryOpType(binaryExpr : LuaBinaryExpr, context:SearchContext)
 
 fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): ITySubstitutor {
     val selfSubstitutor = TySelfSubstitutor(context, this)
+    val genericParams = sig.genericParams
 
-    if (sig.isGeneric()) {
+    if (genericParams?.isNotEmpty() == true) {
         val list = mutableListOf<ITy>()
         // self type
         if (this.isMethodColonCall) {
@@ -270,7 +271,7 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
             }
         }
 
-        val genericAnalyzer = GenericAnalyzer(sig.genericParams, context)
+        val genericAnalyzer = GenericAnalyzer(genericParams, context, this.args)
 
         var processedIndex = -1
         sig.processParameters { index, param ->
@@ -290,13 +291,14 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
             }
         }
 
-        val map = genericAnalyzer.map.toMutableMap()
+        val analyzedParams = genericAnalyzer.analyzedParams.toMutableMap()
+
         sig.genericParams?.forEach {
             val superCls = it.superClass
-            if (superCls != null && Ty.isInvalid(map[it.name])) map[it.name] = superCls
+            if (superCls != null && Ty.isInvalid(analyzedParams[it.name])) analyzedParams[it.name] = superCls
         }
 
-        return TyChainSubstitutor.chain(selfSubstitutor, TyParameterSubstitutor(context, map))!!
+        return TyChainSubstitutor.chain(selfSubstitutor, TyParameterSubstitutor(context, analyzedParams))!!
     }
 
     return selfSubstitutor
@@ -304,9 +306,7 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
 
 private fun LuaCallExpr.getReturnTy(sig: IFunSignature, context: SearchContext): ITy? {
     val substitutor = createSubstitutor(sig, context)
-    val returnTy = sig.returnTy?.let {
-        it.substitute(substitutor)
-    } ?: TyMultipleResults(listOf(Ty.UNKNOWN), true)
+    val returnTy = sig.returnTy?.substitute(substitutor) ?: TyMultipleResults(listOf(Ty.UNKNOWN), true)
 
     return if (context.supportsMultipleResults) {
         returnTy

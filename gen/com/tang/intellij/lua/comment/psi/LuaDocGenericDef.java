@@ -6,7 +6,7 @@ import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNameIdentifierOwner;
 import com.tang.intellij.lua.psi.LuaClass;
-import com.tang.intellij.lua.ty.ITyClass;
+import com.tang.intellij.lua.ty.TyGenericParameter;
 
 public interface LuaDocGenericDef extends PsiNameIdentifierOwner, LuaDocPsiElement, LuaClass {
 
@@ -17,7 +17,7 @@ public interface LuaDocGenericDef extends PsiNameIdentifierOwner, LuaDocPsiEleme
   PsiElement getId();
 
   @NotNull
-  ITyClass getType();
+  TyGenericParameter getType();
 
   @Nullable
   PsiElement getNameIdentifier();

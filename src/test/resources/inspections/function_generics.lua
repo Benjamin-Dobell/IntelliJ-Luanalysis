@@ -319,19 +319,52 @@ local one
 local three
 
 
+---@generic T
+---@vararg T
+---@return T
+local function merge(...)
+    ---@type T
+    local fakeResult
+
+    return fakeResult
+end
+
+---@type {a: string}
+local looseAnonymousShape
+local strictAnonymousShape = {a = 'specific string'}
+
+looseAnonymousShape = merge(looseAnonymousShape, strictAnonymousShape)
+looseAnonymousShape = merge(strictAnonymousShape, looseAnonymousShape)
+strictAnonymousShape = <error descr="Type mismatch. Required: 'table' Found: '{ a: string }'">merge(looseAnonymousShape, strictAnonymousShape)</error>
+
+stringStringTable = merge(stringStringTable, {a = 'specific string'})
+stringStringTable = <error descr="Type mismatch. Required: 'table<string, string>' Found: 'table | table<string, string>'">merge(stringStringTable, strictAnonymousShape)</error>
+
 ---@generic K, V
 ---@param a table<K, V>
 ---@param b table<K, V>
 ---@return table<K, V>
-local function merge(a, b)
+local function mergeGenericTables(a, b)
+    ---@type table<K, V>
+    local fakeResult
+
+    return fakeResult
+end
+
+
+---@generic K, V
+---@param a table<K, V>
+---@param b table<K, V>
+---@return table<K, V>
+local function mergeGenericTables(a, b)
     ---@type table<K, V>
     local res
 
     return res
 end
 
-local mergedLiteralArr = merge({1, 2}, {3, 4})
-local mergedLiteralMap = merge({a = 1, b = 2}, {c = 3, d = 4})
+local mergedLiteralArr = mergeGenericTables({1, 2}, {3, 4})
+local mergedLiteralMap = mergeGenericTables({a = 1, b = 2}, {c = 3, d = 4})
 
 mergedLiteralArr[1] = one
 mergedLiteralArr[1] = three
@@ -343,7 +376,7 @@ mergedLiteralMap.a = <error descr="Type mismatch. Required: '1 | 2 | 3 | 4' Foun
 
 <error descr="No such member 'e' found on type 'table<\"a\" | \"b\" | \"c\" | \"d\", 1 | 2 | 3 | 4>'">mergedLiteralMap.e</error> = one
 
-local mergedStringStringMap = merge(stringStringTable, stringStringTable)
+local mergedStringStringMap = mergeGenericTables(stringStringTable, stringStringTable)
 
 mergedStringStringMap.a = "a string"
 mergedStringStringMap.a = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>
@@ -352,10 +385,10 @@ mergedStringStringMap['a'] = <error descr="Type mismatch. Required: 'string' Fou
 
 
 ---@type fun<K, V>(a: table<K, V>, b: table<K, V>): table<K, V>
-local typeMerge
+local typeMergeGenericTables
 
-local typeMergedLiteralArr = typeMerge({1, 2}, {3, 4})
-local typeMergedLiteralMap = typeMerge({a = 1, b = 2}, {c = 3, d = 4})
+local typeMergedLiteralArr = typeMergeGenericTables({1, 2}, {3, 4})
+local typeMergedLiteralMap = typeMergeGenericTables({a = 1, b = 2}, {c = 3, d = 4})
 
 typeMergedLiteralArr[1] = one
 typeMergedLiteralArr[1] = three
@@ -367,7 +400,7 @@ typeMergedLiteralMap.a = <error descr="Type mismatch. Required: '1 | 2 | 3 | 4' 
 
 <error descr="No such member 'e' found on type 'table<\"a\" | \"b\" | \"c\" | \"d\", 1 | 2 | 3 | 4>'">typeMergedLiteralMap.e</error> = one
 
-local typeMergedStringStringMap = typeMerge(stringStringTable, stringStringTable)
+local typeMergedStringStringMap = typeMergeGenericTables(stringStringTable, stringStringTable)
 
 typeMergedStringStringMap.a = "a string"
 typeMergedStringStringMap.a = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>
@@ -376,11 +409,11 @@ typeMergedStringStringMap['a'] = <error descr="Type mismatch. Required: 'string'
 
 
 ---@overload fun<K, V>(a: table<K, V>, b: table<K, V>): table<K, V>
-local function overloadMerge(a, b)
+local function overloadMergeGenericTables(a, b)
 end
 
-local overloadMergedLiteralArr = overloadMerge({1, 2}, {3, 4})
-local overloadMergedLiteralMap = overloadMerge({a = 1, b = 2}, {c = 3, d = 4})
+local overloadMergedLiteralArr = overloadMergeGenericTables({1, 2}, {3, 4})
+local overloadMergedLiteralMap = overloadMergeGenericTables({a = 1, b = 2}, {c = 3, d = 4})
 
 overloadMergedLiteralArr[1] = one
 overloadMergedLiteralArr[1] = three
@@ -392,7 +425,7 @@ overloadMergedLiteralMap.a = <error descr="Type mismatch. Required: '1 | 2 | 3 |
 
 <error descr="No such member 'e' found on type 'table<\"a\" | \"b\" | \"c\" | \"d\", 1 | 2 | 3 | 4>'">overloadMergedLiteralMap.e</error> = one
 
-local overloadMergedStringStringMap = overloadMerge(stringStringTable, stringStringTable)
+local overloadMergedStringStringMap = overloadMergeGenericTables(stringStringTable, stringStringTable)
 
 overloadMergedStringStringMap.a = "a string"
 overloadMergedStringStringMap.a = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>
@@ -486,3 +519,41 @@ end
 
 anyBoolean, nilOrString, nilOrNumberOrString, nilOrNumberOrString = variadicGenericParameterMultipleResults(returnsStringNumber)
 anyBoolean, nilOrString, <error descr="Type mismatch. Required: 'nil | number' Found: 'nil | number | string'">nilOrNumber</error> = <error descr="Result 3, type mismatch. Required: 'nil | number' Found: 'nil | number | string'">variadicGenericParameterMultipleResults(returnsStringNumber)</error>
+
+
+---@shape StrictFieldAShape
+---@field a 'string1'
+
+---@shape LooseFieldAShape
+---@field a string
+
+---@type StrictFieldAShape
+local strictfieldAShape
+
+---@type LooseFieldAShape
+local looseFieldAShape
+
+---@generic T
+---@param thing T
+---@param thing2 T
+---@return T
+local function simpleInlineWidening(thing, thing2)
+    return thing
+end
+
+looseFieldAShape = simpleInlineWidening({a = anyString}, {a = string1})
+strictfieldAShape = <error descr="Type mismatch. Required: 'StrictFieldAShape' Found: 'table'">simpleInlineWidening({a = anyString}, {a = string1})</error>
+strictfieldAShape = simpleInlineWidening({a = string1}, {a = string1})
+
+---@generic T : string
+---@param thing {a: T}
+---@param thing2 {a: T}
+---@return T
+local function implicitGenericSubstitution(thing, thing2)
+    return thing.a
+end
+
+---@type 'hi' | 'bye'
+local hiOrBye = implicitGenericSubstitution({a = 'hi'}, {a = 'bye'})
+string1 = <error descr="Type mismatch. Required: '\"string1\"' Found: '\"bye\" | \"hi\"'">implicitGenericSubstitution({a = 'hi'}, {a = 'bye'})</error>
+anyString = implicitGenericSubstitution({a = <error descr="Type mismatch. Required: 'T : string' Found: '\"hi\"'">'hi'</error>}, <error descr="Type mismatch. Missing member: 'a' of: '{ a: T }'">{b = 'nope'}</error>)

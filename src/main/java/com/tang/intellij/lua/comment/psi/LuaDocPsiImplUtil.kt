@@ -214,7 +214,7 @@ fun getType(tagClass: LuaDocTagClass): ITyClass {
     return stub?.classType ?: TyPsiDocClass(tagClass)
 }
 
-fun getType(genericDef: LuaDocGenericDef): ITyClass {
+fun getType(genericDef: LuaDocGenericDef): TyGenericParameter {
     return TyGenericParameter(genericDef)
 }
 

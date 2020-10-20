@@ -17,8 +17,8 @@
 package com.tang.intellij.lua.ty
 
 import com.tang.intellij.lua.Constants
-import com.tang.intellij.lua.psi.LuaCallExpr
-import com.tang.intellij.lua.psi.prefixExpr
+import com.tang.intellij.lua.comment.LuaCommentUtil
+import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
 
 interface ITySubstitutor {
@@ -31,23 +31,36 @@ interface ITySubstitutor {
     fun substitute(ty: ITy): ITy
 }
 
-class GenericAnalyzer(params: Array<TyGenericParameter>?, val searchContext: SearchContext) : TyVisitor() {
-    val map: MutableMap<String, ITy> = mutableMapOf()
+class GenericAnalyzer(params: Array<TyGenericParameter>, val searchContext: SearchContext, val luaPsiElement: LuaPsiElement? = null) : TyVisitor() {
+    private val paramTyMap: MutableMap<String, ITy> = mutableMapOf()
+    private val genericMap: Map<String, TyGenericParameter> = params.associateBy {
+        it.className
+    }
 
-    private val substitutor = TyParameterSubstitutor(searchContext, map)
-    private val constraints : Map<String, ITy>
+    private val substitutor = TyParameterSubstitutor(searchContext, paramTyMap)
 
-    private var cur: ITy
+    private var cur: ITy = Ty.VOID
 
-    init {
-        val constraints = mutableMapOf<String, ITy>()
+    val analyzedParams: Map<String, ITy> = paramTyMap
 
-        params?.forEach {
-            constraints[it.className] = it
+    private fun isInlineTable(ty: ITy): Boolean {
+        if (ty !is TyTable) {
+            return false
         }
 
-        this.constraints = constraints.toMap()
-        this.cur = Ty.VOID
+        var ancestor = ty.table.parent
+
+        while (ancestor is LuaTableExpr) {
+            ancestor = ancestor.parent
+        }
+
+        return ancestor == luaPsiElement || (ancestor is LuaExprList && ancestor.parent == luaPsiElement)
+    }
+
+    private fun varianceFlags(ty: ITy): Int {
+        return if (isInlineTable(ty)) {
+            TyVarianceFlags.STRICT_UNKNOWN or TyVarianceFlags.WIDEN_TABLES
+        } else TyVarianceFlags.STRICT_UNKNOWN
     }
 
     fun analyze(arg: ITy, par: ITy) {
@@ -75,26 +88,41 @@ class GenericAnalyzer(params: Array<TyGenericParameter>?, val searchContext: Sea
 
         if (clazz is TyGenericParameter) {
             val genericName = clazz.className
-            val constraint = constraints.get(genericName)
+            val genericParam = genericMap.get(genericName)
 
-            if (constraint != null) {
-                val mappedType = map.get(genericName)
+            if (genericParam != null) {
+                val mappedType = paramTyMap.get(genericName)
                 val currentType = cur.substitute(substitutor)
 
-                map[genericName] = if (constraint.contravariantOf(currentType, searchContext, TyVarianceFlags.ABSTRACT_PARAMS or TyVarianceFlags.STRICT_UNKNOWN)) {
+                paramTyMap[genericName] = if (genericParam.contravariantOf(currentType, searchContext, TyVarianceFlags.ABSTRACT_PARAMS or TyVarianceFlags.STRICT_UNKNOWN)) {
                     if (mappedType == null) {
                         currentType
-                    } else if (mappedType.contravariantOf(currentType, searchContext, TyVarianceFlags.STRICT_UNKNOWN)) {
+                    } else if (mappedType.contravariantOf(currentType, searchContext, varianceFlags(currentType))) {
                         mappedType
-                    } else if (currentType.contravariantOf(mappedType, searchContext, TyVarianceFlags.STRICT_UNKNOWN)) {
+                    } else if (currentType.contravariantOf(mappedType, searchContext, varianceFlags(mappedType))) {
                         currentType
                     } else {
                         mappedType.union(currentType, searchContext)
                     }
                 } else {
-                    constraint
+                    genericParam
                 }
             }
+        } else if (clazz is TyDocTable) {
+            clazz.processMembers(searchContext, { _, classMember ->
+                val curMember = classMember.guessIndexType(searchContext)?.let {
+                    cur.findIndexer(it, searchContext, false)
+                } ?: classMember.name?.let { cur.findMember(it, searchContext) }
+
+                val classMemberTy = classMember.guessType(searchContext) ?: Ty.UNKNOWN
+                val curMemberTy = curMember?.guessType(searchContext) ?: Ty.NIL
+
+                warp(curMemberTy) {
+                    Ty.resolve(classMemberTy, searchContext).accept(this)
+                }
+
+                true
+            }, true)
         }
     }
 
@@ -300,7 +328,31 @@ class TySelfSubstitutor(context: SearchContext, val call: LuaCallExpr?, val self
 
 class TyParameterSubstitutor(searchContext: SearchContext, val map: Map<String, ITy>) : TySubstitutor(searchContext) {
     override fun substitute(clazz: ITyClass): ITy {
-        return if (clazz is TyGenericParameter) map.get(clazz.className) ?: clazz else clazz
+        if (clazz is TyGenericParameter) {
+            return map.get(clazz.className) ?: clazz
+        } else if (clazz is TyDocTable) {
+            val params = clazz.params
+
+            if (params?.isNotEmpty() == true) {
+                var paramsSubstituted = false
+
+                val substitutedParams = params.map {
+                    val substitutedParam = it.substitute(this)
+
+                    if (substitutedParam != it) {
+                        paramsSubstituted = true
+                    }
+
+                    substitutedParam
+                }
+
+                if (paramsSubstituted) {
+                    return TyGeneric(substitutedParams.toTypedArray(), clazz)
+                }
+            }
+        }
+
+        return clazz
     }
 }
 

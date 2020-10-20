@@ -23,6 +23,8 @@ import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.Processor
 import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.Constants
+import com.tang.intellij.lua.comment.LuaCommentUtil
+import com.tang.intellij.lua.comment.psi.LuaDocGeneralTy
 import com.tang.intellij.lua.comment.psi.LuaDocTableDef
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass
 import com.tang.intellij.lua.psi.*
@@ -478,7 +480,28 @@ fun getDocTableTypeName(table: LuaDocTableDef): String {
     return "10|$fileName|${table.node.startOffset}"
 }
 
-class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table)) {
+private fun getDocTableImplicitParams(table: LuaDocTableDef): Array<TyGenericParameter>? {
+    val params = mutableListOf<TyGenericParameter>()
+
+    table.tableFieldList.forEach { field ->
+        val value = field.valueType
+
+        if (value is LuaDocGeneralTy) {
+            val tyName = value.classNameRef.id.text
+            val param = LuaPsiTreeUtil.findGenericDef(tyName, table, true)?.type
+
+            if (param != null && !params.contains(param)) {
+                params.add(param)
+            }
+        }
+    }
+
+    return if (params.isNotEmpty()) {
+        params.toTypedArray()
+    } else null
+}
+
+class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table), getDocTableImplicitParams(table)) {
     init {
         this.flags = TyFlags.SHAPE
     }

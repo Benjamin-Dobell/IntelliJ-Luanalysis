@@ -297,7 +297,9 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
             val paramType = pi.ty
             val argType = typeInfo.ty
             val argExpr = args.getOrNull(i) ?: args.last()
-            val varianceFlags = if (argExpr is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
+            val varianceFlags = if (argExpr is LuaTableExpr) {
+                TyVarianceFlags.WIDEN_TABLES
+            } else 0
 
             if (processProblem != null) {
                 val contravariant = ProblemUtil.contravariantOf(paramType, argType, context, varianceFlags, null, argExpr) { _, element, message, highlightType ->

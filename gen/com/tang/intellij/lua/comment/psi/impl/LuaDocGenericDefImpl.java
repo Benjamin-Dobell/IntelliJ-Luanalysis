@@ -10,7 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.comment.psi.LuaDocTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.tang.intellij.lua.comment.psi.*;
-import com.tang.intellij.lua.ty.ITyClass;
+import com.tang.intellij.lua.ty.TyGenericParameter;
 
 public class LuaDocGenericDefImpl extends ASTWrapperPsiElement implements LuaDocGenericDef {
 
@@ -41,7 +41,7 @@ public class LuaDocGenericDefImpl extends ASTWrapperPsiElement implements LuaDoc
 
   @Override
   @NotNull
-  public ITyClass getType() {
+  public TyGenericParameter getType() {
     return LuaDocPsiImplUtilKt.getType(this);
   }
 
