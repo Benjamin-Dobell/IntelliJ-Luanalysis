@@ -26,6 +26,7 @@ import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.Ty
 import com.tang.intellij.lua.ty.TySnippet
 import com.tang.intellij.lua.ty.TyUnion
+import com.tang.intellij.lua.ty.isGlobal
 
 class UndeclaredMemberInspection : StrictInspection() {
     override fun buildVisitor(myHolder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor =
@@ -36,18 +37,20 @@ class UndeclaredMemberInspection : StrictInspection() {
                     val memberName = o.name
 
                     Ty.eachResolved(prefix, context) { prefixTy ->
-                        if (memberName != null) {
-                            if (prefixTy.guessMemberType(memberName, context) == null) {
-                                myHolder.registerProblem(o, "No such member '%s' found on type '%s'".format(memberName, prefixTy))
-                            }
-                        } else {
-                            o.idExpr?.guessType(context)?.let { indexTy ->
-                                TyUnion.each(indexTy) {
-                                    if (it !is TySnippet && prefixTy.guessIndexerType(it, context) == null) {
-                                        myHolder.registerProblem(o, "No such indexer '[%s]' found on type '%s'".format(it.displayName, prefixTy))
-                                    }
+                        if (!prefixTy.isGlobal) {
+                            if (memberName != null) {
+                                if (prefixTy.guessMemberType(memberName, context) == null) {
+                                    myHolder.registerProblem(o, "No such member '%s' found on type '%s'".format(memberName, prefixTy))
                                 }
+                            } else {
+                                o.idExpr?.guessType(context)?.let { indexTy ->
+                                    TyUnion.each(indexTy) {
+                                        if (it !is TySnippet && prefixTy.guessIndexerType(it, context) == null) {
+                                            myHolder.registerProblem(o, "No such indexer '[%s]' found on type '%s'".format(it.displayName, prefixTy))
+                                        }
+                                    }
 
+                                }
                             }
                         }
                     }

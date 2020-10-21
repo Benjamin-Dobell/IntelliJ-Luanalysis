@@ -62,19 +62,21 @@ aNumber, aString = --[[---@not string, number]] multiReturn2(true)
 aNumber = <error descr="Type mismatch. Required: 'number' Found: 'number | string'">multiReturn2(true)</error>
 aNumber = --[[---@not string]] multiReturn2(true)
 
-
 ---@type number[]
 local numberArray
 
-local a, b, c = --[[---@not nil, nil, nil]] table.unpack(numberArray, 1, 3)
+local a = --[[---@not nil]] table.unpack(numberArray, 1, 1)
+local a2, b2, c2 = --[[---@not nil, nil, nil]] table.unpack(numberArray, 1, 3)
 
 aNumber = a
-aNumber = b
-aNumber = c
+aNumber = a2
+aNumber = b2
+aNumber = c2
 
 aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">a</error>
-aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">b</error>
-aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">c</error>
+aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">a2</error>
+aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">b2</error>
+aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">c2</error>
 
 ---@type (number | string)[]
 local stringOrNumberArray
@@ -114,3 +116,11 @@ nilOrNumber = <error descr="Type mismatch. Required: 'nil | number' Found: 'nil 
 nilOrString = j
 nilOrString = k
 nilOrString = l
+
+---@return any
+local function notNilAny()
+    ---@type any[]
+    local anyArray
+
+    return --[[---@not nil]] table.unpack(anyArray, 1)
+end
