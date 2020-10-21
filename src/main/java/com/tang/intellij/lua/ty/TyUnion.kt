@@ -293,7 +293,7 @@ class TyUnion : Ty {
             expandedTys.forEach {
                 val covariant = childSet.contains(it) || childSet.find { childTy ->
                     recursionGuard(childTy, {
-                        childTy.contravariantOf(it, context, TyVarianceFlags.STRICT_NIL)
+                        childTy.contravariantOf(it, context, TyVarianceFlags.STRICT_NIL or TyVarianceFlags.STRICT_UNKNOWN)
                     }) ?: false
                 } != null
 
@@ -313,7 +313,7 @@ class TyUnion : Ty {
                     } else {
                         childSet.removeIf { childTy ->
                             recursionGuard(childTy, {
-                                it.contravariantOf(childTy, context, TyVarianceFlags.STRICT_NIL)
+                                it.contravariantOf(childTy, context, TyVarianceFlags.STRICT_NIL or TyVarianceFlags.STRICT_UNKNOWN)
                             }) ?: false
                         }
 
