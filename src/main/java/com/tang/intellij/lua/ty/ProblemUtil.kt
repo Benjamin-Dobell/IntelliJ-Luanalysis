@@ -295,7 +295,9 @@ object ProblemUtil {
 
                     source.processMembers(context) { _, sourceMember ->
                         val indexTy = sourceMember.guessIndexType(context)
-                        val highlightElement = if (sourceIsInline) sourceMember else sourceElement
+                        val highlightElement = if (sourceIsInline) {
+                            sourceMember
+                        } else sourceElement
 
                         if (indexTy == null || indexTy !is TyPrimitiveLiteral || indexTy.primitiveKind != TyPrimitiveKind.Number) {
                             isContravariant = false
@@ -329,9 +331,15 @@ object ProblemUtil {
                             if (it is TyMultipleResults) it.list else listOf(it)
                         }
 
+                        val valueHighlightElement = if (sourceIsInline) {
+                            if (sourceMember is LuaTableField) {
+                                sourceMember.valueExpr ?: sourceMember
+                            } else sourceMember
+                        } else sourceElement
+
                         sourceFieldTypes.forEach { sourceFieldTy ->
-                            if (baseIsShape && sourceMember is LuaTableExpr) {
-                                contravariantOf(base, sourceFieldTy, context, varianceFlags, targetElement, sourceMember) { targetElement, sourceElement, message, highlightType ->
+                            if (sourceIsInline && baseIsShape && valueHighlightElement is LuaTableExpr) {
+                                contravariantOf(base, sourceFieldTy, context, varianceFlags, targetElement, valueHighlightElement) { targetElement, sourceElement, message, highlightType ->
                                     isContravariant = false
                                     problems.add(Problem(targetElement, sourceElement, message, highlightType))
                                 }
@@ -339,7 +347,7 @@ object ProblemUtil {
                                 isContravariant = false
                                 problems.add(Problem(
                                         targetElement,
-                                        highlightElement,
+                                        valueHighlightElement,
                                         "Type mismatch. Required: '%s' Found: '%s'".format(base.displayName, sourceFieldTy.displayName)
                                 ))
                             }
