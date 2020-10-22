@@ -22,6 +22,7 @@ import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.BitUtil
 import com.intellij.util.io.StringRef
+import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.impl.LuaIndexExprImpl
 import com.tang.intellij.lua.search.SearchContext
@@ -70,8 +71,10 @@ class LuaIndexExprType : LuaStubElementType<LuaIndexExprStub, LuaIndexExpr>("IND
                 indexExpr.guessParentType(it)
             }
 
+            val isSelf = (indexExpr.exprList.firstOrNull() as? LuaNameExpr)?.name == Constants.WORD_SELF
+
             TyUnion.each(ty) {
-                if (it is ITyClass && it !is TySerializedClass) {
+                if (it is ITyClass && (isSelf || it !is TySerializedClass)) {
                     classNameSet.add(it.className)
                 }
             }
