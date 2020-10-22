@@ -534,14 +534,6 @@ private fun LuaTableExpr.infer(context: SearchContext): ITy? {
                     if (ty != null) {
                         return TyArray(ty)
                     }
-                } else {
-                    val elementTy = context.withIndex(0) {
-                        valueExpr.guessType(context)
-                    }
-
-                    if (elementTy != null) {
-                        return TyArray(elementTy)
-                    }
                 }
             }
         }
