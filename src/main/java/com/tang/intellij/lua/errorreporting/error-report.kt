@@ -16,12 +16,14 @@
 
 package com.tang.intellij.lua.errorreporting
 
+import com.intellij.AbstractBundle
 import com.intellij.CommonBundle
 import com.intellij.diagnostic.AbstractMessage
 import com.intellij.diagnostic.IdeErrorsDialog
 import com.intellij.diagnostic.ReportMessages
 import com.intellij.ide.DataManager
 import com.intellij.ide.plugins.PluginManager
+import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.idea.IdeaLogger
 import com.intellij.notification.NotificationListener
 import com.intellij.notification.NotificationType
@@ -174,12 +176,10 @@ class GitHubErrorReporter : ErrorReportSubmitter() {
 				IdeaLogger.ourLastActionId.orEmpty(),
 				description ?: "<No description>",
 				event.message ?: event.throwable.message.toString())
-		IdeErrorsDialog.findPluginId(event.throwable)?.let { pluginId ->
-			PluginManager.getPlugin(pluginId)?.let { ideaPluginDescriptor ->
-				if (!ideaPluginDescriptor.isBundled) {
-					bean.pluginName = ideaPluginDescriptor.name
-					bean.pluginVersion = ideaPluginDescriptor.version
-				}
+		IdeErrorsDialog.getPlugin(event)?.let { ideaPluginDescriptor ->
+			if (!ideaPluginDescriptor.isBundled) {
+				bean.pluginName = ideaPluginDescriptor.name
+				bean.pluginVersion = ideaPluginDescriptor.version
 			}
 		}
 
@@ -202,9 +202,9 @@ class GitHubErrorReporter : ErrorReportSubmitter() {
 		private val project: Project?) : Consumer<SubmittedReportInfo> {
 		override fun consume(reportInfo: SubmittedReportInfo) {
 			consumer.consume(reportInfo)
-			if (reportInfo.status == SubmissionStatus.FAILED) ReportMessages.GROUP.createNotification(ReportMessages.ERROR_REPORT,
+			if (reportInfo.status == SubmissionStatus.FAILED) ReportMessages.GROUP.createNotification(ReportMessages.getErrorReport(),
 				reportInfo.linkText, NotificationType.ERROR, null).setImportant(false).notify(project)
-			else ReportMessages.GROUP.createNotification(ReportMessages.ERROR_REPORT, reportInfo.linkText,
+			else ReportMessages.GROUP.createNotification(ReportMessages.getErrorReport(), reportInfo.linkText,
 				NotificationType.INFORMATION, NotificationListener.URL_OPENING_LISTENER).setImportant(false).notify(project)
 		}
 	}
@@ -243,7 +243,7 @@ private object ErrorReportBundle {
 
 	@JvmStatic
 	internal fun message(@PropertyKey(resourceBundle = BUNDLE) key: String, vararg params: Any) =
-		CommonBundle.message(bundle, key, *params)
+		AbstractBundle.message(bundle, key, *params)
 }
 
 private class AnonymousFeedbackTask(
@@ -264,7 +264,7 @@ private fun getKeyValuePairs(
 		error: GitHubErrorBean,
 		appInfo: ApplicationInfoEx,
 		namesInfo: ApplicationNamesInfo): MutableMap<String, String> {
-	PluginManager.getPlugin(PluginId.findId("com.tang"))?.run {
+	PluginManagerCore.getPlugin(PluginId.findId("com.tang"))?.run {
 		if (error.pluginName.isBlank()) error.pluginName = name
 		if (error.pluginVersion.isBlank()) error.pluginVersion = version
 	}

@@ -20,7 +20,7 @@ import com.intellij.codeInsight.template.postfix.templates.StringBasedPostfixTem
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.codeInsight.postfix.LuaPostfixUtils.selectorTopmost
 
-class LuaIfNotPostfixTemplate : StringBasedPostfixTemplate("if_not", "if not expr then end", selectorTopmost()) {
+class LuaIfNotPostfixTemplate : StringBasedPostfixTemplate("if_not", "if not expr then end", selectorTopmost(), null) {
     override fun getTemplateString(psiElement: PsiElement): String? {
         return "if not \$expr$ then\n\$END$\nend"
     }

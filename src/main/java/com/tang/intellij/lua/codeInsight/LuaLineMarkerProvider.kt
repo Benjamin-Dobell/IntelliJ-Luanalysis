@@ -83,10 +83,10 @@ class LuaLineMarkerProvider : LineMarkerProvider {
             // OverridenMethod
             val search = LuaOverridingMethodsSearch.search(methodDef)
             if (search.findFirst() != null && classMethodNameId != null) {
-                result.add(LineMarkerInfo(classMethodNameId,
+                result.add(LineMarkerInfo(
+                        classMethodNameId,
                         classMethodNameId.textRange,
                         AllIcons.Gutter.OverridenMethod,
-                        Pass.LINE_MARKERS,
                         null,
                         object : LuaLineMarkerNavigator<PsiElement, LuaClassMethod>() {
 
@@ -106,7 +106,6 @@ class LuaLineMarkerProvider : LineMarkerProvider {
                 val lineSeparator = LineMarkerInfo(anchor,
                         anchor.textRange,
                         null,
-                        Pass.LINE_MARKERS,
                         null,
                         null,
                         GutterIconRenderer.Alignment.RIGHT)
@@ -123,8 +122,7 @@ class LuaLineMarkerProvider : LineMarkerProvider {
                 result.add(LineMarkerInfo(id,
                         id.textRange,
                         AllIcons.Gutter.OverridenMethod,
-                        Pass.LINE_MARKERS,
-                        Function<PsiElement, String> { element.name },
+                        { element.name },
                         object : LuaLineMarkerNavigator<PsiElement, LuaDocTagClass>() {
                             override fun getTitle(elt: PsiElement)
                                     = "Choose Subclass of ${element.name}"
@@ -142,7 +140,8 @@ class LuaLineMarkerProvider : LineMarkerProvider {
             val classIcon = LineMarkerInfo(id,
                     TextRange(startOffset, startOffset),
                     LuaIcons.CLASS,
-                    Pass.LINE_MARKERS, null, null,
+                    null,
+                    null,
                     GutterIconRenderer.Alignment.CENTER)
             result.add(classIcon)
         } else if (element is LuaCallExpr) {
@@ -160,7 +159,6 @@ class LuaLineMarkerProvider : LineMarkerProvider {
                             result.add(LineMarkerInfo<PsiElement>(anchor,
                                     anchor.textRange,
                                     AllIcons.Gutter.RecursiveMethod,
-                                    Pass.LINE_MARKERS,
                                     FunctionUtil.constant("Recursive call"),
                                     null,
                                     GutterIconRenderer.Alignment.CENTER))
@@ -179,7 +177,6 @@ class LuaLineMarkerProvider : LineMarkerProvider {
                         result.add(LineMarkerInfo(returnKeyWord,
                                 returnKeyWord.textRange,
                                 LuaIcons.LineMarker.TailCall,
-                                Pass.LINE_MARKERS,
                                 FunctionUtil.constant("Tail call"), null,
                                 GutterIconRenderer.Alignment.CENTER))
                         break
