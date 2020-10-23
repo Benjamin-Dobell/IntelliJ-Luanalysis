@@ -40,7 +40,7 @@ object LuaElementTypes {
     val ASSIGN_STAT = LuaPlaceholderStub.Type("ASSIGN_STAT") { stub, nodeType -> LuaAssignStatImpl(stub, nodeType) }
     val VAR_LIST = LuaPlaceholderStub.Type("VAR_LIST") { stub, type -> LuaVarListImpl(stub, type) }
     val LOCAL_FUNC_DEF = LuaLocalFuncDefElementType()
-    val FUNC_BODY = LuaPlaceholderStub.Type("FUNC_BODY") { stub, type -> LuaFuncBodyImpl(stub, type) }
+    val FUNC_BODY = LuaFuncBodyType()
     val CLASS_METHOD_NAME = LuaPlaceholderStub.Type("CLASS_METHOD_NAME") { stub, type -> LuaClassMethodNameImpl(stub, type) }
 
     val CLOSURE_EXPR = LuaClosureExprType()

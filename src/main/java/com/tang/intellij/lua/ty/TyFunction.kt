@@ -348,7 +348,7 @@ abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
     override fun hashCode(): Int {
         var code = mainSignature.hashCode()
         signatures.forEach {
-            code += it.hashCode() * 31
+            code = code * 31 + it.hashCode()
         }
         return code
     }

@@ -51,8 +51,9 @@ class ReturnTypeInspection : StrictInspection() {
                     val concreteType = context.withMultipleResults {
                         o.exprList?.guessType(context)?.let {
                             TyMultipleResults.flatten(context, it)
-                        } ?: Ty.VOID
-                    }
+                        }
+                    } ?: Ty.VOID
+
                     val concreteTypes = toList(concreteType)
 
                     val documentedReturnTypeTag = o.comment?.let { PsiTreeUtil.getChildrenOfTypeAsList(it, LuaDocTagTypeImpl::class.java).firstOrNull() }

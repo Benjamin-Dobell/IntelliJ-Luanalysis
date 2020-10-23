@@ -55,8 +55,10 @@ class AssignTypeInspection : StrictInspection() {
                                 if (value == Ty.NIL) {
                                     return
                                 }
-                                if (value is TyUnion) value.getChildTypes().fold(Ty.VOID as ITy) { acc, ty ->
-                                    if (ty == Ty.NIL) acc else acc.union(ty, context)
+                                if (value is TyUnion) {
+                                    value.getChildTypes().fold(Ty.VOID as ITy) { acc, ty ->
+                                        if (ty == Ty.NIL) acc else acc.union(ty, context)
+                                    }
                                 } else {
                                     value
                                 }

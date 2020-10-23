@@ -668,7 +668,6 @@ fun getVisibility(member: LuaClassMember): Visibility {
 }
 
 fun getVisibility(classMethodDef: LuaClassMethodDef): Visibility {
-    val stub = classMethodDef.stub
     return getVisibility(classMethodDef as LuaClassMember)
 }
 

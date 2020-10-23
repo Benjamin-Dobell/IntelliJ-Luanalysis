@@ -140,7 +140,7 @@ fun resolve(indexExpr: LuaIndexExpr, context: SearchContext): PsiElement? {
     val parentType = indexExpr.guessParentType(context)
     val indexTy = idExpr.guessType(context)
 
-    if (parentType == null || indexTy == null) {
+    if (indexTy == null) {
         return null
     }
 

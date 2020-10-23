@@ -66,8 +66,10 @@ class TyUnion : Ty {
         }
 
     override fun union(ty: ITy, context: SearchContext): ITy {
-        if (ty == Ty.VOID) {
+        if (ty is TyVoid) {
             return this
+        } else if (ty is TyUnknown && childSet.find { it is TyMultipleResults } == null) {
+            return Ty.UNKNOWN
         }
 
         val unionTys = mutableListOf<ITy>()
@@ -265,15 +267,13 @@ class TyUnion : Ty {
 
         fun union(t1: ITy, t2: ITy, context: SearchContext): ITy {
             return when {
-                t1 == t2 -> t1
-                t1 is TyUnknown || t2 is TyUnknown -> Ty.UNKNOWN
-                t1 is TyVoid -> t2
-                t2 is TyVoid -> t1
+                t1 === t2 || t1 == t2 -> t1
                 t1 is TyUnion -> t1.union(t2, context)
                 t2 is TyUnion -> t2.union(t1, context)
-                else -> {
-                    union(listOf(t1, t2), context)
-                }
+                t1 is TyMultipleResults || t2 is TyMultipleResults -> union(listOf(t1, t2), context)
+                t1 is TyVoid -> t2
+                t2 is TyVoid -> t1
+                else -> union(listOf(t1, t2), context)
             }
         }
 

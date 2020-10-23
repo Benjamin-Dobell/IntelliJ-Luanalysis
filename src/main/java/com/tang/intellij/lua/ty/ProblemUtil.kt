@@ -141,7 +141,9 @@ object ProblemUtil {
             }
 
             if (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN != 0 || sourceMemberTy !is TyUnknown) {
-                if (varianceFlags and TyVarianceFlags.WIDEN_TABLES == 0) {
+                // TODO: Always allowing widening is unsound. However, usage of Luanalysis without shape widening is presently impractical as we lack required
+                //       functionality such as getter/setter types, readonly properties and maybe use-site variance. Mind you, even TypeScript fails at this.
+                /*if (varianceFlags and TyVarianceFlags.WIDEN_TABLES == 0) {
                     if (!targetMemberTy.equals(sourceMemberTy, context)) {
                         isContravariant = false
 
@@ -158,7 +160,7 @@ object ProblemUtil {
                             return@processMembers false
                         }
                     }
-                } else {
+                } else {*/
                     val memberElement = if (processProblem != null && sourceElement != null) findHighlightElement(sourceMember.node.psi) else null
 
                     if (memberElement is LuaTableExpr) {
@@ -177,7 +179,7 @@ object ProblemUtil {
                             return@processMembers false
                         }
                     }
-                }
+                //}
             }
 
             true
@@ -418,6 +420,10 @@ object ProblemUtil {
     }
 
     fun contravariantOf(target: ITy, source: ITy, context: SearchContext, varianceFlags: Int, targetElement: PsiElement?, sourceElement: PsiElement, processProblem: ProcessProblem): Boolean {
+        if (target === source) {
+            return true
+        }
+
         val tyProblems = mutableMapOf<String, Collection<Problem>>()
         val resolvedTarget = Ty.resolve(target, context)
 

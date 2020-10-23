@@ -34,31 +34,31 @@ interface LuaFuncBodyOwnerStub<T : LuaFuncBodyOwner> : StubElement<T> {
     val overloads: Array<IFunSignature>
     val varargTy: ITy?
 
-    private fun walkStub(stub: StubElement<*>, context: SearchContext): ITy? {
+    private fun walkBody(stub: StubElement<*>, context: SearchContext): ITy? {
         val psi = stub.psi
-        return recursionGuard(stub, Computable {
-            val ty = when (psi) {
+        var ty: ITy? = null
+
+        recursionGuard(stub, {
+            when (psi) {
                 is LuaReturnStat -> {
-                    psi.exprList?.guessTypeAt(context)
+                    ty = TyUnion.union(ty, psi.exprList?.guessTypeAt(context), context)
                 }
+                is LuaFuncBody,
                 is LuaDoStat,
                 is LuaWhileStat,
                 is LuaIfStat,
                 is LuaForAStat,
                 is LuaForBStat,
                 is LuaRepeatStat -> {
-                    var ret: ITy? = null
                     for (childrenStub in stub.childrenStubs) {
-                        ret = walkStub(childrenStub, context)
-                        if (ret != null)
-                            break
+                        ty = TyUnion.union(ty, walkBody(childrenStub, context), context)
                     }
-                    ret
                 }
-                else -> null
+                else -> {}
             }
-            ty
         })
+
+        return ty
     }
 
     fun guessReturnTy(context: SearchContext): ITy {
@@ -69,9 +69,8 @@ interface LuaFuncBodyOwnerStub<T : LuaFuncBodyOwner> : StubElement<T> {
             }
             return docTy
         }
-        childrenStubs
-                .mapNotNull { walkStub(it, context) }
-                .forEach { return it }
-        return Ty.VOID
+        return findChildStubByType(LuaElementTypes.FUNC_BODY)?.let {
+            walkBody(it, context)
+        } ?: Ty.VOID
     }
 }

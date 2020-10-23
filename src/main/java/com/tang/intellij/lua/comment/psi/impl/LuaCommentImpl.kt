@@ -197,7 +197,7 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
         return false
     }
 
-    override fun createSubstitutor(searchContext: SearchContext): ITySubstitutor? {
+    override fun createSubstitutor(context: SearchContext): ITySubstitutor? {
         val list = findTags(LuaDocGenericDef::class.java)
         val map = mutableMapOf<String, LuaDocGenericDef>()
         for (genericDef in list) {
@@ -207,7 +207,7 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
         if (map.isEmpty())
             return null
 
-        return object : TySubstitutor(searchContext) {
+        return object : TySubstitutor(context) {
             override fun substitute(clazz: ITyClass): ITy {
                 return map[clazz.className]?.let { TyGenericParameter(it) } ?: super.substitute(clazz)
             }

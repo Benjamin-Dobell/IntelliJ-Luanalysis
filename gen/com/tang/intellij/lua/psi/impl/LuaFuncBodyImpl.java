@@ -9,14 +9,14 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.psi.LuaTypes.*;
 import com.intellij.extapi.psi.StubBasedPsiElementBase;
-import com.tang.intellij.lua.stubs.LuaPlaceholderStub;
+import com.tang.intellij.lua.stubs.LuaFuncBodyStub;
 import com.tang.intellij.lua.psi.*;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.tree.IElementType;
 
-public class LuaFuncBodyImpl extends StubBasedPsiElementBase<LuaPlaceholderStub> implements LuaFuncBody {
+public class LuaFuncBodyImpl extends StubBasedPsiElementBase<LuaFuncBodyStub> implements LuaFuncBody {
 
-  public LuaFuncBodyImpl(@NotNull LuaPlaceholderStub stub, @NotNull IStubElementType type) {
+  public LuaFuncBodyImpl(@NotNull LuaFuncBodyStub stub, @NotNull IStubElementType type) {
     super(stub, type);
   }
 
@@ -24,7 +24,7 @@ public class LuaFuncBodyImpl extends StubBasedPsiElementBase<LuaPlaceholderStub>
     super(node);
   }
 
-  public LuaFuncBodyImpl(LuaPlaceholderStub stub, IElementType type, ASTNode node) {
+  public LuaFuncBodyImpl(LuaFuncBodyStub stub, IElementType type, ASTNode node) {
     super(stub, type, node);
   }
 

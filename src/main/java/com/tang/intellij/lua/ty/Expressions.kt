@@ -319,8 +319,10 @@ private fun LuaCallExpr.infer(context: SearchContext): ITy? {
     val luaCallExpr = this
     // xxx()
     val expr = luaCallExpr.expr
-    // 从 require 'xxx' 中获取返回类型
-    if (expr is LuaNameExpr && LuaSettings.isRequireLikeFunctionName(expr.name)) {
+
+    // require('module') resolution
+    // TODO: Lazy module type like TyLazyClass, but with file paths for use when context.isDumb
+    if (!context.isDumb && expr is LuaNameExpr && LuaSettings.isRequireLikeFunctionName(expr.name)) {
         var filePath: String? = null
         val string = luaCallExpr.firstStringArg
         if (string is LuaLiteralExpr) {

@@ -27,10 +27,7 @@ import com.tang.intellij.lua.psi.impl.LuaIndexExprImpl
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.stubs.index.StubKeys
-import com.tang.intellij.lua.ty.ITy
-import com.tang.intellij.lua.ty.ITyClass
-import com.tang.intellij.lua.ty.Ty
-import com.tang.intellij.lua.ty.TyUnion
+import com.tang.intellij.lua.ty.*
 
 /**
 
@@ -72,13 +69,15 @@ class LuaIndexExprType : LuaStubElementType<LuaIndexExprStub, LuaIndexExpr>("IND
             val ty = SearchContext.withDumb(indexExpr.project, Ty.UNKNOWN) {
                 indexExpr.guessParentType(it)
             }
+
             TyUnion.each(ty) {
-                if (it is ITyClass)
+                if (it is ITyClass && it !is TySerializedClass) {
                     classNameSet.add(it.className)
+                }
             }
         }
-        val visibility = indexExpr.visibility
 
+        val visibility = indexExpr.visibility
         var flags = BitUtil.set(0, visibility.bitMask, true)
         flags = BitUtil.set(flags, LuaIndexExprType.FLAG_DEPRECATED, indexExpr.isDeprecated)
         flags = BitUtil.set(flags, LuaIndexExprType.FLAG_BRACK, indexExpr.lbrack != null)

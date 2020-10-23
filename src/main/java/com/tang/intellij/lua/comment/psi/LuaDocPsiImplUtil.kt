@@ -359,7 +359,7 @@ fun getType(luaDocGenericTy: LuaDocGenericTy): ITy {
 }
 
 fun getType(luaDocParTy: LuaDocParTy): ITy {
-    return luaDocParTy.ty?.getType() ?: Ty.UNKNOWN
+    return luaDocParTy.ty.getType()
 }
 
 fun getType(booleanLiteral: LuaDocBooleanLiteralTy): ITy {

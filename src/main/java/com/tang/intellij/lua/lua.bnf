@@ -486,7 +486,7 @@ funcBody ::= '(' (parList)? ')' <<lazyBlock>>? 'end' {
         RPAREN = 'RPAREN'
         ELLIPSIS = 'ELLIPSIS'
     ]
-    stubClass = 'com.tang.intellij.lua.stubs.LuaPlaceholderStub'
+    stubClass = 'com.tang.intellij.lua.stubs.LuaFuncBodyStub'
 }
 
 private parList ::= paramNameDef (',' paramNameDef)* (',' '...')? | '...' { recoverWhile = parList_recover }

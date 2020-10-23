@@ -177,7 +177,7 @@ abstract class TyClass(override val className: String,
             }
 
             return processSuperClasses(this, context) {
-                it.processMembers(context, { superClass, superMember ->
+                it.processMembers(context, { _, superMember ->
                     val superMemberName = superMember.name
 
                     val memberOverridden = if (superMemberName != null) {

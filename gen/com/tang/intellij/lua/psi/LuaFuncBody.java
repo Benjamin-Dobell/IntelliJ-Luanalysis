@@ -5,9 +5,9 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.StubBasedPsiElement;
-import com.tang.intellij.lua.stubs.LuaPlaceholderStub;
+import com.tang.intellij.lua.stubs.LuaFuncBodyStub;
 
-public interface LuaFuncBody extends LuaIndentRange, LuaDeclarationScope, StubBasedPsiElement<LuaPlaceholderStub> {
+public interface LuaFuncBody extends LuaIndentRange, LuaDeclarationScope, StubBasedPsiElement<LuaFuncBodyStub> {
 
   @NotNull
   List<LuaParamNameDef> getParamNameDefList();
