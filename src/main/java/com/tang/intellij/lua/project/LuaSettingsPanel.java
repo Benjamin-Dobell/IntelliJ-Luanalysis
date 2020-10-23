@@ -17,6 +17,7 @@
 package com.tang.intellij.lua.project;
 
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
@@ -41,7 +42,8 @@ import java.util.SortedMap;
  * Created by tangzx on 2017/6/12.
  */
 public class LuaSettingsPanel implements SearchableConfigurable, Configurable.NoScroll {
-    private LuaSettings settings;
+    private final LuaSettings settings;
+
     private JPanel myPanel;
     private JCheckBox strictDoc;
     private JCheckBox smartCloseEnd;
@@ -57,8 +59,9 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
     private JTextField requireFunctionNames;
     private JTextField tooLargerFileThreshold;
 
-    public LuaSettingsPanel(LuaSettings settings) {
-        this.settings = settings;
+    public LuaSettingsPanel() {
+        settings = LuaSettings.Companion.getInstance();
+
         strictDoc.setSelected(settings.isStrictDoc());
         smartCloseEnd.setSelected(settings.isSmartCloseEnd());
         showWordsInFile.setSelected(settings.isShowWordsInFile());
