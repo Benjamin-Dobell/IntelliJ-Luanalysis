@@ -18,6 +18,7 @@ package com.tang.intellij.lua.ty
 
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.Processor
@@ -26,11 +27,7 @@ import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.codeInsight.inspection.MatchFunctionSignatureInspection
 import com.tang.intellij.lua.comment.psi.LuaDocClassRef
 import com.tang.intellij.lua.project.LuaSettings
-import com.tang.intellij.lua.psi.LuaCallExpr
-import com.tang.intellij.lua.psi.LuaClassMember
-import com.tang.intellij.lua.psi.LuaPsiTreeUtil.findGenericDef
-import com.tang.intellij.lua.psi.LuaTableExpr
-import com.tang.intellij.lua.psi.argList
+import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.search.LuaShortNamesManager
 import com.tang.intellij.lua.search.SearchContext
 import java.lang.IllegalStateException
@@ -203,9 +200,9 @@ val ITy.isColonCall get() = hasFlag(TyFlags.SELF_FUNCTION)
 fun ITy.findCandidateSignatures(context: SearchContext, nArgs: Int): Collection<IFunSignature> {
     val candidates = mutableListOf<IFunSignature>()
     var lastCandidate: IFunSignature? = null
-    processSignatures(context, Processor {
+    processSignatures(context, {
         val params = it.params
-        if (params == null || params.size >= nArgs || it.varargTy != null) {
+        if (params == null || params.size >= nArgs || it.variadicParamTy != null) {
             candidates.add(it)
         }
         lastCandidate = it
@@ -224,7 +221,7 @@ fun ITy.findCandidateSignatures(context: SearchContext, call: LuaCallExpr): Coll
     if (isInstanceMethodUsedAsStaticMethod)
         return findCandidateSignatures(context, n - 1)
     val isStaticMethodUsedAsInstanceMethod = !isColonCall && call.isMethodColonCall
-    return findCandidateSignatures(context, if(isStaticMethodUsedAsInstanceMethod) n + 1 else n)
+    return findCandidateSignatures(context, if (isStaticMethodUsedAsInstanceMethod) n + 1 else n)
 }
 
 fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem: ProcessProblem? = null): SignatureMatchResult? {
@@ -327,7 +324,7 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
             true
         }
 
-        val varargParamTy = signature.varargTy
+        val varargParamTy = signature.variadicParamTy
 
         if (parameterCount < concreteArgTypes.size) {
             if (varargParamTy != null) {
@@ -421,7 +418,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
         get() = TyRenderer.SIMPLE.render(this)
 
     // Lazy initialization because Ty.TRUE is itself a Ty that needs to be instantiated and refers to itself.
-    override val booleanType: ITy by lazy { Ty.TRUE }
+    override val booleanType: ITy by lazy { TRUE }
 
     fun addFlag(flag: Int) {
         flags = flags or flag
@@ -474,7 +471,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
             return true
         }
 
-        val resolvedOther = Ty.resolve(other, context)
+        val resolvedOther = resolve(other, context)
 
         if (resolvedOther !== other) {
             return contravariantOf(resolvedOther, context, flags)
@@ -607,12 +604,12 @@ abstract class Ty(override val kind: TyKind) : ITy {
             }
         }
 
-        fun create(name: String): ITy {
-            return getBuiltin(name) ?: TyLazyClass(name)
+        fun create(name: String, psiElement: PsiElement? = null): ITy {
+            return getBuiltin(name) ?: TyLazyClass(name, psiElement)
         }
 
         fun create(classRef: LuaDocClassRef): ITy {
-            val simpleType = Ty.create(classRef.classNameRef.id.text)
+            val simpleType = create(classRef.classNameRef.id.text, classRef)
             return if (classRef.tyList.size > 0) {
                 TyGeneric(classRef.tyList.map { it.getType() }.toTypedArray(), simpleType)
             } else simpleType
@@ -689,12 +686,15 @@ abstract class Ty(override val kind: TyKind) : ITy {
                         base.lazyInit(context)
 
                         if (!base.isAnonymous && !base.isGlobal) {
-                            val genericTy = findGenericDef(base.className, context)?.type
+                            val className = base.className
+                            val scopedType = context.element?.let {
+                                LuaScopedTypeTree.get(it.containingFile).find(context, it, className)?.type
+                            }
 
-                            if (genericTy != null) {
-                                genericTy
+                            if (scopedType != null) {
+                                scopedType
                             } else {
-                                val aliasTy = LuaShortNamesManager.getInstance(context.project).findAlias(base.className, context)
+                                val aliasTy = LuaShortNamesManager.getInstance(context.project).findAlias(className, context)
 
                                 if (aliasTy != null) {
                                     aliasTy.type
@@ -751,7 +751,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
                 return ty
             }
 
-            var resolvedTy: ITy = Ty.VOID
+            var resolvedTy: ITy = VOID
 
             eachResolved(ty, context) {
                 resolvedTy = resolvedTy.union(it, context)
@@ -769,11 +769,11 @@ class TyUnknown : Ty(TyKind.Unknown) {
     }
 
     override fun equals(other: ITy, context: SearchContext): Boolean {
-        if (other === Ty.UNKNOWN) {
+        if (other === UNKNOWN) {
             return true
         }
 
-        return Ty.resolve(other, context) is TyUnknown
+        return resolve(other, context) is TyUnknown
     }
 
     override fun hashCode(): Int {
@@ -785,24 +785,24 @@ class TyUnknown : Ty(TyKind.Unknown) {
     }
 
     override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
-        return if (LuaSettings.instance.isUnknownIndexable) Ty.UNKNOWN else null
+        return if (LuaSettings.instance.isUnknownIndexable) UNKNOWN else null
     }
 
     override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
-        return if (LuaSettings.instance.isUnknownIndexable) Ty.UNKNOWN else null
+        return if (LuaSettings.instance.isUnknownIndexable) UNKNOWN else null
     }
 }
 
 class TyNil : Ty(TyKind.Nil) {
 
-    override val booleanType = Ty.FALSE
+    override val booleanType = FALSE
 
     override fun equals(other: ITy, context: SearchContext): Boolean {
-        if (other === Ty.NIL) {
+        if (other === NIL) {
             return true
         }
 
-        return Ty.resolve(other, context) is TyNil
+        return resolve(other, context) is TyNil
     }
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
@@ -813,11 +813,11 @@ class TyNil : Ty(TyKind.Nil) {
 class TyVoid : Ty(TyKind.Void) {
 
     override fun equals(other: ITy, context: SearchContext): Boolean {
-        if (other === Ty.VOID) {
+        if (other === VOID) {
             return true
         }
 
-        return Ty.resolve(other, context) is TyVoid
+        return resolve(other, context) is TyVoid
     }
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {

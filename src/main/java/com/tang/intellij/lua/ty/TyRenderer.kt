@@ -116,7 +116,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
 
     override fun renderSignature(sb: StringBuilder, signature: IFunSignature) {
         val params = signature.params
-        val varargTy = signature.varargTy
+        val varargTy = signature.variadicParamTy
 
         if (params != null || varargTy != null) {
             sb.append("(")

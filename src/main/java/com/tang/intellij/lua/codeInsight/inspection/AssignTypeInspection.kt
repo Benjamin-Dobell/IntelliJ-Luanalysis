@@ -23,6 +23,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
+import com.tang.intellij.lua.search.PsiSearchContext
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
 
@@ -97,7 +98,7 @@ class AssignTypeInspection : StrictInspection() {
                         return
                     }
 
-                    val searchContext = SearchContext.get(expressions.first())
+                    val searchContext = PsiSearchContext(expressions.first())
                     var assigneeIndex = 0
                     var variadicTy: ITy? = null
                     var lastExpressionFirstAssigneeIndex = 0

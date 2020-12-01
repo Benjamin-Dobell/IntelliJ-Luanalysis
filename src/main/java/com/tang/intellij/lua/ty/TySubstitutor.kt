@@ -17,7 +17,6 @@
 package com.tang.intellij.lua.ty
 
 import com.tang.intellij.lua.Constants
-import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
 
@@ -31,13 +30,13 @@ interface ITySubstitutor {
     fun substitute(ty: ITy): ITy
 }
 
-class GenericAnalyzer(params: Array<TyGenericParameter>, val searchContext: SearchContext, val luaPsiElement: LuaPsiElement? = null) : TyVisitor() {
+class GenericAnalyzer(params: Array<out TyGenericParameter>, val context: SearchContext, val luaPsiElement: LuaPsiElement? = null) : TyVisitor() {
     private val paramTyMap: MutableMap<String, ITy> = mutableMapOf()
     private val genericMap: Map<String, TyGenericParameter> = params.associateBy {
         it.className
     }
 
-    private val substitutor = TyParameterSubstitutor(searchContext, paramTyMap)
+    private val substitutor = TyParameterSubstitutor(context, paramTyMap)
 
     private var cur: ITy = Ty.VOID
 
@@ -80,7 +79,7 @@ class GenericAnalyzer(params: Array<TyGenericParameter>, val searchContext: Sear
             if (clazzParams != null && it is ITyClass) {
                 it.params?.asSequence()?.zip(clazzParams.asSequence())?.forEach { (param, clazzParam) ->
                     warp(param) {
-                        Ty.resolve(clazzParam, searchContext).accept(this)
+                        Ty.resolve(clazzParam, context).accept(this)
                     }
                 }
             }
@@ -94,31 +93,31 @@ class GenericAnalyzer(params: Array<TyGenericParameter>, val searchContext: Sear
                 val mappedType = paramTyMap.get(genericName)
                 val currentType = cur.substitute(substitutor)
 
-                paramTyMap[genericName] = if (genericParam.contravariantOf(currentType, searchContext, TyVarianceFlags.ABSTRACT_PARAMS or TyVarianceFlags.STRICT_UNKNOWN)) {
+                paramTyMap[genericName] = if (genericParam.contravariantOf(currentType, context, TyVarianceFlags.ABSTRACT_PARAMS or TyVarianceFlags.STRICT_UNKNOWN)) {
                     if (mappedType == null) {
                         currentType
-                    } else if (mappedType.contravariantOf(currentType, searchContext, varianceFlags(currentType))) {
+                    } else if (mappedType.contravariantOf(currentType, context, varianceFlags(currentType))) {
                         mappedType
-                    } else if (currentType.contravariantOf(mappedType, searchContext, varianceFlags(mappedType))) {
+                    } else if (currentType.contravariantOf(mappedType, context, varianceFlags(mappedType))) {
                         currentType
                     } else {
-                        mappedType.union(currentType, searchContext)
+                        mappedType.union(currentType, context)
                     }
                 } else {
                     genericParam
                 }
             }
         } else if (clazz is TyDocTable) {
-            clazz.processMembers(searchContext, { _, classMember ->
-                val curMember = classMember.guessIndexType(searchContext)?.let {
-                    cur.findIndexer(it, searchContext, false)
-                } ?: classMember.name?.let { cur.findMember(it, searchContext) }
+            clazz.processMembers(context, { _, classMember ->
+                val curMember = classMember.guessIndexType(context)?.let {
+                    cur.findIndexer(it, context, false)
+                } ?: classMember.name?.let { cur.findMember(it, context) }
 
-                val classMemberTy = classMember.guessType(searchContext) ?: Ty.UNKNOWN
-                val curMemberTy = curMember?.guessType(searchContext) ?: Ty.NIL
+                val classMemberTy = classMember.guessType(context) ?: Ty.UNKNOWN
+                val curMemberTy = curMember?.guessType(context) ?: Ty.NIL
 
                 warp(curMemberTy) {
-                    Ty.resolve(classMemberTy, searchContext).accept(this)
+                    Ty.resolve(classMemberTy, context).accept(this)
                 }
 
                 true
@@ -127,7 +126,7 @@ class GenericAnalyzer(params: Array<TyGenericParameter>, val searchContext: Sear
     }
 
     override fun visitUnion(u: TyUnion) {
-        Ty.eachResolved(u, searchContext) {
+        Ty.eachResolved(u, context) {
             it.accept(this)
         }
     }
@@ -136,12 +135,12 @@ class GenericAnalyzer(params: Array<TyGenericParameter>, val searchContext: Sear
         cur.let {
             if (it is ITyArray) {
                 warp(it.base) {
-                    Ty.resolve(array.base, searchContext).accept(this)
+                    Ty.resolve(array.base, context).accept(this)
                 }
-            } else if (it is ITyClass && TyArray.isArray(it, searchContext)) {
-                it.processMembers(searchContext) { _, member ->
-                    warp(member.guessType(searchContext) ?: Ty.UNKNOWN) {
-                        Ty.resolve(array.base, searchContext).accept(this)
+            } else if (it is ITyClass && TyArray.isArray(it, context)) {
+                it.processMembers(context) { _, member ->
+                    warp(member.guessType(context) ?: Ty.UNKNOWN) {
+                        Ty.resolve(array.base, context).accept(this)
                     }
                     true
                 }
@@ -161,37 +160,37 @@ class GenericAnalyzer(params: Array<TyGenericParameter>, val searchContext: Sear
         cur.let {
             if (it is ITyGeneric) {
                 warp(it.base) {
-                    Ty.resolve(generic.base, searchContext).accept(this)
+                    Ty.resolve(generic.base, context).accept(this)
                 }
 
                 it.params.asSequence().zip(generic.params.asSequence()).forEach { (param, genericParam) ->
                     warp(param) {
-                        Ty.resolve(genericParam, searchContext).accept(this)
+                        Ty.resolve(genericParam, context).accept(this)
                     }
                 }
             } else if (generic.base == Ty.TABLE && generic.params.size == 2) {
                 if (it == Ty.TABLE) {
                     warp(Ty.UNKNOWN) {
-                        Ty.resolve(generic.params.first(), searchContext).accept(this)
+                        Ty.resolve(generic.params.first(), context).accept(this)
                     }
 
                     warp(Ty.UNKNOWN) {
-                        Ty.resolve(generic.params.last(), searchContext).accept(this)
+                        Ty.resolve(generic.params.last(), context).accept(this)
                     }
                 } else if (it is ITyArray) {
                     warp(Ty.NUMBER) {
-                        Ty.resolve(generic.params.first(), searchContext).accept(this)
+                        Ty.resolve(generic.params.first(), context).accept(this)
                     }
 
                     warp(it.base) {
-                        Ty.resolve(generic.params.last(), searchContext).accept(this)
+                        Ty.resolve(generic.params.last(), context).accept(this)
                     }
-                } else if (it.isShape(searchContext)) {
-                    val genericTable = createTableGenericFromMembers(it, searchContext)
+                } else if (it.isShape(context)) {
+                    val genericTable = createTableGenericFromMembers(it, context)
 
                     genericTable.params.asSequence().zip(generic.params.asSequence()).forEach { (param, genericParam) ->
                         warp(param) {
-                            Ty.resolve(genericParam, searchContext).accept(this)
+                            Ty.resolve(genericParam, context).accept(this)
                         }
                     }
                 }
@@ -203,7 +202,7 @@ class GenericAnalyzer(params: Array<TyGenericParameter>, val searchContext: Sear
         arg.returnTy?.let {
             warp(it) {
                 par.returnTy?.let {
-                    Ty.resolve(it, searchContext).accept(this)
+                    Ty.resolve(it, context).accept(this)
                 }
             }
         }
@@ -213,7 +212,7 @@ class GenericAnalyzer(params: Array<TyGenericParameter>, val searchContext: Sear
         if (Ty.isInvalid(ty))
             return
         val arg = cur
-        cur = Ty.resolve(ty, searchContext)
+        cur = Ty.resolve(ty, context)
         action()
         cur = arg
     }

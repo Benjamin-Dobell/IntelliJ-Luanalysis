@@ -25,6 +25,7 @@ import com.tang.intellij.lua.psi.LuaElementTypes
 import com.tang.intellij.lua.psi.LuaParamInfo
 import com.tang.intellij.lua.psi.impl.LuaClosureExprImpl
 import com.tang.intellij.lua.psi.overloads
+import com.tang.intellij.lua.search.StubSearchContext
 import com.tang.intellij.lua.ty.IFunSignature
 import com.tang.intellij.lua.ty.ITy
 import com.tang.intellij.lua.ty.TyGenericParameter

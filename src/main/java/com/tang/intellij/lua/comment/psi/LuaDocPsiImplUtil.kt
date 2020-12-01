@@ -57,7 +57,7 @@ fun resolveType(nameRef: LuaDocClassNameRef, context: SearchContext): ITy {
         return if (contextClass != null) TyClass.createSelfType(contextClass) else Ty.UNKNOWN
     }
 
-    return LuaPsiTreeUtil.findGenericDef(nameRef.text, nameRef)?.type ?: Ty.create(nameRef.text)
+    return LuaScopedTypeTree.get(nameRef.containingFile).find(context, nameRef, nameRef.text)?.type ?: Ty.create(nameRef.text)
 }
 
 fun getName(identifierOwner: PsiNameIdentifierOwner): String? {
@@ -325,7 +325,7 @@ fun getType(luaDocGeneralTy: LuaDocGeneralTy): ITy {
         SearchContext.withDumb(luaDocGeneralTy.project, null) {
             resolveType(luaDocGeneralTy.classNameRef, it)
         }
-    } ?: TyLazyClass(luaDocGeneralTy.classNameRef.id.text)
+    } ?: TyLazyClass(luaDocGeneralTy.classNameRef.id.text, luaDocGeneralTy)
 }
 
 fun getType(luaDocFunctionTy: LuaDocFunctionTy): ITy {
@@ -354,7 +354,7 @@ fun getType(luaDocGenericTy: LuaDocGenericTy): ITy {
         SearchContext.withDumb(luaDocGenericTy.project, null) {
             luaDocGenericTy.classNameRef.resolveType(it)
         }
-    } ?: TyLazyClass(luaDocGenericTy.classNameRef.id.text)
+    } ?: TyLazyClass(luaDocGenericTy.classNameRef.id.text, luaDocGenericTy)
     return TyGeneric(paramTys, baseTy)
 }
 

@@ -25,7 +25,7 @@ import java.util.*
 
 interface LuaDeclarationTree {
     companion object {
-        private val key = Key.create<LuaDeclarationTree>("lua.object.tree.manager")
+        private val key = Key.create<LuaDeclarationTree>("lua.object.tree.declarations")
         fun get(file: PsiFile): LuaDeclarationTree {
             var ret = file.getUserData(key)
             if (ret != null && ret.shouldRebuild()) {
@@ -75,18 +75,18 @@ interface LuaDeclarationTree {
     }
 }
 
-private abstract class Node {
-    var next: Node? = null
-    var prev: Node? = null
+private abstract class DeclarationTreeNode {
+    var next: DeclarationTreeNode? = null
+    var prev: DeclarationTreeNode? = null
     abstract val pos: Int
 }
 
-private abstract class NodeContainer : Node() {
-    protected val children = mutableListOf<Node>()
-    private var _first: Node? = null
-    private var _last: Node? = null
+private abstract class DeclarationTreeNodeContainer : DeclarationTreeNode() {
+    protected val children = mutableListOf<DeclarationTreeNode>()
+    private var _first: DeclarationTreeNode? = null
+    private var _last: DeclarationTreeNode? = null
 
-    fun add(child: Node) {
+    fun add(child: DeclarationTreeNode) {
         children.add(child)
         if (_first == null)
             _first = child
@@ -96,7 +96,7 @@ private abstract class NodeContainer : Node() {
     }
 
     fun <T> processNode(clazz: Class<T>, process: (node: T) -> Boolean): Boolean {
-        var cur: Node? = _first
+        var cur: DeclarationTreeNode? = _first
         while (cur != null) {
             if (clazz.isInstance(cur)) {
                 if (!process(clazz.cast(cur)))
@@ -107,7 +107,7 @@ private abstract class NodeContainer : Node() {
         return true
     }
 
-    fun lastOrNull(predicate: (child: Node) -> Boolean): Node? {
+    fun lastOrNull(predicate: (child: DeclarationTreeNode) -> Boolean): DeclarationTreeNode? {
         var cur = _last
         while (cur != null) {
             if (predicate(cur))
@@ -128,7 +128,7 @@ private class Declaration(
         override val psi: PsiNamedElement,
         val flags: Int,
         val prevDeclaration: Declaration? = null
-) : Node(), LuaDeclarationTree.IDeclaration {
+) : DeclarationTreeNode(), LuaDeclarationTree.IDeclaration {
     private val children = mutableMapOf<String, Declaration>()
 
     fun findField(name: String): Declaration? {
@@ -161,14 +161,14 @@ private open class Scope(
         val tree: LuaDeclarationTreeBase,
         override val pos: Int,
         val parent: Scope? = null
-) : NodeContainer() {
+) : DeclarationTreeNodeContainer() {
 
     open fun walkOver(process: (declaration: Declaration) -> Boolean): Boolean {
         return true
     }
 
     open fun walkUp(pos: Int, lev: Int, process: (declaration: Declaration) -> Boolean) {
-        var cur: Node? = lastOrNull { it.pos < pos }
+        var cur: DeclarationTreeNode? = lastOrNull { it.pos < pos }
         while (cur != null) {
             if (cur is Declaration && !process(cur))
                 return
@@ -190,12 +190,13 @@ private open class Scope(
         if (expr is LuaNameExpr) {
             return find(expr)
         } else if (expr is LuaIndexExpr) {
-            val fieldName = expr.name ?: expr.idExpr?.let { idExpr ->
-                (idExpr as? LuaLiteralExpr)?.let { "[${it.text}]" }
-            } ?: return null
+            return find(expr.prefixExpr)?.let {
+                val fieldName = expr.name ?: expr.idExpr?.let { idExpr ->
+                    (idExpr as? LuaLiteralExpr)?.let { "[${it.text}]" }
+                } ?: return null
 
-            val declaration = find(expr.prefixExpr)
-            return declaration?.findField(fieldName)
+                return it.findField(fieldName)
+            }
         }
         return null
     }
@@ -203,7 +204,7 @@ private open class Scope(
 
 private abstract class LuaDeclarationTreeBase(val file: PsiFile) : LuaRecursiveVisitor(), LuaDeclarationTree {
     companion object {
-        val scopeKey = Key.create<Scope>("lua.object.tree.scope")
+        val scopeKey = Key.create<Scope>("lua.object.tree.declarations.scope")
     }
 
     val modificationStamp: Long = file.modificationStamp

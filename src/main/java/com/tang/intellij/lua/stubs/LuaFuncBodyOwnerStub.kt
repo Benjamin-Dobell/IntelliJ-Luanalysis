@@ -16,7 +16,6 @@
 
 package com.tang.intellij.lua.stubs
 
-import com.intellij.openapi.util.Computable
 import com.intellij.psi.stubs.StubElement
 import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.psi.*

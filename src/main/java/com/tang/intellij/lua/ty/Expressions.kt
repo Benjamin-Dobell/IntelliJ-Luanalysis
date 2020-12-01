@@ -283,7 +283,7 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
             true
         }
         // vararg
-        val varargTy = sig.varargTy
+        val varargTy = sig.variadicParamTy
         if (varargTy != null) {
             for (i in processedIndex + 1 until list.size) {
                 val argTy = list[i]

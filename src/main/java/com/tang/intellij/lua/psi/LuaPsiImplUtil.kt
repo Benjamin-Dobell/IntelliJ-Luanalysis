@@ -417,33 +417,30 @@ fun getParams(owner: LuaFuncBodyOwner): Array<LuaParamInfo> {
 }
 
 private fun getParamsInner(funcBodyOwner: LuaFuncBodyOwner): Array<LuaParamInfo> {
-    var comment: LuaComment? = null
-    if (funcBodyOwner is LuaCommentOwner) {
-        comment = LuaCommentUtil.findComment(funcBodyOwner)
+    val comment = if (funcBodyOwner is LuaCommentOwner) {
+        LuaCommentUtil.findComment(funcBodyOwner)
     } else {
-        val commentOwner = PsiTreeUtil.getParentOfType(funcBodyOwner, LuaCommentOwner::class.java)
-        if (commentOwner != null)
-            comment = LuaCommentUtil.findComment(commentOwner)
+        PsiTreeUtil.getParentOfType(funcBodyOwner, LuaCommentOwner::class.java)?.let {
+            LuaCommentUtil.findComment(it)
+        }
     }
 
     val paramNameList = funcBodyOwner.paramNameDefList
+
     if (paramNameList != null) {
         val list = mutableListOf<LuaParamInfo>()
+
         for (i in paramNameList.indices) {
-            val paramInfo = LuaParamInfo()
-            val paramName = paramNameList[i].text
-            paramInfo.name = paramName
-            // param types
-            if (comment != null) {
-                val paramDef = comment.getParamDef(paramName)
-                if (paramDef != null) {
-                    paramInfo.ty = paramDef.type
-                }
-            }
-            list.add(paramInfo)
+            val name = paramNameList[i].text
+            val ty = comment?.let {
+                comment.getParamDef(name)?.type
+            } ?: Ty.UNKNOWN
+            list.add(LuaParamInfo(name, ty))
         }
+
         return list.toTypedArray()
     }
+
     return emptyArray()
 }
 

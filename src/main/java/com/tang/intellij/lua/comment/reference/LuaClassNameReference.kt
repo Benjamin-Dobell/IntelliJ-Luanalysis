@@ -23,6 +23,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.comment.psi.LuaDocClassNameRef
 import com.tang.intellij.lua.psi.LuaElementFactory
 import com.tang.intellij.lua.psi.LuaPsiTreeUtil
+import com.tang.intellij.lua.psi.LuaScopedTypeTree
 import com.tang.intellij.lua.psi.search.LuaShortNamesManager
 import com.tang.intellij.lua.search.SearchContext
 
@@ -46,14 +47,16 @@ class LuaClassNameReference(element: LuaDocClassNameRef) : PsiReferenceBase<LuaD
 
     override fun resolve(): PsiElement? {
         val name = myElement.text
-        val genericDef = LuaPsiTreeUtil.findGenericDef(name, myElement)
+        val project = myElement.project
 
-        if (genericDef != null) {
-            return genericDef
+        val context = SearchContext.get(project)
+        val scopedType = LuaScopedTypeTree.get(myElement.containingFile).find(context, myElement, name)
+
+        if (scopedType != null) {
+            return scopedType
         }
 
-        val project = myElement.project
-        return LuaPsiTreeUtil.findGenericDef(name, myElement) ?: LuaShortNamesManager.getInstance(project).findType(name, SearchContext.get(project))
+        return LuaShortNamesManager.getInstance(project).findType(name, context)
     }
 
     override fun getVariants(): Array<Any> = emptyArray()

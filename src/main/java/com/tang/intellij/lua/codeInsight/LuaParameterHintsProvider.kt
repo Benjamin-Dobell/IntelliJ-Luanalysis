@@ -23,6 +23,7 @@ import com.intellij.codeInsight.hints.Option
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.psi.*
+import com.tang.intellij.lua.search.PsiSearchContext
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
 import java.util.*
@@ -71,7 +72,7 @@ class LuaParameterHintsProvider : InlayParameterHintsProvider {
 
                 // 是否是 inst:method() 被用为 inst.method(self) 形式
                 val isInstanceMethodUsedAsStaticMethod = ty.isColonCall && callExpr.isMethodDotCall
-                val searchContext = SearchContext.get(callExpr)
+                val searchContext = PsiSearchContext(callExpr)
 
                 val sig = ty.matchSignature(searchContext, callExpr)?.signature
 

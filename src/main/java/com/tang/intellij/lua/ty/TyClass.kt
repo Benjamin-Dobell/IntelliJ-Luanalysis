@@ -17,25 +17,29 @@
 package com.tang.intellij.lua.ty
 
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.Processor
 import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.Constants
-import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.LuaDocGeneralTy
+import com.tang.intellij.lua.comment.psi.LuaDocGenericDef
 import com.tang.intellij.lua.comment.psi.LuaDocTableDef
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.search.LuaClassInheritorsSearch
 import com.tang.intellij.lua.psi.search.LuaShortNamesManager
+import com.tang.intellij.lua.search.ProjectSearchContext
+import com.tang.intellij.lua.search.PsiSearchContext
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.*
 
 interface ITyClass : ITy {
     val className: String
     val varName: String
+
     var superClass: ITy?
     var aliasName: String?
     var params: Array<TyGenericParameter>?
@@ -302,7 +306,7 @@ abstract class TyClass(override val className: String,
     }
 }
 
-class TyPsiDocClass(tagClass: LuaDocTagClass) : TyClass(
+class TyPsiDocClass(val tagClass: LuaDocTagClass) : TyClass(
         tagClass.name,
         tagClass.genericDefList.map { TyGenericParameter(it) }.toTypedArray(),
         "",
@@ -338,7 +342,17 @@ open class TySerializedClass(name: String,
     }
 }
 
-class TyLazyClass(name: String) : TySerializedClass(name, null)
+class TyLazyClass(name: String, val psi: PsiElement? = null) : TySerializedClass(name, null) {
+    override fun doLazyInit(searchContext: SearchContext) {
+        val context = if (psi != null) {
+            PsiSearchContext(psi)
+        } else {
+            ProjectSearchContext(searchContext.project)
+        }
+
+        super.doLazyInit(context)
+    }
+}
 
 fun createSerializedClass(name: String,
                           params: Array<TyGenericParameter>? = null,
@@ -487,11 +501,13 @@ private fun getDocTableImplicitParams(table: LuaDocTableDef): Array<TyGenericPar
         val value = field.valueType
 
         if (value is LuaDocGeneralTy) {
-            val tyName = value.classNameRef.id.text
-            val param = LuaPsiTreeUtil.findGenericDef(tyName, table, true)?.type
+            val name = value.classNameRef.id.text
+            val scopedType = SearchContext.withDumb(value.project, null) {
+                (LuaScopedTypeTree.get(value.containingFile).find(it, value, name) as? LuaDocGenericDef)?.type
+            }
 
-            if (param != null && !params.contains(param)) {
-                params.add(param)
+            if (scopedType != null && !params.contains(scopedType)) {
+                params.add(scopedType)
             }
         }
     }

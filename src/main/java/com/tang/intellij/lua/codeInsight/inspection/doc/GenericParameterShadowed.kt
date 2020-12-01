@@ -25,6 +25,9 @@ import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.LuaDocGenericDef
 import com.tang.intellij.lua.comment.psi.LuaDocVisitor
 import com.tang.intellij.lua.psi.LuaPsiTreeUtil
+import com.tang.intellij.lua.psi.LuaScopedType
+import com.tang.intellij.lua.psi.LuaScopedTypeTree
+import com.tang.intellij.lua.search.SearchContext
 
 class GenericParameterShadowed : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
@@ -33,13 +36,14 @@ class GenericParameterShadowed : LocalInspectionTool() {
                 super.visitGenericDef(o)
 
                 val genericName = o.id.text
-                val container = LuaCommentUtil.findContainer(o)
-                val genericDef = LuaPsiTreeUtil.findGenericDef(genericName, container.parent, true)
+                val containingFile = o.containingFile
+                val genericDef = LuaScopedTypeTree.get(containingFile).find(SearchContext.get(o.project), o, genericName) as? LuaDocGenericDef
 
                 if (genericDef != null) {
-                    val document = FileDocumentManager.getInstance().getDocument(genericDef.containingFile.virtualFile)
+                    val document = FileDocumentManager.getInstance().getDocument(containingFile.virtualFile)
                     val desc = if (document != null) {
-                        val suffix = if (!genericDef.containingFile.equals(o.containingFile)) " of " + genericDef.containingFile.name else ""
+                        val genericContainingFile = genericDef.containingFile
+                        val suffix = if (!genericContainingFile.equals(containingFile)) " of " + genericContainingFile.name else ""
                         "Generic parameters cannot be shadowed, '$genericName' was previously defined on line ${document.getLineNumber(genericDef.node.startOffset) + 1}${suffix}"
                     } else {
                         "Generic parameters cannot be shadowed, '$genericName' was previously defined."

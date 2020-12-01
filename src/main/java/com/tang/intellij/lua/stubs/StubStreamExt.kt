@@ -20,9 +20,10 @@ import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.psi.LuaParamInfo
+import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
 
-fun StubOutputStream.writeParamInfoArray(params: Array<LuaParamInfo>) {
+fun StubOutputStream.writeParamInfoArray(params: Array<out LuaParamInfo>) {
     writeByte(params.size)
     for (param in params) {
         LuaParamInfo.serialize(param, this)
@@ -38,7 +39,7 @@ fun StubInputStream.readParamInfoArray(): Array<LuaParamInfo> {
     return list.toTypedArray()
 }
 
-fun StubOutputStream.writeParamInfoArrayNullable(params: Array<LuaParamInfo>?) {
+fun StubOutputStream.writeParamInfoArrayNullable(params: Array<out LuaParamInfo>?) {
     writeBoolean(params != null)
     if (params != null) {
         writeParamInfoArray(params)
@@ -50,7 +51,7 @@ fun StubInputStream.readParamInfoArrayNullable(): Array<LuaParamInfo>? {
     return if (notNull) readParamInfoArray() else null
 }
 
-fun StubOutputStream.writeSignatures(signatures: Array<IFunSignature>) {
+fun StubOutputStream.writeSignatures(signatures: Array<out IFunSignature>) {
     writeByte(signatures.size)
     for (sig in signatures) {
         FunSignature.serialize(sig, this)
@@ -66,7 +67,7 @@ fun StubInputStream.readSignatures(): Array<IFunSignature> {
     return arr.toTypedArray()
 }
 
-fun StubOutputStream.writeSignaturesNullable(signatures: Array<IFunSignature>?) {
+fun StubOutputStream.writeSignaturesNullable(signatures: Array<out IFunSignature>?) {
     writeBoolean(signatures != null)
     if (signatures != null) {
         writeSignatures(signatures)
@@ -103,7 +104,7 @@ fun StubInputStream.readNames(): Array<String> {
     return list.toTypedArray()
 }
 
-fun StubOutputStream.writeGenericParamsNullable(genericParams: Array<TyGenericParameter>?) {
+fun StubOutputStream.writeGenericParamsNullable(genericParams: Array<out TyGenericParameter>?) {
     writeByte(genericParams?.size ?: 0)
     genericParams?.forEach { parameter ->
         writeName(parameter.name)

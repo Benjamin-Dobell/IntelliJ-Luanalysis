@@ -23,7 +23,7 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElementVisitor
 import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.psi.LuaPsiTreeUtil
-import com.tang.intellij.lua.search.SearchContext
+import com.tang.intellij.lua.search.PsiSearchContext
 import com.tang.intellij.lua.ty.GenericAnalyzer
 import com.tang.intellij.lua.ty.ProblemUtil
 import com.tang.intellij.lua.ty.TyVarianceFlags
@@ -36,7 +36,7 @@ class GenericConstraintInspection : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
         return object : LuaDocVisitor() {
             private fun validateGenericArguments(typeElement: LuaDocPsiElement, classNameRef: LuaDocClassNameRef, args: List<LuaDocTy>) {
-                val context = SearchContext.get(classNameRef)
+                val context = PsiSearchContext(classNameRef)
                 val params = LuaPsiTreeUtil.findType(classNameRef.text, context)?.type?.getParams(context)
 
                 if (params != null && params.size > 0) {

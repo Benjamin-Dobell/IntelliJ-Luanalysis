@@ -25,7 +25,10 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.comment.psi.api.LuaComment
-import com.tang.intellij.lua.psi.*
+import com.tang.intellij.lua.psi.LuaClassMethodDef
+import com.tang.intellij.lua.psi.LuaCommentOwner
+import com.tang.intellij.lua.psi.LuaTypes
+import com.tang.intellij.lua.psi.LuaVisitor
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
 
@@ -34,11 +37,29 @@ import com.tang.intellij.lua.ty.*
  *
  */
 class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
+    override fun findGenericDefs(): Collection<LuaDocGenericDef> {
+        val typeGenericDefList = (PsiTreeUtil.getChildOfType(this, LuaDocTagClass::class.java))?.genericDefList
+                ?: PsiTreeUtil.getChildOfType(this, LuaDocTagAlias::class.java)?.genericDefList
+
+        if (typeGenericDefList != null) {
+            return typeGenericDefList
+        }
+
+        val genericDefs = mutableListOf<LuaDocGenericDef>()
+
+        findTags(LuaDocTagGenericList::class.java).forEach {
+            genericDefs.addAll(it.genericDefList)
+        }
+
+        return genericDefs
+    }
+
     override fun <T : LuaDocPsiElement> findTag(t:Class<T>): T? {
         var element: PsiElement? = firstChild
         while (element != null) {
             if (t.isInstance(element)) {
-                return t.cast(element)
+                @Suppress("UNCHECKED_CAST")
+                return element as T
             }
             element = element.nextSibling
         }
@@ -51,31 +72,6 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
 
     override fun findTags(name: String): Collection<LuaDocTagDef> {
         return PsiTreeUtil.findChildrenOfType(this, LuaDocTagDef::class.java).filter { it.tagName.text == name }
-    }
-
-    override fun findGeneric(name: String): LuaDocGenericDef? {
-        val typeGenericDefList = (PsiTreeUtil.getChildOfType(this, LuaDocTagClass::class.java))?.genericDefList
-                ?: PsiTreeUtil.getChildOfType(this, LuaDocTagAlias::class.java)?.genericDefList
-
-        if (typeGenericDefList != null) {
-            for (genericDef in typeGenericDefList) {
-                if (name == genericDef.id.text) {
-                    return genericDef
-                }
-            }
-        }
-
-        val functionGenericDefLists: Collection<LuaDocTagGenericList> = findTags(LuaDocTagGenericList::class.java)
-
-        for (functionGenericDefList in functionGenericDefLists) {
-            for (genericDef in functionGenericDefList.genericDefList) {
-                if (name == genericDef.id.text) {
-                    return genericDef
-                }
-            }
-        }
-
-        return null
     }
 
     override fun getTokenType(): IElementType {
@@ -152,15 +148,19 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
             val list = mutableListOf<IFunSignature>()
             val colonCall = (owner as? LuaClassMethodDef)?.isStatic == false
             var element: PsiElement? = firstChild
+
             while (element != null) {
                 if (element is LuaDocTagOverload) {
                     val fty = element.functionTy
+
                     if (fty != null) {
                         list.add(FunSignature.create(colonCall, fty))
                     }
                 }
+
                 element = element.nextSibling
             }
+
             return if (list.size != 0) list.toTypedArray() else null
         }
 

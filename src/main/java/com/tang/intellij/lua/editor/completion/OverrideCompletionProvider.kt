@@ -59,11 +59,11 @@ class OverrideCompletionProvider : LuaCompletionProvider() {
         }
     }
 
-    private fun addOverrideMethod(completionParameters: CompletionParameters, completionResultSet: CompletionResultSet, memberNameSet:MutableSet<String>, sup: ITyClass) {
+    private fun addOverrideMethod(completionParameters: CompletionParameters, completionResultSet: CompletionResultSet, memberNameSet: MutableSet<String>, sup: ITyClass) {
         val project = completionParameters.originalFile.project
         val context = SearchContext.get(project)
         val clazzName = sup.className
-        LuaClassMemberIndex.processAll(TyLazyClass(clazzName), context, Processor { def ->
+        LuaClassMemberIndex.processAll(TyLazyClass(clazzName), context, { def ->
             if (def is LuaClassMethod) {
                 def.name?.let {
                     if (memberNameSet.add(it)) {

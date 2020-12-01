@@ -44,7 +44,7 @@ fun renderTy(sb: StringBuilder, ty: ITy, tyRenderer: ITyRenderer) {
 fun renderSignature(sb: StringBuilder, signature: IFunSignature, tyRenderer: ITyRenderer) {
     val sig = mutableListOf<String>()
     val params = signature.params
-    val varargTy = signature.varargTy
+    val varargTy = signature.variadicParamTy
 
     if (params != null || varargTy != null) {
         params?.forEach {

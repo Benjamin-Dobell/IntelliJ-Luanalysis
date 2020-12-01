@@ -21,16 +21,13 @@ import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.search.SearchContext
-import com.tang.intellij.lua.ty.ITy
-import com.tang.intellij.lua.ty.ITySubstitutor
-import com.tang.intellij.lua.ty.Ty
-import com.tang.intellij.lua.ty.TyMultipleResults
+import com.tang.intellij.lua.ty.*
 
 /**
  * parameter info
  * Created by tangzx on 2017/2/4.
  */
-class LuaParamInfo(var name: String = "", var ty: ITy = Ty.UNKNOWN) {
+class LuaParamInfo(val name: String, val ty: ITy) {
 
     override fun equals(other: Any?): Boolean {
         //only check ty
@@ -52,10 +49,7 @@ class LuaParamInfo(var name: String = "", var ty: ITy = Ty.UNKNOWN) {
             return this
         }
 
-        val pi = LuaParamInfo()
-        pi.name = name
-        pi.ty = substitutedTy
-        return pi
+        return LuaParamInfo(name, substitutedTy)
     }
 
     companion object {
@@ -64,10 +58,9 @@ class LuaParamInfo(var name: String = "", var ty: ITy = Ty.UNKNOWN) {
         }
 
         fun deserialize(stubInputStream: StubInputStream): LuaParamInfo {
-            val paramInfo = LuaParamInfo()
-            paramInfo.name = StringRef.toString(stubInputStream.readName())
-            paramInfo.ty = Ty.deserialize(stubInputStream)
-            return paramInfo
+            val name = StringRef.toString(stubInputStream.readName())
+            val ty = Ty.deserialize(stubInputStream)
+            return LuaParamInfo(name, ty)
         }
 
         fun serialize(param: LuaParamInfo, stubOutputStream: StubOutputStream) {

@@ -5,8 +5,10 @@ import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiNameIdentifierOwner;
 import com.tang.intellij.lua.psi.LuaClass;
+import com.tang.intellij.lua.psi.LuaScopedType;
 import com.tang.intellij.lua.psi.LuaClassField;
 import com.tang.intellij.lua.psi.LuaTypeAlias;
+import com.tang.intellij.lua.psi.LuaTypeScope;
 
 public class LuaDocVisitor extends PsiElementVisitor {
 
@@ -48,6 +50,7 @@ public class LuaDocVisitor extends PsiElementVisitor {
 
   public void visitFunctionTy(@NotNull LuaDocFunctionTy o) {
     visitTy(o);
+    // visitLuaTypeScope(o);
   }
 
   public void visitGeneralTy(@NotNull LuaDocGeneralTy o) {
@@ -57,6 +60,7 @@ public class LuaDocVisitor extends PsiElementVisitor {
   public void visitGenericDef(@NotNull LuaDocGenericDef o) {
     visitPsiNameIdentifierOwner(o);
     // visitLuaClass(o);
+    // visitLuaScopedType(o);
   }
 
   public void visitGenericTy(@NotNull LuaDocGenericTy o) {

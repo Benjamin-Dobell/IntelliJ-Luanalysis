@@ -6,9 +6,10 @@ import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNameIdentifierOwner;
 import com.tang.intellij.lua.psi.LuaClass;
+import com.tang.intellij.lua.psi.LuaScopedType;
 import com.tang.intellij.lua.ty.TyGenericParameter;
 
-public interface LuaDocGenericDef extends PsiNameIdentifierOwner, LuaDocPsiElement, LuaClass {
+public interface LuaDocGenericDef extends PsiNameIdentifierOwner, LuaDocPsiElement, LuaClass, LuaScopedType {
 
   @Nullable
   LuaDocClassRef getClassRef();

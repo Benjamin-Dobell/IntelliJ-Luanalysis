@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017. tangzx(love.tangzx@qq.com)
+ * Copyright (c) 2020
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,8 @@
 
 package com.tang.intellij.lua.psi
 
-import com.intellij.navigation.NavigationItem
-import com.intellij.psi.PsiElement
-import com.tang.intellij.lua.ty.ITy
-import com.tang.intellij.lua.ty.ITyClass
-
-interface LuaTypeDef : PsiElement, NavigationItem {
-    val type: ITy
+interface LuaScopedType : LuaTypeDef {
+    override fun getName(): String
 }
 
-interface LuaClass : LuaTypeDef, LuaTypeScope {
-    override val type: ITyClass
-}
-
-interface LuaTypeAlias : LuaTypeDef, LuaTypeScope
+interface LuaTypeScope : LuaPsiElement

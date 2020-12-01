@@ -223,6 +223,9 @@ function_ty ::= fun function_generic? function_params? (':' function_return_type
         getReturnType
     ]
     pin = 1
+    implements = [
+        "com.tang.intellij.lua.psi.LuaTypeScope"
+    ]
 }
 
 union_ty ::= ty (('|' ty))+ {
@@ -308,6 +311,7 @@ generic_def ::= ID (EXTENDS class_ref)? {
         "com.intellij.psi.PsiNameIdentifierOwner"
         "com.tang.intellij.lua.comment.psi.LuaDocPsiElement"
         "com.tang.intellij.lua.psi.LuaClass"
+        "com.tang.intellij.lua.psi.LuaScopedType"
     ]
     methods = [
         getType

@@ -57,7 +57,7 @@ class SuggestLuaParametersMacro : Macro() {
         return null
     }
 
-    private fun create(params: Array<LuaParamInfo>): Array<LookupElement> {
+    private fun create(params: Array<out LuaParamInfo>): Array<LookupElement> {
         val paramNames = mutableListOf<String>()
         params.forEach {
             paramNames.add(it.name)

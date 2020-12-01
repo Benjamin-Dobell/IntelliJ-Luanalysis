@@ -30,8 +30,7 @@ import java.util.*
 
  * Created by tangzx on 2017/1/14.
  */
-class SearchContext {
-
+abstract class SearchContext internal constructor() {
     companion object {
         private val threadLocal = object : ThreadLocal<Stack<SearchContext>>() {
             override fun initialValue(): Stack<SearchContext> {
@@ -42,15 +41,10 @@ class SearchContext {
         fun get(project: Project): SearchContext {
             val stack = threadLocal.get()
             return if (stack.isEmpty()) {
-                SearchContext(project)
+                ProjectSearchContext(project)
             } else {
                 stack.peek()
             }
-        }
-
-        fun get(element: PsiElement): SearchContext {
-            val stack = threadLocal.get()
-            return stack.find { c -> c.element == element } ?: SearchContext(element)
         }
 
         fun infer(psi: LuaTypeGuessable): ITy? {
@@ -88,7 +82,7 @@ class SearchContext {
         }
 
         fun <T> withDumb(project: Project, defaultValue: T, action: (ctx: SearchContext) -> T): T {
-            val context = SearchContext(project)
+            val context = ProjectSearchContext(project)
             return withDumb(context, defaultValue, action)
         }
 
@@ -103,8 +97,8 @@ class SearchContext {
         }
     }
 
-    val project: Project
-    val element: PsiElement?
+    abstract val project: Project
+    abstract val element: PsiElement?
 
     val index: Int get() = myIndex // Multiple results index
     val supportsMultipleResults: Boolean get() = myMultipleResults
@@ -115,16 +109,6 @@ class SearchContext {
     private var myInStack = false
     private val myInferCache = mutableMapOf<LuaTypeGuessable, ITy>()
     private var myScope: GlobalSearchScope? = null
-
-    private constructor(project: Project) {
-        this.project = project
-        element = null
-    }
-
-    private constructor(element: PsiElement) {
-        project = element.project
-        this.element = element
-    }
 
     fun <T> withIndex(index: Int, supportMultipleResults: Boolean = false, action: () -> T): T {
         val savedIndex = this.index
