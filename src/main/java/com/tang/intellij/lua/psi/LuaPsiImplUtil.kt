@@ -503,7 +503,7 @@ fun guessIndexType(tableField: LuaTableField, context: SearchContext): ITy? {
         return null
     }
 
-    val indexTy = tableField.idExpr?.guessType(context)
+    val indexTy = tableField.stub?.indexTy ?: tableField.idExpr?.guessType(context)
 
     if (indexTy != null) {
         return indexTy
@@ -529,13 +529,11 @@ fun guessIndexType(tableField: LuaTableField, context: SearchContext): ITy? {
 
 fun guessType(tableField: LuaTableField, context: SearchContext): ITy? {
     val stub = tableField.stub
-    //from comment
-    val docTy = if (stub != null) stub.docTy else tableField.comment?.docTy
-    if (docTy != null)
-        return docTy
-
-    //guess from value
-    return PsiTreeUtil.getStubChildOfType(tableField, LuaExpr::class.java)?.guessType(context)
+    return if (stub != null) {
+        stub.valueTy
+    } else {
+        tableField.comment?.docTy
+    } ?: tableField.valueExpr?.guessType(context)
 }
 
 fun getName(tableField: LuaTableField): String? {
@@ -576,11 +574,17 @@ fun getPresentation(tableField: LuaTableField): ItemPresentation {
  * xx['id']
  */
 fun getIdExpr(tableField: LuaTableField): LuaExpr? {
-    val bracket = tableField.lbrack
-    if (bracket != null) {
-        return PsiTreeUtil.getNextSiblingOfType(bracket, LuaExpr::class.java)
-    }
-    return null
+    val isIndexExpression = tableField.stub?.isIndexExpression ?: tableField.lbrack != null
+    return if (isIndexExpression) {
+        PsiTreeUtil.getStubChildOfType(tableField, LuaExpr::class.java)
+    } else null
+}
+
+fun getValueExpr(tableField: LuaTableField): LuaExpr? {
+    val isIndexExpression = tableField.stub?.isIndexExpression ?: tableField.lbrack != null
+    return if (isIndexExpression) {
+        PsiTreeUtil.getStubChildrenOfTypeAsList(tableField, LuaExpr::class.java).getOrNull(1)
+    } else PsiTreeUtil.getStubChildOfType(tableField, LuaExpr::class.java)
 }
 
 fun getIndexType(tableField: LuaTableField): LuaDocTy? {

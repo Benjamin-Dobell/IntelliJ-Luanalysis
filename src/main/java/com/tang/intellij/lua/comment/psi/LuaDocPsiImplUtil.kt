@@ -414,24 +414,40 @@ fun getNameIdentifier(f: LuaDocTableField): PsiElement? {
 
 fun getName(f:LuaDocTableField): String? {
     val stub = f.stub
-    if (stub != null)
-        return stub.name
-    return getName(f as PsiNameIdentifierOwner)
+    return if (stub != null) {
+        stub.name
+    } else {
+        getName(f as PsiNameIdentifierOwner)
+    }
 }
 
 fun getIndexType(f: LuaDocTableField): LuaDocTy? {
-    return if (f.lbrack != null) f.tyList.firstOrNull() else null
+    val isIndexExpression = f.stub?.let {
+        it.name == null
+    } ?: f.lbrack != null
+
+    return if (isIndexExpression) {
+        PsiTreeUtil.getStubChildOfType(f, LuaDocTy::class.java)
+    } else null
 }
 
 fun getValueType(f: LuaDocTableField): LuaDocTy? {
-    return f.tyList.getOrNull(if (f.lbrack != null) 1 else 0)
+    val isIndexExpression = f.stub?.let {
+        it.name == null
+    } ?: f.lbrack != null
+
+    return if (isIndexExpression) {
+        PsiTreeUtil.getStubChildrenOfTypeAsList(f, LuaDocTy::class.java).getOrNull(1)
+    } else PsiTreeUtil.getStubChildOfType(f, LuaDocTy::class.java)
 }
 
 fun guessType(f:LuaDocTableField, context: SearchContext): ITy {
     val stub = f.stub
-    if (stub != null)
-        return stub.valueTy ?: Ty.UNKNOWN
-    return f.valueType?.getType() ?: Ty.UNKNOWN
+    return if (stub != null) {
+        stub.valueTy
+    } else {
+        f.valueType?.getType()
+    } ?: Ty.UNKNOWN
 }
 
 fun getNameIdentifier(g: LuaDocGenericDef): PsiElement? {
@@ -448,5 +464,9 @@ fun getNameIdentifier(g: LuaDocTagAlias): PsiElement {
 
 fun getType(alias: LuaDocTagAlias): ITy {
     val stub = alias.stub
-    return stub?.type ?: TyAlias(alias.name, alias.genericDefList.map { TyGenericParameter(it) }.toTypedArray(), alias.ty?.getType() ?: Ty.UNKNOWN)
+    return if (stub != null) {
+        return stub.type
+    } else {
+        TyAlias(alias.name, alias.genericDefList.map { TyGenericParameter(it) }.toTypedArray(), alias.ty?.getType() ?: Ty.UNKNOWN)
+    }
 }

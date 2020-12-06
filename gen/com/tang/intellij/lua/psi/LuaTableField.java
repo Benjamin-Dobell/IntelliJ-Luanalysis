@@ -13,7 +13,7 @@ import com.tang.intellij.lua.comment.psi.api.LuaComment;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 
-public interface LuaTableField extends LuaClassField, PsiNameIdentifierOwner, LuaCommentOwner, StubBasedPsiElement<LuaTableFieldStub> {
+public interface LuaTableField extends LuaClassField, PsiNameIdentifierOwner, LuaCommentOwner, LuaTypeScope, StubBasedPsiElement<LuaTableFieldStub> {
 
   @NotNull
   List<LuaExpr> getExprList();
@@ -57,6 +57,9 @@ public interface LuaTableField extends LuaClassField, PsiNameIdentifierOwner, Lu
 
   @Nullable
   LuaExpr getIdExpr();
+
+  @Nullable
+  LuaExpr getValueExpr();
 
   @Nullable
   PsiElement getLbrack();

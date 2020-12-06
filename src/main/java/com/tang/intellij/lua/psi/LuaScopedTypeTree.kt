@@ -178,6 +178,9 @@ private fun isValidTypeScope(element: PsiElement?): Boolean {
                 } ?: false
             } else false
         }
+        is LuaTableField -> {
+            return element.valueExpr is LuaClosureExpr
+        }
         else -> true
     }
 }

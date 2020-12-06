@@ -57,4 +57,11 @@ end
 
 outerFunction("someValue")
 
-
+local tableWithGenericFunction = {
+    ---@generic T
+    ---@param t T
+    genericFunction = function(t)
+        ---@type T
+        local alsoT = t
+    end
+}

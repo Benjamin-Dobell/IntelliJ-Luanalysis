@@ -222,6 +222,7 @@ public class LuaVisitor extends PsiElementVisitor {
     visitClassField(o);
     // visitPsiNameIdentifierOwner(o);
     // visitCommentOwner(o);
+    // visitTypeScope(o);
   }
 
   public void visitTableFieldSep(@NotNull LuaTableFieldSep o) {

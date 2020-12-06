@@ -68,7 +68,7 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
                     field.fieldName,
                     flags,
                     valueTy)
-        } else if (indexTy != null) {
+        } else if (field.idExpr != null) {
             valueTy = if (valueTy is TyMultipleResults) valueTy.list.first() else valueTy
 
             return LuaTableFieldStubImpl(
@@ -76,6 +76,7 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
                     this,
                     className,
                     indexTy,
+                    true,
                     flags,
                     valueTy)
         } else {
@@ -103,6 +104,7 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
                     this,
                     className,
                     TyPrimitiveLiteral.getTy(TyPrimitiveKind.Number, fieldIndex.toString()),
+                    false,
                     flags,
                     valueTy)
         }
@@ -112,6 +114,11 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
         stubOutputStream.writeName(stub.className)
         stubOutputStream.writeName(stub.name)
         stubOutputStream.writeTyNullable(stub.indexTy)
+
+        if (stub.indexTy != null) {
+            stubOutputStream.writeBoolean(stub.isIndexExpression)
+        }
+
         stubOutputStream.writeShort(stub.flags)
         stubOutputStream.writeTyNullable(stub.valueTy)
     }
@@ -120,6 +127,9 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
         val className = StringRef.toString(stubInputStream.readName())!!
         val name = StringRef.toString(stubInputStream.readName())
         val indexType = stubInputStream.readTyNullable()
+        val isIndexExpression = if (indexType != null) {
+            stubInputStream.readBoolean()
+        } else false
         val flags = stubInputStream.readShort().toInt()
         val valueType = stubInputStream.readTyNullable()
 
@@ -135,6 +145,7 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
                     this,
                     className,
                     indexType!!,
+                    isIndexExpression,
                     flags,
                     valueType)
         }
@@ -182,6 +193,7 @@ interface LuaTableFieldStub : LuaClassMemberStub<LuaTableField> {
 
     val name: String?
     val indexTy: ITy?
+    val isIndexExpression: Boolean
 
     val flags: Int
 
@@ -195,6 +207,7 @@ class LuaTableFieldStubImpl : LuaStubBase<LuaTableField>, LuaTableFieldStub {
     override val className: String?
     override val name: String?
     override val indexTy: ITy?
+    override val isIndexExpression: Boolean
     override val flags: Int
     override val valueTy: ITy?
 
@@ -208,15 +221,17 @@ class LuaTableFieldStubImpl : LuaStubBase<LuaTableField>, LuaTableFieldStub {
         this.className = className
         this.name = name
         this.indexTy = null
+        this.isIndexExpression = false
         this.flags = flags
         this.valueTy = valueTy
     }
 
-    constructor(parent: StubElement<*>, elementType: LuaStubElementType<*, *>, className: String?, indexType: ITy, flags: Int, valueTy: ITy?)
+    constructor(parent: StubElement<*>, elementType: LuaStubElementType<*, *>, className: String?, indexType: ITy?, isIndexExpression: Boolean, flags: Int, valueTy: ITy?)
             : super(parent, elementType) {
         this.className = className
         this.name = null
         this.indexTy = indexType
+        this.isIndexExpression = isIndexExpression
         this.flags = flags
         this.valueTy = valueTy
     }

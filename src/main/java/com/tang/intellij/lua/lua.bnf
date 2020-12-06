@@ -532,6 +532,7 @@ tableField ::= tableField1 | tableField2 | expr {
         isDeprecated
         getComment
         getIdExpr
+        getValueExpr
         nameDef = "tableFieldNameDef"
         lbrack = 'LBRACK'
     ]
@@ -540,6 +541,7 @@ tableField ::= tableField1 | tableField2 | expr {
         "com.tang.intellij.lua.psi.LuaClassField"
         "com.intellij.psi.PsiNameIdentifierOwner"
         "com.tang.intellij.lua.psi.LuaCommentOwner"
+        "com.tang.intellij.lua.psi.LuaTypeScope"
     ]
     recoverWhile = tableField_recover
 }
