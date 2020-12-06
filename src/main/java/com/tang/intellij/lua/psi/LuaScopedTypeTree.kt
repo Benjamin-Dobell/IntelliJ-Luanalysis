@@ -167,14 +167,14 @@ private fun isValidTypeScope(element: PsiElement?): Boolean {
         is LuaLocalDef -> {
             if (element.nameList?.nameDefList?.size == 1) {
                 element.exprList?.exprList?.let {
-                    (it.first() as? LuaClosureExpr)?.comment != null
+                    (it.firstOrNull() as? LuaClosureExpr)?.comment != null
                 } ?: false
             } else false
         }
         is LuaAssignStat -> {
             if (element.varExprList.exprList.size == 1) {
                 element.valueExprList?.exprList?.let {
-                    (it.first() as? LuaClosureExpr)?.comment != null
+                    (it.firstOrNull() as? LuaClosureExpr)?.comment != null
                 } ?: false
             } else false
         }
@@ -243,26 +243,35 @@ private abstract class ScopedTypeTree(val file: PsiFile) : LuaRecursiveVisitor()
         }
     }
 
-    protected open fun visitElementExt(element: PsiElement) {
+    protected open fun traverseChildren(element: PsiElement) {
         super.visitElement(element)
     }
 
     override fun visitElement(element: PsiElement) {
-        if (isValidTypeScope(element)) {
+        if (isValidTypeScope(element) && currentScope.psi !== element) {
             push(create(element))
-            visitElementExt(element)
+            traverseChildren(element)
             pop()
         } else if (element is LuaDocTagOverload) {
-            // Typically generic defs (@generic) are scoped to the comment owner. However, overloads are a special case
-            // where generics defs are scoped to the overload only i.e. cannot be referenced in the function body.
+            // Typically generic defs (@generic) are scoped to the function owner. However, overloads are a special case
+            // where generics defs must be scoped to the overload only i.e. cannot be referenced in the function body.
             val previousScope = currentScope
             currentScope = currentScope.parent ?: rootScope
 
-            visitElementExt(element)
+            traverseChildren(element)
 
             currentScope = previousScope
         } else {
-            visitElementExt(element)
+            val cls = (element as? LuaComment)?.tagClass
+
+            if (cls != null) {
+                // If we encountered a comment with a @class then we want all comment children (i.e. @field) to be children of the class' scope.
+                push(create(cls))
+                traverseChildren(element)
+                pop()
+            } else {
+                traverseChildren(element)
+            }
         }
     }
 }
@@ -304,7 +313,7 @@ private class ScopedTypeStubTree(file: PsiFile) : ScopedTypeTree(file) {
         return super.shouldRebuild() || (file as? LuaPsiFile)?.isContentsLoaded == true
     }
 
-    override fun visitElementExt(element: PsiElement) {
+    override fun traverseChildren(element: PsiElement) {
         var stub: STUB_ELE? = null
 
         if (element is LuaPsiFile) {
@@ -320,7 +329,7 @@ private class ScopedTypeStubTree(file: PsiFile) : ScopedTypeTree(file) {
                 child.psi.accept(this)
             }
         } else {
-            super.visitElementExt(element)
+            super.traverseChildren(element)
         }
     }
 

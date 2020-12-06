@@ -43,3 +43,16 @@ aNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">gener
 aString = genericA.a
 aString = <error descr="No such member 'b' found on type 'GenericFieldsA<string>'">genericA.b</error>
 aString = <error descr="No such member 'c' found on type 'GenericFieldsA<string>'">genericA.c</error>
+
+
+---@class GenericFieldsD<T>
+---@field doThing fun(callback: nil | (fun(t: T): boolean)): void
+
+---@type GenericFieldsD<number>
+local genericFieldsD
+
+genericFieldsD.doThing(function(t)
+    aNumber = t
+    aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">t</error>
+    return true
+end)

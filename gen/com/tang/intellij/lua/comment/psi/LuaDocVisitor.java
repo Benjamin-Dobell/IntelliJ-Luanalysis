@@ -7,8 +7,8 @@ import com.intellij.psi.PsiNameIdentifierOwner;
 import com.tang.intellij.lua.psi.LuaClass;
 import com.tang.intellij.lua.psi.LuaScopedType;
 import com.tang.intellij.lua.psi.LuaClassField;
-import com.tang.intellij.lua.psi.LuaTypeAlias;
 import com.tang.intellij.lua.psi.LuaTypeScope;
+import com.tang.intellij.lua.psi.LuaTypeAlias;
 
 public class LuaDocVisitor extends PsiElementVisitor {
 
@@ -115,6 +115,7 @@ public class LuaDocVisitor extends PsiElementVisitor {
     visitPsiElement(o);
     // visitPsiNameIdentifierOwner(o);
     // visitLuaClass(o);
+    // visitLuaTypeScope(o);
     // visitTag(o);
   }
 

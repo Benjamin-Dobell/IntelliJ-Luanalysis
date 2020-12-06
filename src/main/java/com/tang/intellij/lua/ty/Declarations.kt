@@ -309,7 +309,7 @@ private fun resolveParamType(paramNameDef: LuaParamNameDef, context: SearchConte
 
         val iterator: ITyFunction?
 
-        val callExpr = exprList?.exprList?.first() as? LuaCallExpr
+        val callExpr = exprList?.exprList?.firstOrNull() as? LuaCallExpr
 
         if (callExpr != null) {
             iterator = context.withMultipleResults {
@@ -318,7 +318,7 @@ private fun resolveParamType(paramNameDef: LuaParamNameDef, context: SearchConte
                 TyMultipleResults.getResult(context, it, 0) as? ITyFunction
             }
         } else {
-            iterator = (exprList?.exprList?.first() as? LuaTypeGuessable)?.guessType(context) as? ITyFunction
+            iterator = (exprList?.exprList?.firstOrNull() as? LuaTypeGuessable)?.guessType(context) as? ITyFunction
         }
 
         if (iterator != null) {

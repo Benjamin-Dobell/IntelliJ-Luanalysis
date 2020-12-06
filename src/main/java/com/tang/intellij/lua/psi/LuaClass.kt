@@ -25,7 +25,7 @@ interface LuaTypeDef : PsiElement, NavigationItem {
     val type: ITy
 }
 
-interface LuaClass : LuaTypeDef, LuaTypeScope {
+interface LuaClass : LuaTypeDef {
     override val type: ITyClass
 }
 
