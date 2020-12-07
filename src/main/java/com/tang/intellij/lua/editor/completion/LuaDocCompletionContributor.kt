@@ -133,7 +133,7 @@ class LuaDocCompletionContributor : CompletionContributor() {
                 val seeRefTag = PsiTreeUtil.getParentOfType(position, LuaDocTagSee::class.java)
                 if (seeRefTag != null) {
                     val ctx = SearchContext.get(seeRefTag.project)
-                    val classType = seeRefTag.classNameRef?.resolveType(ctx) as? ITyClass
+                    val classType = seeRefTag.typeRef?.resolveType(ctx) as? ITyClass
                     classType?.processMembers(ctx) { _, member ->
                         val name = member.name
                         if (name != null) {
@@ -173,7 +173,7 @@ class LuaDocCompletionContributor : CompletionContributor() {
                 psiElement(LuaDocTypes.TAG_NAME_PARAM))
 
         // 在 extends 之后提示类型
-        private val SHOW_CLASS = psiElement().withParent(LuaDocClassNameRef::class.java)
+        private val SHOW_CLASS = psiElement().withParent(LuaDocTypeRef::class.java)
 
         // 在 @field 之后提示 public / protected
         private val SHOW_ACCESS_MODIFIER = psiElement().afterLeaf(

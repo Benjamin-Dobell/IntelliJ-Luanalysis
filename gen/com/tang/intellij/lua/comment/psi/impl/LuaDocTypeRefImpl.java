@@ -14,25 +14,32 @@ import com.intellij.psi.PsiReference;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 
-public class LuaDocClassNameRefImpl extends ASTWrapperPsiElement implements LuaDocClassNameRef {
+public class LuaDocTypeRefImpl extends ASTWrapperPsiElement implements LuaDocTypeRef {
 
-  public LuaDocClassNameRefImpl(@NotNull ASTNode node) {
+  public LuaDocTypeRefImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull LuaDocVisitor visitor) {
-    visitor.visitClassNameRef(this);
+    visitor.visitTypeRef(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaDocVisitor) accept((LuaDocVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
-  @NotNull
+  @Nullable
   public PsiElement getId() {
-    return notNullChild(findChildByType(ID));
+    return findChildByType(ID);
+  }
+
+  @Override
+  @NotNull
+  public String getName() {
+    return LuaDocPsiImplUtilKt.getName(this);
   }
 
   @Override

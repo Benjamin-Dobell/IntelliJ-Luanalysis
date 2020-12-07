@@ -9,35 +9,22 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.comment.psi.LuaDocTypes.*;
 import com.tang.intellij.lua.comment.psi.*;
-import com.tang.intellij.lua.ty.ITy;
 
-public class LuaDocStringLiteralTyImpl extends LuaDocTyImpl implements LuaDocStringLiteralTy {
+public abstract class LuaDocGenericTableIndexTyImpl extends LuaDocTyImpl implements LuaDocGenericTableIndexTy {
 
-  public LuaDocStringLiteralTyImpl(@NotNull ASTNode node) {
+  public LuaDocGenericTableIndexTyImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   @Override
   public void accept(@NotNull LuaDocVisitor visitor) {
-    visitor.visitStringLiteralTy(this);
+    visitor.visitGenericTableIndexTy(this);
   }
 
   @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaDocVisitor) accept((LuaDocVisitor)visitor);
     else super.accept(visitor);
-  }
-
-  @Override
-  @NotNull
-  public ITy getType() {
-    return LuaDocPsiImplUtilKt.getType(this);
-  }
-
-  @Override
-  @NotNull
-  public PsiElement getValue() {
-    return notNullChild(findChildByType(STRING_LITERAL));
   }
 
 }

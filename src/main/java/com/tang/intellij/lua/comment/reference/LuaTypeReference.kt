@@ -20,9 +20,8 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceBase
 import com.intellij.psi.util.PsiTreeUtil
-import com.tang.intellij.lua.comment.psi.LuaDocClassNameRef
+import com.tang.intellij.lua.comment.psi.LuaDocTypeRef
 import com.tang.intellij.lua.psi.LuaElementFactory
-import com.tang.intellij.lua.psi.LuaPsiTreeUtil
 import com.tang.intellij.lua.psi.LuaScopedTypeTree
 import com.tang.intellij.lua.psi.search.LuaShortNamesManager
 import com.tang.intellij.lua.search.SearchContext
@@ -31,7 +30,7 @@ import com.tang.intellij.lua.search.SearchContext
 
  * Created by TangZX on 2016/11/29.
  */
-class LuaClassNameReference(element: LuaDocClassNameRef) : PsiReferenceBase<LuaDocClassNameRef>(element) {
+class LuaTypeReference(element: LuaDocTypeRef) : PsiReferenceBase<LuaDocTypeRef>(element) {
 
     override fun getRangeInElement() = TextRange(0, myElement.textLength)
 
@@ -41,8 +40,8 @@ class LuaClassNameReference(element: LuaDocClassNameRef) : PsiReferenceBase<LuaD
 
     override fun handleElementRename(newElementName: String): PsiElement {
         val element = LuaElementFactory.createWith(myElement.project, "---@type $newElementName")
-        val classNameRef = PsiTreeUtil.findChildOfType(element, LuaDocClassNameRef::class.java)
-        return myElement.replace(classNameRef!!)
+        val typeRef = PsiTreeUtil.findChildOfType(element, LuaDocTypeRef::class.java)
+        return myElement.replace(typeRef!!)
     }
 
     override fun resolve(): PsiElement? {

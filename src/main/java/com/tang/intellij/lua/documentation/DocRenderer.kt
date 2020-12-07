@@ -260,10 +260,10 @@ private fun renderTypeDef(sb: StringBuilder, tagType: LuaDocTagType, tyRenderer:
 }
 
 private fun renderSee(sb: StringBuilder, see: LuaDocTagSee, tyRenderer: ITyRenderer) {
-    val classNameRef = see.classNameRef
+    val typeRef = see.typeRef
 
-    if (classNameRef != null) {
-        val ty = classNameRef.resolveType(SearchContext.get(classNameRef.project))
+    if (typeRef != null) {
+        val ty = typeRef.resolveType(SearchContext.get(typeRef.project))
         renderTy(sb, ty, tyRenderer)
         see.id?.let {
             sb.append("#${it.text}")

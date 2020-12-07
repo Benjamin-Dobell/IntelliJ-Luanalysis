@@ -52,6 +52,7 @@ aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean'">tabl
 
 local anonymousClassTable = {}
 anonymousClassTable[1] = 1
+anonymousClassTable.a = <error descr="Unknown function 'Undeclared'."><warning descr="Undeclared variable 'Undeclared'.">Undeclared</warning>()</error>
 
 aBoolean = <error descr="Type mismatch. Required: 'boolean' Found: '1'">anonymousClassTable[1]</error>
 aNumber = anonymousClassTable[1]

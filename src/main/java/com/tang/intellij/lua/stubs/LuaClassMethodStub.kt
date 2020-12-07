@@ -23,7 +23,6 @@ import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.impl.LuaClassMethodDefImpl
 import com.tang.intellij.lua.search.SearchContext
-import com.tang.intellij.lua.search.StubSearchContext
 import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.stubs.index.StubKeys
 import com.tang.intellij.lua.ty.*

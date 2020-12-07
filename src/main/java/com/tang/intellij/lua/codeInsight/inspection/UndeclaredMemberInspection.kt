@@ -25,7 +25,6 @@ import com.tang.intellij.lua.psi.prefixExpr
 import com.tang.intellij.lua.search.PsiSearchContext
 import com.tang.intellij.lua.ty.Ty
 import com.tang.intellij.lua.ty.TySnippet
-import com.tang.intellij.lua.ty.TyUnion
 import com.tang.intellij.lua.ty.isGlobal
 
 class UndeclaredMemberInspection : StrictInspection() {
@@ -39,13 +38,13 @@ class UndeclaredMemberInspection : StrictInspection() {
                     Ty.eachResolved(prefix, context) { prefixTy ->
                         if (!prefixTy.isGlobal) {
                             if (memberName != null) {
-                                if (prefixTy.guessMemberType(memberName, context) == null) {
+                                if (prefixTy.findMember(memberName, context) == null) {
                                     myHolder.registerProblem(o, "No such member '%s' found on type '%s'".format(memberName, prefixTy))
                                 }
                             } else {
                                 o.idExpr?.guessType(context)?.let { indexTy ->
-                                    TyUnion.each(indexTy) {
-                                        if (it !is TySnippet && prefixTy.guessIndexerType(it, context) == null) {
+                                    Ty.eachResolved(indexTy, context) {
+                                        if (it !is TySnippet && prefixTy.findIndexer(it, context) == null) {
                                             myHolder.registerProblem(o, "No such indexer '[%s]' found on type '%s'".format(it.displayName, prefixTy))
                                         }
                                     }

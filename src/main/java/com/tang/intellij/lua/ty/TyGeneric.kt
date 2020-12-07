@@ -20,6 +20,7 @@ import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.comment.psi.LuaDocGenericDef
+import com.tang.intellij.lua.comment.psi.LuaDocGenericTableTy
 import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.readTyNullable
@@ -108,7 +109,7 @@ interface ITyGeneric : ITy {
     }
 }
 
-class TyGeneric(override val params: Array<out ITy>, override val base: ITy) : Ty(TyKind.Generic), ITyGeneric {
+open class TyGeneric(override val params: Array<out ITy>, override val base: ITy) : Ty(TyKind.Generic), ITyGeneric {
 
     override fun equals(other: Any?): Boolean {
         return other is ITyGeneric && other.base == base && other.displayName == displayName
@@ -307,6 +308,40 @@ class TyGeneric(override val params: Array<out ITy>, override val base: ITy) : T
         }
 
         return true
+    }
+}
+
+class TyTableGeneric(
+        val genericTableTy: LuaDocGenericTableTy,
+        val keyType: ITy = genericTableTy.keyType?.getType() ?: Ty.UNKNOWN,
+        val valueType: ITy = genericTableTy.valueType?.getType() ?: Ty.UNKNOWN
+) : TyGeneric(
+        arrayOf(keyType, valueType),
+        Ty.TABLE
+) {
+    override fun findMember(name: String, searchContext: SearchContext): LuaClassMember? {
+        Ty.eachResolved(keyType, searchContext) {
+            if ((it is TyPrimitiveClass && it.primitiveKind == TyPrimitiveKind.String)
+                    || (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String && it.value == name)) {
+                return genericTableTy
+            }
+        }
+
+        return null
+    }
+
+    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember? {
+        if (exact) {
+            Ty.eachResolved(keyType, searchContext) {
+                if (it.equals(indexTy, searchContext)) {
+                    return genericTableTy
+                }
+            }
+        } else if (keyType.contravariantOf(indexTy, searchContext, TyVarianceFlags.STRICT_UNKNOWN)) {
+            return genericTableTy
+        }
+
+        return null
     }
 }
 

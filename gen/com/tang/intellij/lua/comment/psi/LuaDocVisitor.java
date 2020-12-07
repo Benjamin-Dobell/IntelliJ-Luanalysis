@@ -8,6 +8,7 @@ import com.tang.intellij.lua.psi.LuaClass;
 import com.tang.intellij.lua.psi.LuaScopedType;
 import com.tang.intellij.lua.psi.LuaClassField;
 import com.tang.intellij.lua.psi.LuaTypeScope;
+import com.tang.intellij.lua.psi.LuaClassMember;
 import com.tang.intellij.lua.psi.LuaTypeAlias;
 
 public class LuaDocVisitor extends PsiElementVisitor {
@@ -22,10 +23,6 @@ public class LuaDocVisitor extends PsiElementVisitor {
 
   public void visitBooleanLiteralTy(@NotNull LuaDocBooleanLiteralTy o) {
     visitTy(o);
-  }
-
-  public void visitClassNameRef(@NotNull LuaDocClassNameRef o) {
-    visitPsiElement(o);
   }
 
   public void visitClassRef(@NotNull LuaDocClassRef o) {
@@ -61,6 +58,15 @@ public class LuaDocVisitor extends PsiElementVisitor {
     visitPsiNameIdentifierOwner(o);
     // visitLuaClass(o);
     // visitLuaScopedType(o);
+  }
+
+  public void visitGenericTableIndexTy(@NotNull LuaDocGenericTableIndexTy o) {
+    visitTy(o);
+  }
+
+  public void visitGenericTableTy(@NotNull LuaDocGenericTableTy o) {
+    visitTy(o);
+    // visitLuaClassMember(o);
   }
 
   public void visitGenericTy(@NotNull LuaDocGenericTy o) {
@@ -177,6 +183,10 @@ public class LuaDocVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitTypeRef(@NotNull LuaDocTypeRef o) {
+    visitPsiElement(o);
+  }
+
   public void visitUnionTy(@NotNull LuaDocUnionTy o) {
     visitTy(o);
   }
@@ -185,7 +195,7 @@ public class LuaDocVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
-  public void visitLuaClassField(@NotNull LuaClassField o) {
+  public void visitPsiNameIdentifierOwner(@NotNull PsiNameIdentifierOwner o) {
     visitElement(o);
   }
 
@@ -197,11 +207,11 @@ public class LuaDocVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
-  public void visitLuaTypeAlias(@NotNull LuaTypeAlias o) {
+  public void visitLuaClassField(@NotNull LuaClassField o) {
     visitElement(o);
   }
 
-  public void visitPsiNameIdentifierOwner(@NotNull PsiNameIdentifierOwner o) {
+  public void visitLuaTypeAlias(@NotNull LuaTypeAlias o) {
     visitElement(o);
   }
 

@@ -32,7 +32,7 @@ class IllegalInheritanceInspection : LocalInspectionTool() {
             override fun visitTagClass(o: LuaDocTagClass) {
                 o.superClassRef?.let {
                     val className = o.id.text
-                    val parentClassName = it.classNameRef.text
+                    val parentClassName = it.typeRef.text
 
                     if (parentClassName == className) {
                         holder.registerProblem(o, "Illegal self inheritance", ProblemHighlightType.ERROR)
@@ -40,7 +40,7 @@ class IllegalInheritanceInspection : LocalInspectionTool() {
                     }
 
                     val context = SearchContext.get(o.project)
-                    val superClass = it.classNameRef.resolveType(context).let {
+                    val superClass = it.typeRef.resolveType(context).let {
                         if (it is ITyGeneric) it.base else it
                     }
 

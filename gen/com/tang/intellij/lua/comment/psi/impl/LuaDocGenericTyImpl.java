@@ -17,10 +17,12 @@ public class LuaDocGenericTyImpl extends LuaDocTyImpl implements LuaDocGenericTy
     super(node);
   }
 
+  @Override
   public void accept(@NotNull LuaDocVisitor visitor) {
     visitor.visitGenericTy(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaDocVisitor) accept((LuaDocVisitor)visitor);
     else super.accept(visitor);
@@ -28,14 +30,14 @@ public class LuaDocGenericTyImpl extends LuaDocTyImpl implements LuaDocGenericTy
 
   @Override
   @NotNull
-  public LuaDocClassNameRef getClassNameRef() {
-    return notNullChild(PsiTreeUtil.getChildOfType(this, LuaDocClassNameRef.class));
+  public List<LuaDocTy> getTyList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, LuaDocTy.class);
   }
 
   @Override
   @NotNull
-  public List<LuaDocTy> getTyList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, LuaDocTy.class);
+  public LuaDocTypeRef getTypeRef() {
+    return notNullChild(PsiTreeUtil.getChildOfType(this, LuaDocTypeRef.class));
   }
 
   @Override

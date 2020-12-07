@@ -8,10 +8,10 @@ import com.intellij.psi.PsiElement;
 public interface LuaDocClassRef extends LuaDocPsiElement {
 
   @NotNull
-  LuaDocClassNameRef getClassNameRef();
+  List<LuaDocTy> getTyList();
 
   @NotNull
-  List<LuaDocTy> getTyList();
+  LuaDocTypeRef getTypeRef();
 
   //WARNING: getReference(...) is skipped
   //matching getReference(LuaDocClassRef, ...)

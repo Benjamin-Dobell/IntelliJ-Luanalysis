@@ -258,6 +258,7 @@ BOOLEAN=true|false
     "fun"                      { return FUN; }
     "vararg"                   { _typeReq = true; return VARARG; }
     "..."                      { return ELLIPSIS; }
+    "table"                    { return TABLE; }
     {ID}                       { if (_typeReq || _typeLevel > 0) { _typeReq = false; return ID; } else { yybegin(_nextState); yypushback(yylength()); } }
 }
 

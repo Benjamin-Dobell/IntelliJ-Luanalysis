@@ -36,6 +36,7 @@ public class LuaDocTagFieldImpl extends StubBasedPsiElementBase<LuaDocTagFieldSt
     visitor.visitTagField(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaDocVisitor) accept((LuaDocVisitor)visitor);
     else super.accept(visitor);
@@ -49,12 +50,6 @@ public class LuaDocTagFieldImpl extends StubBasedPsiElementBase<LuaDocTagFieldSt
 
   @Override
   @Nullable
-  public LuaDocClassNameRef getClassNameRef() {
-    return PsiTreeUtil.getChildOfType(this, LuaDocClassNameRef.class);
-  }
-
-  @Override
-  @Nullable
   public LuaDocCommentString getCommentString() {
     return PsiTreeUtil.getChildOfType(this, LuaDocCommentString.class);
   }
@@ -63,6 +58,12 @@ public class LuaDocTagFieldImpl extends StubBasedPsiElementBase<LuaDocTagFieldSt
   @NotNull
   public List<LuaDocTy> getTyList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, LuaDocTy.class);
+  }
+
+  @Override
+  @Nullable
+  public LuaDocTypeRef getTypeRef() {
+    return PsiTreeUtil.getChildOfType(this, LuaDocTypeRef.class);
   }
 
   @Override

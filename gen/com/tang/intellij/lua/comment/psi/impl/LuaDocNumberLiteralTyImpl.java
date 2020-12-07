@@ -17,10 +17,12 @@ public class LuaDocNumberLiteralTyImpl extends LuaDocTyImpl implements LuaDocNum
     super(node);
   }
 
+  @Override
   public void accept(@NotNull LuaDocVisitor visitor) {
     visitor.visitNumberLiteralTy(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaDocVisitor) accept((LuaDocVisitor)visitor);
     else super.accept(visitor);

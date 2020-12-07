@@ -19,13 +19,13 @@ public interface LuaDocTagField extends LuaClassField, LuaDocPsiElement, PsiName
   LuaDocAccessModifier getAccessModifier();
 
   @Nullable
-  LuaDocClassNameRef getClassNameRef();
-
-  @Nullable
   LuaDocCommentString getCommentString();
 
   @NotNull
   List<LuaDocTy> getTyList();
+
+  @Nullable
+  LuaDocTypeRef getTypeRef();
 
   @Nullable
   PsiElement getId();

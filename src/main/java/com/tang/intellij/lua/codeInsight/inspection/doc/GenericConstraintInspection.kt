@@ -35,15 +35,15 @@ fun pluralizedParameter(count: Int): String {
 class GenericConstraintInspection : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
         return object : LuaDocVisitor() {
-            private fun validateGenericArguments(typeElement: LuaDocPsiElement, classNameRef: LuaDocClassNameRef, args: List<LuaDocTy>) {
-                val context = PsiSearchContext(classNameRef)
-                val params = LuaPsiTreeUtil.findType(classNameRef.text, context)?.type?.getParams(context)
+            private fun validateGenericArguments(typeElement: LuaDocPsiElement, typeRef: LuaDocTypeRef, args: List<LuaDocTy>) {
+                val context = PsiSearchContext(typeRef)
+                val params = LuaPsiTreeUtil.findType(typeRef.text, context)?.type?.getParams(context)
 
                 if (params != null && params.size > 0) {
                     val genericAnalyzer = GenericAnalyzer(params, context)
 
                     if (params.size != args.size) {
-                        holder.registerProblem(typeElement, "\"${classNameRef.text}\" requires ${params.size} generic ${pluralizedParameter(params.size)}", ProblemHighlightType.ERROR)
+                        holder.registerProblem(typeElement, "\"${typeRef.text}\" requires ${params.size} generic ${pluralizedParameter(params.size)}", ProblemHighlightType.ERROR)
                     }
 
                     params.forEachIndexed { index, param ->
@@ -66,25 +66,25 @@ class GenericConstraintInspection : LocalInspectionTool() {
                             }
                         }
                     }
-                } else if (classNameRef.text == "table") {
+                } else if (typeRef.text == "table") {
                     if (args.size != 0 && args.size != 2) {
                         holder.registerProblem(typeElement, "table requires 2 generic parameters", ProblemHighlightType.ERROR)
                     }
                 } else if (args.size != 0) {
-                    holder.registerProblem(typeElement, "\"${classNameRef.text}\" is not a generic type", ProblemHighlightType.ERROR)
+                    holder.registerProblem(typeElement, "\"${typeRef.text}\" is not a generic type", ProblemHighlightType.ERROR)
                 }
             }
 
             override fun visitType(o: LuaDocType) {
                 if (o is LuaDocGenericTy) {
-                    validateGenericArguments(o, o.classNameRef, o.tyList)
+                    validateGenericArguments(o, o.typeRef, o.tyList)
                 } else if (o is LuaDocGeneralTy) {
-                    validateGenericArguments(o, o.classNameRef, emptyList())
+                    validateGenericArguments(o, o.typeRef, emptyList())
                 }
             }
 
             override fun visitClassRef(o: LuaDocClassRef) {
-                validateGenericArguments(o, o.classNameRef, o.tyList)
+                validateGenericArguments(o, o.typeRef, o.tyList)
             }
         }
     }

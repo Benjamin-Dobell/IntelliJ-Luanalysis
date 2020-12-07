@@ -28,7 +28,7 @@ import com.intellij.psi.stubs.StubElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.LuaCommentUtil
-import com.tang.intellij.lua.comment.reference.LuaClassNameReference
+import com.tang.intellij.lua.comment.reference.LuaTypeReference
 import com.tang.intellij.lua.comment.reference.LuaDocParamNameReference
 import com.tang.intellij.lua.comment.reference.LuaDocSeeReference
 import com.tang.intellij.lua.lang.type.LuaNumber
@@ -47,17 +47,21 @@ fun getReference(paramNameRef: LuaDocParamNameRef): PsiReference {
     return LuaDocParamNameReference(paramNameRef)
 }
 
-fun getReference(docClassNameRef: LuaDocClassNameRef): PsiReference {
-    return LuaClassNameReference(docClassNameRef)
+fun getReference(docTypeRef: LuaDocTypeRef): PsiReference {
+    return LuaTypeReference(docTypeRef)
 }
 
-fun resolveType(nameRef: LuaDocClassNameRef, context: SearchContext): ITy {
-    if (nameRef.id.text == Constants.WORD_SELF) {
-        val contextClass = LuaPsiTreeUtil.findContextClass(nameRef, context) as? ITyClass
+fun getName(docTypeRef: LuaDocTypeRef): String {
+    return docTypeRef.id?.text ?: "table"
+}
+
+fun resolveType(docTypeRef: LuaDocTypeRef, context: SearchContext): ITy {
+    if (docTypeRef.name == Constants.WORD_SELF) {
+        val contextClass = LuaPsiTreeUtil.findContextClass(docTypeRef, context) as? ITyClass
         return if (contextClass != null) TyClass.createSelfType(contextClass) else Ty.UNKNOWN
     }
 
-    return LuaScopedTypeTree.get(nameRef.containingFile).find(context, nameRef, nameRef.text)?.type ?: Ty.create(nameRef.text)
+    return LuaScopedTypeTree.get(docTypeRef.containingFile).find(context, docTypeRef, docTypeRef.text)?.type ?: Ty.create(docTypeRef.text)
 }
 
 fun getName(identifierOwner: PsiNameIdentifierOwner): String? {
@@ -321,11 +325,17 @@ fun getType(luaDocArrTy: LuaDocArrTy): ITy {
 }
 
 fun getType(luaDocGeneralTy: LuaDocGeneralTy): ITy {
+    val typeRef = luaDocGeneralTy.typeRef
+
+    if (typeRef.id == null) {
+        return Ty.TABLE
+    }
+
     return withRecursionGuard("getType", luaDocGeneralTy) {
         SearchContext.withDumb(luaDocGeneralTy.project, null) {
-            resolveType(luaDocGeneralTy.classNameRef, it)
+            resolveType(typeRef, it)
         }
-    } ?: TyLazyClass(luaDocGeneralTy.classNameRef.id.text, luaDocGeneralTy)
+    } ?: TyLazyClass(typeRef.name, luaDocGeneralTy)
 }
 
 fun getType(luaDocFunctionTy: LuaDocFunctionTy): ITy {
@@ -352,9 +362,9 @@ fun getType(luaDocGenericTy: LuaDocGenericTy): ITy {
     val paramTys = luaDocGenericTy.tyList.map { it.getType() }.toTypedArray()
     val baseTy = withRecursionGuard("getType", luaDocGenericTy) {
         SearchContext.withDumb(luaDocGenericTy.project, null) {
-            luaDocGenericTy.classNameRef.resolveType(it)
+            luaDocGenericTy.typeRef.resolveType(it)
         }
-    } ?: TyLazyClass(luaDocGenericTy.classNameRef.id.text, luaDocGenericTy)
+    } ?: TyLazyClass(luaDocGenericTy.typeRef.name, luaDocGenericTy)
     return TyGeneric(paramTys, baseTy)
 }
 
@@ -469,4 +479,24 @@ fun getType(alias: LuaDocTagAlias): ITy {
     } else {
         TyAlias(alias.name, alias.genericDefList.map { TyGenericParameter(it) }.toTypedArray(), alias.ty?.getType() ?: Ty.UNKNOWN)
     }
+}
+
+fun getName(luaDocGenericTableTy: LuaDocGenericTableTy): String? {
+    return null
+}
+
+fun getType(luaDocGenericTableTy: LuaDocGenericTableTy): ITy {
+    return TyTableGeneric(luaDocGenericTableTy)
+}
+
+fun getVisibility(luaDocGenericTableTy: LuaDocGenericTableTy): Visibility {
+    return Visibility.PUBLIC
+}
+
+fun guessType(luaDocGenericTableTy: LuaDocGenericTableTy, context: SearchContext): ITy {
+    return luaDocGenericTableTy.getType()
+}
+
+fun guessParentType(luaDocGenericTableTy: LuaDocGenericTableTy, context: SearchContext): ITy {
+    return luaDocGenericTableTy.getType()
 }

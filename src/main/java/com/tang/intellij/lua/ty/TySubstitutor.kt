@@ -244,7 +244,11 @@ open class TySubstitutor(override val searchContext: SearchContext) : ITySubstit
         val substitutedBase = generic.base.substitute(this)
 
         return if (paramsSubstituted || substitutedBase !== generic.base) {
-            TyGeneric(substitutedParams.toTypedArray(), substitutedBase)
+            if (generic is TyTableGeneric) {
+                TyTableGeneric(generic.genericTableTy, substitutedParams.first(), substitutedParams.last())
+            } else {
+                TyGeneric(substitutedParams.toTypedArray(), substitutedBase)
+            }
         } else {
             generic
         }

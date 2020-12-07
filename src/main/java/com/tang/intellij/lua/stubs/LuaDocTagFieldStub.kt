@@ -45,7 +45,7 @@ class LuaDocTagFieldType : LuaStubElementType<LuaDocTagFieldStub, LuaDocTagField
         val element = node.psi as LuaDocTagField
         if (element.name == null && element.indexType == null)
             return false
-        if (element.classNameRef != null)
+        if (element.typeRef != null)
             return true
         val comment = LuaCommentUtil.findContainer(element)
         return comment.tagClass != null
@@ -56,10 +56,10 @@ class LuaDocTagFieldType : LuaStubElementType<LuaDocTagFieldStub, LuaDocTagField
         val indexType = tagField.indexType
 
         val className: String
-        val classRef = tagField.classNameRef
+        val classRef = tagField.typeRef
 
         if (classRef != null) {
-            className = classRef.id.text
+            className = classRef.name
         } else {
             val comment = LuaCommentUtil.findContainer(tagField)
             val classDef = comment.tagClass!!

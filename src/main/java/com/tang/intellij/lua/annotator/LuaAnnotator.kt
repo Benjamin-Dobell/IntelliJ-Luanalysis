@@ -17,7 +17,6 @@
 package com.tang.intellij.lua.annotator
 
 import com.intellij.lang.annotation.*
-import com.intellij.lang.annotation.Annotation
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.Constants
@@ -269,9 +268,9 @@ class LuaAnnotator : Annotator {
                     .create()
         }
 
-        override fun visitClassNameRef(o: LuaDocClassNameRef) {
+        override fun visitTypeRef(o: LuaDocTypeRef) {
             createInfoAnnotation(o, null)
-                    .textAttributes(LuaHighlightingData.CLASS_REFERENCE)
+                    .textAttributes(LuaHighlightingData.TYPE_REFERENCE)
                     .create()
         }
 

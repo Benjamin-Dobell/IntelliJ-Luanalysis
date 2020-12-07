@@ -17,10 +17,12 @@ public class LuaDocBooleanLiteralTyImpl extends LuaDocTyImpl implements LuaDocBo
     super(node);
   }
 
+  @Override
   public void accept(@NotNull LuaDocVisitor visitor) {
     visitor.visitBooleanLiteralTy(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaDocVisitor) accept((LuaDocVisitor)visitor);
     else super.accept(visitor);

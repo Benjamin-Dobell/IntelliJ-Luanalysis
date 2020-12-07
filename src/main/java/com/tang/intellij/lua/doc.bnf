@@ -59,6 +59,7 @@
         NUMBER_LITERAL = "NUMBER_LITERAL"
         ARR = '[]'
         FUN = 'fun'
+        TABLE = 'table'
         VARARG = 'vararg'
         PRIVATE = 'private'
         PROTECTED = 'protected'
@@ -113,14 +114,23 @@ private doc_item ::= '@' (tag_param
     | access_modifier
     | tag_generic_list)
 
-ty ::= union_ty | function_ty | table_ty | generic_ty | arr_ty | general_ty | par_ty | snippet_ty | primitive_literal_ty {
+ty ::= union_ty
+	| function_ty
+	| generic_table_ty
+	| table_ty
+	| generic_ty
+	| arr_ty
+	| general_ty
+	| par_ty
+	| snippet_ty
+	| primitive_literal_ty {
     implements = ['com.tang.intellij.lua.comment.psi.LuaDocType']
 }
 
 arr_ty ::= ty '[]' {
     methods = [getType]
 }
-general_ty ::= class_name_ref {
+general_ty ::= type_ref {
     methods = [getType]
 }
 par_ty ::= ('(' ty ')') { // NOTE: Brackets are necessary to prevent GrammarKit (automatically) pinning to the left parenthesis.
@@ -178,10 +188,28 @@ table_ty ::= table_def {
     methods = [getType]
 }
 
-private generic_param_list ::= (ty ',')* ty
-generic_ty ::= class_name_ref '<' generic_param_list '>' {
-    methods = [getType]
+generic_table_index_ty ::= ty
+
+generic_table_ty ::= 'table' '<' generic_table_index_ty ',' ty '>' {
     pin = 2
+	implements = [
+        "com.tang.intellij.lua.psi.LuaClassMember"
+    ]
+    methods = [
+        getType
+        getVisibility
+        guessType
+        guessParentType
+        isDeprecated
+        keyType = '/ty[0]'
+        valueType = '/ty[1]'
+    ]
+}
+
+private generic_param_list ::= (ty ',')* ty
+generic_ty ::= type_ref '<' generic_param_list '>' {
+    pin = 2
+    methods = [getType]
 }
 
 function_param ::= ID (':' ty)? {
@@ -228,14 +256,14 @@ function_ty ::= fun function_generic? function_params? (':' function_return_type
     ]
 }
 
-union_ty ::= ty (('|' ty))+ {
+union_ty ::= ty (('|' ty)+) {
     methods = [getType]
 }
 access_modifier ::= PRIVATE | PUBLIC | PROTECTED | TAG_NAME_PRIVATE | TAG_NAME_PUBLIC | TAG_NAME_PROTECTED
 
 private tagFieldIndex ::= '[' ty ']' { pin = 2 }
 
-tag_field ::= TAG_NAME_FIELD access_modifier? ('<' class_name_ref '>')? (ID | tagFieldIndex) ty comment_string? {
+tag_field ::= TAG_NAME_FIELD access_modifier? ('<' type_ref '>')? (ID | tagFieldIndex) ty comment_string? {
     pin = 1
     implements = [
         "com.tang.intellij.lua.psi.LuaClassField"
@@ -293,15 +321,18 @@ tag_return ::= TAG_NAME_RETURN function_return_type comment_string? {
     methods = [
         resolveTypeAt
         getType
-        varreturn = 'ELLIPSIS'
     ]
 }
 
-class_name_ref ::= ID {
-    methods = [getReference resolveType]
+type_ref ::= 'table' | ID {
+    methods = [
+        getName
+        getReference
+        resolveType
+    ]
 }
 
-class_ref ::= class_name_ref ('<' generic_param_list '>')? {
+class_ref ::= type_ref ('<' generic_param_list '>')? {
 	methods = [getReference]
 }
 
@@ -376,7 +407,7 @@ comment_string ::= STRING_BEGIN? STRING? {
     ]
 }
 
-tag_see ::= TAG_NAME_SEE class_name_ref (SHARP ID)? {
+tag_see ::= TAG_NAME_SEE type_ref (SHARP ID)? {
     pin = 1
     methods = [
         getReference

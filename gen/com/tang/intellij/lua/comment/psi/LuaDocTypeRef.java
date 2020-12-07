@@ -8,10 +8,13 @@ import com.intellij.psi.PsiReference;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 
-public interface LuaDocClassNameRef extends LuaDocPsiElement {
+public interface LuaDocTypeRef extends LuaDocPsiElement {
+
+  @Nullable
+  PsiElement getId();
 
   @NotNull
-  PsiElement getId();
+  String getName();
 
   @NotNull
   PsiReference getReference();

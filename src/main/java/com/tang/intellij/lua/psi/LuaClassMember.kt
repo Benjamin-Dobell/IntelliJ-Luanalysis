@@ -27,7 +27,7 @@ import com.tang.intellij.lua.ty.TyUnion
  * Class 成员
  * Created by tangzx on 2016/12/12.
  */
-interface LuaClassMember : LuaTypeGuessable, PsiNamedElement {
+interface LuaClassMember : LuaTypeGuessable {
     fun guessParentType(context: SearchContext): ITy
 
     @JvmDefault

@@ -501,7 +501,7 @@ private fun getDocTableImplicitParams(table: LuaDocTableDef): Array<TyGenericPar
         val value = field.valueType
 
         if (value is LuaDocGeneralTy) {
-            val name = value.classNameRef.id.text
+            val name = value.typeRef.name
             val scopedType = SearchContext.withDumb(value.project, null) {
                 (LuaScopedTypeTree.get(value.containingFile).find(it, value, name) as? LuaDocGenericDef)?.type
             }

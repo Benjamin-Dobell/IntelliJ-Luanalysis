@@ -22,6 +22,7 @@ public class LuaDocReturnListImpl extends ASTWrapperPsiElement implements LuaDoc
     visitor.visitReturnList(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaDocVisitor) accept((LuaDocVisitor)visitor);
     else super.accept(visitor);

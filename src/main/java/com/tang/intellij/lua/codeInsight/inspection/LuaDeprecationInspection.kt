@@ -22,7 +22,7 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass
-import com.tang.intellij.lua.comment.psi.LuaDocClassNameRef
+import com.tang.intellij.lua.comment.psi.LuaDocTypeRef
 import com.tang.intellij.lua.comment.psi.LuaDocPsiElement
 import com.tang.intellij.lua.comment.psi.LuaDocVisitor
 import com.tang.intellij.lua.comment.psi.api.LuaComment
@@ -61,7 +61,7 @@ class LuaDeprecationInspection : LocalInspectionTool() {
             super.visitComment(o)
             if (o is LuaComment) {
                 o.acceptChildren(object : LuaDocVisitor() {
-                    override fun visitClassNameRef(o: LuaDocClassNameRef) {
+                    override fun visitTypeRef(o: LuaDocTypeRef) {
                         checkDeprecated(o) {
                             holder.registerProblem(o, "'${o.text}' is deprecated", ProblemHighlightType.LIKE_DEPRECATED)
                         }

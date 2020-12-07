@@ -9,7 +9,7 @@ import com.tang.intellij.lua.ty.ITy;
 public interface LuaDocGeneralTy extends LuaDocTy {
 
   @NotNull
-  LuaDocClassNameRef getClassNameRef();
+  LuaDocTypeRef getTypeRef();
 
   @NotNull
   ITy getType();

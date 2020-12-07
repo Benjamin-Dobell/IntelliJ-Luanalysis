@@ -9,7 +9,7 @@ import com.intellij.psi.PsiReference;
 public interface LuaDocTagSee extends LuaDocTag {
 
   @Nullable
-  LuaDocClassNameRef getClassNameRef();
+  LuaDocTypeRef getTypeRef();
 
   @Nullable
   PsiElement getId();

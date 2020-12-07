@@ -21,13 +21,13 @@ import com.intellij.codeInspection.LocalInspectionToolSession
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElementVisitor
-import com.tang.intellij.lua.comment.psi.LuaDocClassNameRef
+import com.tang.intellij.lua.comment.psi.LuaDocTypeRef
 import com.tang.intellij.lua.comment.psi.LuaDocVisitor
 
 class UnresolvedClassInspection : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
         return object : LuaDocVisitor() {
-            override fun visitClassNameRef(o: LuaDocClassNameRef) {
+            override fun visitTypeRef(o: LuaDocTypeRef) {
                 if (o.reference.resolve() == null) {
                     holder.registerProblem(o, "Unresolved type \"${o.text}\"", ProblemHighlightType.ERROR)
                 }

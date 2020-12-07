@@ -609,7 +609,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
         }
 
         fun create(classRef: LuaDocClassRef): ITy {
-            val simpleType = create(classRef.classNameRef.id.text, classRef)
+            val simpleType = create(classRef.typeRef.name, classRef)
             return if (classRef.tyList.size > 0) {
                 TyGeneric(classRef.tyList.map { it.getType() }.toTypedArray(), simpleType)
             } else simpleType
