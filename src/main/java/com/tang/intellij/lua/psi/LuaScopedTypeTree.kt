@@ -18,6 +18,7 @@ package com.tang.intellij.lua.psi
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.comment.psi.api.LuaComment
@@ -140,7 +141,7 @@ private class ScopedTypeTreeScope(val psi: PsiElement, val treeBuilder: ScopedTy
                 cls.tagClass
             } else null
 
-            val genericDef = classTag?.genericDefList?.firstOrNull {
+            val genericDef = PsiTreeUtil.getStubChildrenOfTypeAsList(classTag, LuaDocGenericDef::class.java).firstOrNull {
                 it.name == name
             }
 
