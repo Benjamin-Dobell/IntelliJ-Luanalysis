@@ -13,27 +13,21 @@ import com.tang.intellij.lua.psi.Visibility;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 
-public class LuaDocArrTyImpl extends LuaDocTyImpl implements LuaDocArrTy {
+public class LuaDocPrimitiveTableTyImpl extends LuaDocTyImpl implements LuaDocPrimitiveTableTy {
 
-  public LuaDocArrTyImpl(@NotNull ASTNode node) {
+  public LuaDocPrimitiveTableTyImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   @Override
   public void accept(@NotNull LuaDocVisitor visitor) {
-    visitor.visitArrTy(this);
+    visitor.visitPrimitiveTableTy(this);
   }
 
   @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaDocVisitor) accept((LuaDocVisitor)visitor);
     else super.accept(visitor);
-  }
-
-  @Override
-  @NotNull
-  public LuaDocTy getTy() {
-    return notNullChild(PsiTreeUtil.getChildOfType(this, LuaDocTy.class));
   }
 
   @Override

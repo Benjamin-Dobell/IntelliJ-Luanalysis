@@ -311,7 +311,25 @@ open class TyGeneric(override val params: Array<out ITy>, override val base: ITy
     }
 }
 
-class TyTableGeneric(
+object TyGenericSerializer : TySerializer<ITyGeneric>() {
+    override fun deserializeTy(flags: Int, stream: StubInputStream): ITyGeneric {
+        val base = Ty.deserialize(stream)
+        val size = stream.readByte()
+        val params = mutableListOf<ITy>()
+        for (i in 0 until size) {
+            params.add(Ty.deserialize(stream))
+        }
+        return TyGeneric(params.toTypedArray(), base)
+    }
+
+    override fun serializeTy(ty: ITyGeneric, stream: StubOutputStream) {
+        Ty.serialize(ty.base, stream)
+        stream.writeByte(ty.params.size)
+        ty.params.forEach { Ty.serialize(it, stream) }
+    }
+}
+
+class TyDocTableGeneric(
         val genericTableTy: LuaDocGenericTableTy,
         val keyType: ITy = genericTableTy.keyType?.getType() ?: Ty.UNKNOWN,
         val valueType: ITy = genericTableTy.valueType?.getType() ?: Ty.UNKNOWN
@@ -321,7 +339,7 @@ class TyTableGeneric(
 ) {
     override fun findMember(name: String, searchContext: SearchContext): LuaClassMember? {
         Ty.eachResolved(keyType, searchContext) {
-            if ((it is TyPrimitiveClass && it.primitiveKind == TyPrimitiveKind.String)
+            if ((it is ITyPrimitive && it.primitiveKind == TyPrimitiveKind.String)
                     || (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String && it.value == name)) {
                 return genericTableTy
             }
@@ -345,20 +363,3 @@ class TyTableGeneric(
     }
 }
 
-object TyGenericSerializer : TySerializer<ITyGeneric>() {
-    override fun deserializeTy(flags: Int, stream: StubInputStream): ITyGeneric {
-        val base = Ty.deserialize(stream)
-        val size = stream.readByte()
-        val params = mutableListOf<ITy>()
-        for (i in 0 until size) {
-            params.add(Ty.deserialize(stream))
-        }
-        return TyGeneric(params.toTypedArray(), base)
-    }
-
-    override fun serializeTy(ty: ITyGeneric, stream: StubOutputStream) {
-        Ty.serialize(ty.base, stream)
-        stream.writeByte(ty.params.size)
-        ty.params.forEach { Ty.serialize(it, stream) }
-    }
-}

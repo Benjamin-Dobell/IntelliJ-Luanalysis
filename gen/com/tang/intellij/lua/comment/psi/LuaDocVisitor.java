@@ -7,8 +7,8 @@ import com.intellij.psi.PsiNameIdentifierOwner;
 import com.tang.intellij.lua.psi.LuaClass;
 import com.tang.intellij.lua.psi.LuaScopedType;
 import com.tang.intellij.lua.psi.LuaClassField;
-import com.tang.intellij.lua.psi.LuaTypeScope;
 import com.tang.intellij.lua.psi.LuaClassMember;
+import com.tang.intellij.lua.psi.LuaTypeScope;
 import com.tang.intellij.lua.psi.LuaTypeAlias;
 
 public class LuaDocVisitor extends PsiElementVisitor {
@@ -19,6 +19,7 @@ public class LuaDocVisitor extends PsiElementVisitor {
 
   public void visitArrTy(@NotNull LuaDocArrTy o) {
     visitTy(o);
+    // visitLuaClassMember(o);
   }
 
   public void visitBooleanLiteralTy(@NotNull LuaDocBooleanLiteralTy o) {
@@ -83,6 +84,11 @@ public class LuaDocVisitor extends PsiElementVisitor {
 
   public void visitParamNameRef(@NotNull LuaDocParamNameRef o) {
     visitPsiElement(o);
+  }
+
+  public void visitPrimitiveTableTy(@NotNull LuaDocPrimitiveTableTy o) {
+    visitTy(o);
+    // visitLuaClassMember(o);
   }
 
   public void visitReturnList(@NotNull LuaDocReturnList o) {

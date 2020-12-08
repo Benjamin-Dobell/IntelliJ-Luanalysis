@@ -18,6 +18,9 @@ package com.tang.intellij.lua.ty
 
 import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
+import com.tang.intellij.lua.Constants
+import com.tang.intellij.lua.comment.psi.LuaDocPrimitiveTableTy
+import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.search.SearchContext
 
 interface ITyPrimitive : ITy {
@@ -31,7 +34,7 @@ class TyPrimitive(override val primitiveKind: TyPrimitiveKind,
     override val booleanType = if (primitiveKind == TyPrimitiveKind.Boolean) Ty.BOOLEAN else Ty.TRUE
 
     override fun equals(other: Any?): Boolean {
-        return other is TyPrimitive && other.primitiveKind == primitiveKind
+        return other is ITyPrimitive && other.primitiveKind == primitiveKind
     }
 
     override fun equals(other: ITy, context: SearchContext): Boolean {
@@ -40,7 +43,7 @@ class TyPrimitive(override val primitiveKind: TyPrimitiveKind,
         }
 
         val resolvedOther = Ty.resolve(other, context)
-        return resolvedOther is TyPrimitive && resolvedOther.primitiveKind == primitiveKind
+        return resolvedOther is ITyPrimitive && resolvedOther.primitiveKind == primitiveKind
     }
 
     override fun hashCode(): Int {
@@ -87,7 +90,7 @@ class TyPrimitive(override val primitiveKind: TyPrimitiveKind,
 }
 
 // string
-class TyPrimitiveClass(override val primitiveKind: TyPrimitiveKind,
+open class TyPrimitiveClass(override val primitiveKind: TyPrimitiveKind,
                        override val displayName: String) : TyClass(displayName), ITyPrimitive {
 
     override val kind = TyKind.Primitive
@@ -101,7 +104,16 @@ class TyPrimitiveClass(override val primitiveKind: TyPrimitiveKind,
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is TyPrimitiveClass && other.primitiveKind == primitiveKind
+        return other is ITyPrimitive && other.primitiveKind == primitiveKind
+    }
+
+    override fun equals(other: ITy, context: SearchContext): Boolean {
+        if (this === other) {
+            return true
+        }
+
+        val resolvedOther = Ty.resolve(other, context)
+        return resolvedOther is ITyPrimitive && resolvedOther.primitiveKind == primitiveKind
     }
 
     override fun hashCode(): Int {
@@ -129,9 +141,33 @@ object TyPrimitiveSerializer : TySerializer<ITy>() {
 
     override fun serializeTy(ty: ITy, stream: StubOutputStream) {
         when (ty) {
-            is TyPrimitive -> stream.writeByte(ty.primitiveKind.ordinal)
-            is TyPrimitiveClass -> stream.writeByte(ty.primitiveKind.ordinal)
+            is ITyPrimitive -> stream.writeByte(ty.primitiveKind.ordinal)
             else -> stream.writeByte(-1)
         }
+    }
+}
+
+class TyDocPrimitiveTable(val luaDocPrimitiveTableTy: LuaDocPrimitiveTableTy) : TyPrimitiveClass(TyPrimitiveKind.Table, Constants.WORD_TABLE) {
+    override fun findMember(name: String, searchContext: SearchContext): LuaClassMember {
+        return luaDocPrimitiveTableTy
+    }
+
+    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember {
+        return luaDocPrimitiveTableTy
+    }
+
+    override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
+        if (super.contravariantOf(other, context, flags)) {
+            return true
+        }
+
+        if (flags and TyVarianceFlags.STRICT_UNKNOWN == 0) {
+            val otherBase = if (other is ITyGeneric) other.base else other
+            return other.kind == TyKind.Array
+                    || otherBase.kind == TyKind.Class
+                    || otherBase == Ty.TABLE
+        }
+
+        return false
     }
 }

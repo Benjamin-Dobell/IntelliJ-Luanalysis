@@ -58,10 +58,10 @@ local NUMBER = 1
 
 ---@alias Identifier IdentifierString | IdentifierNumber
 
----@alias StringTuple {[1]: IdentifierString, [2]: string}
----@alias NumberTuple {[1]: IdentifierNumber, [2]: number}
+---@alias StringTupleAlias {[1]: IdentifierString, [2]: string}
+---@alias NumberTupleAlias {[1]: IdentifierNumber, [2]: number}
 
----@alias IdentifiedTuple StringTuple | NumberTuple
+---@alias IdentifiedTuple StringTupleAlias | NumberTupleAlias
 
 ---@type IdentifiedTuple
 local identifiedTuple

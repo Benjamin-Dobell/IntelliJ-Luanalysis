@@ -175,27 +175,8 @@ val ITy.isGlobal: Boolean
 val ITy.isAnonymous: Boolean
     get() = hasFlag(TyFlags.ANONYMOUS)
 
-private val ITy.worth: Float get() {
-    var value = 10f
-    when(this) {
-        is ITyArray, is ITyGeneric -> value = 80f
-        is ITyPrimitive -> value = 70f
-        is ITyFunction -> value = 60f
-        is ITyClass -> {
-            value = when {
-                this is TyTable -> 9f
-                this.isAnonymous -> 2f
-                this.isGlobal -> 5f
-                else -> 90f
-            }
-        }
-    }
-    return value
-}
-
-
-
-val ITy.isColonCall get() = hasFlag(TyFlags.SELF_FUNCTION)
+val ITy.isColonCall: Boolean
+    get() = hasFlag(TyFlags.SELF_FUNCTION)
 
 fun ITy.findCandidateSignatures(context: SearchContext, nArgs: Int): Collection<IFunSignature> {
     val candidates = mutableListOf<IFunSignature>()
@@ -514,7 +495,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
     }
 
     override fun compareTo(other: ITy): Int {
-        return other.worth.compareTo(worth)
+        return other.displayName.compareTo(displayName)
     }
 
     override fun substitute(substitutor: ITySubstitutor): ITy {

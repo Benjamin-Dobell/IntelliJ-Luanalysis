@@ -17,6 +17,9 @@
 package com.tang.intellij.test.completion
 
 import com.intellij.codeInsight.completion.CompletionType
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.tang.intellij.lua.editor.completion.LuaLookupElement
+import com.tang.intellij.test.fileTreeFromText
 import java.util.*
 
 /**
@@ -153,5 +156,24 @@ class TestCompletion : TestCompletionBase() {
         """) {
             assertTrue(it.contains("name"))
         }
+    }
+
+    fun `test table member non-completion`() {
+        val code = """
+            --- testNonCompletion.lua
+
+            ---@type table
+            local t = {}
+            t.dontComplete = 1
+            t.--[[caret]]
+        """
+        fileTreeFromText(code).createAndOpenFileWithCaretMarker()
+
+        FileDocumentManager.getInstance().saveAllDocuments()
+        myFixture.completeBasic()
+
+        val exactLookups = myFixture.lookupElements.filter { it.lookupString == "dontComplete" }
+        assertEquals(1, exactLookups.size)
+        assertFalse(exactLookups.first() is LuaLookupElement)
     }
 }

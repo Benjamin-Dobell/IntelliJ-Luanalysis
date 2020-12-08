@@ -120,6 +120,7 @@ ty ::= union_ty
 	| table_ty
 	| generic_ty
 	| arr_ty
+	| primitive_table_ty
 	| general_ty
 	| par_ty
 	| snippet_ty
@@ -128,7 +129,28 @@ ty ::= union_ty
 }
 
 arr_ty ::= ty '[]' {
-    methods = [getType]
+	implements = [
+        "com.tang.intellij.lua.psi.LuaClassMember"
+    ]
+    methods = [
+        getType
+        getVisibility
+        guessType
+        guessParentType
+        isDeprecated
+    ]
+}
+primitive_table_ty ::= 'table' {
+	implements = [
+        "com.tang.intellij.lua.psi.LuaClassMember"
+    ]
+    methods = [
+        getType
+        getVisibility
+        guessType
+        guessParentType
+        isDeprecated
+    ]
 }
 general_ty ::= type_ref {
     methods = [getType]

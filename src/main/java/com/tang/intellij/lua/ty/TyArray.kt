@@ -18,13 +18,15 @@ package com.tang.intellij.lua.ty
 
 import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
+import com.tang.intellij.lua.comment.psi.LuaDocArrTy
+import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.search.SearchContext
 
 interface ITyArray : ITy {
     val base: ITy
 }
 
-class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
+open class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
 
     override fun equals(other: Any?): Boolean {
         return other is ITyArray && base == other.base
@@ -63,7 +65,7 @@ class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
         val membersContravariant = other.processMembers(context) { _, otherMember ->
             val index = otherMember.guessIndexType(context)
 
-            if ((index is TyPrimitive && index.primitiveKind == TyPrimitiveKind.Number)
+            if ((index is ITyPrimitive && index.primitiveKind == TyPrimitiveKind.Number)
                     || (index is TyPrimitiveLiteral && index.primitiveKind == TyPrimitiveKind.Number)) {
                 val otherFieldTypes = (otherMember.guessType(context) ?: Ty.UNKNOWN).let {
                     if (it is TyMultipleResults) it.list else listOf(it)
@@ -179,5 +181,23 @@ object TyArraySerializer : TySerializer<ITyArray>() {
     override fun deserializeTy(flags: Int, stream: StubInputStream): ITyArray {
         val base = Ty.deserialize(stream)
         return TyArray(base)
+    }
+}
+
+class TyDocArray(val luaDocArrTy: LuaDocArrTy) : TyArray(luaDocArrTy.ty.getType()) {
+    override fun findMember(name: String, searchContext: SearchContext): LuaClassMember? {
+        return null
+    }
+
+    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember? {
+        if (exact) {
+            if (Ty.NUMBER.equals(indexTy, searchContext)) {
+                return luaDocArrTy
+            }
+        } else if (Ty.NUMBER.contravariantOf(indexTy, searchContext, TyVarianceFlags.STRICT_UNKNOWN)) {
+            return luaDocArrTy
+        }
+
+        return null
     }
 }

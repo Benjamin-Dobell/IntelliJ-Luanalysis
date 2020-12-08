@@ -22,7 +22,7 @@ import com.tang.intellij.lua.search.SearchContext
 import java.util.concurrent.ConcurrentHashMap
 
 
-class TyPrimitiveLiteral private constructor(override val primitiveKind: TyPrimitiveKind, val value: String) : Ty(TyKind.PrimitiveLiteral), ITyPrimitive {
+class TyPrimitiveLiteral private constructor(val primitiveKind: TyPrimitiveKind, val value: String) : Ty(TyKind.PrimitiveLiteral) {
     override val displayName: String by lazy { if (primitiveKind == TyPrimitiveKind.String) "\"${value.replace("\"", "\\\"")}\"" else value }
 
     // Ty.TRUE/Ty.FALSE are TyPrimitiveLiteral, to avoid circular references (a null booleanType) we make this lazy.

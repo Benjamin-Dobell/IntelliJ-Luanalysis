@@ -26,6 +26,7 @@ public interface LuaDocTypes {
   IElementType NUMBER_LITERAL_TY = LuaParserDefinitionKt.createDocType("NUMBER_LITERAL_TY");
   IElementType PARAM_NAME_REF = LuaParserDefinitionKt.createDocType("PARAM_NAME_REF");
   IElementType PAR_TY = LuaParserDefinitionKt.createDocType("PAR_TY");
+  IElementType PRIMITIVE_TABLE_TY = LuaParserDefinitionKt.createDocType("PRIMITIVE_TABLE_TY");
   IElementType RETURN_LIST = LuaParserDefinitionKt.createDocType("RETURN_LIST");
   IElementType SNIPPET_TY = LuaParserDefinitionKt.createDocType("SNIPPET_TY");
   IElementType STRING_LITERAL_TY = LuaParserDefinitionKt.createDocType("STRING_LITERAL_TY");
@@ -161,6 +162,9 @@ public interface LuaDocTypes {
       }
       else if (type == PAR_TY) {
         return new LuaDocParTyImpl(node);
+      }
+      else if (type == PRIMITIVE_TABLE_TY) {
+        return new LuaDocPrimitiveTableTyImpl(node);
       }
       else if (type == RETURN_LIST) {
         return new LuaDocReturnListImpl(node);
