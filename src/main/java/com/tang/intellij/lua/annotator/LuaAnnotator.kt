@@ -18,6 +18,7 @@ package com.tang.intellij.lua.annotator
 
 import com.intellij.lang.annotation.*
 import com.intellij.openapi.util.Key
+import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.psi.*
@@ -253,6 +254,15 @@ class LuaAnnotator : Annotator {
     }
 
     internal inner class LuaDocElementVisitor : LuaDocVisitor() {
+        override fun visitGenericTableTy(o: LuaDocGenericTableTy) {
+            super.visitGenericTableTy(o)
+            val psiTextOffset = o.textOffset
+            myHolder!!.newSilentAnnotation(HighlightSeverity.INFORMATION)
+                    .range(TextRange(psiTextOffset, psiTextOffset + 5)) // 5 == "table".length
+                    .textAttributes(LuaHighlightingData.TYPE_REFERENCE)
+                    .create()
+        }
+
         override fun visitTagClass(o: LuaDocTagClass) {
             super.visitTagClass(o)
             createInfoAnnotation(o.id, null)
@@ -287,6 +297,12 @@ class LuaAnnotator : Annotator {
         override fun visitParamNameRef(o: LuaDocParamNameRef) {
             createInfoAnnotation(o, null)
                     .textAttributes(LuaHighlightingData.DOC_COMMENT_TAG_VALUE)
+                    .create()
+        }
+
+        override fun visitPrimitiveTableTy(o: LuaDocPrimitiveTableTy) {
+            createInfoAnnotation(o, null)
+                    .textAttributes(LuaHighlightingData.TYPE_REFERENCE)
                     .create()
         }
     }
