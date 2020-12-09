@@ -68,7 +68,7 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
                     field.fieldName,
                     flags,
                     valueTy)
-        } else if (field.idExpr != null) {
+        } else if (indexTy != null) {
             valueTy = if (valueTy is TyMultipleResults) valueTy.list.first() else valueTy
 
             return LuaTableFieldStubImpl(
@@ -124,7 +124,7 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
     }
 
     override fun deserialize(stubInputStream: StubInputStream, stubElement: StubElement<*>): LuaTableFieldStub {
-        val className = StringRef.toString(stubInputStream.readName())!!
+        val className = StringRef.toString(stubInputStream.readName())
         val name = StringRef.toString(stubInputStream.readName())
         val indexType = stubInputStream.readTyNullable()
         val isIndexExpression = if (indexType != null) {
@@ -226,7 +226,7 @@ class LuaTableFieldStubImpl : LuaStubBase<LuaTableField>, LuaTableFieldStub {
         this.valueTy = valueTy
     }
 
-    constructor(parent: StubElement<*>, elementType: LuaStubElementType<*, *>, className: String?, indexType: ITy?, isIndexExpression: Boolean, flags: Int, valueTy: ITy?)
+    constructor(parent: StubElement<*>, elementType: LuaStubElementType<*, *>, className: String?, indexType: ITy, isIndexExpression: Boolean, flags: Int, valueTy: ITy?)
             : super(parent, elementType) {
         this.className = className
         this.name = null

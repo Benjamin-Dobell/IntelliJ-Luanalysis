@@ -175,6 +175,10 @@ local numberTuple
 numberArray = numberTuple
 numberTuple = <error descr="Type mismatch. Required: 'NumberTuple' Found: 'number[]'">numberArray</error>
 
+numberTuple = {aNumber, aNumber, aNumber}
+numberTuple = {[1] = aNumber, [2] = aNumber, [3] = aNumber}
+numberTuple = {aNumber, aNumber, [3] = aNumber}
+
 ---@shape NonContiguousNumberTuple : NumberTuple
 ---@field [5] number
 
@@ -182,6 +186,8 @@ numberTuple = <error descr="Type mismatch. Required: 'NumberTuple' Found: 'numbe
 local nonContiguousNumberTuple
 
 numberArray = <error descr="Type mismatch. Required: 'number[]' Found: 'table<number, number>'">nonContiguousNumberTuple</error>
+
+nonContiguousNumberTuple = {aNumber, aNumber, aNumber, [5] = aNumber}
 
 
 ---@shape PrimitiveAndTable
