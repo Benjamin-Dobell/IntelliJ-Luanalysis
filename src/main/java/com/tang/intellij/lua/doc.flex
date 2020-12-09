@@ -33,7 +33,7 @@ import com.tang.intellij.lua.comment.psi.LuaDocTypes;
     }
 
     private void beginType(int nextState) {
-        yybegin(xTYPE_REF);
+        yybegin(xTYPE);
         _typeLevel = 0;
         _typeReq = true;
         _nextState = nextState;
@@ -45,8 +45,22 @@ import com.tang.intellij.lua.comment.psi.LuaDocTypes;
 
     private int nBrackets = -1;
 
-    private boolean checkAhead(char c, int offset) {
-        return this.zzMarkedPos + offset < this.zzBuffer.length() && this.zzBuffer.charAt(this.zzMarkedPos + offset) == c;
+    private int checkAhead(char c) {
+        int length = this.zzBuffer.length();
+
+        for (int pos = this.zzMarkedPos; pos < length; pos++) {
+            char charAhead = zzBuffer.charAt(pos);
+
+            if (charAhead == c) {
+                return pos;
+            }
+
+            if (charAhead != ' ' && charAhead != '\t' && charAhead != '\f') {
+                return -1;
+            }
+        }
+
+        return -1;
     }
 %}
 
@@ -87,7 +101,7 @@ BOOLEAN=true|false
 %state xTAG_NAME
 %state xCOMMENT_STRING
 %state xPARAM
-%state xTYPE_REF
+%state xTYPE
 %state xCLASS
 %state xCLASS_PARAMS
 %state xCLASS_PARAM_LIST
@@ -125,7 +139,7 @@ BOOLEAN=true|false
     .                          { yybegin(xCOMMENT_STRING); yypushback(yylength()); }
 }
 
-<xTAG, xTAG_WITH_ID, xTAG_NAME, xPARAM, xTYPE_REF, xCLASS, xCLASS_PARAM_LIST, xCLASS_EXTEND, xFIELD, xFIELD_ID, xFIELD_VALUE, xCOMMENT_STRING, xGENERIC, xALIAS, xALIAS_PARAM_LIST, xSUPPRESS> {
+<xTAG, xTAG_WITH_ID, xTAG_NAME, xPARAM, xTYPE, xCLASS, xCLASS_PARAM_LIST, xCLASS_EXTEND, xFIELD, xFIELD_ID, xFIELD_VALUE, xCOMMENT_STRING, xGENERIC, xALIAS, xALIAS_PARAM_LIST, xSUPPRESS> {
     {LINE_WS}+                 { return com.intellij.psi.TokenType.WHITE_SPACE; }
     {BLOCK_END}                {
         if (yylength() - 2 == nBrackets) {
@@ -227,7 +241,7 @@ BOOLEAN=true|false
     [^]                        { beginType(); yypushback(yylength()); }
 }
 
-<xTYPE_REF> {
+<xTYPE> {
     "@"                        { yybegin(xCOMMENT_STRING); return STRING_BEGIN; }
     ","                        { _typeReq = true; return COMMA; }
     "|"                        { _typeReq = true; return OR; }
@@ -239,9 +253,10 @@ BOOLEAN=true|false
     "{"                        { _typeLevel++; return LCURLY; }
     "}"                        { _typeLevel--; _typeReq = false; return RCURLY; }
     "["                        {
-        if (checkAhead(']', 0)) {
+        int closePos = checkAhead(']');
+        if (closePos != -1) {
             _typeReq = false;
-            zzMarkedPos += 1;
+            zzMarkedPos = closePos + 1;
             return ARR;
         } else {
             _typeLevel++;
@@ -255,24 +270,45 @@ BOOLEAN=true|false
     {BOOLEAN}                  { return BOOLEAN_LITERAL; }
     "-"                        { return MINUS; }
     {NUMBER}                   { return NUMBER_LITERAL; }
-    "fun"                      { return FUN; }
-    "vararg"                   { _typeReq = true; return VARARG; }
+    "fun"                      {
+          if (!_typeReq && checkAhead(':') != -1) {
+              return ID;
+        } else {
+              _typeReq = false;
+              return FUN;
+        }
+    }
+    "vararg"                   {
+          if (checkAhead(':') != -1) {
+              return ID;
+        } else {
+              _typeReq = true;
+              return VARARG;
+        }
+    }
     "..."                      { return ELLIPSIS; }
-    "table"                    { return TABLE; }
-    {ID}                       { if (_typeReq || _typeLevel > 0) { _typeReq = false; return ID; } else { yybegin(_nextState); yypushback(yylength()); } }
+    "table"                    { return !_typeReq && checkAhead(':') != -1 ? ID : TABLE; }
+    {ID}                       {
+        if (_typeReq || _typeLevel > 0) {
+            _typeReq = false;
+            return ID;
+        } else {
+            yybegin(_nextState); yypushback(yylength());
+        }
+    }
 }
 
 <xDOUBLE_QUOTED_STRING> {
-    {DOUBLE_QUOTED_STRING}    { yybegin(xTYPE_REF); return STRING_LITERAL; }
+    {DOUBLE_QUOTED_STRING}    { yybegin(xTYPE); return STRING_LITERAL; }
 }
 
 <xSINGLE_QUOTED_STRING> {
-    {SINGLE_QUOTED_STRING}    { yybegin(xTYPE_REF); return STRING_LITERAL; }
+    {SINGLE_QUOTED_STRING}    { yybegin(xTYPE); return STRING_LITERAL; }
 }
 
 <xBACKTICK_QUOTED_STRING> {
     {SNIPPET_CONTENT}         { return SNIPPET; }
-    "`"                       { yybegin(xTYPE_REF); return BACKTICK; }
+    "`"                       { yybegin(xTYPE); return BACKTICK; }
 }
 
 <xTAG> {
@@ -289,7 +325,7 @@ BOOLEAN=true|false
     {STRING}                   { yybegin(xBODY); return STRING; }
 }
 
-<xTAG, xTAG_WITH_ID, xTAG_NAME, xPARAM, xTYPE_REF, xCLASS, xCLASS_EXTEND, xFIELD, xFIELD_ID, xFIELD_VALUE, xCOMMENT_STRING, xGENERIC, xALIAS, xSUPPRESS> {
+<xTAG, xTAG_WITH_ID, xTAG_NAME, xPARAM, xTYPE, xCLASS, xCLASS_EXTEND, xFIELD, xFIELD_ID, xFIELD_VALUE, xCOMMENT_STRING, xGENERIC, xALIAS, xSUPPRESS> {
     {EOL}                      { yybegin(xBODY); return EOL; }
 }
 

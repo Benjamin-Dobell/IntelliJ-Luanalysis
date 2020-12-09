@@ -28,7 +28,7 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
   public static final int xTAG_NAME = 8;
   public static final int xCOMMENT_STRING = 10;
   public static final int xPARAM = 12;
-  public static final int xTYPE_REF = 14;
+  public static final int xTYPE = 14;
   public static final int xCLASS = 16;
   public static final int xCLASS_PARAMS = 18;
   public static final int xCLASS_PARAM_LIST = 20;
@@ -697,7 +697,7 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
     }
 
     private void beginType(int nextState) {
-        yybegin(xTYPE_REF);
+        yybegin(xTYPE);
         _typeLevel = 0;
         _typeReq = true;
         _nextState = nextState;
@@ -709,8 +709,22 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
 
     private int nBrackets = -1;
 
-    private boolean checkAhead(char c, int offset) {
-        return this.zzMarkedPos + offset < this.zzBuffer.length() && this.zzBuffer.charAt(this.zzMarkedPos + offset) == c;
+    private int checkAhead(char c) {
+        int length = this.zzBuffer.length();
+
+        for (int pos = this.zzMarkedPos; pos < length; pos++) {
+            char charAhead = zzBuffer.charAt(pos);
+
+            if (charAhead == c) {
+                return pos;
+            }
+
+            if (charAhead != ' ' && charAhead != '\t' && charAhead != '\f') {
+                return -1;
+            }
+        }
+
+        return -1;
     }
 
 
@@ -1037,7 +1051,12 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
             // fall through
           case 90: break;
           case 14: 
-            { if (_typeReq || _typeLevel > 0) { _typeReq = false; return ID; } else { yybegin(_nextState); yypushback(yylength()); }
+            { if (_typeReq || _typeLevel > 0) {
+            _typeReq = false;
+            return ID;
+        } else {
+            yybegin(_nextState); yypushback(yylength());
+        }
             } 
             // fall through
           case 91: break;
@@ -1047,9 +1066,10 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
             // fall through
           case 92: break;
           case 16: 
-            { if (checkAhead(']', 0)) {
+            { int closePos = checkAhead(']');
+        if (closePos != -1) {
             _typeReq = false;
-            zzMarkedPos += 1;
+            zzMarkedPos = closePos + 1;
             return ARR;
         } else {
             _typeLevel++;
@@ -1204,7 +1224,7 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
             // fall through
           case 122: break;
           case 46: 
-            { yybegin(xTYPE_REF); return BACKTICK;
+            { yybegin(xTYPE); return BACKTICK;
             } 
             // fall through
           case 123: break;
@@ -1222,7 +1242,7 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
             // fall through
           case 125: break;
           case 49: 
-            { yybegin(xTYPE_REF); return STRING_LITERAL;
+            { yybegin(xTYPE); return STRING_LITERAL;
             } 
             // fall through
           case 126: break;
@@ -1247,7 +1267,12 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
             // fall through
           case 130: break;
           case 54: 
-            { return FUN;
+            { if (!_typeReq && checkAhead(':') != -1) {
+              return ID;
+        } else {
+              _typeReq = false;
+              return FUN;
+        }
             } 
             // fall through
           case 131: break;
@@ -1287,7 +1312,7 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
             // fall through
           case 138: break;
           case 62: 
-            { return TABLE;
+            { return !_typeReq && checkAhead(':') != -1 ? ID : TABLE;
             } 
             // fall through
           case 139: break;
@@ -1312,7 +1337,12 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
             // fall through
           case 143: break;
           case 67: 
-            { _typeReq = true; return VARARG;
+            { if (checkAhead(':') != -1) {
+              return ID;
+        } else {
+              _typeReq = true;
+              return VARARG;
+        }
             } 
             // fall through
           case 144: break;

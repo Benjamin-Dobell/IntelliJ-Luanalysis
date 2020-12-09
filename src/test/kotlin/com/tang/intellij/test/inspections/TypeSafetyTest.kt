@@ -155,6 +155,10 @@ class TypeSafetyTest : LuaInspectionsTestBase(
         check("overloads.lua")
     }
 
+    fun testPoorlyNamedParams() {
+        check("poorly_named_params.lua")
+    }
+
     fun testRecursiveAlias() {
         check("recursive_alias.lua")
     }
