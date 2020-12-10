@@ -228,115 +228,144 @@
         <lang.inspectionSuppressor language="Lua" implementationClass="com.tang.intellij.lua.codeInsight.inspection.LuaSuppressManager"/>
 
         <localInspection
-                implementationClass="com.tang.intellij.lua.codeInsight.inspection.DuplicateTypeDeclaration"
                 displayName="Duplicate type"
                 enabledByDefault="true"
                 level="ERROR"
-                groupName="Lua"/>
+                groupName="Lua"
+                language="Lua"
+                implementationClass="com.tang.intellij.lua.codeInsight.inspection.DuplicateTypeDeclaration"/>
         <localInspection
-                implementationClass="com.tang.intellij.lua.codeInsight.inspection.SimplifyLocalAssignment"
                 displayName="Local assign can be simpler"
                 enabledByDefault="true"
-                groupName="Lua"/>
+                groupName="Lua"
+                language="Lua"
+                implementationClass="com.tang.intellij.lua.codeInsight.inspection.SimplifyLocalAssignment"/>
         <localInspection
                 displayName="Remove unused"
                 enabledByDefault="true"
                 groupName="Lua"
+                language="Lua"
+                runForWholeFile="true"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.RemoveUnusedLocal"/>
         <localInspection
                 displayName="Empty body"
                 enabledByDefault="true"
                 groupName="Lua"
+                language="Lua"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.EmptyBody"/>
         <localInspection
                 displayName="Unreachable statement"
                 enabledByDefault="true"
                 groupName="Lua"
+                language="Lua"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.UnreachableStatement"/>
         <localInspection
                 displayName="0 index"
                 enabledByDefault="true"
                 groupName="Lua"
+                language="Lua"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.ArrayIndexZero"/>
         <localInspection
                 displayName="Local name shadowed"
                 enabledByDefault="true"
                 groupName="Lua"
+                language="Lua"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.LocalNameShadowed"/>
         <localInspection
                 displayName="Lua language level"
                 enabledByDefault="true"
                 groupName="Lua"
                 level="ERROR"
+                language="Lua"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.LanguageLevelInspection"/>
         <localInspection
                 displayName="Match function signature"
                 enabledByDefault="true"
                 groupName="Lua > Lint > Type safety"
                 level="ERROR"
+                language="Lua"
+                runForWholeFile="true"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.MatchFunctionSignatureInspection"/>
         <localInspection
                 displayName="Undeclared variable"
                 enabledByDefault="true"
                 groupName="Lua > Lint > Type safety"
+                language="Lua"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.UndeclaredVariableInspection"/>
         <localInspection
                 displayName="Undeclared member"
                 enabledByDefault="true"
                 groupName="Lua > Lint > Type safety"
                 level="ERROR"
+                language="Lua"
+                runForWholeFile="true"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.UndeclaredMemberInspection"/>
         <localInspection
                 displayName="Return type"
                 enabledByDefault="true"
                 groupName="Lua > Lint > Type safety"
                 level="ERROR"
+                language="Lua"
+                runForWholeFile="true"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.ReturnTypeInspection"/>
         <localInspection
                 displayName="Assign type"
                 enabledByDefault="true"
                 groupName="Lua > Lint > Type safety"
                 level="ERROR"
+                language="Lua"
+                runForWholeFile="true"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.AssignTypeInspection"/>
         <localInspection
                 displayName="Global name can be local"
                 enabledByDefault="false"
                 groupName="Lua"
+                language="Lua"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.GlobalNameCanbeLocal"/>
         <localInspection
                 displayName="Lua deprecation"
                 enabledByDefault="true"
                 groupName="Lua"
+                language="Lua"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.LuaDeprecationInspection"/>
 
         <localInspection
                 displayName="Unresolved symbol in emmy doc"
                 enabledByDefault="true"
                 groupName="Lua > Emmy doc"
+                language="Lua"
+                runForWholeFile="true"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.doc.UnresolvedSymbolInEmmyDocInspection"/>
 
         <localInspection
                 displayName="Unresolved class in emmy doc"
                 enabledByDefault="true"
                 groupName="Lua > Emmy doc"
+                language="Lua"
+                runForWholeFile="true"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.doc.UnresolvedClassInspection"/>
 
         <localInspection
                 displayName="Illegal inheritance in emmy doc"
                 enabledByDefault="true"
                 groupName="Lua > Emmy doc"
+                language="Lua"
+                runForWholeFile="true"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.doc.IllegalInheritanceInspection"/>
 
         <localInspection
                 displayName="Generic constraint type mismatch in emmy doc"
                 enabledByDefault="true"
                 groupName="Lua > Emmy doc"
+                language="Lua"
+                runForWholeFile="true"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.doc.GenericConstraintInspection"/>
 
         <localInspection
                 displayName="Generic parameter shadowed"
                 enabledByDefault="true"
                 groupName="Lua > Emmy doc"
+                language="Lua"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.doc.GenericParameterShadowed"/>
     </extensions>
 

@@ -21,11 +21,8 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.refactoring.RefactoringActionHandler
 import com.intellij.refactoring.RefactoringActionHandlerFactory
-import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.LuaDocGenericDef
 import com.tang.intellij.lua.comment.psi.LuaDocVisitor
-import com.tang.intellij.lua.psi.LuaPsiTreeUtil
-import com.tang.intellij.lua.psi.LuaScopedType
 import com.tang.intellij.lua.psi.LuaScopedTypeTree
 import com.tang.intellij.lua.search.SearchContext
 
