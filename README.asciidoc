@@ -357,7 +357,7 @@ image:./snapshot/26_2_variadic_casts.png[image]
 
 == Building from Source
 
-`./gradlew build_201`
+`./gradlew build_203`
 
 For more details about the Jetbrains Platform SDK please refer to the
 https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/setting_up_environment.html[official

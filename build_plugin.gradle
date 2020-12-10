@@ -16,17 +16,23 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
-    id 'org.jetbrains.intellij' version "0.5.0"
-    id "org.jetbrains.kotlin.jvm" version "1.4.10"
+    id 'org.jetbrains.intellij' version "0.6.5"
+    id "org.jetbrains.kotlin.jvm" version "1.4.21"
     id "de.undercouch.download" version "3.4.3"
 }
 
 repositories {
+    mavenCentral()
     jcenter()
 }
 
 dependencies {
     compile fileTree(dir: "libs", includes: ["*.jar"])
+}
+
+compileJava {
+    sourceCompatibility = 11
+    targetCompatibility = 11
 }
 
 sourceSets {
@@ -73,7 +79,7 @@ ext {
     }
 }
 
-setDefaultProperty("IDEA_VER", "202")
+setDefaultProperty("IDEA_VER", "203")
 
 version = "${version}-IDEA${IDEA_VER}"
 
