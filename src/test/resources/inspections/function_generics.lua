@@ -557,3 +557,14 @@ end
 local hiOrBye = implicitGenericSubstitution({a = 'hi'}, {a = 'bye'})
 string1 = <error descr="Type mismatch. Required: '\"string1\"' Found: '\"bye\" | \"hi\"'">implicitGenericSubstitution({a = 'hi'}, {a = 'bye'})</error>
 anyString = implicitGenericSubstitution({a = <error descr="Type mismatch. Required: 'T : string' Found: '\"hi\"'">'hi'</error>}, <error descr="Type mismatch. Missing member: 'a' of: '{ a: T }'">{b = 'nope'}</error>)
+
+---@generic T
+---@param a T
+---@return T[]
+local function genericArray(a)
+    return {a, a}
+end
+
+local substitutedArray = genericArray( anyNumber)
+anyNumber = substitutedArray[1]
+numberArray = substitutedArray

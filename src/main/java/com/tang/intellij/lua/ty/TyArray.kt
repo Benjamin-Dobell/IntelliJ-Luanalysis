@@ -184,7 +184,7 @@ object TyArraySerializer : TySerializer<ITyArray>() {
     }
 }
 
-class TyDocArray(val luaDocArrTy: LuaDocArrTy) : TyArray(luaDocArrTy.ty.getType()) {
+class TyDocArray(val luaDocArrTy: LuaDocArrTy, base: ITy = luaDocArrTy.ty.getType()) : TyArray(base) {
     override fun findMember(name: String, searchContext: SearchContext): LuaClassMember? {
         return null
     }
@@ -199,5 +199,15 @@ class TyDocArray(val luaDocArrTy: LuaDocArrTy) : TyArray(luaDocArrTy.ty.getType(
         }
 
         return null
+    }
+
+    override fun substitute(substitutor: ITySubstitutor): ITy {
+        val substitutedBase = TyMultipleResults.getResult(substitutor.searchContext, base.substitute(substitutor))
+
+        return if (substitutedBase !== base) {
+            TyDocArray(luaDocArrTy, substitutedBase)
+        } else {
+            this
+        }
     }
 }
