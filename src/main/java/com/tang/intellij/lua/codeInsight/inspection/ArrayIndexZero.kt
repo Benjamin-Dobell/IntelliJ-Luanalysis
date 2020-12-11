@@ -32,7 +32,7 @@ class ArrayIndexZero : LocalInspectionTool() {
                 o.acceptChildren(object : PsiElementVisitor() {
                     override fun visitElement(element: PsiElement) {
                         if (element is LuaLiteralExpr && element.text == "0") {
-                            holder.registerProblem(element, "0 index", object : LocalQuickFix {
+                            holder.registerProblem(element, "Lua integral keys typically commence enumeration from 1", object : LocalQuickFix {
                                 override fun getName() = "Replace with index 1"
 
                                 override fun getFamilyName() = name

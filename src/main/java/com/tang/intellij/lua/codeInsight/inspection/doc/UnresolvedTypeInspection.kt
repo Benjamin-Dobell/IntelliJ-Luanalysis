@@ -24,7 +24,7 @@ import com.intellij.psi.PsiElementVisitor
 import com.tang.intellij.lua.comment.psi.LuaDocTypeRef
 import com.tang.intellij.lua.comment.psi.LuaDocVisitor
 
-class UnresolvedClassInspection : LocalInspectionTool() {
+class UnresolvedTypeInspection : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
         return object : LuaDocVisitor() {
             override fun visitTypeRef(o: LuaDocTypeRef) {

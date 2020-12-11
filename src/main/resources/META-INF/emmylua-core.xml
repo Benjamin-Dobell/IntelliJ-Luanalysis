@@ -335,7 +335,7 @@
                 groupName="Lua > Emmy doc"
                 language="Lua"
                 runForWholeFile="true"
-                implementationClass="com.tang.intellij.lua.codeInsight.inspection.doc.UnresolvedSymbolInEmmyDocInspection"/>
+                implementationClass="com.tang.intellij.lua.codeInsight.inspection.doc.UnresolvedSymbolInspection"/>
 
         <localInspection
                 displayName="Unresolved class in emmy doc"
@@ -343,7 +343,7 @@
                 groupName="Lua > Emmy doc"
                 language="Lua"
                 runForWholeFile="true"
-                implementationClass="com.tang.intellij.lua.codeInsight.inspection.doc.UnresolvedClassInspection"/>
+                implementationClass="com.tang.intellij.lua.codeInsight.inspection.doc.UnresolvedTypeInspection"/>
 
         <localInspection
                 displayName="Illegal inheritance in emmy doc"

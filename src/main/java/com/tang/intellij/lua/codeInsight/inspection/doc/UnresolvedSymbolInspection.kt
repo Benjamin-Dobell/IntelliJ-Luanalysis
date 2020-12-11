@@ -22,7 +22,7 @@ import com.intellij.psi.PsiElementVisitor
 import com.tang.intellij.lua.comment.psi.LuaDocTagParam
 import com.tang.intellij.lua.comment.psi.LuaDocVisitor
 
-class UnresolvedSymbolInEmmyDocInspection : LocalInspectionTool() {
+class UnresolvedSymbolInspection : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
         return object : LuaDocVisitor() {
             override fun visitTagParam(o: LuaDocTagParam) {
