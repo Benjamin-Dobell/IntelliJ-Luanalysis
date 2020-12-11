@@ -357,11 +357,46 @@ image:./snapshot/26_2_variadic_casts.png[image]
 
 == Building from Source
 
-`./gradlew build_203`
+=== Prerequisites
 
+To build, you will require a Java 11 SDK.
+
+====
+On macOS you can install Jetbrain's Java 11 SDK with:
+
+[source,shell]
+----
+brew install java11
+----
+====
+
+=== Building
+
+You will then need to ensure the `JAVA_HOME` environment variable is point to a Java 11 SDK.
+
+====
+On macOS, with OpenJDK 11 installed from Homebrew, this can be achieved with:
+
+[source,shell]
+----
+export JAVA_HOME=/usr/local/opt/openjdk@11
+----
+====
+
+Build the plugin with the latest Jetbrain SDK (203 at the time of writing) with:
+
+[source,shell]
+----
+./gradlew build_203
+----
+
+****
 For more details about the Jetbrains Platform SDK please refer to the
 https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/setting_up_environment.html[official
 documentation].
+****
+
+The resultant plugin `.zip` will end up in the directory `./build/distributions/`.
 
 == Installation from Source
 
