@@ -20,6 +20,7 @@ import com.intellij.codeInspection.*
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
+import com.tang.intellij.lua.lang.LuaFileType
 import com.tang.intellij.lua.lang.LuaLanguageLevel
 import com.tang.intellij.lua.lang.LuaParserDefinition
 import com.tang.intellij.lua.project.LuaSettings
@@ -42,7 +43,11 @@ class LanguageLevelInspection : LocalInspectionTool() {
         })
     }
 
-    override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
+    override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
+        if (session.file.name.matches(LuaFileType.DEFINITION_FILE_REGEX)) {
+            return PsiElementVisitor.EMPTY_VISITOR
+        }
+
         return object : LuaVisitor() {
             override fun visitBinaryOp(o: LuaBinaryOp) {
                 if (o.languageLevel < LuaLanguageLevel.LUA52 && LuaParserDefinition.LUA52_BIN_OP_SET.contains(o.node.firstChildNode.elementType)) {

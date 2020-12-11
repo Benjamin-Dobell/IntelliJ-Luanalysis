@@ -321,7 +321,7 @@
                 enabledByDefault="false"
                 groupName="Lua"
                 language="Lua"
-                implementationClass="com.tang.intellij.lua.codeInsight.inspection.GlobalNameCanbeLocal"/>
+                implementationClass="com.tang.intellij.lua.codeInsight.inspection.GlobalNameCanBeLocal"/>
         <localInspection
                 displayName="Lua deprecation"
                 enabledByDefault="true"

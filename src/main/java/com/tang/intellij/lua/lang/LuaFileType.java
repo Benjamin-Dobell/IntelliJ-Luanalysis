@@ -17,6 +17,7 @@
 package com.tang.intellij.lua.lang;
 
 import com.intellij.openapi.fileTypes.LanguageFileType;
+import kotlin.text.Regex;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,6 +30,8 @@ import javax.swing.*;
 public class LuaFileType extends LanguageFileType {
 
     public static final LuaFileType INSTANCE = new LuaFileType();
+
+    public static final Regex DEFINITION_FILE_REGEX = new Regex(".*\\.def\\.lua$");
 
     protected LuaFileType() {
         super(LuaLanguage.INSTANCE);

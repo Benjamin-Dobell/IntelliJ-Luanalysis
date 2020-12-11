@@ -27,10 +27,15 @@ import com.intellij.psi.PsiNamedElement
 import com.intellij.refactoring.RefactoringActionHandler
 import com.intellij.refactoring.RefactoringActionHandlerFactory
 import com.tang.intellij.lua.Constants
+import com.tang.intellij.lua.lang.LuaFileType
 import com.tang.intellij.lua.psi.*
 
 class LocalNameShadowed : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
+        if (session.file.name.matches(LuaFileType.DEFINITION_FILE_REGEX)) {
+            return PsiElementVisitor.EMPTY_VISITOR
+        }
+
         return object : LuaVisitor() {
 
             private fun check(namedElement: PsiNamedElement) {
