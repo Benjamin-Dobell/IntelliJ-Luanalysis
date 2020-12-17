@@ -175,7 +175,7 @@ class AssignTypeInspection : StrictInspection() {
                                 value = variadicTy
                             }
 
-                            if (assignees.size == 1 && (assignee.parent as? LuaCommentOwner)?.comment?.tagClass != null) {
+                            if (assignees.size == 1 && LuaPsiTreeUtil.findAncestorOfType(assignee, LuaStatement::class.java)?.comment?.tagClass != null) {
                                 if (value !is TyTable) {
                                     myHolder.registerProblem(expression, "Type mismatch. Required: 'table' Found: '%s'".format(value.displayName))
                                 }

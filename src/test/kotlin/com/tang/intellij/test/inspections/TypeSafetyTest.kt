@@ -105,7 +105,11 @@ class TypeSafetyTest : LuaInspectionsTestBase(
         check("generic_self.lua", true)
     }
 
-    fun testGlobals() {
+    fun testGlobalDefinitions() {
+        check("global_definitions.lua")
+    }
+
+    fun testGlobalUsage() {
         myFixture.configureByFile("global_definitions.lua")
         check("global_usage.lua")
     }
