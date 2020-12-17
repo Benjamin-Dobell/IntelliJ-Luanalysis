@@ -23,7 +23,7 @@ import com.tang.intellij.lua.psi.LuaParamInfo
  *
  * Created by TangZX on 2016/12/20.
  */
-open class FuncInsertHandler(private val funcBodyOwner: LuaFuncBodyOwner) : ArgsInsertHandler() {
+open class FuncInsertHandler(private val funcBodyOwner: LuaFuncBodyOwner<*>) : ArgsInsertHandler() {
 
     override fun getParams(): Array<LuaParamInfo> {
         return funcBodyOwner.params

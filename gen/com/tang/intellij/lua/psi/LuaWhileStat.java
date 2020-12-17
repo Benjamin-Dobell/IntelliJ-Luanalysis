@@ -7,7 +7,4 @@ import com.intellij.psi.PsiElement;
 
 public interface LuaWhileStat extends LuaStatement, LuaLoop, LuaIndentRange {
 
-  @Nullable
-  LuaExpr getExpr();
-
 }

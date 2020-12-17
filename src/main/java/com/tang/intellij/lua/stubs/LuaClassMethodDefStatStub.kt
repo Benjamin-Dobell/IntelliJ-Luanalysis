@@ -21,7 +21,7 @@ import com.intellij.psi.stubs.*
 import com.intellij.util.BitUtil
 import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.psi.*
-import com.tang.intellij.lua.psi.impl.LuaClassMethodDefImpl
+import com.tang.intellij.lua.psi.impl.LuaClassMethodDefStatImpl
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.stubs.index.StubKeys
@@ -31,19 +31,19 @@ import com.tang.intellij.lua.ty.*
  * class method static/instance
  * Created by tangzx on 2016/12/4.
  */
-class LuaClassMethodType : LuaStubElementType<LuaClassMethodStub, LuaClassMethodDef>("Class Method") {
+class LuaClassMethodType : LuaStubElementType<LuaClassMethodDefStatStub, LuaClassMethodDefStat>("Class Method") {
 
-    override fun createPsi(luaClassMethodStub: LuaClassMethodStub): LuaClassMethodDef {
-        return LuaClassMethodDefImpl(luaClassMethodStub, this)
+    override fun createPsi(luaClassMethodDefStatStub: LuaClassMethodDefStatStub): LuaClassMethodDefStat {
+        return LuaClassMethodDefStatImpl(luaClassMethodDefStatStub, this)
     }
 
-    override fun createStub(methodDef: LuaClassMethodDef, stubElement: StubElement<*>): LuaClassMethodStub {
-        val methodName = methodDef.classMethodName
-        val id = methodDef.nameIdentifier
-        val expr = methodName.expr
+    override fun createStub(def: LuaClassMethodDefStat, stubElement: StubElement<*>): LuaClassMethodDefStatStub {
+        val methodName = def.classMethodName
+        val id = def.nameIdentifier
+        val expr = methodName.expression
         val classNameSet = mutableListOf<ITyClass>()
 
-        SearchContext.withDumb(methodDef.project, null) {
+        SearchContext.withDumb(def.project, null) {
             SearchContext.infer(expr, it)
         }?.let {
             TyUnion.each(it) {
@@ -59,32 +59,32 @@ class LuaClassMethodType : LuaStubElementType<LuaClassMethodStub, LuaClassMethod
         var flags = 0
 
         val isStatic = methodName.dot != null
-        val isDeprecated = methodDef.isDeprecated
+        val isDeprecated = def.isDeprecated
         flags = BitUtil.set(flags, FLAG_STATIC, isStatic)
         flags = BitUtil.set(flags, FLAG_DEPRECATED, isDeprecated)
 
-        val visibility = methodDef.visibility
+        val visibility = def.visibility
         flags = BitUtil.set(flags, visibility.bitMask, true)
 
-        val retDocTy = methodDef.comment?.tagReturn?.type
-        val params = methodDef.params
-        val overloads = methodDef.overloads
-        val genericParams = methodDef.genericParams
+        val retDocTy = def.comment?.tagReturn?.type
+        val params = def.params
+        val overloads = def.overloads
+        val genericParams = def.genericParams
 
-        return LuaClassMethodStubImpl(flags,
+        return LuaClassMethodDefStatStubImpl(flags,
                 id?.text ?: "",
                 classNameSet.toTypedArray(),
                 retDocTy,
                 params,
                 genericParams,
                 overloads,
-                methodDef.varargType,
+                def.varargType,
                 stubElement)
     }
 
     override fun shouldCreateStub(node: ASTNode): Boolean {
         //确定是完整的，并且是 class:method, class.method 形式的， 否则会报错
-        val psi = node.psi as LuaClassMethodDef
+        val psi = node.psi as LuaClassMethodDefStat
         return psi.funcBody != null
     }
 
@@ -93,7 +93,7 @@ class LuaClassMethodType : LuaStubElementType<LuaClassMethodStub, LuaClassMethod
         types.forEach { Ty.serialize(it, this) }
     }
 
-    override fun serialize(stub: LuaClassMethodStub, stubOutputStream: StubOutputStream) {
+    override fun serialize(stub: LuaClassMethodDefStatStub, stubOutputStream: StubOutputStream) {
         stubOutputStream.writeTypes(stub.classes)
         stubOutputStream.writeName(stub.name)
         stubOutputStream.writeShort(stub.flags)
@@ -114,7 +114,7 @@ class LuaClassMethodType : LuaStubElementType<LuaClassMethodStub, LuaClassMethod
         return list.toTypedArray()
     }
 
-    override fun deserialize(stubInputStream: StubInputStream, stubElement: StubElement<*>): LuaClassMethodStub {
+    override fun deserialize(stubInputStream: StubInputStream, stubElement: StubElement<*>): LuaClassMethodDefStatStub {
         val classes = stubInputStream.readTypes()
         val shortName = stubInputStream.readName()
         val flags = stubInputStream.readShort()
@@ -124,7 +124,7 @@ class LuaClassMethodType : LuaStubElementType<LuaClassMethodStub, LuaClassMethod
         val varargTy = stubInputStream.readTyNullable()
         val overloads = stubInputStream.readSignatures()
 
-        return LuaClassMethodStubImpl(flags.toInt(),
+        return LuaClassMethodDefStatStubImpl(flags.toInt(),
                 StringRef.toString(shortName),
                 classes,
                 retDocTy,
@@ -135,9 +135,9 @@ class LuaClassMethodType : LuaStubElementType<LuaClassMethodStub, LuaClassMethod
                 stubElement)
     }
 
-    override fun indexStub(luaClassMethodStub: LuaClassMethodStub, indexSink: IndexSink) {
-        val classNames = luaClassMethodStub.classes
-        val shortName = luaClassMethodStub.name
+    override fun indexStub(luaClassMethodDefStatStub: LuaClassMethodDefStatStub, indexSink: IndexSink) {
+        val classNames = luaClassMethodDefStatStub.classes
+        val shortName = luaClassMethodDefStatStub.name
         classNames.forEach {
             LuaClassMemberIndex.indexMemberStub(indexSink, it.className, shortName)
         }
@@ -150,7 +150,7 @@ class LuaClassMethodType : LuaStubElementType<LuaClassMethodStub, LuaClassMethod
     }
 }
 
-interface LuaClassMethodStub : LuaFuncBodyOwnerStub<LuaClassMethodDef>, LuaClassMemberStub<LuaClassMethodDef> {
+interface LuaClassMethodDefStatStub : LuaFuncBodyOwnerStub<LuaClassMethodDefStat>, LuaClassMemberStub<LuaClassMethodDefStat> {
 
     val classes: Array<ITyClass>
 
@@ -161,16 +161,17 @@ interface LuaClassMethodStub : LuaFuncBodyOwnerStub<LuaClassMethodDef>, LuaClass
     val flags: Int
 }
 
-class LuaClassMethodStubImpl(override val flags: Int,
-                             override val name: String,
-                             override val classes: Array<ITyClass>,
-                             override val returnDocTy: ITy?,
-                             override val params: Array<LuaParamInfo>,
-                             override val genericParams: Array<TyGenericParameter>?,
-                             override val overloads: Array<IFunSignature>,
-                             override val varargTy: ITy?,
-                             parent: StubElement<*>)
-    : StubBase<LuaClassMethodDef>(parent, LuaElementType.CLASS_METHOD_DEF), LuaClassMethodStub {
+class LuaClassMethodDefStatStubImpl(
+    override val flags: Int,
+    override val name: String,
+    override val classes: Array<ITyClass>,
+    override val returnDocTy: ITy?,
+    override val params: Array<LuaParamInfo>,
+    override val genericParams: Array<TyGenericParameter>?,
+    override val overloads: Array<IFunSignature>,
+    override val varargTy: ITy?,
+    parent: StubElement<*>
+) : StubBase<LuaClassMethodDefStat>(parent, LuaElementType.CLASS_METHOD_DEF_STAT), LuaClassMethodDefStatStub {
     override val docTy: ITy? = null
 
     override val isStatic: Boolean

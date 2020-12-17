@@ -10,6 +10,6 @@ import com.tang.intellij.lua.stubs.LuaPlaceholderStub;
 public interface LuaExprStat extends LuaStatement, StubBasedPsiElement<LuaPlaceholderStub> {
 
   @NotNull
-  LuaExpr getExpr();
+  LuaExpression<?> getExpression();
 
 }

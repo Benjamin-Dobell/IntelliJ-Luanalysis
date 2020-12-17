@@ -16,6 +16,7 @@
 
 package com.tang.intellij.lua.stubs
 
+import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.StubElement
 import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.psi.*
@@ -26,7 +27,7 @@ import com.tang.intellij.lua.ty.*
  * func body owner stub
  * Created by TangZX on 2017/2/4.
  */
-interface LuaFuncBodyOwnerStub<T : LuaFuncBodyOwner> : StubElement<T> {
+interface LuaFuncBodyOwnerStub<T : PsiElement> : StubElement<T> {
     val returnDocTy:ITy?
     val params: Array<LuaParamInfo>
     val genericParams: Array<TyGenericParameter>?

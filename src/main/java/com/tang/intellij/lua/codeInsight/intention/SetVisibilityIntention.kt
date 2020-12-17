@@ -23,20 +23,20 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.codeInsight.template.macro.NamesMacro
 import com.tang.intellij.lua.comment.psi.LuaDocAccessModifier
-import com.tang.intellij.lua.psi.LuaClassMethodDef
+import com.tang.intellij.lua.psi.LuaClassMethodDefStat
 import com.tang.intellij.lua.psi.LuaCommentOwner
 import com.tang.intellij.lua.psi.LuaFuncBodyOwner
 
 class SetVisibilityIntention : FunctionIntention() {
 
-    override fun isAvailable(bodyOwner: LuaFuncBodyOwner, editor: Editor): Boolean {
-        if (bodyOwner is LuaClassMethodDef) {
+    override fun isAvailable(bodyOwner: LuaFuncBodyOwner<*>, editor: Editor): Boolean {
+        if (bodyOwner is LuaClassMethodDefStat) {
             return bodyOwner.comment?.findTag(LuaDocAccessModifier::class.java) == null
         }
         return false
     }
 
-    override fun invoke(bodyOwner: LuaFuncBodyOwner, editor: Editor) {
+    override fun invoke(bodyOwner: LuaFuncBodyOwner<*>, editor: Editor) {
         if (bodyOwner is LuaCommentOwner) {
             val comment = bodyOwner.comment
             val funcBody = bodyOwner.funcBody

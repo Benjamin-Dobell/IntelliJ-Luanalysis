@@ -24,15 +24,15 @@ import com.tang.intellij.lua.psi.LuaClassMethod
  *
  * Created by tangzx on 2017/3/29.
  */
-class LuaOverridingMethodsSearch : ExtensibleQueryFactory<LuaClassMethod, LuaOverridingMethodsSearch.SearchParameters>("com.tang.intellij.lua") {
+class LuaOverridingMethodsSearch : ExtensibleQueryFactory<LuaClassMethod<*>, LuaOverridingMethodsSearch.SearchParameters>("com.tang.intellij.lua") {
 
-    class SearchParameters(val method: LuaClassMethod, val isDeep: Boolean)
+    class SearchParameters(val method: LuaClassMethod<*>, val isDeep: Boolean)
 
     companion object {
         private val INSTANCE = LuaOverridingMethodsSearch()
 
         @JvmOverloads
-        fun search(methodDef: LuaClassMethod, deep: Boolean = true): Query<LuaClassMethod> =
-                INSTANCE.createUniqueResultsQuery(SearchParameters(methodDef, deep))
+        fun search(classMethod: LuaClassMethod<*>, deep: Boolean = true): Query<LuaClassMethod<*>> =
+                INSTANCE.createUniqueResultsQuery(SearchParameters(classMethod, deep))
     }
 }

@@ -76,7 +76,7 @@ class LuaStringArgIndex : FileBasedIndexExtension<String, LuaStringArgIndex.LuaC
         PsiTreeUtil.findChildrenOfType(it.psiFile, LuaCallExpr::class.java).forEach { call ->
             val isColon = call.isMethodColonCall
             call.argList.forEachIndexed { index, arg ->
-                val name = call.expr.name
+                val name = call.expression.name
                 if (name != null && arg is LuaLiteralExpr && arg.kind == LuaLiteralKind.String) {
                     val sv = arg.stringValue
                     if (sv.length in 2..1024) {

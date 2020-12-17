@@ -9,33 +9,33 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.psi.LuaTypes.*;
 import com.intellij.extapi.psi.StubBasedPsiElementBase;
-import com.tang.intellij.lua.stubs.LuaClassMethodStub;
+import com.tang.intellij.lua.stubs.LuaClassMethodDefStatStub;
 import com.tang.intellij.lua.psi.*;
 import com.intellij.navigation.ItemPresentation;
-import com.tang.intellij.lua.comment.psi.api.LuaComment;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.tree.IElementType;
 
-public class LuaClassMethodDefImpl extends StubBasedPsiElementBase<LuaClassMethodStub> implements LuaClassMethodDef {
+public class LuaClassMethodDefStatImpl extends StubBasedPsiElementBase<LuaClassMethodDefStatStub> implements LuaClassMethodDefStat {
 
-  public LuaClassMethodDefImpl(@NotNull LuaClassMethodStub stub, @NotNull IStubElementType type) {
+  public LuaClassMethodDefStatImpl(@NotNull LuaClassMethodDefStatStub stub, @NotNull IStubElementType type) {
     super(stub, type);
   }
 
-  public LuaClassMethodDefImpl(@NotNull ASTNode node) {
+  public LuaClassMethodDefStatImpl(@NotNull ASTNode node) {
     super(node);
   }
 
-  public LuaClassMethodDefImpl(LuaClassMethodStub stub, IElementType type, ASTNode node) {
+  public LuaClassMethodDefStatImpl(LuaClassMethodDefStatStub stub, IElementType type, ASTNode node) {
     super(stub, type, node);
   }
 
   public void accept(@NotNull LuaVisitor visitor) {
-    visitor.visitClassMethodDef(this);
+    visitor.visitClassMethodDefStat(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);
@@ -51,12 +51,6 @@ public class LuaClassMethodDefImpl extends StubBasedPsiElementBase<LuaClassMetho
   @Nullable
   public LuaFuncBody getFuncBody() {
     return PsiTreeUtil.getStubChildOfType(this, LuaFuncBody.class);
-  }
-
-  @Override
-  @Nullable
-  public LuaComment getComment() {
-    return LuaPsiImplUtilKt.getComment(this);
   }
 
   @Override
@@ -78,8 +72,8 @@ public class LuaClassMethodDefImpl extends StubBasedPsiElementBase<LuaClassMetho
 
   @Override
   @NotNull
-  public List<LuaParamNameDef> getParamNameDefList() {
-    return LuaPsiImplUtilKt.getParamNameDefList(this);
+  public List<LuaParamDef> getParamDefList() {
+    return LuaPsiImplUtilKt.getParamDefList(this);
   }
 
   @Override

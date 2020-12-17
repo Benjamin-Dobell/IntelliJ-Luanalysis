@@ -126,10 +126,10 @@ private class ScopedTypeTreeScope(val psi: PsiElement, val treeBuilder: ScopedTy
             return type
         }
 
-        val cls: ITyClass? = if (psi is LuaClassMethodDef) {
+        val cls: ITyClass? = if (psi is LuaClassMethodDefStat) {
             psi.guessParentType(context) as? ITyClass
         } else if (psi is LuaAssignStat) {
-            (psi.varExprList.exprList.first() as? LuaIndexExpr)?.guessParentType(context) as? ITyClass
+            (psi.varExprList.expressionList.first() as? LuaIndexExpr)?.guessParentType(context) as? ITyClass
         } else {
             null
         }
@@ -165,16 +165,16 @@ private fun isValidTypeScope(element: PsiElement?): Boolean {
     }
 
     return when (element) {
-        is LuaLocalDef -> {
-            if (element.nameList?.nameDefList?.size == 1) {
-                element.exprList?.exprList?.let {
+        is LuaLocalDefStat -> {
+            if (element.localDefList.size == 1) {
+                element.exprList?.expressionList?.let {
                     (it.firstOrNull() as? LuaClosureExpr)?.comment != null
                 } ?: false
             } else false
         }
         is LuaAssignStat -> {
-            if (element.varExprList.exprList.size == 1) {
-                element.valueExprList?.exprList?.let {
+            if (element.varExprList.expressionList.size == 1) {
+                element.valueExprList?.expressionList?.let {
                     (it.firstOrNull() as? LuaClosureExpr)?.comment != null
                 } ?: false
             } else false
@@ -352,7 +352,7 @@ private class ScopedTypeStubTree(file: PsiFile) : ScopedTypeTree(file) {
                 if (isValidTypeScope(stubPsi)) {
                     val scope = stubPsi.getUserData(scopeKey)
 
-                    return if (scope != null ){
+                    return if (scope != null) {
                         FoundScope(scope, psiScopedType?.let { scope.indexOf(psiScopedType) })
                     } else null
                 }

@@ -47,7 +47,7 @@ class SuggestLuaParametersMacro : Macro() {
         if (func is LuaClosureExpr) {
             val ty = func.shouldBe(SearchContext.get(context.project)) as? ITyFunction ?: return null
             return ty.mainSignature.params?.let { create(it) } ?: arrayOf()
-        } else if (func is LuaClassMethod) {
+        } else if (func is LuaClassMethod<*>) {
             val method = func.findOverridingMethod(SearchContext.get(context.project))
             val params = method?.params
             if (params != null)

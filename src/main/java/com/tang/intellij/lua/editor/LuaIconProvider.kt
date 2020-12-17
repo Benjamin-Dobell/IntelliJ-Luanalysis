@@ -20,7 +20,7 @@ import com.intellij.ide.IconProvider
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass
 import com.tang.intellij.lua.lang.LuaIcons
-import com.tang.intellij.lua.psi.LuaClassMethodDef
+import com.tang.intellij.lua.psi.LuaClassMethodDefStat
 import javax.swing.Icon
 
 /**
@@ -31,7 +31,7 @@ class LuaIconProvider : IconProvider() {
     override fun getIcon(psiElement: PsiElement, iconFlags: Int): Icon? {
         if (psiElement is LuaDocTagClass)
             return LuaIcons.CLASS
-        else if (psiElement is LuaClassMethodDef)
+        else if (psiElement is LuaClassMethodDefStat)
             return LuaIcons.CLASS_METHOD
         return null
     }

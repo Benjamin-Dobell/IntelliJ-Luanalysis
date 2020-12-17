@@ -46,7 +46,7 @@ class LuaHighlightExitPointsHandler internal constructor(editor: Editor, file: P
                 addOccurrence(o)
             }
 
-            override fun visitFuncBodyOwner(o: LuaFuncBodyOwner) {
+            override fun visitLocalFuncDefStat(o: LuaLocalFuncDefStat) {
                 // ignore sub function
             }
 

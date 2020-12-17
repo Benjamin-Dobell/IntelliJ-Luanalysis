@@ -8,10 +8,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.psi.LuaTypes.*;
+import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.tang.intellij.lua.psi.*;
 import com.intellij.psi.PsiReference;
 
-public class LuaGotoStatImpl extends LuaStatementImpl implements LuaGotoStat {
+public class LuaGotoStatImpl extends ASTWrapperPsiElement implements LuaGotoStat {
 
   public LuaGotoStatImpl(@NotNull ASTNode node) {
     super(node);
@@ -21,6 +22,7 @@ public class LuaGotoStatImpl extends LuaStatementImpl implements LuaGotoStat {
     visitor.visitGotoStat(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);

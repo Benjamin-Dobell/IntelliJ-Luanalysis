@@ -24,7 +24,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.tang.intellij.lua.codeInsight.template.macro.SuggestTypeMacro
 import com.tang.intellij.lua.comment.LuaCommentUtil
-import com.tang.intellij.lua.psi.LuaLocalDef
+import com.tang.intellij.lua.psi.LuaLocalDefStat
 import com.tang.intellij.lua.psi.LuaPsiTreeUtil
 
 /**
@@ -42,18 +42,18 @@ class CreateTypeAnnotationIntention : BaseIntentionAction() {
     }
 
     override fun isAvailable(project: Project, editor: Editor, psiFile: PsiFile): Boolean {
-        val localDef = LuaPsiTreeUtil.findElementOfClassAtOffset(psiFile, editor.caretModel.offset, LuaLocalDef::class.java, false)
-        if (localDef != null) {
-            val comment = localDef.comment
+        val localStat = LuaPsiTreeUtil.findElementOfClassAtOffset(psiFile, editor.caretModel.offset, LuaLocalDefStat::class.java, false)
+        if (localStat != null) {
+            val comment = localStat.comment
             return comment?.tagType == null
         }
         return false
     }
 
     override fun invoke(project: Project, editor: Editor, psiFile: PsiFile) {
-        val localDef = LuaPsiTreeUtil.findElementOfClassAtOffset(psiFile, editor.caretModel.offset, LuaLocalDef::class.java, false)
-        if (localDef != null) {
-            LuaCommentUtil.insertTemplate(localDef, editor) { _, template ->
+        val localStat = LuaPsiTreeUtil.findElementOfClassAtOffset(psiFile, editor.caretModel.offset, LuaLocalDefStat::class.java, false)
+        if (localStat != null) {
+            LuaCommentUtil.insertTemplate(localStat, editor) { _, template ->
                 template.addTextSegment("---@type ")
                 val name = MacroCallNode(SuggestTypeMacro())
                 template.addVariable("type", name, TextExpression("table"), true)

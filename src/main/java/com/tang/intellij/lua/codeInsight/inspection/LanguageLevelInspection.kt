@@ -25,19 +25,16 @@ import com.tang.intellij.lua.lang.LuaLanguageLevel
 import com.tang.intellij.lua.lang.LuaParserDefinition
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.project.StdLibraryProvider
-import com.tang.intellij.lua.psi.LuaBinaryOp
-import com.tang.intellij.lua.psi.LuaUnaryOp
-import com.tang.intellij.lua.psi.LuaVisitor
-import com.tang.intellij.lua.psi.languageLevel
+import com.tang.intellij.lua.psi.*
 
 class LanguageLevelInspection : LocalInspectionTool() {
 
-    private fun registerOperatorProblem(o: PsiElement, desc: String, holder: ProblemsHolder) {
+    private fun registerLuaLevelProblem(o: PsiElement, requiredLevel: LuaLanguageLevel, desc: String, holder: ProblemsHolder) {
         holder.registerProblem(o, desc, object : LocalQuickFix {
-            override fun getFamilyName() = "Upgrade language level to Lua 5.2"
+            override fun getFamilyName() = "Upgrade language level to ${requiredLevel}"
 
             override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
-                LuaSettings.instance.languageLevel = LuaLanguageLevel.LUA52
+                LuaSettings.instance.languageLevel = requiredLevel
                 StdLibraryProvider.reload()
             }
         })
@@ -50,16 +47,26 @@ class LanguageLevelInspection : LocalInspectionTool() {
 
         return object : LuaVisitor() {
             override fun visitBinaryOp(o: LuaBinaryOp) {
-                if (o.languageLevel < LuaLanguageLevel.LUA52 && LuaParserDefinition.LUA52_BIN_OP_SET.contains(o.node.firstChildNode.elementType)) {
-                    val desc = "The binary operator '${o.text}' only available in Lua 5.2 or above"
-                    registerOperatorProblem(o, desc, holder)
+                if (o.languageLevel < LuaLanguageLevel.LUA53 && LuaParserDefinition.LUA53_BIN_OP_SET.contains(o.node.firstChildNode.elementType)) {
+                    val desc = "The binary operator '${o.text}' only available in Lua 5.3 and above"
+                    registerLuaLevelProblem(o, LuaLanguageLevel.LUA53, desc, holder)
                 }
             }
 
             override fun visitUnaryOp(o: LuaUnaryOp) {
-                if (o.languageLevel < LuaLanguageLevel.LUA52 && LuaParserDefinition.LUA52_UNARY_OP_SET.contains(o.node.firstChildNode.elementType)) {
-                    val desc = "The unary operator '${o.text}' only available in Lua 5.2 or above"
-                    registerOperatorProblem(o, desc, holder)
+                if (o.languageLevel < LuaLanguageLevel.LUA53 && LuaParserDefinition.LUA53_UNARY_OP_SET.contains(o.node.firstChildNode.elementType)) {
+                    val desc = "The unary operator '${o.text}' only available in Lua 5.3 and above"
+                    registerLuaLevelProblem(o, LuaLanguageLevel.LUA52, desc, holder)
+                }
+            }
+
+            override fun visitAttribute(o: LuaAttribute) {
+                super.visitAttribute(o)
+                if (o.languageLevel < LuaLanguageLevel.LUA54) {
+                    registerLuaLevelProblem(o,
+                            LuaLanguageLevel.LUA54,
+                            "Attributes are only available in Lua 5.4 and above",
+                            holder)
                 }
             }
         }

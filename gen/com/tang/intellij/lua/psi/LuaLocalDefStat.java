@@ -7,9 +7,15 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.StubBasedPsiElement;
 import com.tang.intellij.lua.stubs.LuaPlaceholderStub;
 
-public interface LuaNameList extends LuaPsiElement, StubBasedPsiElement<LuaPlaceholderStub> {
+public interface LuaLocalDefStat extends LuaDeclaration, LuaDeclarationScope, LuaTypeScope, LuaStatement, StubBasedPsiElement<LuaPlaceholderStub> {
+
+  @Nullable
+  LuaExprList getExprList();
 
   @NotNull
-  List<LuaNameDef> getNameDefList();
+  List<LuaLocalDef> getLocalDefList();
+
+  @Nullable
+  PsiElement getAssign();
 
 }

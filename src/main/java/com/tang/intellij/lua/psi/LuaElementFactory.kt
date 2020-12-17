@@ -36,7 +36,7 @@ object LuaElementFactory {
     fun createIdentifier(project: Project, name: String): PsiElement {
         val content = "local $name = 0"
         val file = createFile(project, content)
-        val def = PsiTreeUtil.findChildOfType(file, LuaNameDef::class.java)!!
+        val def = PsiTreeUtil.findChildOfType(file, LuaLocalDef::class.java)!!
         return def.firstChild
     }
 
@@ -68,6 +68,6 @@ object LuaElementFactory {
 
     fun createParamter(project: Project, name: String): PsiElement {
         val element = createWith(project, "local function($name)end")
-        return PsiTreeUtil.findChildOfType(element, LuaParamNameDef::class.java)!!
+        return PsiTreeUtil.findChildOfType(element, LuaParamDef::class.java)!!
     }
 }

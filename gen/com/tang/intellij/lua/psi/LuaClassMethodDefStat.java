@@ -4,27 +4,30 @@ package com.tang.intellij.lua.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiNameIdentifierOwner;
+import com.tang.intellij.lua.stubs.LuaClassMethodDefStatStub;
 import com.intellij.psi.StubBasedPsiElement;
-import com.tang.intellij.lua.stubs.LuaLocalFuncDefStub;
-import com.intellij.psi.search.SearchScope;
-import com.tang.intellij.lua.comment.psi.api.LuaComment;
+import com.intellij.navigation.ItemPresentation;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 
-public interface LuaLocalFuncDef extends LuaFuncBodyOwner, LuaCommentOwner, LuaDeclaration, LuaStatement, LuaTypeScope, PsiNameIdentifierOwner, StubBasedPsiElement<LuaLocalFuncDefStub> {
+public interface LuaClassMethodDefStat extends LuaClassMethod<LuaClassMethodDefStatStub>, LuaDeclaration, LuaTypeScope, LuaStatement, StubBasedPsiElement<LuaClassMethodDefStatStub> {
+
+  @NotNull
+  LuaClassMethodName getClassMethodName();
 
   @Nullable
   LuaFuncBody getFuncBody();
 
-  @Nullable
-  PsiElement getId();
-
-  @Nullable
-  LuaComment getComment();
+  @NotNull
+  ITy guessParentType(@NotNull SearchContext context);
 
   @NotNull
-  List<LuaParamNameDef> getParamNameDefList();
+  Visibility getVisibility();
+
+  boolean isDeprecated();
+
+  @NotNull
+  List<LuaParamDef> getParamDefList();
 
   @Nullable
   PsiElement getNameIdentifier();
@@ -37,16 +40,15 @@ public interface LuaLocalFuncDef extends LuaFuncBodyOwner, LuaCommentOwner, LuaD
 
   int getTextOffset();
 
-  @NotNull
-  SearchScope getUseScope();
-
   @Nullable
   ITy guessReturnType(@NotNull SearchContext searchContext);
 
   @NotNull
-  ITy guessParentType(@NotNull SearchContext context);
+  LuaParamInfo[] getParams();
+
+  boolean isStatic();
 
   @NotNull
-  LuaParamInfo[] getParams();
+  ItemPresentation getPresentation();
 
 }

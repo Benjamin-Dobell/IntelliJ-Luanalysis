@@ -8,15 +8,14 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.psi.LuaTypes.*;
+import com.tang.intellij.lua.stubs.LuaExprPlaceStub;
 import com.tang.intellij.lua.psi.*;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
-import com.tang.intellij.lua.stubs.LuaExprPlaceStub;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.tree.IElementType;
-import com.tang.intellij.lua.stubs.LuaExprStub;
 
-public class LuaCallExprImpl extends LuaCallExprMixin implements LuaCallExpr {
+public class LuaCallExprImpl extends LuaExprMixin<LuaExprPlaceStub> implements LuaCallExpr {
 
   public LuaCallExprImpl(@NotNull LuaExprPlaceStub stub, @NotNull IStubElementType<?, ?> nodeType) {
     super(stub, nodeType);
@@ -34,6 +33,7 @@ public class LuaCallExprImpl extends LuaCallExprMixin implements LuaCallExpr {
     visitor.visitCallExpr(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);
@@ -46,9 +46,39 @@ public class LuaCallExprImpl extends LuaCallExprMixin implements LuaCallExpr {
   }
 
   @Override
-  @NotNull
-  public LuaExpr getExpr() {
-    return notNullChild(PsiTreeUtil.getStubChildOfType(this, LuaExpr.class));
+  @Nullable
+  public LuaCallExpr getCallExpr() {
+    return PsiTreeUtil.getStubChildOfType(this, LuaCallExpr.class);
+  }
+
+  @Override
+  @Nullable
+  public LuaIndexExpr getIndexExpr() {
+    return PsiTreeUtil.getStubChildOfType(this, LuaIndexExpr.class);
+  }
+
+  @Override
+  @Nullable
+  public LuaLiteralExpr getLiteralExpr() {
+    return PsiTreeUtil.getStubChildOfType(this, LuaLiteralExpr.class);
+  }
+
+  @Override
+  @Nullable
+  public LuaNameExpr getNameExpr() {
+    return PsiTreeUtil.getStubChildOfType(this, LuaNameExpr.class);
+  }
+
+  @Override
+  @Nullable
+  public LuaParenExpr getParenExpr() {
+    return PsiTreeUtil.getStubChildOfType(this, LuaParenExpr.class);
+  }
+
+  @Override
+  @Nullable
+  public LuaTableExpr getTableExpr() {
+    return PsiTreeUtil.getStubChildOfType(this, LuaTableExpr.class);
   }
 
   @Override
@@ -76,6 +106,12 @@ public class LuaCallExprImpl extends LuaCallExprMixin implements LuaCallExpr {
   @Override
   public boolean isFunctionCall() {
     return LuaPsiImplUtilKt.isFunctionCall(this);
+  }
+
+  @Override
+  @NotNull
+  public LuaExpression<?> getExpression() {
+    return LuaPsiImplUtilKt.getExpression(this);
   }
 
 }

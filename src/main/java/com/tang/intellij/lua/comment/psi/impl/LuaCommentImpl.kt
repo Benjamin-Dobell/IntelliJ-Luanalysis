@@ -25,7 +25,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.comment.psi.api.LuaComment
-import com.tang.intellij.lua.psi.LuaClassMethodDef
+import com.tang.intellij.lua.psi.LuaClassMethodDefStat
 import com.tang.intellij.lua.psi.LuaCommentOwner
 import com.tang.intellij.lua.psi.LuaTypes
 import com.tang.intellij.lua.psi.LuaVisitor
@@ -146,7 +146,7 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
     override val overloads: Array<IFunSignature>?
         get() {
             val list = mutableListOf<IFunSignature>()
-            val colonCall = (owner as? LuaClassMethodDef)?.isStatic == false
+            val colonCall = (owner as? LuaClassMethodDefStat)?.isStatic == false
             var element: PsiElement? = firstChild
 
             while (element != null) {

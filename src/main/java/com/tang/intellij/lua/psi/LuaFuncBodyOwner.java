@@ -16,7 +16,9 @@
 
 package com.tang.intellij.lua.psi;
 
+import com.intellij.psi.stubs.StubElement;
 import com.tang.intellij.lua.search.SearchContext;
+import com.tang.intellij.lua.stubs.LuaFuncBodyOwnerStub;
 import com.tang.intellij.lua.ty.ITy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +31,8 @@ import org.jetbrains.annotations.Nullable;
  *
  * Created by TangZX on 2016/12/9.
  */
-public interface LuaFuncBodyOwner extends LuaParametersOwner, LuaTypeGuessable {
+public interface LuaFuncBodyOwner<Stub extends LuaFuncBodyOwnerStub> extends LuaParametersOwner<Stub>, LuaTypeGuessable {
+
     @Nullable
     LuaFuncBody getFuncBody();
 

@@ -28,8 +28,8 @@ import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
  *
  * Created by tangzx on 2017/3/29.
  */
-class LuaOverridingMethodsSearchExecutor : QueryExecutor<LuaClassMethod, LuaOverridingMethodsSearch.SearchParameters> {
-    override fun execute(searchParameters: LuaOverridingMethodsSearch.SearchParameters, processor: Processor<in LuaClassMethod>): Boolean {
+class LuaOverridingMethodsSearchExecutor : QueryExecutor<LuaClassMethod<*>, LuaOverridingMethodsSearch.SearchParameters> {
+    override fun execute(searchParameters: LuaOverridingMethodsSearch.SearchParameters, processor: Processor<in LuaClassMethod<*>>): Boolean {
         val method = searchParameters.method
         val project = method.project
         val context = SearchContext.get(project)
@@ -41,8 +41,8 @@ class LuaOverridingMethodsSearchExecutor : QueryExecutor<LuaClassMethod, LuaOver
 
             return search.forEach(Processor { luaClass ->
                 val name = luaClass.name
-                val methodDef = LuaClassMemberIndex.findMethod(name, methodName, context, false)
-                methodDef == null || processor.process(methodDef)
+                val classMethod = LuaClassMemberIndex.findMethod(name, methodName, context, false)
+                classMethod == null || processor.process(classMethod)
             })
         }
         return false

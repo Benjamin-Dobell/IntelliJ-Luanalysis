@@ -9,14 +9,10 @@ import com.intellij.psi.StubBasedPsiElement;
 import com.tang.intellij.lua.stubs.LuaTableFieldStub;
 import com.intellij.navigation.ItemPresentation;
 import com.tang.intellij.lua.comment.psi.LuaDocTy;
-import com.tang.intellij.lua.comment.psi.api.LuaComment;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 
 public interface LuaTableField extends LuaClassField, PsiNameIdentifierOwner, LuaCommentOwner, LuaTypeScope, StubBasedPsiElement<LuaTableFieldStub> {
-
-  @NotNull
-  List<LuaExpr> getExprList();
 
   @Nullable
   PsiElement getId();
@@ -53,13 +49,13 @@ public interface LuaTableField extends LuaClassField, PsiNameIdentifierOwner, Lu
   boolean isDeprecated();
 
   @Nullable
-  LuaComment getComment();
+  LuaExpression<?> getIdExpr();
 
   @Nullable
-  LuaExpr getIdExpr();
+  LuaExpression<?> getValueExpr();
 
-  @Nullable
-  LuaExpr getValueExpr();
+  @NotNull
+  List<LuaExpression<?>> getExpressionList();
 
   @Nullable
   PsiElement getLbrack();

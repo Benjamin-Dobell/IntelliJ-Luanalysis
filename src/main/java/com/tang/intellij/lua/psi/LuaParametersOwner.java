@@ -16,6 +16,8 @@
 
 package com.tang.intellij.lua.psi;
 
+import com.intellij.psi.StubBasedPsiElement;
+import com.intellij.psi.stubs.StubElement;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -25,7 +27,8 @@ import java.util.List;
  * for
  * Created by TangZX on 2016/12/21.
  */
-public interface LuaParametersOwner extends LuaPsiElement {
+
+public interface LuaParametersOwner<Stub extends StubElement> extends LuaPsiElement, StubBasedPsiElement<Stub> {
     @Nullable
-    List<LuaParamNameDef> getParamNameDefList();
+    List<LuaParamDef> getParamDefList();
 }

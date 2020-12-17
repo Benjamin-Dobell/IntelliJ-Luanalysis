@@ -31,15 +31,14 @@ object LuaElementTypes {
             LuaTypes.MINUS, LuaTypes.GETN
     )}
 
-    val LOCAL_DEF = LuaPlaceholderStub.Type("LOCAL_DEF") { stub, type -> LuaLocalDefImpl(stub, type) }
+    val LOCAL_DEF_STAT = LuaPlaceholderStub.Type("LOCAL_DEF_STAT") { stub, type -> LuaLocalDefStatImpl(stub, type) }
     val SINGLE_ARG = LuaPlaceholderStub.Type("SINGLE_ARG") { stub, type -> LuaSingleArgImpl(stub, type) }
     val LIST_ARGS = LuaPlaceholderStub.Type("LIST_ARGS") { stub, type -> LuaListArgsImpl(stub, type) }
 
     val EXPR_LIST = LuaPlaceholderStub.Type("EXPR_LIST") { stub, type -> LuaExprListImpl(stub, type) }
-    val NAME_LIST = LuaPlaceholderStub.Type("NAME_LIST") { stub, type -> LuaNameListImpl(stub, type) }
     val ASSIGN_STAT = LuaPlaceholderStub.Type("ASSIGN_STAT") { stub, nodeType -> LuaAssignStatImpl(stub, nodeType) }
     val VAR_LIST = LuaPlaceholderStub.Type("VAR_LIST") { stub, type -> LuaVarListImpl(stub, type) }
-    val LOCAL_FUNC_DEF = LuaLocalFuncDefElementType()
+    val LOCAL_FUNC_DEF_STAT = LuaLocalFuncDefStatElementType()
     val FUNC_BODY = LuaFuncBodyType()
     val CLASS_METHOD_NAME = LuaPlaceholderStub.Type("CLASS_METHOD_NAME") { stub, type -> LuaClassMethodNameImpl(stub, type) }
 
@@ -52,5 +51,8 @@ object LuaElementTypes {
     val RETURN_STAT = LuaPlaceholderStub.Type("RETURN_STAT") { stub, nodeType -> LuaReturnStatImpl(stub, nodeType) }
     val DO_STAT = LuaPlaceholderStub.Type("DO_STAT") { stub, nodeType -> LuaDoStatImpl(stub, nodeType) }
     val IF_STAT = LuaPlaceholderStub.Type("IF_STAT") { stub, nodeType -> LuaIfStatImpl(stub, nodeType) }
-    val EXPR_STAT = LuaPlaceholderStub.Type("CALL_STAT") { stub, nodeType -> LuaExprStatImpl(stub, nodeType) }
+    val EXPR_STAT = LuaPlaceholderStub.Type("EXPR_STAT") { stub, nodeType -> LuaExprStatImpl(stub, nodeType) }
+
+    val FOR_A_STAT = LuaPlaceholderStub.Type("FOR_A_STAT") { stub, type -> LuaForAStatImpl(stub, type) }
+    val FOR_B_STAT = LuaPlaceholderStub.Type("FOR_B_STAT") { stub, type -> LuaForBStatImpl(stub, type) }
 }

@@ -27,19 +27,33 @@ public class LuaSingleArgImpl extends LuaArgsImpl implements LuaSingleArg {
     super(stub, type, node);
   }
 
+  @Override
   public void accept(@NotNull LuaVisitor visitor) {
     visitor.visitSingleArg(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
+  @Nullable
+  public LuaLiteralExpr getLiteralExpr() {
+    return PsiTreeUtil.getStubChildOfType(this, LuaLiteralExpr.class);
+  }
+
+  @Override
+  @Nullable
+  public LuaTableExpr getTableExpr() {
+    return PsiTreeUtil.getStubChildOfType(this, LuaTableExpr.class);
+  }
+
+  @Override
   @NotNull
-  public LuaExpr getExpr() {
-    return notNullChild(PsiTreeUtil.getStubChildOfType(this, LuaExpr.class));
+  public LuaExpression<?> getExpression() {
+    return LuaPsiImplUtilKt.getExpression(this);
   }
 
 }

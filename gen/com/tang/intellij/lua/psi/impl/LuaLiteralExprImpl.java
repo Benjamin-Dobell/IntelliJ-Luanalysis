@@ -12,7 +12,6 @@ import com.tang.intellij.lua.psi.*;
 import com.tang.intellij.lua.stubs.LuaLiteralExprStub;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.tree.IElementType;
-import com.tang.intellij.lua.stubs.LuaExprStub;
 
 public class LuaLiteralExprImpl extends LuaLiteralExprMixin implements LuaLiteralExpr {
 
@@ -32,6 +31,7 @@ public class LuaLiteralExprImpl extends LuaLiteralExprMixin implements LuaLitera
     visitor.visitLiteralExpr(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);

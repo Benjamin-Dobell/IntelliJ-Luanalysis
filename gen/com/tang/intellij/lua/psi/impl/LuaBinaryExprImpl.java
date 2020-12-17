@@ -8,13 +8,12 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.psi.LuaTypes.*;
-import com.tang.intellij.lua.psi.*;
 import com.tang.intellij.lua.stubs.LuaBinaryExprStub;
+import com.tang.intellij.lua.psi.*;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.tree.IElementType;
-import com.tang.intellij.lua.stubs.LuaExprStub;
 
-public class LuaBinaryExprImpl extends LuaBinaryExprMixin implements LuaBinaryExpr {
+public class LuaBinaryExprImpl extends LuaExprMixin<LuaBinaryExprStub> implements LuaBinaryExpr {
 
   public LuaBinaryExprImpl(@NotNull LuaBinaryExprStub stub, @NotNull IStubElementType<?, ?> nodeType) {
     super(stub, nodeType);
@@ -32,6 +31,7 @@ public class LuaBinaryExprImpl extends LuaBinaryExprMixin implements LuaBinaryEx
     visitor.visitBinaryExpr(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);
@@ -41,12 +41,6 @@ public class LuaBinaryExprImpl extends LuaBinaryExprMixin implements LuaBinaryEx
   @NotNull
   public LuaBinaryOp getBinaryOp() {
     return notNullChild(PsiTreeUtil.getChildOfType(this, LuaBinaryOp.class));
-  }
-
-  @Override
-  @Nullable
-  public LuaExpr getExpr() {
-    return PsiTreeUtil.getStubChildOfType(this, LuaExpr.class);
   }
 
 }

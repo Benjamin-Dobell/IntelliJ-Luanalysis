@@ -40,7 +40,7 @@ abstract class FunctionIntention : BaseIntentionAction() {
         return isAvailable(bodyOwner, editor)
     }
 
-    abstract fun isAvailable(bodyOwner: LuaFuncBodyOwner, editor: Editor): Boolean
+    abstract fun isAvailable(bodyOwner: LuaFuncBodyOwner<*>, editor: Editor): Boolean
 
     @Throws(IncorrectOperationException::class)
     override fun invoke(project: Project, editor: Editor, psiFile: PsiFile) {
@@ -48,5 +48,5 @@ abstract class FunctionIntention : BaseIntentionAction() {
         if (bodyOwner != null) invoke(bodyOwner, editor)
     }
 
-    abstract fun invoke(bodyOwner: LuaFuncBodyOwner, editor: Editor)
+    abstract fun invoke(bodyOwner: LuaFuncBodyOwner<*>, editor: Editor)
 }

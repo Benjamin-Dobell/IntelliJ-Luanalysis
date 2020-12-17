@@ -34,9 +34,9 @@ class LuaStringArgHistoryProvider : LuaCompletionProvider() {
     }
 
     override fun addCompletions(session: CompletionSession) {
-        val argExpr = session.parameters.position.parent as? LuaExpr ?: return
+        val argExpr = session.parameters.position.parent as? LuaExpression<*> ?: return
         val callExpr = PsiTreeUtil.getParentOfType(session.parameters.position, LuaCallExpr::class.java) ?: return
-        val fnName = callExpr.expr.name ?: return
+        val fnName = callExpr.expression.name ?: return
         var index = callExpr.argList.indexOf(argExpr)
         index = if (callExpr.isMethodColonCall) index + 1 else index
         LuaStringArgIndex.processValues(

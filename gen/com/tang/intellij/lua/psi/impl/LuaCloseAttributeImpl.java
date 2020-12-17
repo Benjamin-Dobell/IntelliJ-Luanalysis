@@ -10,27 +10,21 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.psi.LuaTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.tang.intellij.lua.psi.*;
-import com.tang.intellij.lua.comment.psi.api.LuaComment;
 
-public class LuaStatementImpl extends ASTWrapperPsiElement implements LuaStatement {
+public class LuaCloseAttributeImpl extends ASTWrapperPsiElement implements LuaCloseAttribute {
 
-  public LuaStatementImpl(@NotNull ASTNode node) {
+  public LuaCloseAttributeImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull LuaVisitor visitor) {
-    visitor.visitStatement(this);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
-    else super.accept(visitor);
+    visitor.visitCloseAttribute(this);
   }
 
   @Override
-  @Nullable
-  public LuaComment getComment() {
-    return LuaPsiImplUtilKt.getComment(this);
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
+    else super.accept(visitor);
   }
 
 }

@@ -50,7 +50,7 @@ class SignatureInsertHandlerForString(sig: IFunSignature,
         val startOffset = insertionContext.startOffset
         val indexExpr = insertionContext.file.findElementAt(startOffset)?.parent as? LuaIndexExpr
         if (indexExpr != null) {
-            val prefixExpr = indexExpr.prefixExpr
+            val prefixExpr = indexExpr.prefixExpression
             if (prefixExpr is LuaLiteralExpr && prefixExpr.kind == LuaLiteralKind.String) {
                 val node = prefixExpr.node
                 insertionContext.document.insertString(node.startOffset + node.textLength, ")")

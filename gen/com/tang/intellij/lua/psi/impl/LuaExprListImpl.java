@@ -34,21 +34,22 @@ public class LuaExprListImpl extends StubBasedPsiElementBase<LuaPlaceholderStub>
     visitor.visitExprList(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
-  @NotNull
-  public List<LuaExpr> getExprList() {
-    return PsiTreeUtil.getStubChildrenOfTypeAsList(this, LuaExpr.class);
-  }
-
-  @Override
   @Nullable
   public ITy guessTypeAt(@NotNull SearchContext context) {
     return LuaPsiImplUtilKt.guessTypeAt(this, context);
+  }
+
+  @Override
+  @NotNull
+  public List<LuaExpression<?>> getExpressionList() {
+    return LuaPsiImplUtilKt.getExpressionList(this);
   }
 
 }

@@ -28,7 +28,7 @@ import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
 
 class MatchFunctionSignatureInspection : StrictInspection() {
-    data class ConcreteTypeInfo(val param: LuaExpr, val ty: ITy)
+    data class ConcreteTypeInfo(val param: LuaExpression<*>, val ty: ITy)
 
     override fun buildVisitor(myHolder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
         if (session.file.name.matches(LuaFileType.DEFINITION_FILE_REGEX)) {
@@ -43,7 +43,7 @@ class MatchFunctionSignatureInspection : StrictInspection() {
                     if (o.parent is LuaCallExpr && o.colon != null) {
                         // Guess parent types
                         val context = SearchContext.get(o.project)
-                        o.exprList.forEach { expr ->
+                        o.expressionList.forEach { expr ->
                             if (expr.guessType(context) == Ty.NIL) {
                                 // If parent type is nil add error
                                 myHolder.registerProblem(expr, "Trying to index a nil type.")
@@ -57,7 +57,7 @@ class MatchFunctionSignatureInspection : StrictInspection() {
                 super.visitCallExpr(o)
 
                 val searchContext = PsiSearchContext(o)
-                val prefixExpr = o.expr
+                val prefixExpr = o.expression
                 var resolvedTy = prefixExpr.guessType(searchContext)?.let { Ty.resolve(it, searchContext) } ?: Ty.UNKNOWN
 
                 if (resolvedTy is TyUnion && resolvedTy.size == 2 && resolvedTy.getChildTypes().last().isAnonymous) {

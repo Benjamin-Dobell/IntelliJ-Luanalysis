@@ -33,9 +33,9 @@ class LuaCurrentFunctionNameMacro : Macro() {
         while (e != null && e !is PsiFile) {
             e = e.parent
             when (e) {
-                is LuaClassMethodDef -> return TextResult(e.classMethodName.text)
-                is LuaFuncDef -> return TextResult(e.name ?: "")
-                is LuaLocalFuncDef -> return TextResult(e.name ?: "")
+                is LuaClassMethodDefStat -> return TextResult(e.classMethodName.text)
+                is LuaFuncDefStat -> return TextResult(e.name ?: "")
+                is LuaLocalFuncDefStat -> return TextResult(e.name ?: "")
             }
         }
         return null
@@ -47,9 +47,9 @@ class LuaCurrentFunctionNameMacro : Macro() {
         while (e != null && e !is PsiFile) {
             e = e.parent
             when (e) {
-                is LuaClassMethodDef -> list.add(LookupElementBuilder.create(e.classMethodName.text))
-                is LuaFuncDef -> e.name?.let { list.add(LookupElementBuilder.create(it)) }
-                is LuaLocalFuncDef -> e.name?.let { list.add(LookupElementBuilder.create(it)) }
+                is LuaClassMethodDefStat -> list.add(LookupElementBuilder.create(e.classMethodName.text))
+                is LuaFuncDefStat -> e.name?.let { list.add(LookupElementBuilder.create(it)) }
+                is LuaLocalFuncDefStat -> e.name?.let { list.add(LookupElementBuilder.create(it)) }
             }
         }
         return list.toTypedArray()

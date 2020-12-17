@@ -46,10 +46,10 @@ class LuaBreadcrumbsProvider : BreadcrumbsProvider {
                     is LuaFuncBody ->{
                         val parent2 = blockParent.parent
                         when (parent2) {
-                            is LuaClassMethodDef -> "${parent2.classMethodName.text}${parent2.paramSignature}"
+                            is LuaClassMethodDefStat -> "${parent2.classMethodName.text}${parent2.paramSignature}"
                             is LuaClosureExpr -> "function${parent2.paramSignature}"
-                            is LuaFuncDef -> "function${parent2.paramSignature}"
-                            is LuaLocalFuncDef -> "local function ${parent2.name}"
+                            is LuaFuncDefStat -> "function${parent2.paramSignature}"
+                            is LuaLocalFuncDefStat -> "local function ${parent2.name}"
                             else -> "<?>"
                         }
                     }

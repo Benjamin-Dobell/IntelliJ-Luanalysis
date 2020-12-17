@@ -25,10 +25,7 @@ import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.refactoring.RefactoringFactory
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.psi.LuaDocPsiElement
-import com.tang.intellij.lua.psi.LuaLocalDef
-import com.tang.intellij.lua.psi.LuaLocalFuncDef
-import com.tang.intellij.lua.psi.LuaParamNameDef
-import com.tang.intellij.lua.psi.LuaVisitor
+import com.tang.intellij.lua.psi.*
 import org.jetbrains.annotations.Nls
 
 /**
@@ -39,7 +36,7 @@ class RemoveUnusedLocal : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
         return object : LuaVisitor() {
 
-            override fun visitParamNameDef(o: LuaParamNameDef) {
+            override fun visitParamDef(o: LuaParamDef) {
                 if (o.textMatches(Constants.WORD_UNDERLINE))
                     return
                 val search = ReferencesSearch.search(o, o.useScope)
@@ -58,24 +55,23 @@ class RemoveUnusedLocal : LocalInspectionTool() {
                 }
             }
 
-            override fun visitLocalDef(o: LuaLocalDef) {
-                val list = o.nameList?.nameDefList ?: return
-                list.forEach { name ->
-                    if (!name.textMatches(Constants.WORD_UNDERLINE)) {
-                        val search = ReferencesSearch.search(name, name.useScope)
+            override fun visitLocalDefStat(o: LuaLocalDefStat) {
+                o.localDefList.forEach { localDef ->
+                    if (localDef.name != Constants.WORD_UNDERLINE) {
+                        val search = ReferencesSearch.search(localDef, localDef.useScope)
                         if (search.findFirst() == null) {
-                            if (list.size == 1) {
-                                val offset = name.node.startOffset - o.node.startOffset
-                                val textRange = TextRange(offset, offset + name.textLength)
+                            if (o.localDefList.size == 1) {
+                                val offset = localDef.node.startOffset - o.node.startOffset
+                                val textRange = TextRange(offset, offset + localDef.textLength)
                                 holder.registerProblem(o,
-                                        "Unused local : '${name.text}'",
+                                        "Unused local : '${localDef.text}'",
                                         ProblemHighlightType.LIKE_UNUSED_SYMBOL,
                                         textRange,
-                                        RemoveFix("Remove unused local '${name.text}'"),
+                                        RemoveFix("Remove unused local '${localDef.text}'"),
                                         RenameToUnderlineFix())
                             } else {
-                                holder.registerProblem(name,
-                                        "Unused local : '${name.text}'",
+                                holder.registerProblem(localDef,
+                                        "Unused local : '${localDef.text}'",
                                         ProblemHighlightType.LIKE_UNUSED_SYMBOL,
                                         RenameToUnderlineFix())
                             }
@@ -84,7 +80,7 @@ class RemoveUnusedLocal : LocalInspectionTool() {
                 }
             }
 
-            override fun visitLocalFuncDef(o: LuaLocalFuncDef) {
+            override fun visitLocalFuncDefStat(o: LuaLocalFuncDefStat) {
                 val name = o.nameIdentifier
 
                 if (name != null) {

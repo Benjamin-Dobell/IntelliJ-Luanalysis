@@ -67,10 +67,10 @@ class LuaDocCompletionContributor : CompletionContributor() {
 
                 if (element is LuaDocPsiElement) {
                     val owner = LuaCommentUtil.findOwner(element)
-                    if (owner is LuaFuncBodyOwner) {
+                    if (owner is LuaFuncBodyOwner<*>) {
                         val body = owner.funcBody
                         if (body != null) {
-                            val parDefList = body.paramNameDefList
+                            val parDefList = body.paramDefList
                             for (def in parDefList) {
                                 completionResultSet.addElement(
                                         LookupElementBuilder.create(def.text)

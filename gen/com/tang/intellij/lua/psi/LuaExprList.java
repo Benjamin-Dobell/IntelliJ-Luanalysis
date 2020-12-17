@@ -11,10 +11,10 @@ import com.tang.intellij.lua.ty.ITy;
 
 public interface LuaExprList extends LuaPsiElement, StubBasedPsiElement<LuaPlaceholderStub> {
 
-  @NotNull
-  List<LuaExpr> getExprList();
-
   @Nullable
   ITy guessTypeAt(@NotNull SearchContext context);
+
+  @NotNull
+  List<LuaExpression<?>> getExpressionList();
 
 }

@@ -21,14 +21,14 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceBase
 import com.tang.intellij.lua.psi.LuaClassMethod
 
-class LuaOverridingMethodReference(val methodDef: LuaClassMethod, val target: LuaClassMethod)
-    : PsiReferenceBase<LuaClassMethod>(methodDef) {
+class LuaOverridingMethodReference(val classMethod: LuaClassMethod<*>, val target: LuaClassMethod<*>)
+    : PsiReferenceBase<LuaClassMethod<*>>(classMethod) {
     override fun getVariants(): Array<Any> {
         return arrayOf()
     }
 
     override fun getRangeInElement(): TextRange {
-        val id = methodDef.nameIdentifier!!
+        val id = classMethod.nameIdentifier!!
         val start = id.node.startOffset - myElement.node.startOffset
         return TextRange(start, start + id.textLength)
     }

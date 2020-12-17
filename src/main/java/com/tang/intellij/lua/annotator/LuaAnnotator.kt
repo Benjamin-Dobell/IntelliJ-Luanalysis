@@ -67,7 +67,7 @@ class LuaAnnotator : Annotator {
     internal inner class LuaElementVisitor : LuaVisitor() {
 
         override fun visitExprStat(o: LuaExprStat) {
-            if (o.expr !is LuaCallExpr) {
+            if (o.expression !is LuaCallExpr) {
                 if (o.containingFile !is LuaExprCodeFragment) {
                     myHolder!!.newAnnotation(HighlightSeverity.ERROR, "syntax error").range(o).create()
                 }
@@ -76,7 +76,7 @@ class LuaAnnotator : Annotator {
             }
         }
 
-        override fun visitLocalFuncDef(o: LuaLocalFuncDef) {
+        override fun visitLocalFuncDefStat(o: LuaLocalFuncDefStat) {
             val name = o.nameIdentifier
 
             if (name != null) {
@@ -87,19 +87,18 @@ class LuaAnnotator : Annotator {
         }
 
         override fun visitLocalDef(o: LuaLocalDef) {
-            val nameList = o.nameList
-            if (nameList != null) {
-                var child: PsiElement? = nameList.firstChild
-                while (child != null) {
-                    if (child is LuaNameDef) {
-                        createInfoAnnotation(child, "Local variable \"${child.name}\"")
-                                .textAttributes(LuaHighlightingData.LOCAL_VAR)
-                                .create()
-                    }
-                    child = child.nextSibling
+            createInfoAnnotation(o, "Local variable \"${o.name}\"")
+                    .textAttributes(LuaHighlightingData.LOCAL_VAR)
+                    .create()
+
+            arrayOf(o.close, o.const).forEach {
+                if (it != null) {
+                    myHolder!!.newSilentAnnotation(HighlightSeverity.INFORMATION)
+                            .range(it)
+                            .textAttributes(LuaHighlightingData.KEYWORD)
+                            .create()
                 }
             }
-            super.visitLocalDef(o)
         }
 
         override fun visitTableField(o: LuaTableField) {
@@ -112,7 +111,7 @@ class LuaAnnotator : Annotator {
             }
         }
 
-        override fun visitFuncDef(o: LuaFuncDef) {
+        override fun visitFuncDefStat(o: LuaFuncDefStat) {
             val name = o.nameIdentifier ?: return
 
             if (isModuleFile) {
@@ -138,7 +137,7 @@ class LuaAnnotator : Annotator {
                     .create()
         }
 
-        override fun visitParamNameDef(o: LuaParamNameDef) {
+        override fun visitParamDef(o: LuaParamDef) {
             createInfoAnnotation(o, "Parameter : \"${o.name}\"")
                     .textAttributes(LuaHighlightingData.PARAMETER)
                     .create()
@@ -161,13 +160,13 @@ class LuaAnnotator : Annotator {
                 }
             }
 
-            if (res is LuaParamNameDef) {
+            if (res is LuaParamDef) {
                 if (!checkUpValue(o)) {
                     createInfoAnnotation(id, "Parameter : \"${res.name}\"")
                             .textAttributes(LuaHighlightingData.PARAMETER)
                             .create()
                 }
-            } else if (res is LuaFuncDef) {
+            } else if (res is LuaFuncDefStat) {
                 val resolvedFile = res.containingFile
                 if (resolvedFile !is LuaPsiFile || resolvedFile.getModuleName(context) == null) {
                     createInfoAnnotation(id, "Global function : \"${res.name}\"")
@@ -183,13 +182,13 @@ class LuaAnnotator : Annotator {
                                 .textAttributes(LuaHighlightingData.SELF)
                                 .create()
                     }
-                } else if (res is LuaNameDef) {
+                } else if (res is LuaLocalDef) {
                     if (!checkUpValue(o)) {
                         createInfoAnnotation(id, "Local variable \"${o.name}\"")
                                 .textAttributes(LuaHighlightingData.LOCAL_VAR)
                                 .create()
                     }
-                } else if (res is LuaLocalFuncDef) {
+                } else if (res is LuaLocalFuncDefStat) {
                     if (!checkUpValue(o)) {
                         createInfoAnnotation(id, "Local function \"${o.name}\"")
                                 .textAttributes(LuaHighlightingData.LOCAL_VAR)
@@ -222,7 +221,7 @@ class LuaAnnotator : Annotator {
 
         override fun visitIndexExpr(o: LuaIndexExpr) {
             super.visitIndexExpr(o)
-            val prefix = o.prefixExpr
+            val prefix = o.prefixExpression
             if (prefix is LuaNameExpr && prefix.getUserData(STD_MARKER) != null) {
                 createInfoAnnotation(o, "Std apis")
                         .textAttributes(LuaHighlightingData.STD_API)

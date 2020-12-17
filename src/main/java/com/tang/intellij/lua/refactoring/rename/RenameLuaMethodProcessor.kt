@@ -32,11 +32,11 @@ import com.tang.intellij.lua.psi.search.LuaOverridingMethodsSearch
  */
 class RenameLuaMethodProcessor : RenamePsiElementProcessor() {
     override fun canProcessElement(psiElement: PsiElement): Boolean {
-        return psiElement is LuaClassMethod
+        return psiElement is LuaClassMethod<*>
     }
 
     override fun prepareRenaming(element: PsiElement, newName: String, allRenames: MutableMap<PsiElement, String>, scope: SearchScope) {
-        val methodDef = element as LuaClassMethod
+        val classMethod = element as LuaClassMethod<*>
 
         /**
          * bug fix #167
@@ -46,7 +46,7 @@ class RenameLuaMethodProcessor : RenamePsiElementProcessor() {
          */
         FileDocumentManager.getInstance().saveAllDocuments()
 
-        val search = MergeQuery(LuaOverridingMethodsSearch.search(methodDef), LuaOverridenMethodsSearch.search(methodDef))
+        val search = MergeQuery(LuaOverridingMethodsSearch.search(classMethod), LuaOverridenMethodsSearch.search(classMethod))
         search.forEach {
             allRenames[it] = newName
 

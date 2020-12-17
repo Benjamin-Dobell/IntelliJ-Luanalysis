@@ -64,7 +64,7 @@ class LuaClosureExprStub(
         override val params: Array<LuaParamInfo>,
         override val overloads: Array<IFunSignature>,
         parent: StubElement<*>?
-) : LuaStubBase<LuaClosureExpr>(parent, LuaElementTypes.CLOSURE_EXPR), LuaFuncBodyOwnerStub<LuaClosureExpr>, LuaExprStub<LuaClosureExpr> {
-    override val genericParams: Array<TyGenericParameter>?
+) : LuaExprStub<LuaClosureExpr>(parent, LuaElementTypes.CLOSURE_EXPR), LuaFuncBodyOwnerStub<LuaClosureExpr> {
+    override val genericParams: Array<TyGenericParameter>
         get() = emptyArray()
 }

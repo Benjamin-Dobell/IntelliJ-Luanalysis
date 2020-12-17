@@ -51,7 +51,7 @@ class LocalAndGlobalCompletionProvider(private val mask: Int) : ClassMemberCompl
             })
         }
         when (psi) {
-            is LuaFuncBodyOwner -> {
+            is LuaFuncBodyOwner<*> -> {
                 psi.guessType(ctx)?.let {
                     TyUnion.each(it) {
                         if (it is ITyFunction) {
@@ -76,7 +76,7 @@ class LocalAndGlobalCompletionProvider(private val mask: Int) : ClassMemberCompl
                 }
                 if (!isFn) {
                     var icon = LuaIcons.LOCAL_VAR
-                    if (psi is LuaParamNameDef)
+                    if (psi is LuaParamDef)
                         icon = LuaIcons.PARAMETER
 
                     val elementBuilder = LookupElementFactory.createGuessableLookupElement(name, psi, type, icon)
@@ -109,13 +109,13 @@ class LocalAndGlobalCompletionProvider(private val mask: Int) : ClassMemberCompl
         //local
         if (has(LOCAL_FUN) || has(LOCAL_VAR)) {
             LuaDeclarationTree.get(cur.containingFile).walkUpLocal(cur) {
-                val nameDef = it.psi
+                val localDef = it.psi
                 val name = it.name
-                if (nameDef is LuaPsiElement &&
+                if (localDef is LuaPsiElement &&
                         completionResultSet.prefixMatcher.prefixMatches(name) &&
                         localNamesSet.add(name)) {
                     session.addWord(name)
-                    addCompletion(name, session, nameDef)
+                    addCompletion(name, session, localDef)
                 }
                 true
             }

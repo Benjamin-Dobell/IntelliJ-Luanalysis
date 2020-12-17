@@ -29,7 +29,7 @@ import org.jetbrains.annotations.Nls
 
 
 class CreateFunctionReturnAnnotationIntention : FunctionIntention() {
-    override fun isAvailable(bodyOwner: LuaFuncBodyOwner, editor: Editor): Boolean {
+    override fun isAvailable(bodyOwner: LuaFuncBodyOwner<*>, editor: Editor): Boolean {
         if (bodyOwner is LuaCommentOwner) {
             val comment = bodyOwner.comment
             return comment == null || PsiTreeUtil.getChildrenOfType(comment, LuaDocTagReturn::class.java) == null
@@ -42,7 +42,7 @@ class CreateFunctionReturnAnnotationIntention : FunctionIntention() {
 
     override fun getText() = "Create return annotation"
 
-    override fun invoke(bodyOwner: LuaFuncBodyOwner, editor: Editor) {
+    override fun invoke(bodyOwner: LuaFuncBodyOwner<*>, editor: Editor) {
         if (bodyOwner is LuaCommentOwner) {
             LuaCommentUtil.insertTemplate(bodyOwner, editor) { _, template ->
                 template.addTextSegment("---@return ")

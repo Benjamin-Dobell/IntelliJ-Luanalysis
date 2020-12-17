@@ -13,21 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.tang.intellij.lua.psi
 
-package com.tang.intellij.lua.psi.impl
+import com.tang.intellij.lua.comment.LuaCommentUtil
+import com.tang.intellij.lua.comment.psi.api.LuaComment
 
-import com.intellij.lang.ASTNode
-import com.intellij.psi.stubs.IStubElementType
-import com.intellij.psi.tree.IElementType
-import com.tang.intellij.lua.stubs.LuaExprPlaceStub
-
-open class LuaCallExprMixin : LuaExprStubMixin<LuaExprPlaceStub> {
-
-    constructor(stub: LuaExprPlaceStub, nodeType: IStubElementType<*, *>)
-            : super(stub, nodeType)
-
-    constructor(node: ASTNode) : super(node)
-
-    constructor(stub: LuaExprPlaceStub, nodeType: IElementType, node: ASTNode)
-            : super(stub, nodeType, node)
+/**
+ *
+ * Created by TangZX on 2016/11/24.
+ */
+interface LuaCommentOwner : LuaPsiElement {
+    val comment: LuaComment?
+        get() = LuaCommentUtil.findComment(this)
 }

@@ -131,7 +131,7 @@ open class LuaScriptBlock(val psi: PsiElement,
             is LuaIndentRange -> LuaIndentBlock(element, wrap, alignment, childIndent, ctx)
             is LuaIndexExpr -> LuaIndexExprBlock(element, wrap, alignment, childIndent, ctx)
             is LuaAssignStat,
-            is LuaLocalDef -> LuaAssignBlock(element, wrap, alignment, childIndent, ctx)
+            is LuaLocalDefStat -> LuaAssignBlock(element, wrap, alignment, childIndent, ctx)
             else -> LuaScriptBlock(element, wrap, alignment, childIndent, ctx)
         }
         block.parent = this

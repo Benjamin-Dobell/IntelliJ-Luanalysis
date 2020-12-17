@@ -98,7 +98,7 @@ class LuaNameExprType : LuaStubElementType<LuaNameExprStub, LuaNameExpr>("NAME_E
     }
 }
 
-interface LuaNameExprStub : LuaExprStub<LuaNameExpr>, LuaDocTyStub {
+interface LuaNameExprStub : StubElement<LuaNameExpr>, LuaDocTyStub {
     val name: String
     val module: String
     val isName: Boolean

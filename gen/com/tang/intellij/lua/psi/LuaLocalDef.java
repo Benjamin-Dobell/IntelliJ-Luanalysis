@@ -4,22 +4,32 @@ package com.tang.intellij.lua.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.StubBasedPsiElement;
-import com.tang.intellij.lua.stubs.LuaPlaceholderStub;
-import com.tang.intellij.lua.comment.psi.api.LuaComment;
+import com.tang.intellij.lua.stubs.LuaLocalDefStub;
+import com.intellij.psi.search.SearchScope;
 
-public interface LuaLocalDef extends LuaDeclaration, LuaStatement, LuaDeclarationScope, LuaTypeScope, LuaCommentOwner, StubBasedPsiElement<LuaPlaceholderStub> {
+public interface LuaLocalDef extends LuaNamedElement, LuaTypeGuessable, PsiNameIdentifierOwner, StubBasedPsiElement<LuaLocalDefStub> {
+
+  @NotNull
+  PsiElement getId();
+
+  @NotNull
+  String getName();
+
+  @NotNull
+  PsiElement setName(@NotNull String name);
+
+  @NotNull
+  PsiElement getNameIdentifier();
+
+  @NotNull
+  SearchScope getUseScope();
 
   @Nullable
-  LuaExprList getExprList();
+  LuaCloseAttribute getClose();
 
   @Nullable
-  LuaNameList getNameList();
-
-  @Nullable
-  LuaComment getComment();
-
-  @Nullable
-  PsiElement getAssign();
+  LuaConstAttribute getConst();
 
 }

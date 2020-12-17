@@ -21,7 +21,6 @@ import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiBuilderFactory;
 import com.intellij.lang.PsiParser;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.tree.CustomParsingType;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.ILazyParseableElementType;
@@ -59,8 +58,8 @@ public class LuaElementType extends IElementType {
         }
     };
 
-    public static LuaStubElementType FUNC_DEF = new LuaFuncType();
-    public static LuaStubElementType CLASS_METHOD_DEF = new LuaClassMethodType();
+    public static LuaStubElementType FUNC_DEF_STAT = new LuaFuncType();
+    public static LuaStubElementType CLASS_METHOD_DEF_STAT = new LuaClassMethodType();
     public static LuaStubElementType CLASS_FIELD_DEF = new LuaDocTagFieldType();
     public static LuaStubElementType TYPE_DEF = new LuaDocTagTypeType();
     public static LuaStubElementType CLASS_DEF = new LuaDocTagClassType();
@@ -100,7 +99,7 @@ public class LuaElementType extends IElementType {
         }
     }
 
-    public static LuaNameDefElementType NAME_DEF = new LuaNameDefElementType();
-    public static ParamNameDefElementType PARAM_NAME_DEF = new ParamNameDefElementType();
+    public static LuaLocalDefElementType LOCAL_DEF = new LuaLocalDefElementType();
+    public static LuaParamDefElementType PARAM_DEF = new LuaParamDefElementType();
     public static LuaLiteralElementType LITERAL_EXPR = new LuaLiteralElementType();
 }

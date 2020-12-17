@@ -72,8 +72,8 @@ class LuaRequireReference internal constructor(callExpr: LuaCallExpr) : PsiRefer
         if (filePsi != null) {
             val returnStatement = filePsi.returnStatement()
 
-            if (returnStatement != null && returnStatement.exprList?.exprList?.size == 1) {
-                val resolvedNameExpr = returnStatement.exprList!!.exprList.first() as? LuaNameExpr
+            if (returnStatement != null && returnStatement.exprList?.expressionList?.size == 1) {
+                val resolvedNameExpr = returnStatement.exprList!!.expressionList.first() as? LuaNameExpr
 
                 return if (resolvedNameExpr != null) {
                     resolveInFile(resolvedNameExpr.name, resolvedNameExpr, SearchContext.get(myElement.project))
@@ -99,7 +99,7 @@ class LuaRequireReference internal constructor(callExpr: LuaCallExpr) : PsiRefer
     fun setPath(luaPath: String) {
         if (path != null) {
             val stat = LuaElementFactory.createWith(myElement.project, "require $quot$luaPath$quot") as LuaExprStat
-            val stringArg = (stat.expr as? LuaCallExpr)?.firstStringArg
+            val stringArg = (stat.expression as? LuaCallExpr)?.firstStringArg
             if (stringArg != null)
                 path.replace(stringArg)
         }

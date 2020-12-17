@@ -41,7 +41,7 @@ class AssignTypeInspection : StrictInspection() {
                     }
                 }
 
-                private fun inspectAssignee(assignee: LuaTypeGuessable, value: ITy, varianceFlags: Int, targetElement: PsiElement?, expressionElement: LuaExpr, context: SearchContext, processProblem: ProcessProblem) {
+                private fun inspectAssignee(assignee: LuaTypeGuessable, value: ITy, varianceFlags: Int, targetElement: PsiElement?, expressionElement: LuaExpression<*>, context: SearchContext, processProblem: ProcessProblem) {
                     if (assignee is LuaIndexExpr) {
                         // Get owner class
                         val fieldOwnerType = assignee.guessParentType(context)
@@ -83,6 +83,15 @@ class AssignTypeInspection : StrictInspection() {
                             }
                         }
                     } else {
+                        if (assignee is LuaNameExpr) {
+                            val tree = LuaDeclarationTree.get(assignee.containingFile)
+                            (tree.find(assignee)?.firstDeclaration?.psi as? LuaLocalDef)?.let {
+                                if (it.const != null || it.close != null) {
+                                    processProblem(null, assignee, "Attempt to assign to const variable", ProblemHighlightType.ERROR)
+                                }
+                            }
+                        }
+
                         val variableType = assignee.guessType(context)
 
                         if (variableType == null || (variableType is TyTable && value is TyTable && variableType.table == value.table)) {
@@ -93,7 +102,7 @@ class AssignTypeInspection : StrictInspection() {
                     }
                 }
 
-                fun inspectAssignment(assignees: List<LuaTypeGuessable>, expressions: List<LuaExpr>?) {
+                fun inspectAssignment(assignees: List<LuaTypeGuessable>, expressions: List<LuaExpression<*>>?) {
                     if (expressions == null || expressions.size == 0) {
                         return
                     }
@@ -166,7 +175,7 @@ class AssignTypeInspection : StrictInspection() {
                                 value = variadicTy
                             }
 
-                            if (assignees.size == 1 && (assignee.parent?.parent as? LuaCommentOwner)?.comment?.tagClass != null) {
+                            if (assignees.size == 1 && (assignee.parent as? LuaCommentOwner)?.comment?.tagClass != null) {
                                 if (value !is TyTable) {
                                     myHolder.registerProblem(expression, "Type mismatch. Required: 'table' Found: '%s'".format(value.displayName))
                                 }
@@ -215,16 +224,12 @@ class AssignTypeInspection : StrictInspection() {
 
                 override fun visitAssignStat(o: LuaAssignStat) {
                     super.visitAssignStat(o)
-                    inspectAssignment(o.varExprList.exprList, o.valueExprList?.exprList)
+                    inspectAssignment(o.varExprList.expressionList, o.valueExprList?.expressionList)
                 }
 
-                override fun visitLocalDef(o: LuaLocalDef) {
-                    super.visitLocalDef(o)
-                    val nameList = o.nameList
-
-                    if (nameList != null) {
-                        inspectAssignment(nameList.nameDefList, o.exprList?.exprList)
-                    }
+                override fun visitLocalDefStat(o: LuaLocalDefStat) {
+                    super.visitLocalDefStat(o)
+                    inspectAssignment(o.localDefList, o.exprList?.expressionList)
                 }
             }
 }

@@ -48,7 +48,7 @@ class LuaIntroduceVarHandler : RefactoringActionHandler {
         var isReplaceAll: Boolean = false
         var name = "var"
         var newOccurrences = mutableListOf<PsiElement>()
-        var newNameElement: LuaNameDef? = null
+        var newNameElement: LuaLocalDef? = null
         var position: PsiElement? = null
     }
 
@@ -60,10 +60,10 @@ class LuaIntroduceVarHandler : RefactoringActionHandler {
 
     }
 
-    operator fun invoke(project: Project, editor: Editor, expr: LuaExpr) {
-        val occurrences = getOccurrences(expr)
-        val operation = IntroduceOperation(expr, project, editor, expr.containingFile, occurrences)
-        OccurrencesChooser.simpleChooser<PsiElement>(editor).showChooser(expr, occurrences, object : Pass<OccurrencesChooser.ReplaceChoice>() {
+    operator fun invoke(project: Project, editor: Editor, expression: LuaExpression<*>) {
+        val occurrences = getOccurrences(expression)
+        val operation = IntroduceOperation(expression, project, editor, expression.containingFile, occurrences)
+        OccurrencesChooser.simpleChooser<PsiElement>(editor).showChooser(expression, occurrences, object : Pass<OccurrencesChooser.ReplaceChoice>() {
             override fun pass(choice: OccurrencesChooser.ReplaceChoice) {
                 operation.isReplaceAll = choice == OccurrencesChooser.ReplaceChoice.ALL
                 WriteCommandAction.runWriteCommandAction(operation.project) { performReplace(operation) }
@@ -72,8 +72,8 @@ class LuaIntroduceVarHandler : RefactoringActionHandler {
         })
     }
 
-    private fun getOccurrences(expr: LuaExpr): List<PsiElement> {
-        return LuaRefactoringUtil.getOccurrences(expr, expr.containingFile)
+    private fun getOccurrences(expression: LuaExpression<*>): List<PsiElement> {
+        return LuaRefactoringUtil.getOccurrences(expression, expression.containingFile)
     }
 
     private fun findAnchor(occurrences: List<PsiElement>?): PsiElement? {
@@ -107,18 +107,18 @@ class LuaIntroduceVarHandler : RefactoringActionHandler {
         var commonParent = PsiTreeUtil.findCommonParent(operation.occurrences)
         if (commonParent != null) {
             var element = operation.element
-            var localDef = LuaElementFactory.createWith(operation.project, "local var = " + element.text)
+            var localDefStat = LuaElementFactory.createWith(operation.project, "local var = " + element.text)
             val inline = isInline(commonParent, operation)
             if (inline) {
                 if (element is LuaCallExpr && element.parent is LuaExprStat)
                     element = element.parent
-                localDef = element.replace(localDef)
-                operation.position = localDef
+                localDefStat = element.replace(localDefStat)
+                operation.position = localDefStat
             } else {
                 val anchor = findAnchor(operation.occurrences)
                 commonParent = anchor?.parent
-                localDef = commonParent!!.addBefore(localDef, anchor)
-                commonParent.addAfter(LuaElementFactory.newLine(operation.project), localDef)
+                localDefStat = commonParent!!.addBefore(localDefStat, anchor)
+                commonParent.addAfter(LuaElementFactory.newLine(operation.project), localDefStat)
                 operation.occurrences.forEach { occ->
                     var identifier = LuaElementFactory.createName(operation.project, operation.name)
                     identifier = occ.replace(identifier)
@@ -128,11 +128,11 @@ class LuaIntroduceVarHandler : RefactoringActionHandler {
                 }
             }
 
-            localDef = CodeInsightUtilCore.forcePsiPostprocessAndRestoreElement(localDef)
-            val nameDef = PsiTreeUtil.findChildOfType(localDef, LuaNameDef::class.java)
-            if (nameDef != null)
-                operation.editor.caretModel.moveToOffset(nameDef.textOffset)
-            operation.newNameElement = nameDef
+            localDefStat = CodeInsightUtilCore.forcePsiPostprocessAndRestoreElement(localDefStat)
+            val localDef = PsiTreeUtil.findChildOfType(localDefStat, LuaLocalDef::class.java)
+            if (localDef != null)
+                operation.editor.caretModel.moveToOffset(localDef.textOffset)
+            operation.newNameElement = localDef
         }
     }
 

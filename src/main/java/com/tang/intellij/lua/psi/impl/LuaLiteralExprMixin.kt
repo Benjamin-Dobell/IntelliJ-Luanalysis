@@ -48,7 +48,7 @@ internal class TextEscaper(host: LuaLiteralExprMixin) : LiteralTextEscaper<LuaLi
 }
 
 abstract class LuaLiteralExprMixin
-    : LuaExprStubMixin<LuaLiteralExprStub>, PsiLanguageInjectionHost, LuaLiteralExpr {
+    : LuaExprMixin<LuaLiteralExprStub>, PsiLanguageInjectionHost, LuaLiteralExpr {
 
     constructor(stub: LuaLiteralExprStub, nodeType: IStubElementType<*, *>)
             : super(stub, nodeType)

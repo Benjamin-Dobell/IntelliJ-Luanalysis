@@ -22,17 +22,17 @@ import com.intellij.psi.stubs.StubElement
 import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.io.StringRef
-import com.tang.intellij.lua.psi.LuaLocalFuncDef
+import com.tang.intellij.lua.psi.LuaLocalFuncDefStat
 import com.tang.intellij.lua.psi.LuaParamInfo
-import com.tang.intellij.lua.psi.impl.LuaLocalFuncDefImpl
+import com.tang.intellij.lua.psi.impl.LuaLocalFuncDefStatImpl
 import com.tang.intellij.lua.psi.overloads
 import com.tang.intellij.lua.psi.genericParams
 import com.tang.intellij.lua.ty.IFunSignature
 import com.tang.intellij.lua.ty.ITy
 import com.tang.intellij.lua.ty.TyGenericParameter
 
-class LuaLocalFuncDefElementType
-    : LuaStubElementType<LuaLocalFuncDefStub, LuaLocalFuncDef>("LOCAL_FUNC_DEF") {
+class LuaLocalFuncDefStatElementType
+    : LuaStubElementType<LuaLocalFuncDefStub, LuaLocalFuncDefStat>("LOCAL_FUNC_DEF_STAT") {
     override fun serialize(stub: LuaLocalFuncDefStub, stream: StubOutputStream) {
         stream.writeName(stub.name)
         stream.writeTyNullable(stub.returnDocTy)
@@ -43,11 +43,11 @@ class LuaLocalFuncDefElementType
     }
 
     override fun shouldCreateStub(node: ASTNode): Boolean {
-        val psi = node.psi as LuaLocalFuncDef
+        val psi = node.psi as LuaLocalFuncDefStat
         return createStubIfParentIsStub(node) && psi.name != null
     }
 
-    override fun createStub(def: LuaLocalFuncDef, parentStub: StubElement<*>?): LuaLocalFuncDefStub {
+    override fun createStub(def: LuaLocalFuncDefStat, parentStub: StubElement<*>?): LuaLocalFuncDefStub {
         val retDocTy = def.comment?.tagReturn?.type
         val params = def.params
         val genericParams = def.genericParams
@@ -83,8 +83,8 @@ class LuaLocalFuncDefElementType
 
     }
 
-    override fun createPsi(stub: LuaLocalFuncDefStub): LuaLocalFuncDef {
-        return LuaLocalFuncDefImpl(stub, this)
+    override fun createPsi(stub: LuaLocalFuncDefStub): LuaLocalFuncDefStat {
+        return LuaLocalFuncDefStatImpl(stub, this)
     }
 }
 
@@ -97,4 +97,4 @@ class LuaLocalFuncDefStub(
         override val overloads: Array<IFunSignature>,
         parent: StubElement<*>?,
         type: LuaStubElementType<*, *>
-) : LuaStubBase<LuaLocalFuncDef>(parent, type), LuaFuncBodyOwnerStub<LuaLocalFuncDef>
+) : LuaStubBase<LuaLocalFuncDefStat>(parent, type), LuaFuncBodyOwnerStub<LuaLocalFuncDefStat>

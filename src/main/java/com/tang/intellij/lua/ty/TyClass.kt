@@ -285,12 +285,6 @@ abstract class TyClass(override val className: String,
         // for _G
         val G: TyClass = createSerializedClass(Constants.WORD_G)
 
-        fun createAnonymousType(nameDef: LuaNameDef): TyClass {
-            val stub = nameDef.stub
-            val tyName = stub?.anonymousType ?: getAnonymousType(nameDef)
-            return createSerializedClass(tyName, null, nameDef.name, null, null, null, TyFlags.ANONYMOUS)
-        }
-
         fun createGlobalType(name: String): ITy {
             return createSerializedClass(getGlobalTypeName(name), null, name, null, null, null, TyFlags.GLOBAL)
         }
@@ -387,7 +381,7 @@ fun createTableGenericFromMembers(ty: ITy, context: SearchContext): ITyGeneric {
         val indexType = classMember.indexType
 
         if (classMember is LuaTableField) {
-            val exprList = classMember.exprList
+            val exprList = classMember.expressionList
 
             if (exprList.size == 2) {
                 keyType = context.withIndex(0) {
@@ -459,8 +453,8 @@ fun getTableTypeName(table: LuaTableExpr): String {
     return "$fileName@(${table.node.startOffset})table"
 }
 
-fun getAnonymousType(nameDef: LuaNameDef): String {
-    return "${nameDef.node.startOffset}@${nameDef.containingFile.name}"
+fun getAnonymousTypeName(variableDef: LuaPsiElement): String {
+    return "${variableDef.node.startOffset}@${variableDef.containingFile.name}"
 }
 
 fun getSelfType(classTy: ITyClass): String {

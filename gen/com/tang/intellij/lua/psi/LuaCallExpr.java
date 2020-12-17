@@ -4,18 +4,33 @@ package com.tang.intellij.lua.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import com.tang.intellij.lua.stubs.LuaExprPlaceStub;
 import com.intellij.psi.StubBasedPsiElement;
-import com.tang.intellij.lua.stubs.LuaExprStub;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 
-public interface LuaCallExpr extends LuaExpr, StubBasedPsiElement<LuaExprStub> {
+public interface LuaCallExpr extends LuaExpression<LuaExprPlaceStub>, StubBasedPsiElement<LuaExprPlaceStub> {
 
   @NotNull
   LuaArgs getArgs();
 
-  @NotNull
-  LuaExpr getExpr();
+  @Nullable
+  LuaCallExpr getCallExpr();
+
+  @Nullable
+  LuaIndexExpr getIndexExpr();
+
+  @Nullable
+  LuaLiteralExpr getLiteralExpr();
+
+  @Nullable
+  LuaNameExpr getNameExpr();
+
+  @Nullable
+  LuaParenExpr getParenExpr();
+
+  @Nullable
+  LuaTableExpr getTableExpr();
 
   @Nullable
   ITy guessParentType(@NotNull SearchContext context);
@@ -28,5 +43,8 @@ public interface LuaCallExpr extends LuaExpr, StubBasedPsiElement<LuaExprStub> {
   boolean isMethodColonCall();
 
   boolean isFunctionCall();
+
+  @NotNull
+  LuaExpression<?> getExpression();
 
 }

@@ -8,9 +8,6 @@ import com.intellij.psi.PsiElement;
 public interface LuaRepeatStat extends LuaStatement, LuaLoop, LuaIndentRange, LuaDeclarationScope {
 
   @Nullable
-  LuaExpr getExpr();
-
-  @Nullable
   PsiElement getUntil();
 
 }

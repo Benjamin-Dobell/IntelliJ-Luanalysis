@@ -19,9 +19,9 @@ package com.tang.intellij.lua.reference
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceBase
-import com.tang.intellij.lua.psi.LuaFuncDef
+import com.tang.intellij.lua.psi.LuaFuncDefStat
 
-class LuaFuncForwardDecReference(def: LuaFuncDef, val resolve: PsiElement) : PsiReferenceBase<LuaFuncDef>(def){
+class LuaFuncForwardDecReference(def: LuaFuncDefStat, val resolve: PsiElement) : PsiReferenceBase<LuaFuncDefStat>(def){
     override fun resolve(): PsiElement? {
         return resolve
     }

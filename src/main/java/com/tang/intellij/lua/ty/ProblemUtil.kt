@@ -18,6 +18,7 @@ package com.tang.intellij.lua.ty
 
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
 
@@ -53,29 +54,16 @@ class Problem (
     }
 }
 
-// PsiTreeUtil has getDepth but was only introduced in IntelliJ 192.4787.16, we presently support 172.0
-private fun getDepth(element: PsiElement, topLevel: PsiElement?): Int {
-    var depth = 0
-    var parent: PsiElement? = element
-
-    while (parent !== topLevel && parent != null) {
-        ++depth
-        parent = parent.parent
-    }
-
-    return depth
-}
-
 object ProblemUtil {
     private fun findHighlightElement(element: PsiElement): PsiElement? {
         return when (element) {
             is LuaLiteralExpr -> element
             is LuaTableExpr -> element
             is LuaParenExpr -> {
-                return element.expr?.let { findHighlightElement(it) }
+                return element.expression?.let { findHighlightElement(it) }
             }
             is LuaTableField -> {
-                val valueExpr = element.exprList.last()
+                val valueExpr = element.expressionList.last()
                 return if (valueExpr is LuaParenExpr) findHighlightElement(valueExpr) else valueExpr
             }
             else -> null
@@ -461,7 +449,7 @@ object ProblemUtil {
             var candidateMinDepth = Int.MAX_VALUE
 
             candidateProblems.forEach {
-                val depth = getDepth(it.sourceElement, sourceElement)
+                val depth = PsiTreeUtil.getDepth(it.sourceElement, sourceElement)
 
                 if (depth < candidateMinDepth) {
                     candidateMinDepth = depth

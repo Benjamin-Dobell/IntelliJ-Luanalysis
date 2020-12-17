@@ -7,7 +7,13 @@ import com.intellij.psi.PsiElement;
 
 public interface LuaSingleArg extends LuaArgs {
 
+  @Nullable
+  LuaLiteralExpr getLiteralExpr();
+
+  @Nullable
+  LuaTableExpr getTableExpr();
+
   @NotNull
-  LuaExpr getExpr();
+  LuaExpression<?> getExpression();
 
 }

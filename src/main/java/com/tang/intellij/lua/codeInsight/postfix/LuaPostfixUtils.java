@@ -25,7 +25,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
-import com.tang.intellij.lua.psi.LuaExpr;
+import com.tang.intellij.lua.psi.LuaExpression;
 import com.tang.intellij.lua.psi.LuaExprStat;
 import com.tang.intellij.lua.psi.LuaParenExpr;
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +34,7 @@ import java.util.List;
 
 public class LuaPostfixUtils {
 
-    public static final Condition<PsiElement> IS_NON_PAR = (element) -> element instanceof LuaExpr && !(element instanceof LuaParenExpr);
+    public static final Condition<PsiElement> IS_NON_PAR = (element) -> element instanceof LuaExpression<?> && !(element instanceof LuaParenExpr);
 
     public static PostfixTemplateExpressionSelector selectorTopmost() {
         return selectorTopmost(Conditions.alwaysTrue());
@@ -47,7 +47,7 @@ public class LuaPostfixUtils {
                 LuaExprStat stat = PsiTreeUtil.getNonStrictParentOfType(psiElement, LuaExprStat.class);
                 PsiElement expr = null;
                 if (stat != null) {
-                    expr = stat.getExpr();
+                    expr = stat.getExpression();
                 }
 
                 return ContainerUtil.createMaybeSingletonList(expr);
@@ -63,12 +63,12 @@ public class LuaPostfixUtils {
         return new PostfixTemplateExpressionSelectorBase(additionalFilter) {
             @Override
             protected List<PsiElement> getNonFilteredExpressions(@NotNull PsiElement psiElement, @NotNull Document document, int i) {
-                LuaExpr expr = PsiTreeUtil.getNonStrictParentOfType(psiElement, LuaExpr.class);
+                LuaExpression<?> expr = PsiTreeUtil.getNonStrictParentOfType(psiElement, LuaExpression.class);
                 List<PsiElement> list = new SmartList<>();
                 while (expr != null) {
                     if (!PsiTreeUtil.hasErrorElements(expr))
                         list.add(expr);
-                    expr = PsiTreeUtil.getParentOfType(expr, LuaExpr.class);
+                    expr = PsiTreeUtil.getParentOfType(expr, LuaExpression.class);
                 }
                 return list;
             }

@@ -10,7 +10,7 @@ import com.tang.intellij.lua.stubs.LuaFuncBodyStub;
 public interface LuaFuncBody extends LuaIndentRange, LuaDeclarationScope, StubBasedPsiElement<LuaFuncBodyStub> {
 
   @NotNull
-  List<LuaParamNameDef> getParamNameDefList();
+  List<LuaParamDef> getParamDefList();
 
   @Nullable
   PsiElement getRparen();

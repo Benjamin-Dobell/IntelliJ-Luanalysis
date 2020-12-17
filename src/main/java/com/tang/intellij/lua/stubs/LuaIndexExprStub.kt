@@ -46,11 +46,11 @@ class LuaIndexExprType : LuaStubElementType<LuaIndexExprStub, LuaIndexExpr>("IND
      * a().b.c => false
      */
     private fun LuaIndexExpr.isPure(): Boolean {
-        var prev = this.prefixExpr
+        var prev = this.prefixExpression
         while (true) {
             when (prev) {
                 is LuaNameExpr -> return true
-                is LuaIndexExpr -> prev = prev.prefixExpr
+                is LuaIndexExpr -> prev = prev.prefixExpression
                 else -> return false
             }
         }
@@ -71,7 +71,7 @@ class LuaIndexExprType : LuaStubElementType<LuaIndexExprStub, LuaIndexExpr>("IND
                 indexExpr.guessParentType(it)
             }
 
-            val isSelf = (indexExpr.exprList.firstOrNull() as? LuaNameExpr)?.name == Constants.WORD_SELF
+            val isSelf = (indexExpr.expressionList.firstOrNull() as? LuaNameExpr)?.name == Constants.WORD_SELF
 
             TyUnion.each(ty) {
                 if (it is ITyClass && it !is ITyPrimitive && (isSelf || it !is TySerializedClass)) {
@@ -151,7 +151,7 @@ class LuaIndexExprType : LuaStubElementType<LuaIndexExprStub, LuaIndexExpr>("IND
     }
 }
 
-interface LuaIndexExprStub : LuaExprStub<LuaIndexExpr>, LuaClassMemberStub<LuaIndexExpr> {
+interface LuaIndexExprStub : StubElement<LuaIndexExpr>, LuaClassMemberStub<LuaIndexExpr> {
     val classNames: Array<String>
     val name: String?
     val idTy: ITy?

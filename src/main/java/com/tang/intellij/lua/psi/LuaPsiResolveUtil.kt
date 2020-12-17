@@ -43,10 +43,10 @@ fun resolveInFile(refName:String, pin: PsiElement, context: SearchContext?): Psi
     }
 
     if (ret == null && refName == Constants.WORD_SELF) {
-        val methodDef = PsiTreeUtil.getStubOrPsiParentOfType(pin, LuaClassMethodDef::class.java)
+        val methodDef = PsiTreeUtil.getStubOrPsiParentOfType(pin, LuaClassMethodDefStat::class.java)
         if (methodDef != null && !methodDef.isStatic) {
             val methodName = methodDef.classMethodName
-            val expr = methodName.expr
+            val expr = methodName.expression
             ret = if (expr is LuaNameExpr && context != null && expr.name != Constants.WORD_SELF)
                 resolve(expr, context)
             else
@@ -61,9 +61,9 @@ fun isUpValue(ref: LuaNameExpr, context: SearchContext): Boolean {
 
     val refName = ref.name
     if (refName == Constants.WORD_SELF) {
-        val classMethodFuncDef = PsiTreeUtil.getParentOfType(ref, LuaClassMethodDef::class.java)
-        if (classMethodFuncDef != null && !classMethodFuncDef.isStatic) {
-            val methodFuncBody = classMethodFuncDef.funcBody
+        val classMethodFuncDefStat = PsiTreeUtil.getParentOfType(ref, LuaClassMethodDefStat::class.java)
+        if (classMethodFuncDefStat != null && !classMethodFuncDefStat.isStatic) {
+            val methodFuncBody = classMethodFuncDefStat.funcBody
             if (methodFuncBody != null)
                 return methodFuncBody.textOffset < funcBody.textOffset
         }

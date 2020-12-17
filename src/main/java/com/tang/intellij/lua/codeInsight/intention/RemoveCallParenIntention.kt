@@ -28,11 +28,11 @@ class RemoveCallParenIntention : BaseIntentionAction() {
 
     override fun getText() = familyName
 
-    private fun findArgExpr(editor: Editor, psiFile: PsiFile): LuaExpr? {
+    private fun findArgExpr(editor: Editor, psiFile: PsiFile): LuaExpression<*>? {
         val callExpr = LuaPsiTreeUtil.findElementOfClassAtOffset(psiFile, editor.caretModel.offset, LuaCallExpr::class.java, false)
         if (callExpr != null) {
             val args = callExpr.args as? LuaListArgs ?: return null
-            val list = args.exprList
+            val list = args.expressionList
             if (list.isEmpty() || list.size > 1)
                 return null
             val expr = list.first()
@@ -51,7 +51,7 @@ class RemoveCallParenIntention : BaseIntentionAction() {
     override fun invoke(project: Project, editor: Editor, psiFile: PsiFile) {
         val callExpr = LuaPsiTreeUtil.findElementOfClassAtOffset(psiFile, editor.caretModel.offset, LuaCallExpr::class.java, false) ?: return
         val argExpr = findArgExpr(editor, psiFile) ?: return
-        val code = "${callExpr.expr.text} ${argExpr.text}"
+        val code = "${callExpr.expression.text} ${argExpr.text}"
         val file = LuaElementFactory.createFile(project, code)
         val newCall = PsiTreeUtil.findChildOfType(file, LuaCallExpr::class.java) ?: return
         callExpr.replace(newCall)

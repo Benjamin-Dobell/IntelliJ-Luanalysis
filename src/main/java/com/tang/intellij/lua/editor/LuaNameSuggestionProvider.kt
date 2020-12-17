@@ -69,7 +69,7 @@ class LuaNameSuggestionProvider : NameSuggestionProvider {
     private fun getNames(ref: PsiReference, set: MutableSet<String>) {
         val ele = ref.element
         val p1 = ele.parent
-        if (ele is LuaExpr) {
+        if (ele is LuaExpression<*>) {
             when (p1) {
                 is LuaListArgs -> {
                     //call(var)
@@ -96,10 +96,10 @@ class LuaNameSuggestionProvider : NameSuggestionProvider {
                 is LuaExprList -> {
                     //xxx = var
                     val p2 = p1.parent as? LuaAssignStat
-                    val valueList = p2?.valueExprList?.exprList
+                    val valueList = p2?.valueExprList?.expressionList
                     if (valueList != null) {
                         val index = valueList.indexOf(ele)
-                        val varExpr = p2.getExprAt(index)
+                        val varExpr = p2.getExpressionAt(index)
                         if (varExpr is LuaIndexExpr) varExpr.name?.let { set.add(it) }
                     }
                 }

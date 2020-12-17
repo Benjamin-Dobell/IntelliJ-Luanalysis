@@ -130,10 +130,10 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
             } else null
         }
 
-        fun findMethod(className: String, memberName: String, context: SearchContext, deep: Boolean = true): LuaClassMethod? {
-            var target: LuaClassMethod? = null
+        fun findMethod(className: String, memberName: String, context: SearchContext, deep: Boolean = true): LuaClassMethod<*>? {
+            var target: LuaClassMethod<*>? = null
             processMember(className, memberName, context, Processor {
-                if (it is LuaClassMethod) {
+                if (it is LuaClassMethod<*>) {
                     target = it
                     return@Processor false
                 }

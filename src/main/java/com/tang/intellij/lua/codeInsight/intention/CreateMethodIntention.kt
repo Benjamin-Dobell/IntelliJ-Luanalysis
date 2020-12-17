@@ -80,7 +80,7 @@ class CreateMethodIntention : BaseIntentionAction() {
                 LuaPredefinedScope(project))
         if (!methods.isEmpty()) {
             val methodDef = methods.iterator().next()
-            if (methodDef is LuaClassMethodDef) {
+            if (methodDef is LuaClassMethodDefStat) {
                 val expr = methodDef.classMethodName.expr
                 val textRange = methodDef.getTextRange()
                 val position = InsertPosition()

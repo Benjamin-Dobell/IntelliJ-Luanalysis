@@ -19,7 +19,7 @@ package com.tang.intellij.lua.editor.completion
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.psi.LuaClassMember
-import com.tang.intellij.lua.psi.LuaClassMethodDef
+import com.tang.intellij.lua.psi.LuaClassMethodDefStat
 import com.tang.intellij.lua.psi.LuaPsiTreeUtil
 import com.tang.intellij.lua.psi.guessClassType
 import com.tang.intellij.lua.search.SearchContext
@@ -34,7 +34,7 @@ class SuggestSelfMemberProvider : ClassMemberCompletionProvider() {
         val completionParameters = session.parameters
         val completionResultSet = session.resultSet
         val position = completionParameters.position
-        val methodDef = PsiTreeUtil.getParentOfType(position, LuaClassMethodDef::class.java)
+        val methodDef = PsiTreeUtil.getParentOfType(position, LuaClassMethodDefStat::class.java)
         if (methodDef != null && !methodDef.isStatic) {
             val project = position.project
             val searchContext = SearchContext.get(project)

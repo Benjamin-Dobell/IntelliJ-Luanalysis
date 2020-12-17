@@ -22,7 +22,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.tang.intellij.lua.psi.LuaBlock;
 import com.tang.intellij.lua.psi.LuaLocalDef;
-import com.tang.intellij.lua.psi.LuaLocalFuncDef;
+import com.tang.intellij.lua.psi.LuaLocalFuncDefStat;
 
 /**
  *
@@ -33,7 +33,7 @@ abstract class EmptyBodyBase extends LocalInspectionTool {
     private static Class[] invalidClasses = new Class[] {
             PsiWhiteSpace.class,
             PsiComment.class,
-            LuaLocalFuncDef.class,
+            LuaLocalFuncDefStat.class,
             LuaLocalDef.class
     };
 

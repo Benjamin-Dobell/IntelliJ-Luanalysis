@@ -22,7 +22,7 @@ import com.intellij.formatting.Indent
 import com.intellij.formatting.Wrap
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.editor.formatter.LuaFormatContext
-import com.tang.intellij.lua.psi.LuaExpr
+import com.tang.intellij.lua.psi.LuaExpression
 import com.tang.intellij.lua.psi.LuaListArgs
 
 class LuaListArgsBlock(psi: LuaListArgs, wrap: Wrap?, alignment: Alignment?, indent: Indent, ctx: LuaFormatContext)
@@ -35,7 +35,7 @@ class LuaListArgsBlock(psi: LuaListArgs, wrap: Wrap?, alignment: Alignment?, ind
             = if (ctx.settings.ALIGN_MULTILINE_PARAMETERS_IN_CALLS) argAlign else null
 
     override fun buildChild(child: PsiElement, indent: Indent?): LuaScriptBlock {
-        if (child is LuaExpr) {
+        if (child is LuaExpression<*>) {
             val wrap = if (argIndex++ == 0) null else
                 Wrap.createWrap(ctx.settings.CALL_PARAMETERS_WRAP, true)
             return createBlock(child, Indent.getContinuationIndent(), getAlign(), wrap)

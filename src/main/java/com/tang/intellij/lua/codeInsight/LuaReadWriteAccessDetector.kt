@@ -36,8 +36,8 @@ class LuaReadWriteAccessDetector : ReadWriteAccessDetector() {
 
     override fun getExpressionAccess(element: PsiElement): Access {
         return when (element) {
-            is LuaNameDef -> Access.Write
-            is LuaExpr -> {
+            is LuaLocalDef -> Access.Write
+            is LuaExpression<*> -> {
                 if (element.assignStat != null)
                     Access.Write
                 else Access.Read

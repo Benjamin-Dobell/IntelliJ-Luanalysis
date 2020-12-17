@@ -63,7 +63,7 @@ interface LuaDeclarationTree {
     }
 
     fun shouldRebuild(): Boolean
-    fun find(expr: LuaExpr): IDeclaration?
+    fun find(expression: LuaExpression<*>): IDeclaration?
     fun walkUp(pin: PsiElement, process: (declaration: IDeclaration) -> Boolean)
     fun walkUpLocal(pin: PsiElement, process: (declaration: IDeclaration) -> Boolean) {
         walkUp(pin) {
@@ -186,12 +186,12 @@ private open class Scope(
         return ret
     }
 
-    fun find(expr: LuaExpr): Declaration? {
-        if (expr is LuaNameExpr) {
-            return find(expr)
-        } else if (expr is LuaIndexExpr) {
-            return find(expr.prefixExpr)?.let {
-                val fieldName = expr.name ?: expr.idExpr?.let { idExpr ->
+    fun find(expression: LuaExpression<*>): Declaration? {
+        if (expression is LuaNameExpr) {
+            return find(expression)
+        } else if (expression is LuaIndexExpr) {
+            return find(expression.prefixExpression)?.let {
+                val fieldName = expression.name ?: expression.idExpr?.let { idExpr ->
                     (idExpr as? LuaLiteralExpr)?.let { "[${it.text}]" }
                 } ?: return null
 
@@ -219,7 +219,7 @@ private abstract class LuaDeclarationTreeBase(val file: PsiFile) : LuaRecursiveV
 
     private fun push(psi: LuaDeclarationScope): Scope {
         val pos = getPosition(psi)
-        if (psi is LuaLocalDef) { // local a = a
+        if (psi is LuaLocalDefStat) { // local a = a
             return push(object : Scope(this, pos, curScope) {
                 override fun walkOver(process: (declaration: Declaration) -> Boolean): Boolean {
                     return processNode(Declaration::class.java, process)
@@ -294,47 +294,47 @@ private abstract class LuaDeclarationTreeBase(val file: PsiFile) : LuaRecursiveV
     }
 
     private fun createDeclaration(name: String, psi: PsiNamedElement, flags: Int): Declaration {
-        val first = if (psi is LuaExpr) find(psi) else null
+        val first = if (psi is LuaExpression<*>) find(psi) else null
         return Declaration(name, getPosition(psi), psi, flags, first)
     }
 
-    override fun find(expr: LuaExpr): Declaration? {
-        if (expr is LuaIndexExpr || expr is LuaNameExpr) {
-            val scope = findScope(expr)
-            return scope?.find(expr)?.firstDeclaration
+    override fun find(expression: LuaExpression<*>): Declaration? {
+        if (expression is LuaIndexExpr || expression is LuaNameExpr) {
+            val scope = findScope(expression)
+            return scope?.find(expression)?.firstDeclaration
         }
         return null
     }
 
-    override fun visitNameDef(o: LuaNameDef) {
+    override fun visitLocalDef(o: LuaLocalDef) {
         curScope?.add(createDeclaration(o.name, o, DeclarationFlag.Local))
     }
 
-    override fun visitParamNameDef(o: LuaParamNameDef) {
+    override fun visitParamDef(o: LuaParamDef) {
         curScope?.add(createDeclaration(o.name, o, DeclarationFlag.Local))
     }
 
-    override fun visitLocalFuncDef(o: LuaLocalFuncDef) {
+    override fun visitLocalFuncDefStat(o: LuaLocalFuncDefStat) {
         val name = o.name
         if (name != null)
             curScope?.add(createDeclaration(name, o, DeclarationFlag.Local or DeclarationFlag.Function))
-        super.visitLocalFuncDef(o)
+        super.visitLocalFuncDefStat(o)
     }
 
-    override fun visitClassMethodDef(o: LuaClassMethodDef) {
+    override fun visitClassMethodDefStat(o: LuaClassMethodDefStat) {
         val name = o.name
         if (name != null) {
-            val parentExpr = o.classMethodName.expr
+            val parentExpr = o.classMethodName.expression
             find(parentExpr)?.addField(createDeclaration(name, o, DeclarationFlag.Function or DeclarationFlag.ClassMember))
         }
-        super.visitClassMethodDef(o)
+        super.visitClassMethodDefStat(o)
     }
 
     override fun visitClassMethodName(o: LuaClassMethodName) {
     }
 
     override fun visitAssignStat(o: LuaAssignStat) {
-        o.varExprList.exprList.forEach { expr ->
+        o.varExprList.expressionList.forEach { expr ->
             if (expr is LuaNameExpr) {
                 val flags = find(expr)?.flags ?: DeclarationFlag.Global
                 curScope?.add(createDeclaration(expr.name, expr, flags))
@@ -342,7 +342,7 @@ private abstract class LuaDeclarationTreeBase(val file: PsiFile) : LuaRecursiveV
                 val fieldName = expr.name ?: (expr.idExpr as? LuaLiteralExpr)?.let { "[${it.text}]" }
 
                 if (fieldName != null) {
-                    val declaration = curScope?.find(expr.prefixExpr)
+                    val declaration = curScope?.find(expr.prefixExpression)
                     declaration?.addField(createDeclaration(fieldName, expr, DeclarationFlag.ClassMember))
                 }
             }

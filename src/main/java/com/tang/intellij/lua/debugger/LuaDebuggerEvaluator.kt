@@ -42,8 +42,8 @@ abstract class LuaDebuggerEvaluator : XDebuggerEvaluator() {
                     if (ele != null && ele.node.elementType == LuaTypes.ID) {
                         val parent = ele.parent
                         when (parent) {
-                            is LuaFuncDef,
-                            is LuaLocalFuncDef -> currentRange = ele.textRange
+                            is LuaFuncDefStat,
+                            is LuaLocalFuncDefStat -> currentRange = ele.textRange
                             is LuaClassMethodName,
                             is PsiNameIdentifierOwner -> currentRange = parent.textRange
                         }
@@ -51,7 +51,7 @@ abstract class LuaDebuggerEvaluator : XDebuggerEvaluator() {
                 }
 
                 if (currentRange == null) {
-                    val expr = PsiTreeUtil.findElementOfClassAtOffset(file, offset, LuaExpr::class.java, false)
+                    val expr = PsiTreeUtil.findElementOfClassAtOffset(file, offset, LuaExpression::class.java, false)
                     currentRange = when (expr) {
                         is LuaCallExpr,
                         is LuaClosureExpr,

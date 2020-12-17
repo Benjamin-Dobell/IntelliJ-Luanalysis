@@ -8,13 +8,12 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.psi.LuaTypes.*;
-import com.tang.intellij.lua.psi.*;
 import com.tang.intellij.lua.stubs.LuaTableExprStub;
+import com.tang.intellij.lua.psi.*;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.tree.IElementType;
-import com.tang.intellij.lua.stubs.LuaExprStub;
 
-public class LuaTableExprImpl extends LuaTableExprMixin implements LuaTableExpr {
+public class LuaTableExprImpl extends LuaExprMixin<LuaTableExprStub> implements LuaTableExpr {
 
   public LuaTableExprImpl(@NotNull LuaTableExprStub stub, @NotNull IStubElementType<?, ?> nodeType) {
     super(stub, nodeType);
@@ -32,6 +31,7 @@ public class LuaTableExprImpl extends LuaTableExprMixin implements LuaTableExpr 
     visitor.visitTableExpr(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);

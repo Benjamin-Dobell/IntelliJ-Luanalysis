@@ -43,7 +43,7 @@ class ReturnTypeInspection : StrictInspection() {
 
                 val context = PsiSearchContext(o)
                 val bodyOwner = PsiTreeUtil.getParentOfType(o, LuaFuncBodyOwner::class.java) ?: return
-                val expectedReturnType = if (bodyOwner is LuaClassMethodDef) {
+                val expectedReturnType = if (bodyOwner is LuaClassMethodDefStat) {
                     guessSuperReturnTypes(bodyOwner, context)
                 } else {
                     var comment = (bodyOwner as? LuaCommentOwner)?.comment
@@ -71,7 +71,7 @@ class ReturnTypeInspection : StrictInspection() {
                 } else null
 
                 for (i in 0 until concreteTypes.size) {
-                    val element = o.exprList?.getExprAt(i) ?: o
+                    val element = o.exprList?.getExpressionAt(i) ?: o
                     val targetType = abstractTypes.getOrNull(i) ?: variadicAbstractType ?: Ty.VOID
                     val varianceFlags = if (element is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
                     ProblemUtil.contravariantOf(targetType, concreteTypes[i], context, varianceFlags, null, element) { targetElement, sourceElement, message, highlightType ->
@@ -131,14 +131,14 @@ class ReturnTypeInspection : StrictInspection() {
                 }
             }
 
-            private fun guessSuperReturnTypes(function: LuaClassMethodDef, context: SearchContext): ITy? {
+            private fun guessSuperReturnTypes(function: LuaClassMethodDefStat, context: SearchContext): ITy? {
                 val comment = function.comment
                 if (comment != null) {
                     if (comment.isOverride()) {
                         // Find super type
                         val superClass = function.guessClassType(context)
                         val superMember = superClass?.findSuperMember(function.name ?: "", context)
-                        if (superMember is LuaClassMethodDef) {
+                        if (superMember is LuaClassMethodDefStat) {
                             return superMember.guessReturnType(context)
                         }
                     } else {
@@ -159,7 +159,7 @@ class ReturnTypeInspection : StrictInspection() {
                     val context = SearchContext.get(o.project)
                     val bodyOwner = PsiTreeUtil.getParentOfType(o, LuaFuncBodyOwner::class.java)
 
-                    val type = if (bodyOwner is LuaClassMethodDef) {
+                    val type = if (bodyOwner is LuaClassMethodDefStat) {
                         guessSuperReturnTypes(bodyOwner, context)
                     } else {
                         val returnDef = (bodyOwner as? LuaCommentOwner)?.comment?.tagReturn

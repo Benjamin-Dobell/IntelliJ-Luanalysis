@@ -53,13 +53,13 @@ class LuaFindUsagesProvider : FindUsagesProvider {
             return "Class"
         if (psiElement is LuaDocTagField)
             return "Class Field"
-        if (psiElement is LuaFuncDef)
+        if (psiElement is LuaFuncDefStat)
             return "Global Function"
-        if (psiElement is LuaLocalFuncDef)
+        if (psiElement is LuaLocalFuncDefStat)
             return "Local Function"
-        if (psiElement is LuaClassMethodDef)
+        if (psiElement is LuaClassMethodDefStat)
             return "Class Function"
-        if (psiElement is LuaParamNameDef)
+        if (psiElement is LuaParamDef)
             return "Param"
         return if (psiElement is LuaTableField) "Table Field" else "Name"
     }

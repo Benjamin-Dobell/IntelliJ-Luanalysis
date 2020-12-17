@@ -27,10 +27,12 @@ public class LuaListArgsImpl extends LuaArgsImpl implements LuaListArgs {
     super(stub, type, node);
   }
 
+  @Override
   public void accept(@NotNull LuaVisitor visitor) {
     visitor.visitListArgs(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);
@@ -38,8 +40,8 @@ public class LuaListArgsImpl extends LuaArgsImpl implements LuaListArgs {
 
   @Override
   @NotNull
-  public List<LuaExpr> getExprList() {
-    return PsiTreeUtil.getStubChildrenOfTypeAsList(this, LuaExpr.class);
+  public List<LuaExpression<?>> getExpressionList() {
+    return LuaPsiImplUtilKt.getExpressionList(this);
   }
 
 }

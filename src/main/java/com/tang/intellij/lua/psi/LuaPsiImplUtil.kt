@@ -18,7 +18,6 @@
 
 package com.tang.intellij.lua.psi
 
-import com.intellij.extapi.psi.StubBasedPsiElementBase
 import com.intellij.icons.AllIcons
 import com.intellij.navigation.ItemPresentation
 import com.intellij.openapi.util.Computable
@@ -32,14 +31,12 @@ import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.LuaDocAccessModifier
 import com.tang.intellij.lua.comment.psi.LuaDocTagVararg
 import com.tang.intellij.lua.comment.psi.LuaDocTy
-import com.tang.intellij.lua.comment.psi.api.LuaComment
 import com.tang.intellij.lua.comment.psi.impl.LuaDocTagTypeImpl
 import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.lang.LuaIcons
 import com.tang.intellij.lua.lang.type.LuaString
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.LuaClassMemberStub
-import com.tang.intellij.lua.stubs.LuaFuncBodyOwnerStub
 import com.tang.intellij.lua.ty.*
 import java.util.*
 import javax.swing.Icon
@@ -54,66 +51,58 @@ fun setName(owner: PsiNameIdentifierOwner, name: String): PsiElement {
     return owner
 }
 
-fun getNameIdentifier(nameDef: LuaNameDef): PsiElement {
-    return nameDef.firstChild
+fun getNameIdentifier(localDef: LuaLocalDef): PsiElement {
+    return localDef.firstChild
 }
 
-/**
- * LuaNameDef 只可能在本文件中搜
- * @param nameDef def
- * *
- * @return SearchScope
- */
-fun getUseScope(nameDef: LuaNameDef): SearchScope {
-    return GlobalSearchScope.fileScope(nameDef.containingFile)
+fun getNameIdentifier(paramDef: LuaParamDef): PsiElement {
+    return paramDef.firstChild
+}
+
+fun getUseScope(localDef: LuaLocalDef): SearchScope {
+    return GlobalSearchScope.fileScope(localDef.containingFile)
+}
+
+fun getUseScope(paramDef: LuaParamDef): SearchScope {
+    return GlobalSearchScope.fileScope(paramDef.containingFile)
 }
 
 fun getReferences(element: LuaPsiElement): Array<PsiReference> {
     return ReferenceProvidersRegistry.getReferencesFromProviders(element, PsiReferenceService.Hints.NO_HINTS)
 }
 
-/**
- * 寻找 Comment
- * @param declaration owner
- * *
- * @return LuaComment
- */
-fun getComment(declaration: LuaCommentOwner): LuaComment? {
-    return LuaCommentUtil.findComment(declaration)
+fun getNameIdentifier(classMethodDefStat: LuaClassMethodDefStat): PsiElement? {
+    return classMethodDefStat.classMethodName.id
 }
 
-fun getNameIdentifier(classMethodDef: LuaClassMethodDef): PsiElement? {
-    return classMethodDef.classMethodName.id
-}
-
-fun getName(classMethodDef: LuaClassMethodDef): String? {
-    val stub = classMethodDef.stub
+fun getName(classMethodDefStat: LuaClassMethodDefStat): String? {
+    val stub = classMethodDefStat.stub
     if (stub != null)
         return stub.name
-    return getName(classMethodDef as PsiNameIdentifierOwner)
+    return getName(classMethodDefStat as PsiNameIdentifierOwner)
 }
 
-fun isStatic(classMethodDef: LuaClassMethodDef): Boolean {
-    val stub = classMethodDef.stub
+fun isStatic(classMethodDefStat: LuaClassMethodDefStat): Boolean {
+    val stub = classMethodDefStat.stub
     if (stub != null)
         return stub.isStatic
 
-    return classMethodDef.classMethodName.dot != null
+    return classMethodDefStat.classMethodName.dot != null
 }
 
-fun getPresentation(classMethodDef: LuaClassMethodDef): ItemPresentation {
+fun getPresentation(classMethodDefStat: LuaClassMethodDefStat): ItemPresentation {
     return object : ItemPresentation {
         override fun getPresentableText(): String? {
-            val type = classMethodDef.guessClassType(SearchContext.get(classMethodDef.project))
+            val type = classMethodDefStat.guessClassType(SearchContext.get(classMethodDefStat.project))
             if (type != null) {
-                val c = if (classMethodDef.isStatic) "." else ":"
-                return type.displayName + c + classMethodDef.name + classMethodDef.paramSignature
+                val c = if (classMethodDefStat.isStatic) "." else ":"
+                return type.displayName + c + classMethodDefStat.name + classMethodDefStat.paramSignature
             }
-            return classMethodDef.name!! + classMethodDef.paramSignature
+            return classMethodDefStat.name!! + classMethodDefStat.paramSignature
         }
 
         override fun getLocationString(): String {
-            return classMethodDef.containingFile.name
+            return classMethodDefStat.containingFile.name
         }
 
         override fun getIcon(b: Boolean): Icon? {
@@ -124,27 +113,27 @@ fun getPresentation(classMethodDef: LuaClassMethodDef): ItemPresentation {
 
 /**
  * 寻找对应的类
- * @param classMethodDef def
+ * @param classMethodDefStat def
  * *
  * @return LuaType
  */
-fun guessParentType(classMethodDef: LuaClassMethodDef, context: SearchContext): ITy {
-    /*val stub = classMethodDef.stub
+fun guessParentType(classMethodDefStat: LuaClassMethodDefStat, context: SearchContext): ITy {
+    /*val stub = classMethodDefStat.stub
     var type: ITy = Ty.UNKNOWN
     if (stub != null) {
         stub.classes.forEach {
            type = type.union(it)
         }
     } else {
-        val expr = classMethodDef.classMethodName.expr
+        val expr = classMethodDefStat.classMethodName.expr
         val ty = expr.guessType(ctx)
         val perfect = TyUnion.getPerfectClass(ty)
         if (perfect is ITyClass)
             type = perfect
     }*/
 
-    val expr = classMethodDef.classMethodName.expr
-    return recursionGuard(classMethodDef, Computable {
+    val expr = classMethodDefStat.classMethodName.expression
+    return recursionGuard(classMethodDefStat, Computable {
         expr.guessType(context)?.let {
             TyUnion.getPerfectClass(it)
         }
@@ -157,8 +146,8 @@ fun guessParentType(luaClosureExpr: LuaClosureExpr, context: SearchContext): ITy
     }
 
     (luaClosureExpr.parent.parent as? LuaAssignStat)?.let { assignment ->
-        if (assignment.varExprList.exprList.size == 1) {
-            val expr = assignment.varExprList.exprList[0]
+        if (assignment.varExprList.expressionList.size == 1) {
+            val expr = assignment.varExprList.expressionList[0]
 
             if (expr is LuaIndexExpr) {
                 return expr.guessParentType(context)
@@ -169,38 +158,38 @@ fun guessParentType(luaClosureExpr: LuaClosureExpr, context: SearchContext): ITy
     return Ty.UNKNOWN
 }
 
-fun guessParentType(luaLocalFuncDef: LuaLocalFuncDef, context: SearchContext): ITy {
+fun guessParentType(luaLocalFuncDefStat: LuaLocalFuncDefStat, context: SearchContext): ITy {
     return Ty.UNKNOWN
 }
 
-fun getNameIdentifier(funcDef: LuaFuncDef): PsiElement? {
-    return funcDef.id
+fun getNameIdentifier(funcDefStat: LuaFuncDefStat): PsiElement? {
+    return funcDefStat.id
 }
 
-fun getName(funcDef: LuaFuncDef): String? {
-    val stub = funcDef.stub
+fun getName(funcDefStat: LuaFuncDefStat): String? {
+    val stub = funcDefStat.stub
     if (stub != null)
         return stub.name
-    return getName(funcDef as PsiNameIdentifierOwner)
+    return getName(funcDefStat as PsiNameIdentifierOwner)
 }
 
-fun getPresentation(funcDef: LuaFuncDef): ItemPresentation {
+fun getPresentation(funcDefStat: LuaFuncDefStat): ItemPresentation {
     return object : ItemPresentation {
-        override fun getPresentableText(): String? {
-            return funcDef.name!! + funcDef.paramSignature
+        override fun getPresentableText(): String {
+            return funcDefStat.name!! + funcDefStat.paramSignature
         }
 
         override fun getLocationString(): String {
-            return funcDef.containingFile.name
+            return funcDefStat.containingFile.name
         }
 
-        override fun getIcon(b: Boolean): Icon? {
+        override fun getIcon(b: Boolean): Icon {
             return AllIcons.Nodes.Function
         }
     }
 }
 
-fun guessParentType(funcDef: LuaFuncDef, searchContext: SearchContext): ITyClass {
+fun guessParentType(funcDefStat: LuaFuncDefStat, searchContext: SearchContext): ITyClass {
     return TyClass.G
 }
 
@@ -211,7 +200,7 @@ fun guessParentType(funcDef: LuaFuncDef, searchContext: SearchContext): ITyClass
  * @return LuaType
  */
 fun guessParentType(callExpr: LuaCallExpr, context: SearchContext): ITy? {
-    return callExpr.expr.guessType(context)
+    return callExpr.expression.guessType(context)
 }
 
 /**
@@ -226,10 +215,10 @@ fun getFirstStringArg(callExpr: LuaCallExpr): PsiElement? {
 
     when (args) {
         is LuaSingleArg -> {
-            val expr = args.expr
+            val expr = args.expression
             if (expr is LuaLiteralExpr) path = expr
         }
-        is LuaListArgs -> args.exprList.let { list ->
+        is LuaListArgs -> args.expressionList.let { list ->
             if (list.isNotEmpty() && list[0] is LuaLiteralExpr) {
                 val valueExpr = list[0] as LuaLiteralExpr
                 if (valueExpr.kind == LuaLiteralKind.String)
@@ -241,23 +230,23 @@ fun getFirstStringArg(callExpr: LuaCallExpr): PsiElement? {
 }
 
 fun isMethodDotCall(callExpr: LuaCallExpr): Boolean {
-    val expr = callExpr.expr
+    val expr = callExpr.expression
     if (expr is LuaNameExpr)
         return true
     return expr is LuaIndexExpr && expr.colon == null
 }
 
 fun isMethodColonCall(callExpr: LuaCallExpr): Boolean {
-    val expr = callExpr.expr
+    val expr = callExpr.expression
     return expr is LuaIndexExpr && expr.colon != null
 }
 
 fun isFunctionCall(callExpr: LuaCallExpr): Boolean {
-    return callExpr.expr is LuaNameExpr
+    return callExpr.expression is LuaNameExpr
 }
 
 fun guessTypeAt(list: LuaExprList, context: SearchContext): ITy? {
-    val exprList = list.exprStubList
+    val exprList = list.expressionStubList
 
     val expr = exprList.getOrNull(context.index) ?: exprList.lastOrNull()
     if (expr != null) {
@@ -281,7 +270,7 @@ fun guessTypeAt(list: LuaExprList, context: SearchContext): ITy? {
 }
 
 fun guessParentType(indexExpr: LuaIndexExpr, context: SearchContext): ITy {
-    val expr = PsiTreeUtil.getStubChildOfType(indexExpr, LuaExpr::class.java)
+    val expr = PsiTreeUtil.getStubChildOfType(indexExpr, LuaExpression::class.java)
     return expr?.guessType(context) ?: Ty.UNKNOWN
 }
 
@@ -311,11 +300,11 @@ fun getPresentation(indexExpr: LuaIndexExpr): ItemPresentation {
 /**
  * x in y[x]
  */
-fun getIdExpr(indexExpr: LuaIndexExpr): LuaExpr? {
+fun getIdExpr(indexExpr: LuaIndexExpr): LuaExpression<*>? {
     val bracket = indexExpr.lbrack
     if (bracket != null) {
-        val nextLeaf = PsiTreeUtil.getNextSiblingOfType(bracket, LuaExpr::class.java)
-        if (nextLeaf is LuaExpr)
+        val nextLeaf = PsiTreeUtil.getNextSiblingOfType(bracket, LuaExpression::class.java)
+        if (nextLeaf is LuaExpression<*>)
             return nextLeaf
     }
     return null
@@ -372,29 +361,23 @@ fun findField(table: LuaTableExpr, fieldName: String): LuaTableField? {
     return table.tableFieldList.firstOrNull { fieldName == it.name }
 }
 
-fun getParamNameDefList(funcBodyOwner: LuaFuncBodyOwner): List<LuaParamNameDef> {
+fun getParamDefList(funcBodyOwner: LuaFuncBodyOwner<*>): List<LuaParamDef> {
     val funcBody = funcBodyOwner.funcBody
-    return funcBody?.paramNameDefList ?: emptyList()
+    return funcBody?.paramDefList ?: emptyList()
 }
 
-fun getParamNameDefList(forAStat: LuaForAStat): List<LuaParamNameDef> {
-    val list = ArrayList<LuaParamNameDef>()
-    list.add(forAStat.paramNameDef)
+fun getParamDefList(forAStat: LuaForAStat): List<LuaParamDef> {
+    val list = ArrayList<LuaParamDef>()
+    list.add(forAStat.paramDef)
     return list
 }
 
-fun guessReturnType(owner: LuaFuncBodyOwner, searchContext: SearchContext): ITy? {
+fun guessReturnType(owner: LuaFuncBodyOwner<*>, searchContext: SearchContext): ITy? {
     return inferReturnTy(owner, searchContext)
 }
 
-fun getVarargTy(owner: LuaFuncBodyOwner): ITy? {
-    if (owner is StubBasedPsiElementBase<*>) {
-        val stub = owner.stub
-        if (stub is LuaFuncBodyOwnerStub<*>) {
-            return stub.varargTy
-        }
-    }
-    owner.funcBody?.ellipsis?.let {
+fun getVarargTy(owner: LuaFuncBodyOwner<*>): ITy? {
+    return owner.stub?.varargTy ?: owner.funcBody?.ellipsis?.let {
         var ret: ITy? = null
         if (owner is LuaCommentOwner) {
             val varargDef = owner.comment?.findTag(LuaDocTagVararg::class.java)
@@ -402,21 +385,13 @@ fun getVarargTy(owner: LuaFuncBodyOwner): ITy? {
         }
         return ret ?: Ty.UNKNOWN
     }
-
-    return null
 }
 
-fun getParams(owner: LuaFuncBodyOwner): Array<LuaParamInfo> {
-    if (owner is StubBasedPsiElementBase<*>) {
-        val stub = owner.stub
-        if (stub is LuaFuncBodyOwnerStub<*>) {
-            return stub.params
-        }
-    }
-    return getParamsInner(owner)
+fun getParams(owner: LuaFuncBodyOwner<*>): Array<LuaParamInfo> {
+    return owner.stub?.params ?: getParamsInner(owner)
 }
 
-private fun getParamsInner(funcBodyOwner: LuaFuncBodyOwner): Array<LuaParamInfo> {
+private fun getParamsInner(funcBodyOwner: LuaFuncBodyOwner<*>): Array<LuaParamInfo> {
     val comment = if (funcBodyOwner is LuaCommentOwner) {
         LuaCommentUtil.findComment(funcBodyOwner)
     } else {
@@ -425,7 +400,7 @@ private fun getParamsInner(funcBodyOwner: LuaFuncBodyOwner): Array<LuaParamInfo>
         }
     }
 
-    val paramNameList = funcBodyOwner.paramNameDefList
+    val paramNameList = funcBodyOwner.paramDefList
 
     if (paramNameList != null) {
         val list = mutableListOf<LuaParamInfo>()
@@ -444,7 +419,7 @@ private fun getParamsInner(funcBodyOwner: LuaFuncBodyOwner): Array<LuaParamInfo>
     return emptyArray()
 }
 
-fun getParamSignature(funcBodyOwner: LuaFuncBodyOwner): String {
+fun getParamSignature(funcBodyOwner: LuaFuncBodyOwner<*>): String {
     val params = funcBodyOwner.params
     val list = arrayOfNulls<String>(params.size)
     for (i in params.indices) {
@@ -454,26 +429,33 @@ fun getParamSignature(funcBodyOwner: LuaFuncBodyOwner): String {
     return "(" + list.joinToString(", ") + ")"
 }
 
-fun getName(localFuncDef: LuaLocalFuncDef): String? {
-    val stub = localFuncDef.stub
+fun getName(localFuncDefStat: LuaLocalFuncDefStat): String? {
+    val stub = localFuncDefStat.stub
     if (stub != null)
         return stub.name
-    return getName(localFuncDef as PsiNameIdentifierOwner)
+    return getName(localFuncDefStat as PsiNameIdentifierOwner)
 }
 
-fun getNameIdentifier(localFuncDef: LuaLocalFuncDef): PsiElement? {
-    return localFuncDef.id
+fun getNameIdentifier(localFuncDefStat: LuaLocalFuncDefStat): PsiElement? {
+    return localFuncDefStat.id
 }
 
-fun getUseScope(localFuncDef: LuaLocalFuncDef): SearchScope {
-    return GlobalSearchScope.fileScope(localFuncDef.containingFile)
+fun getUseScope(localFuncDefStat: LuaLocalFuncDefStat): SearchScope {
+    return GlobalSearchScope.fileScope(localFuncDefStat.containingFile)
 }
 
-fun getName(nameDef: LuaNameDef): String {
-    val stub = nameDef.stub
+fun getName(localDef: LuaLocalDef): String {
+    val stub = localDef.stub
     if (stub != null)
         return stub.name
-    return nameDef.id.text
+    return localDef.id.text
+}
+
+fun getName(paramDef: LuaParamDef): String {
+    val stub = paramDef.stub
+    if (stub != null)
+        return paramDef.name
+    return paramDef.id.text
 }
 
 fun getName(identifierOwner: PsiNameIdentifierOwner): String? {
@@ -481,10 +463,10 @@ fun getName(identifierOwner: PsiNameIdentifierOwner): String? {
     return id?.text
 }
 
-fun getTextOffset(localFuncDef: PsiNameIdentifierOwner): Int {
-    val id = localFuncDef.nameIdentifier
+fun getTextOffset(localFuncDefStat: PsiNameIdentifierOwner): Int {
+    val id = localFuncDefStat.nameIdentifier
     if (id != null) return id.textOffset
-    return localFuncDef.node.startOffset
+    return localFuncDefStat.node.startOffset
 }
 
 fun getNameIdentifier(tableField: LuaTableField): PsiElement? {
@@ -573,18 +555,18 @@ fun getPresentation(tableField: LuaTableField): ItemPresentation {
 /**
  * xx['id']
  */
-fun getIdExpr(tableField: LuaTableField): LuaExpr? {
+fun getIdExpr(tableField: LuaTableField): LuaExpression<*>? {
     val isIndexExpression = tableField.stub?.isIndexExpression ?: tableField.lbrack != null
     return if (isIndexExpression) {
-        PsiTreeUtil.getStubChildOfType(tableField, LuaExpr::class.java)
+        PsiTreeUtil.getStubChildOfType(tableField, LuaExpression::class.java)
     } else null
 }
 
-fun getValueExpr(tableField: LuaTableField): LuaExpr? {
+fun getValueExpr(tableField: LuaTableField): LuaExpression<*>? {
     val isIndexExpression = tableField.stub?.isIndexExpression ?: tableField.lbrack != null
     return if (isIndexExpression) {
-        PsiTreeUtil.getStubChildrenOfTypeAsList(tableField, LuaExpr::class.java).getOrNull(1)
-    } else PsiTreeUtil.getStubChildOfType(tableField, LuaExpr::class.java)
+        PsiTreeUtil.getStubChildrenOfTypeAsList(tableField, LuaExpression::class.java).getOrNull(1)
+    } else PsiTreeUtil.getStubChildOfType(tableField, LuaExpression::class.java)
 }
 
 fun getIndexType(tableField: LuaTableField): LuaDocTy? {
@@ -668,12 +650,32 @@ fun getVisibility(member: LuaClassMember): Visibility {
     return Visibility.PUBLIC
 }
 
-fun getVisibility(classMethodDef: LuaClassMethodDef): Visibility {
-    return getVisibility(classMethodDef as LuaClassMember)
+fun getVisibility(classMethodDefStat: LuaClassMethodDefStat): Visibility {
+    return getVisibility(classMethodDefStat as LuaClassMember)
 }
 
-fun getExpr(exprStat: LuaExprStat): LuaExpr {
-    return PsiTreeUtil.getStubChildOfType(exprStat, LuaExpr::class.java)!!
+fun getExpression(element: StubBasedPsiElement<*>): LuaExpression<*>? {
+    return PsiTreeUtil.getStubChildOfType(element, LuaExpression::class.java)!!
+}
+
+fun getExpression(callExpr: LuaCallExpr): LuaExpression<*> {
+    return PsiTreeUtil.getStubChildOfType(callExpr, LuaExpression::class.java)!!
+}
+
+fun getExpression(classMethodName: LuaClassMethodName): LuaExpression<*> {
+    return PsiTreeUtil.getStubChildOfType(classMethodName, LuaExpression::class.java)!!
+}
+
+fun getExpression(exprStat: LuaExprStat): LuaExpression<*> {
+    return PsiTreeUtil.getStubChildOfType(exprStat, LuaExpression::class.java)!!
+}
+
+fun getExpression(singleArg: LuaSingleArg): LuaExpression<*> {
+    return PsiTreeUtil.getStubChildOfType(singleArg, LuaExpression::class.java)!!
+}
+
+fun getExpressionList(element: StubBasedPsiElement<*>): List<LuaExpression<*>> {
+    return PsiTreeUtil.getStubChildrenOfTypeAsList(element, LuaExpression::class.java)
 }
 
 fun isDeprecated(member: LuaClassMember): Boolean {

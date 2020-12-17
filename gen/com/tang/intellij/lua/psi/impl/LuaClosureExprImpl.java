@@ -8,15 +8,14 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.psi.LuaTypes.*;
+import com.tang.intellij.lua.stubs.LuaClosureExprStub;
 import com.tang.intellij.lua.psi.*;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
-import com.tang.intellij.lua.stubs.LuaClosureExprStub;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.tree.IElementType;
-import com.tang.intellij.lua.stubs.LuaExprStub;
 
-public class LuaClosureExprImpl extends LuaClosureExprMixin implements LuaClosureExpr {
+public class LuaClosureExprImpl extends LuaExprMixin<LuaClosureExprStub> implements LuaClosureExpr {
 
   public LuaClosureExprImpl(@NotNull LuaClosureExprStub stub, @NotNull IStubElementType<?, ?> nodeType) {
     super(stub, nodeType);
@@ -34,6 +33,7 @@ public class LuaClosureExprImpl extends LuaClosureExprMixin implements LuaClosur
     visitor.visitClosureExpr(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);
@@ -47,8 +47,8 @@ public class LuaClosureExprImpl extends LuaClosureExprMixin implements LuaClosur
 
   @Override
   @NotNull
-  public List<LuaParamNameDef> getParamNameDefList() {
-    return LuaPsiImplUtilKt.getParamNameDefList(this);
+  public List<LuaParamDef> getParamDefList() {
+    return LuaPsiImplUtilKt.getParamDefList(this);
   }
 
   @Override

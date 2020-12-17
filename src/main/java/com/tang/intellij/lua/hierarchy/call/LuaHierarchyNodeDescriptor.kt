@@ -24,7 +24,7 @@ import com.intellij.openapi.util.Comparing
 import com.intellij.pom.Navigatable
 import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiElement
-import com.tang.intellij.lua.psi.LuaLocalFuncDef
+import com.tang.intellij.lua.psi.LuaLocalFuncDefStat
 
 class LuaHierarchyNodeDescriptor(parentDescriptor: HierarchyNodeDescriptor?, element: PsiElement, isBase: Boolean)
     : HierarchyNodeDescriptor(element.project, parentDescriptor, element, isBase), Navigatable {
@@ -65,7 +65,7 @@ class LuaHierarchyNodeDescriptor(parentDescriptor: HierarchyNodeDescriptor?, ele
             myHighlightedText.ending.addText(" " + presentation.locationString, HierarchyNodeDescriptor.getPackageNameAttributes())
             icon = presentation.getIcon(false)
         } else {
-            if (element is LuaLocalFuncDef) {
+            if (element is LuaLocalFuncDefStat) {
                 myHighlightedText.ending.addText(element.name ?: "")
                 myHighlightedText.ending.addText(" " + element.containingFile.name, HierarchyNodeDescriptor.getPackageNameAttributes())
                 icon = AllIcons.Nodes.Function

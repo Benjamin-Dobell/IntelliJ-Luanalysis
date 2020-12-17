@@ -22,7 +22,7 @@ import com.intellij.util.BitUtil
 import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.psi.*
-import com.tang.intellij.lua.psi.impl.LuaFuncDefImpl
+import com.tang.intellij.lua.psi.impl.LuaFuncDefStatImpl
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.stubs.index.StubKeys
@@ -34,33 +34,33 @@ import com.tang.intellij.lua.ty.TyGenericParameter
 
  * Created by tangzx on 2016/11/26.
  */
-class LuaFuncType : LuaStubElementType<LuaFuncStub, LuaFuncDef>("Global Function") {
+class LuaFuncType : LuaStubElementType<LuaFuncDefStatStub, LuaFuncDefStat>("Global Function") {
 
-    override fun createPsi(luaGlobalFuncStub: LuaFuncStub): LuaFuncDef {
-        return LuaFuncDefImpl(luaGlobalFuncStub, this)
+    override fun createPsi(luaGlobalFuncStub: LuaFuncDefStatStub): LuaFuncDefStat {
+        return LuaFuncDefStatImpl(luaGlobalFuncStub, this)
     }
 
-    override fun createStub(funcDef: LuaFuncDef, stubElement: StubElement<*>): LuaFuncStub {
-        val nameRef = funcDef.nameIdentifier!!
-        val file = funcDef.containingFile
+    override fun createStub(funcDefStat: LuaFuncDefStat, stubElement: StubElement<*>): LuaFuncDefStatStub {
+        val nameRef = funcDefStat.nameIdentifier!!
+        val file = funcDefStat.containingFile
         val moduleName = (file as? LuaPsiFile)?.let {
-            SearchContext.withDumb(funcDef.project, null) {
+            SearchContext.withDumb(funcDefStat.project, null) {
                 file.getModuleName(it)
             }
         } ?: Constants.WORD_G
-        val retDocTy = funcDef.comment?.tagReturn?.type
-        val params = funcDef.params
-        val genericParams = funcDef.genericParams
-        val overloads = funcDef.overloads
+        val retDocTy = funcDefStat.comment?.tagReturn?.type
+        val params = funcDefStat.params
+        val genericParams = funcDefStat.genericParams
+        val overloads = funcDefStat.overloads
 
-        var flags = BitUtil.set(0, funcDef.visibility.bitMask, true)
-        flags = BitUtil.set(flags, FLAG_DEPRECATED, funcDef.isDeprecated)
+        var flags = BitUtil.set(0, funcDefStat.visibility.bitMask, true)
+        flags = BitUtil.set(flags, FLAG_DEPRECATED, funcDefStat.isDeprecated)
 
-        return LuaFuncStubImpl(nameRef.text,
+        return LuaFuncDefStatStubImpl(nameRef.text,
                 moduleName,
                 flags,
                 retDocTy,
-                funcDef.varargType,
+                funcDefStat.varargType,
                 params,
                 genericParams,
                 overloads,
@@ -68,11 +68,11 @@ class LuaFuncType : LuaStubElementType<LuaFuncStub, LuaFuncDef>("Global Function
     }
 
     override fun shouldCreateStub(node: ASTNode): Boolean {
-        val element = node.psi as LuaFuncDef
+        val element = node.psi as LuaFuncDefStat
         return element.funcBody != null && element.nameIdentifier != null
     }
 
-    override fun serialize(stub: LuaFuncStub, stream: StubOutputStream) {
+    override fun serialize(stub: LuaFuncDefStatStub, stream: StubOutputStream) {
         stream.writeName(stub.name)
         stream.writeName(stub.module)
         stream.writeShort(stub.flags)
@@ -83,7 +83,7 @@ class LuaFuncType : LuaStubElementType<LuaFuncStub, LuaFuncDef>("Global Function
         stream.writeSignatures(stub.overloads)
     }
 
-    override fun deserialize(stream: StubInputStream, stubElement: StubElement<*>): LuaFuncStub {
+    override fun deserialize(stream: StubInputStream, stubElement: StubElement<*>): LuaFuncDefStatStub {
         val name = stream.readName()
         val module = stream.readName()
         val flags = stream.readShort()
@@ -92,7 +92,7 @@ class LuaFuncType : LuaStubElementType<LuaFuncStub, LuaFuncDef>("Global Function
         val params = stream.readParamInfoArray()
         val genericParams = stream.readGenericParamsNullable()
         val overloads = stream.readSignatures()
-        return LuaFuncStubImpl(StringRef.toString(name),
+        return LuaFuncDefStatStubImpl(StringRef.toString(name),
                 StringRef.toString(module),
                 flags.toInt(),
                 retDocTy,
@@ -103,7 +103,7 @@ class LuaFuncType : LuaStubElementType<LuaFuncStub, LuaFuncDef>("Global Function
                 stubElement)
     }
 
-    override fun indexStub(luaGlobalFuncStub: LuaFuncStub, indexSink: IndexSink) {
+    override fun indexStub(luaGlobalFuncStub: LuaFuncDefStatStub, indexSink: IndexSink) {
         val name = luaGlobalFuncStub.name
         val moduleName = luaGlobalFuncStub.module
 
@@ -117,22 +117,23 @@ class LuaFuncType : LuaStubElementType<LuaFuncStub, LuaFuncDef>("Global Function
     }
 }
 
-interface LuaFuncStub : LuaFuncBodyOwnerStub<LuaFuncDef>, LuaClassMemberStub<LuaFuncDef> {
+interface LuaFuncDefStatStub : LuaFuncBodyOwnerStub<LuaFuncDefStat>, LuaClassMemberStub<LuaFuncDefStat> {
     val name: String
     val module: String
     val flags: Int
 }
 
-class LuaFuncStubImpl(override val name: String,
-                      override val module: String,
-                      override val flags: Int,
-                      override val returnDocTy: ITy?,
-                      override val varargTy: ITy?,
-                      override val params: Array<LuaParamInfo>,
-                      override val genericParams: Array<TyGenericParameter>?,
-                      override val overloads: Array<IFunSignature>,
-                      parent: StubElement<*>)
-    : StubBase<LuaFuncDef>(parent, LuaTypes.FUNC_DEF as IStubElementType<*, *>), LuaFuncStub {
+class LuaFuncDefStatStubImpl(
+    override val name: String,
+    override val module: String,
+    override val flags: Int,
+    override val returnDocTy: ITy?,
+    override val varargTy: ITy?,
+    override val params: Array<LuaParamInfo>,
+    override val genericParams: Array<TyGenericParameter>?,
+    override val overloads: Array<IFunSignature>,
+    parent: StubElement<*>
+) : StubBase<LuaFuncDefStat>(parent, LuaTypes.FUNC_DEF_STAT as IStubElementType<*, *>), LuaFuncDefStatStub {
     override val docTy: ITy?
         get() = null
 

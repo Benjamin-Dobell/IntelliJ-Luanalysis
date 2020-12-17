@@ -34,6 +34,8 @@ import com.tang.intellij.lua.ty.Ty;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 /**
  *
  * Created by tangzx on 2016/12/3.
@@ -97,7 +99,7 @@ public class LuaPsiTreeUtil {
     }
 
     @Nullable
-    private static LuaDocGenericDef findOwnerClassGenericDef(LuaFuncBodyOwner funcBodyOwner, String name) {
+    private static LuaDocGenericDef findOwnerClassGenericDef(LuaFuncBodyOwner<?> funcBodyOwner, String name) {
         SearchContext context = SearchContext.Companion.get(funcBodyOwner.getProject());
         ITy parentType = funcBodyOwner.guessParentType(context);
 
@@ -126,15 +128,15 @@ public class LuaPsiTreeUtil {
             LuaAssignStat assignStat = (LuaAssignStat) commentOwner;
             LuaExprList exprList = assignStat.getValueExprList();
 
-            if (exprList == null || exprList.getExprList().size() != 1) {
+            if (exprList == null || exprList.getExpressionList().size() != 1) {
                 return null;
             }
 
-            commentOwner = exprList.getExprList().get(0);
+            commentOwner = exprList.getExpressionList().get(0);
         }
 
-        if (commentOwner instanceof LuaFuncBodyOwner) {
-            LuaFuncBodyOwner funcBodyOwner = (LuaFuncBodyOwner) commentOwner;
+        if (commentOwner instanceof LuaFuncBodyOwner<?>) {
+            LuaFuncBodyOwner<?> funcBodyOwner = (LuaFuncBodyOwner<?>) commentOwner;
             return findOwnerClassGenericDef(funcBodyOwner, name);
         }
 
@@ -163,8 +165,8 @@ public class LuaPsiTreeUtil {
     @NotNull
     public static ITy findContextClass(PsiElement current, SearchContext context) {
         while (!(current instanceof PsiFile)) {
-            if (current instanceof LuaFuncBodyOwner) {
-                LuaFuncBodyOwner funcBodyOwner = (LuaFuncBodyOwner) current;
+            if (current instanceof LuaFuncBodyOwner<?>) {
+                LuaFuncBodyOwner<?> funcBodyOwner = (LuaFuncBodyOwner<?>) current;
                 ITy ty = funcBodyOwner.guessParentType(context);
 
                 if (ty != null) {
@@ -173,15 +175,16 @@ public class LuaPsiTreeUtil {
             } else if (current instanceof LuaAssignStat) {
                 LuaAssignStat assignStat = (LuaAssignStat) current;
                 LuaExprList valueExprList = assignStat.getValueExprList();
+                List<LuaExpression<?>> expressionList = valueExprList != null ? valueExprList.getExpressionList() : null;
 
-                if (valueExprList != null && valueExprList.getExprList().size() == 1) {
-                    LuaExpr luaExpr = valueExprList.getExprList().get(0);
-                    LuaExpr varExpr = assignStat.getVarExprList().getExprList().get(0);
+                if (expressionList != null && expressionList.size() == 1) {
+                    LuaExpression<?> luaExpression = expressionList.get(0);
+                    LuaExpression<?> varExpr = assignStat.getVarExprList().getExpressionList().get(0);
 
-                    if (luaExpr instanceof LuaFuncBodyOwner && varExpr instanceof LuaIndexExpr) {
+                    if (luaExpression instanceof LuaFuncBodyOwner<?> && varExpr instanceof LuaIndexExpr) {
                         LuaIndexExpr indexExpr = (LuaIndexExpr) varExpr;
 
-                        if (indexExpr.getExprList().size() != 1 || !indexExpr.getFirstChild().getText().equals(Constants.WORD_SELF)) {
+                        if (indexExpr.getExpressionList().size() != 1 || !indexExpr.getFirstChild().getText().equals(Constants.WORD_SELF)) {
                             ITy ty = indexExpr.guessParentType(context);
 
                             if (ty != Ty.Companion.getUNKNOWN()) {

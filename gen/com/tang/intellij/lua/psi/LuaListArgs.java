@@ -8,6 +8,6 @@ import com.intellij.psi.PsiElement;
 public interface LuaListArgs extends LuaArgs {
 
   @NotNull
-  List<LuaExpr> getExprList();
+  List<LuaExpression<?>> getExpressionList();
 
 }

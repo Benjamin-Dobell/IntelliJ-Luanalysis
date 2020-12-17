@@ -33,7 +33,7 @@ import com.tang.intellij.lua.ty.getTableTypeName
  */
 class LuaTableExprType : LuaStubElementType<LuaTableExprStub, LuaTableExpr>("TABLE_EXPR") {
 
-    override fun createPsi(luaTableStub: LuaTableExprStub) = LuaTableExprImpl(luaTableStub, this)
+    override fun createPsi(luaTableExprStub: LuaTableExprStub) = LuaTableExprImpl(luaTableExprStub, this)
 
     override fun createStub(tableExpr: LuaTableExpr, stubElement: StubElement<*>): LuaTableExprStub {
         val tableTypeName = getTableTypeName(tableExpr)
@@ -57,7 +57,7 @@ class LuaTableExprType : LuaStubElementType<LuaTableExprStub, LuaTableExpr>("TAB
     override fun indexStub(luaTableStub: LuaTableExprStub, indexSink: IndexSink) {}
 }
 
-interface LuaTableExprStub : LuaExprStub<LuaTableExpr> {
+interface LuaTableExprStub : StubElement<LuaTableExpr> {
     val tableTypeName: String
 }
 
@@ -65,4 +65,4 @@ class LuaTableExprStubImpl(
         override val tableTypeName: String,
         parent: StubElement<*>,
         elementType: LuaStubElementType<*, *>
-) : LuaExprStubImpl<LuaTableExpr>(parent, elementType), LuaTableExprStub
+) : LuaExprStub<LuaTableExpr>(parent, elementType), LuaTableExprStub

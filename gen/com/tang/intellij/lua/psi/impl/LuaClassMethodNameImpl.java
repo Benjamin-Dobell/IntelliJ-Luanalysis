@@ -32,21 +32,34 @@ public class LuaClassMethodNameImpl extends StubBasedPsiElementBase<LuaPlacehold
     visitor.visitClassMethodName(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
-  @NotNull
-  public LuaExpr getExpr() {
-    return notNullChild(PsiTreeUtil.getStubChildOfType(this, LuaExpr.class));
+  @Nullable
+  public LuaIndexExpr getIndexExpr() {
+    return PsiTreeUtil.getStubChildOfType(this, LuaIndexExpr.class);
+  }
+
+  @Override
+  @Nullable
+  public LuaNameExpr getNameExpr() {
+    return PsiTreeUtil.getStubChildOfType(this, LuaNameExpr.class);
   }
 
   @Override
   @Nullable
   public PsiElement getId() {
     return findChildByType(ID);
+  }
+
+  @Override
+  @NotNull
+  public LuaExpression<?> getExpression() {
+    return LuaPsiImplUtilKt.getExpression(this);
   }
 
   @Override

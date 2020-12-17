@@ -9,30 +9,31 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.psi.LuaTypes.*;
 import com.intellij.extapi.psi.StubBasedPsiElementBase;
-import com.tang.intellij.lua.stubs.LuaNameDefStub;
+import com.tang.intellij.lua.stubs.LuaParamDefStub;
 import com.tang.intellij.lua.psi.*;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.tree.IElementType;
 
-public class LuaNameDefImpl extends StubBasedPsiElementBase<LuaNameDefStub> implements LuaNameDef {
+public class LuaParamDefImpl extends StubBasedPsiElementBase<LuaParamDefStub> implements LuaParamDef {
 
-  public LuaNameDefImpl(@NotNull LuaNameDefStub stub, @NotNull IStubElementType type) {
+  public LuaParamDefImpl(@NotNull LuaParamDefStub stub, @NotNull IStubElementType type) {
     super(stub, type);
   }
 
-  public LuaNameDefImpl(@NotNull ASTNode node) {
+  public LuaParamDefImpl(@NotNull ASTNode node) {
     super(node);
   }
 
-  public LuaNameDefImpl(LuaNameDefStub stub, IElementType type, ASTNode node) {
+  public LuaParamDefImpl(LuaParamDefStub stub, IElementType type, ASTNode node) {
     super(stub, type, node);
   }
 
   public void accept(@NotNull LuaVisitor visitor) {
-    visitor.visitNameDef(this);
+    visitor.visitParamDef(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);

@@ -53,6 +53,6 @@ class LuaBinaryExprType : LuaStubElementType<LuaBinaryExprStub, LuaBinaryExpr>("
 class LuaBinaryExprStub(
         val op: Int,
         parent: StubElement<*>?
-) : LuaStubBase<LuaBinaryExpr>(parent, LuaElementTypes.BINARY_EXPR), LuaExprStub<LuaBinaryExpr> {
+) : LuaExprStub<LuaBinaryExpr>(parent, LuaElementTypes.BINARY_EXPR) {
     val opType: IElementType? get() = LuaElementTypes.BINARY_OPS.getOrNull(op)
 }

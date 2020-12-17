@@ -9,11 +9,17 @@ import com.tang.intellij.lua.stubs.LuaPlaceholderStub;
 
 public interface LuaClassMethodName extends LuaPsiElement, StubBasedPsiElement<LuaPlaceholderStub> {
 
-  @NotNull
-  LuaExpr getExpr();
+  @Nullable
+  LuaIndexExpr getIndexExpr();
+
+  @Nullable
+  LuaNameExpr getNameExpr();
 
   @Nullable
   PsiElement getId();
+
+  @NotNull
+  LuaExpression<?> getExpression();
 
   @Nullable
   PsiElement getDot();

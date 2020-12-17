@@ -8,18 +8,31 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.psi.LuaTypes.*;
+import com.intellij.extapi.psi.StubBasedPsiElementBase;
+import com.tang.intellij.lua.stubs.LuaPlaceholderStub;
 import com.tang.intellij.lua.psi.*;
+import com.intellij.psi.stubs.IStubElementType;
+import com.intellij.psi.tree.IElementType;
 
-public class LuaForAStatImpl extends LuaStatementImpl implements LuaForAStat {
+public class LuaForAStatImpl extends StubBasedPsiElementBase<LuaPlaceholderStub> implements LuaForAStat {
+
+  public LuaForAStatImpl(@NotNull LuaPlaceholderStub stub, @NotNull IStubElementType type) {
+    super(stub, type);
+  }
 
   public LuaForAStatImpl(@NotNull ASTNode node) {
     super(node);
+  }
+
+  public LuaForAStatImpl(LuaPlaceholderStub stub, IElementType type, ASTNode node) {
+    super(stub, type, node);
   }
 
   public void accept(@NotNull LuaVisitor visitor) {
     visitor.visitForAStat(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);
@@ -27,20 +40,14 @@ public class LuaForAStatImpl extends LuaStatementImpl implements LuaForAStat {
 
   @Override
   @NotNull
-  public List<LuaExpr> getExprList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, LuaExpr.class);
+  public LuaParamDef getParamDef() {
+    return notNullChild(PsiTreeUtil.getStubChildOfType(this, LuaParamDef.class));
   }
 
   @Override
   @NotNull
-  public LuaParamNameDef getParamNameDef() {
-    return notNullChild(PsiTreeUtil.getChildOfType(this, LuaParamNameDef.class));
-  }
-
-  @Override
-  @NotNull
-  public List<LuaParamNameDef> getParamNameDefList() {
-    return LuaPsiImplUtilKt.getParamNameDefList(this);
+  public List<LuaParamDef> getParamDefList() {
+    return LuaPsiImplUtilKt.getParamDefList(this);
   }
 
 }

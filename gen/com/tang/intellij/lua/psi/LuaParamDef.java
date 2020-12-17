@@ -6,10 +6,10 @@ import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.StubBasedPsiElement;
-import com.tang.intellij.lua.stubs.LuaNameDefStub;
+import com.tang.intellij.lua.stubs.LuaParamDefStub;
 import com.intellij.psi.search.SearchScope;
 
-public interface LuaNameDef extends LuaNamedElement, LuaTypeGuessable, PsiNameIdentifierOwner, StubBasedPsiElement<LuaNameDefStub> {
+public interface LuaParamDef extends LuaNamedElement, LuaTypeGuessable, PsiNameIdentifierOwner, StubBasedPsiElement<LuaParamDefStub> {
 
   @NotNull
   PsiElement getId();

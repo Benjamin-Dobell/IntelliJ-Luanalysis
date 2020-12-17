@@ -4,17 +4,32 @@ package com.tang.intellij.lua.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiNameIdentifierOwner;
-import com.tang.intellij.lua.stubs.LuaExprStubElement;
 import com.tang.intellij.lua.stubs.LuaIndexExprStub;
+import com.intellij.psi.PsiNameIdentifierOwner;
+import com.intellij.psi.StubBasedPsiElement;
 import com.intellij.navigation.ItemPresentation;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 
-public interface LuaIndexExpr extends LuaExpr, PsiNameIdentifierOwner, LuaClassMember, LuaExprStubElement<LuaIndexExprStub> {
+public interface LuaIndexExpr extends LuaClassMember, LuaExpression<LuaIndexExprStub>, PsiNameIdentifierOwner, StubBasedPsiElement<LuaIndexExprStub> {
 
-  @NotNull
-  List<LuaExpr> getExprList();
+  @Nullable
+  LuaCallExpr getCallExpr();
+
+  @Nullable
+  LuaIndexExpr getIndexExpr();
+
+  @Nullable
+  LuaLiteralExpr getLiteralExpr();
+
+  @Nullable
+  LuaNameExpr getNameExpr();
+
+  @Nullable
+  LuaParenExpr getParenExpr();
+
+  @Nullable
+  LuaTableExpr getTableExpr();
 
   @Nullable
   PsiElement getId();
@@ -34,11 +49,7 @@ public interface LuaIndexExpr extends LuaExpr, PsiNameIdentifierOwner, LuaClassM
   ItemPresentation getPresentation();
 
   @Nullable
-  LuaExpr getIdExpr();
-
-  //WARNING: toString(...) is skipped
-  //matching toString(LuaIndexExpr, ...)
-  //methods are not found in LuaPsiImplUtilKt
+  LuaExpression<?> getIdExpr();
 
   @Nullable
   ITy guessIndexType(@NotNull SearchContext context);
@@ -47,6 +58,9 @@ public interface LuaIndexExpr extends LuaExpr, PsiNameIdentifierOwner, LuaClassM
   ITy guessParentType(@NotNull SearchContext context);
 
   boolean isDeprecated();
+
+  @NotNull
+  List<LuaExpression<?>> getExpressionList();
 
   @Nullable
   PsiElement getDot();

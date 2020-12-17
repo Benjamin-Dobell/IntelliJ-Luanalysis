@@ -4,12 +4,12 @@ package com.tang.intellij.lua.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import com.tang.intellij.lua.stubs.LuaExprPlaceStub;
 import com.intellij.psi.StubBasedPsiElement;
-import com.tang.intellij.lua.stubs.LuaExprStub;
 
-public interface LuaParenExpr extends LuaExpr, StubBasedPsiElement<LuaExprStub> {
+public interface LuaParenExpr extends LuaExpression<LuaExprPlaceStub>, StubBasedPsiElement<LuaExprPlaceStub> {
 
   @Nullable
-  LuaExpr getExpr();
+  LuaExpression<?> getExpression();
 
 }

@@ -27,12 +27,12 @@ class LuaFunctionParamSigMacro : Macro() {
     override fun getPresentableName() = "LuaFunctionParamSignature()"
 
     override fun getName() = "LuaFunctionParamSignature"
-    
+
     override fun calculateResult(expressions: Array<out Expression>, context: ExpressionContext?): Result? {
         var e = context?.psiElementAtStartOffset
         while (e != null && e !is PsiFile) {
             e = e.parent
-            if (e is LuaFuncBodyOwner) {
+            if (e is LuaFuncBodyOwner<*>) {
                 val str = e.paramSignature
                 return TextResult(str.substring(1, str.length-1))
             }
@@ -45,7 +45,7 @@ class LuaFunctionParamSigMacro : Macro() {
         val list = mutableListOf<LookupElement>()
         while (e != null && e !is PsiFile) {
             e = e.parent
-            if (e is LuaFuncBodyOwner) {
+            if (e is LuaFuncBodyOwner<*>) {
                 val str = e.paramSignature
                 list.add(LookupElementBuilder.create(str.substring(1, str.length-1)))
             }

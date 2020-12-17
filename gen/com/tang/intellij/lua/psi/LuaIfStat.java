@@ -9,7 +9,4 @@ import com.tang.intellij.lua.stubs.LuaPlaceholderStub;
 
 public interface LuaIfStat extends LuaStatement, LuaIndentRange, StubBasedPsiElement<LuaPlaceholderStub> {
 
-  @NotNull
-  List<LuaExpr> getExprList();
-
 }

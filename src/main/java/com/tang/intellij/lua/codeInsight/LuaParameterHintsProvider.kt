@@ -63,7 +63,7 @@ class LuaParameterHintsProvider : InlayParameterHintsProvider {
             @Suppress("UnnecessaryVariable")
             val callExpr = psi
             val args = callExpr.args as? LuaListArgs ?: return list
-            val exprList = args.exprList
+            val exprList = args.expressionList
             val context = SearchContext.get(callExpr.getProject())
             val type = callExpr.guessParentType(context)
 
@@ -88,14 +88,14 @@ class LuaParameterHintsProvider : InlayParameterHintsProvider {
                 }
             }
         }
-        else if (psi is LuaParamNameDef) {
+        else if (psi is LuaParamDef) {
             if (PARAMETER_TYPE_HINT.get()) {
                 psi.guessType(SearchContext.get(psi.project))?.let {
                     return listOf(InlayInfo("$TYPE_INFO_PREFIX${it.displayName}", psi.textOffset + psi.textLength))
                 }
             }
         }
-        else if (psi is LuaNameDef) {
+        else if (psi is LuaLocalDef) {
             if (LOCAL_VARIABLE_HINT.get()) {
                 val type = psi.guessType(SearchContext.get(psi.project))
                 if (type != null) {
@@ -103,7 +103,7 @@ class LuaParameterHintsProvider : InlayParameterHintsProvider {
                 }
             }
         }
-        else if (psi is LuaFuncBodyOwner) {
+        else if (psi is LuaFuncBodyOwner<*>) {
             val paren = psi.funcBody?.rparen
             if (FUNCTION_HINT.get() && paren != null) {
                 val type = psi.guessReturnType(SearchContext.get(psi.project))

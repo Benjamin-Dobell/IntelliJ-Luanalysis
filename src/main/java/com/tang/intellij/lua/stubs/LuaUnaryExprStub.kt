@@ -54,6 +54,6 @@ class LuaUnaryExprType : LuaStubElementType<LuaUnaryExprStub, LuaUnaryExpr>("UNA
 class LuaUnaryExprStub(
         val opIndex: Int,
         parent: StubElement<*>?
-) : LuaStubBase<LuaBinaryExpr>(parent, LuaElementTypes.UNARY_EXPR), LuaExprStub<LuaBinaryExpr> {
+) : LuaExprStub<LuaBinaryExpr>(parent, LuaElementTypes.UNARY_EXPR) {
     val opType: IElementType? get() = LuaElementTypes.UNARY_OPS.getOrNull(opIndex)
 }

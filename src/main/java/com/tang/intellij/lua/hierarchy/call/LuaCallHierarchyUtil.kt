@@ -23,7 +23,7 @@ import com.tang.intellij.lua.psi.*
 
 object LuaCallHierarchyUtil {
     fun isValidElement(element: PsiElement?): Boolean {
-        return element is LuaClassMethodDef || element is LuaFuncDef || element is LuaLocalFuncDef
+        return element is LuaClassMethodDefStat || element is LuaFuncDefStat || element is LuaLocalFuncDefStat
     }
 
     fun getValidParentElement(element: PsiElement?): PsiElement? {
@@ -45,7 +45,7 @@ object LuaCallHierarchyUtil {
         val callees = mutableListOf<PsiElement>()
         val visitor = object : LuaRecursiveVisitor() {
             override fun visitCallExpr(o: LuaCallExpr) {
-                o.expr.reference?.resolve()?.takeIf { LuaCallHierarchyUtil.isValidElement(it) }?.let {
+                o.expression.reference?.resolve()?.takeIf { LuaCallHierarchyUtil.isValidElement(it) }?.let {
                     callees.add(it)
                 }
             }

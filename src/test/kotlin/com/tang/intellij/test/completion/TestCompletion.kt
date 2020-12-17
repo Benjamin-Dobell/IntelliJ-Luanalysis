@@ -176,4 +176,20 @@ class TestCompletion : TestCompletionBase() {
         assertEquals(1, exactLookups.size)
         assertFalse(exactLookups.first() is LuaLookupElement)
     }
+
+    fun `test attribute completion`() {
+        val code = """
+            --- testAttributeCompletion.lua
+
+            local v <--[[caret]]
+        """
+        fileTreeFromText(code).createAndOpenFileWithCaretMarker()
+
+        FileDocumentManager.getInstance().saveAllDocuments()
+        myFixture.completeBasic()
+
+        val strings = myFixture.lookupElementStrings
+        assertNotNull(strings)
+        assertTrue(strings!!.containsAll(Arrays.asList("const", "close")))
+    }
 }

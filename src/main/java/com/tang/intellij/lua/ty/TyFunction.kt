@@ -42,7 +42,7 @@ interface IFunSignature {
 }
 
 fun IFunSignature.processParameters(callExpr: LuaCallExpr, processor: (index: Int, param: LuaParamInfo) -> Boolean) {
-    val expr = callExpr.expr
+    val expr = callExpr.expression
     val selfTy = if (expr is LuaIndexExpr) {
         expr.guessParentType(SearchContext.get(expr.project))
     } else null
@@ -395,7 +395,7 @@ abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
     }
 }
 
-class TyPsiFunction(private val colonCall: Boolean, val psi: LuaFuncBodyOwner, flags: Int = 0) : TyFunction() {
+class TyPsiFunction(private val colonCall: Boolean, val psi: LuaFuncBodyOwner<*>, flags: Int = 0) : TyFunction() {
     init {
         this.flags = flags
         if (colonCall) {

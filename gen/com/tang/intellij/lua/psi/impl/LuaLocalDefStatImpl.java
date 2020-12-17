@@ -14,33 +14,46 @@ import com.tang.intellij.lua.psi.*;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.tree.IElementType;
 
-public class LuaNameListImpl extends StubBasedPsiElementBase<LuaPlaceholderStub> implements LuaNameList {
+public class LuaLocalDefStatImpl extends StubBasedPsiElementBase<LuaPlaceholderStub> implements LuaLocalDefStat {
 
-  public LuaNameListImpl(@NotNull LuaPlaceholderStub stub, @NotNull IStubElementType type) {
+  public LuaLocalDefStatImpl(@NotNull LuaPlaceholderStub stub, @NotNull IStubElementType type) {
     super(stub, type);
   }
 
-  public LuaNameListImpl(@NotNull ASTNode node) {
+  public LuaLocalDefStatImpl(@NotNull ASTNode node) {
     super(node);
   }
 
-  public LuaNameListImpl(LuaPlaceholderStub stub, IElementType type, ASTNode node) {
+  public LuaLocalDefStatImpl(LuaPlaceholderStub stub, IElementType type, ASTNode node) {
     super(stub, type, node);
   }
 
   public void accept(@NotNull LuaVisitor visitor) {
-    visitor.visitNameList(this);
+    visitor.visitLocalDefStat(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
+  @Nullable
+  public LuaExprList getExprList() {
+    return PsiTreeUtil.getStubChildOfType(this, LuaExprList.class);
+  }
+
+  @Override
   @NotNull
-  public List<LuaNameDef> getNameDefList() {
-    return PsiTreeUtil.getStubChildrenOfTypeAsList(this, LuaNameDef.class);
+  public List<LuaLocalDef> getLocalDefList() {
+    return PsiTreeUtil.getStubChildrenOfTypeAsList(this, LuaLocalDef.class);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getAssign() {
+    return findChildByType(ASSIGN);
   }
 
 }

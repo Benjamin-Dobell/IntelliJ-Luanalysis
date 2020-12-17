@@ -24,8 +24,6 @@ public class Constants {
     public static final String WORD_SELF = "self";
     public static final String WORD_UNDERLINE = "_";
     public static final String WORD_G = "_G";
-    public static final String WORD_PAIRS = "pairs";
-    public static final String WORD_IPAIRS = "ipairs";
     public static final String WORD_ANY = "any";
     public static final String WORD_VOID = "void";
     public static final String WORD_MODULE = "module";
@@ -38,4 +36,6 @@ public class Constants {
     public static final String WORD_TABLE = "table";
     public static final String WORD_FUNCTION = "function";
     public static final String WORD_REQUIRE = "require";
+    public static final String WORD_CLOSE = "close";
+    public static final String WORD_CONST = "const";
 }

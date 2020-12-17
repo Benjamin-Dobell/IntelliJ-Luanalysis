@@ -32,6 +32,7 @@ public class LuaFuncBodyImpl extends StubBasedPsiElementBase<LuaFuncBodyStub> im
     visitor.visitFuncBody(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);
@@ -39,8 +40,8 @@ public class LuaFuncBodyImpl extends StubBasedPsiElementBase<LuaFuncBodyStub> im
 
   @Override
   @NotNull
-  public List<LuaParamNameDef> getParamNameDefList() {
-    return PsiTreeUtil.getStubChildrenOfTypeAsList(this, LuaParamNameDef.class);
+  public List<LuaParamDef> getParamDefList() {
+    return PsiTreeUtil.getStubChildrenOfTypeAsList(this, LuaParamDef.class);
   }
 
   @Override

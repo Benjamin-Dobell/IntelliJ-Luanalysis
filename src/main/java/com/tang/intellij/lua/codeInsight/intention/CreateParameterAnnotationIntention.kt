@@ -27,7 +27,7 @@ import com.intellij.util.IncorrectOperationException
 import com.tang.intellij.lua.codeInsight.template.macro.SuggestTypeMacro
 import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.psi.LuaCommentOwner
-import com.tang.intellij.lua.psi.LuaParamNameDef
+import com.tang.intellij.lua.psi.LuaParamDef
 import org.jetbrains.annotations.Nls
 
 class CreateParameterAnnotationIntention : BaseIntentionAction() {
@@ -42,11 +42,11 @@ class CreateParameterAnnotationIntention : BaseIntentionAction() {
         return name != null //&& name.funcBodyOwner !is LuaClosureExpr
     }
 
-    private fun findParamName(psiFile: PsiFile, offset:Int): LuaParamNameDef? {
+    private fun findParamName(psiFile: PsiFile, offset:Int): LuaParamDef? {
         var element = psiFile.findElementAt(offset)
         if (element != null) {
             element = element.parent
-            if (element is LuaParamNameDef) {
+            if (element is LuaParamDef) {
                 val commentOwner = PsiTreeUtil.getParentOfType(element, LuaCommentOwner::class.java)
                 val comment = commentOwner?.comment
                 comment?.getParamDef(element.name) ?: return element

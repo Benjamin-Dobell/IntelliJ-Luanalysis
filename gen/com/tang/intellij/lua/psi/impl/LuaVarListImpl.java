@@ -27,13 +27,51 @@ public class LuaVarListImpl extends LuaExprListImpl implements LuaVarList {
     super(stub, type, node);
   }
 
+  @Override
   public void accept(@NotNull LuaVisitor visitor) {
     visitor.visitVarList(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);
+  }
+
+  @Override
+  @NotNull
+  public List<LuaCallExpr> getCallExprList() {
+    return PsiTreeUtil.getStubChildrenOfTypeAsList(this, LuaCallExpr.class);
+  }
+
+  @Override
+  @NotNull
+  public List<LuaIndexExpr> getIndexExprList() {
+    return PsiTreeUtil.getStubChildrenOfTypeAsList(this, LuaIndexExpr.class);
+  }
+
+  @Override
+  @NotNull
+  public List<LuaLiteralExpr> getLiteralExprList() {
+    return PsiTreeUtil.getStubChildrenOfTypeAsList(this, LuaLiteralExpr.class);
+  }
+
+  @Override
+  @NotNull
+  public List<LuaNameExpr> getNameExprList() {
+    return PsiTreeUtil.getStubChildrenOfTypeAsList(this, LuaNameExpr.class);
+  }
+
+  @Override
+  @NotNull
+  public List<LuaParenExpr> getParenExprList() {
+    return PsiTreeUtil.getStubChildrenOfTypeAsList(this, LuaParenExpr.class);
+  }
+
+  @Override
+  @NotNull
+  public List<LuaTableExpr> getTableExprList() {
+    return PsiTreeUtil.getStubChildrenOfTypeAsList(this, LuaTableExpr.class);
   }
 
 }

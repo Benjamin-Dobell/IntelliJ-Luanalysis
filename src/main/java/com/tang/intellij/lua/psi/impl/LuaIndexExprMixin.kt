@@ -17,6 +17,7 @@
 package com.tang.intellij.lua.psi.impl
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.PsiReference
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.tree.IElementType
@@ -29,7 +30,7 @@ import com.tang.intellij.lua.stubs.LuaIndexExprStub
 
  * Created by TangZX on 2017/4/12.
  */
-abstract class LuaIndexExprMixin : LuaExprStubMixin<LuaIndexExprStub>, LuaExpr, LuaClassField {
+abstract class LuaIndexExprMixin : LuaExprMixin<LuaIndexExprStub>, LuaClassField, PsiNamedElement {
 
     internal constructor(stub: LuaIndexExprStub, nodeType: IStubElementType<*, *>) : super(stub, nodeType)
 
@@ -48,14 +49,15 @@ abstract class LuaIndexExprMixin : LuaExprStubMixin<LuaIndexExprStub>, LuaExpr, 
      *
      * get comment for `field`
      */
-    override fun getComment(): LuaComment? {
-        val p = parent
-        if (p is LuaVarList) {
-            val stat = p.parent as LuaStatement
-            return stat.comment
+    override val comment: LuaComment?
+        get() {
+            val p = parent
+            if (p is LuaVarList) {
+                val stat = p.parent as LuaStatement
+                return stat.comment
+            }
+            return super<LuaExprMixin>.comment
         }
-        return super.getComment()
-    }
 
     override val visibility: Visibility get() {
         val stub = this.stub

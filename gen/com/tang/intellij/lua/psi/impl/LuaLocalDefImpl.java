@@ -9,15 +9,15 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.psi.LuaTypes.*;
 import com.intellij.extapi.psi.StubBasedPsiElementBase;
-import com.tang.intellij.lua.stubs.LuaPlaceholderStub;
+import com.tang.intellij.lua.stubs.LuaLocalDefStub;
 import com.tang.intellij.lua.psi.*;
-import com.tang.intellij.lua.comment.psi.api.LuaComment;
+import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.tree.IElementType;
 
-public class LuaLocalDefImpl extends StubBasedPsiElementBase<LuaPlaceholderStub> implements LuaLocalDef {
+public class LuaLocalDefImpl extends StubBasedPsiElementBase<LuaLocalDefStub> implements LuaLocalDef {
 
-  public LuaLocalDefImpl(@NotNull LuaPlaceholderStub stub, @NotNull IStubElementType type) {
+  public LuaLocalDefImpl(@NotNull LuaLocalDefStub stub, @NotNull IStubElementType type) {
     super(stub, type);
   }
 
@@ -25,7 +25,7 @@ public class LuaLocalDefImpl extends StubBasedPsiElementBase<LuaPlaceholderStub>
     super(node);
   }
 
-  public LuaLocalDefImpl(LuaPlaceholderStub stub, IElementType type, ASTNode node) {
+  public LuaLocalDefImpl(LuaLocalDefStub stub, IElementType type, ASTNode node) {
     super(stub, type, node);
   }
 
@@ -33,33 +33,52 @@ public class LuaLocalDefImpl extends StubBasedPsiElementBase<LuaPlaceholderStub>
     visitor.visitLocalDef(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
-  @Nullable
-  public LuaExprList getExprList() {
-    return PsiTreeUtil.getStubChildOfType(this, LuaExprList.class);
+  @NotNull
+  public PsiElement getId() {
+    return notNullChild(findChildByType(ID));
+  }
+
+  @Override
+  @NotNull
+  public String getName() {
+    return LuaPsiImplUtilKt.getName(this);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement setName(@NotNull String name) {
+    return LuaPsiImplUtilKt.setName(this, name);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getNameIdentifier() {
+    return LuaPsiImplUtilKt.getNameIdentifier(this);
+  }
+
+  @Override
+  @NotNull
+  public SearchScope getUseScope() {
+    return LuaPsiImplUtilKt.getUseScope(this);
   }
 
   @Override
   @Nullable
-  public LuaNameList getNameList() {
-    return PsiTreeUtil.getStubChildOfType(this, LuaNameList.class);
+  public LuaCloseAttribute getClose() {
+    return PsiTreeUtil.getChildOfType(this, LuaCloseAttribute.class);
   }
 
   @Override
   @Nullable
-  public LuaComment getComment() {
-    return LuaPsiImplUtilKt.getComment(this);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getAssign() {
-    return findChildByType(ASSIGN);
+  public LuaConstAttribute getConst() {
+    return PsiTreeUtil.getChildOfType(this, LuaConstAttribute.class);
   }
 
 }

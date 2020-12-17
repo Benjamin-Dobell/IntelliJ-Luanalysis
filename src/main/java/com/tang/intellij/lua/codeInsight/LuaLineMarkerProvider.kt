@@ -16,7 +16,6 @@
 
 package com.tang.intellij.lua.codeInsight
 
-import com.intellij.codeHighlighting.Pass
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzerSettings
 import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.codeInsight.daemon.LineMarkerProvider
@@ -31,7 +30,6 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.util.Function
 import com.intellij.util.FunctionUtil
 import com.intellij.util.Query
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass
@@ -88,7 +86,7 @@ class LuaLineMarkerProvider : LineMarkerProvider {
                         classMethodNameId.textRange,
                         AllIcons.Gutter.OverridenMethod,
                         null,
-                        object : LuaLineMarkerNavigator<PsiElement, LuaClassMethod>() {
+                        object : LuaLineMarkerNavigator<PsiElement, LuaClassMethod<*>>() {
 
                             override fun getTitle(elt: PsiElement)
                                     = "Choose Overriding Method of ${methodDef.name}"
@@ -145,7 +143,7 @@ class LuaLineMarkerProvider : LineMarkerProvider {
                     GutterIconRenderer.Alignment.CENTER)
             result.add(classIcon)
         } else if (element is LuaCallExpr) {
-            val expr = element.expr
+            val expr = element.expression
             val reference = expr.reference
             if (reference != null) {
                 val resolve = reference.resolve()

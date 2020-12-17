@@ -69,4 +69,4 @@ class LuaLiteralExprStub(
         val string: String?,
         parent: StubElement<*>?,
         type: LuaStubElementType<*, *>
-) : LuaExprStubImpl<LuaLiteralExpr>(parent, type)
+) : LuaExprStub<LuaLiteralExpr>(parent, type)

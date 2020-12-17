@@ -4,13 +4,13 @@ package com.tang.intellij.lua.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiNameIdentifierOwner;
-import com.tang.intellij.lua.stubs.LuaExprStubElement;
 import com.tang.intellij.lua.stubs.LuaNameExprStub;
+import com.intellij.psi.PsiNameIdentifierOwner;
+import com.intellij.psi.StubBasedPsiElement;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.psi.PsiReference;
 
-public interface LuaNameExpr extends LuaExpr, PsiNameIdentifierOwner, LuaExprStubElement<LuaNameExprStub>, LuaModuleClassField {
+public interface LuaNameExpr extends LuaModuleClassField, LuaExpression<LuaNameExprStub>, PsiNameIdentifierOwner, StubBasedPsiElement<LuaNameExprStub> {
 
   @NotNull
   PsiElement getId();
@@ -31,9 +31,5 @@ public interface LuaNameExpr extends LuaExpr, PsiNameIdentifierOwner, LuaExprStu
   PsiReference[] getReferences();
 
   boolean isDeprecated();
-
-  //WARNING: toString(...) is skipped
-  //matching toString(LuaNameExpr, ...)
-  //methods are not found in LuaPsiImplUtilKt
 
 }

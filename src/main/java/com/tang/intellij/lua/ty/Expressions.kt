@@ -32,9 +32,9 @@ import com.tang.intellij.lua.psi.impl.LuaNameExprMixin
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.search.withSearchGuard
 
-fun inferExpr(expr: LuaExpr, context: SearchContext): ITy? {
-    if (expr.comment != null) {
-        val typeCast = PsiTreeUtil.getChildrenOfTypeAsList(expr.comment, LuaDocTagTypeImpl::class.java).firstOrNull()
+fun inferExpr(expression: LuaExpression<*>, context: SearchContext): ITy? {
+    if (expression.comment != null) {
+        val typeCast = PsiTreeUtil.getChildrenOfTypeAsList(expression.comment, LuaDocTagTypeImpl::class.java).firstOrNull()
 
         if (typeCast != null) {
             val castTy = typeCast.getType()
@@ -49,23 +49,23 @@ fun inferExpr(expr: LuaExpr, context: SearchContext): ITy? {
 
     var ty: ITy? = null
 
-    if (expr is LuaIndexExpr || expr is LuaNameExpr) {
-        val tree = LuaDeclarationTree.get(expr.containingFile)
-        val declaration = tree.find(expr)?.firstDeclaration?.psi
-        if (declaration != expr && declaration is LuaTypeGuessable) {
+    if (expression is LuaIndexExpr || expression is LuaNameExpr) {
+        val tree = LuaDeclarationTree.get(expression.containingFile)
+        val declaration = tree.find(expression)?.firstDeclaration?.psi
+        if (declaration != expression && declaration is LuaTypeGuessable) {
             ty = declaration.guessType(context)
         }
     }
 
     if (ty == null) {
-        ty = inferExprInner(expr, context)
+        ty = inferExprInner(expression, context)
 
         if (ty == null) {
             return null
         }
     }
 
-    val notTypeCast = PsiTreeUtil.getChildrenOfTypeAsList(expr.comment, LuaDocTagNotImpl::class.java).firstOrNull()
+    val notTypeCast = PsiTreeUtil.getChildrenOfTypeAsList(expression.comment, LuaDocTagNotImpl::class.java).firstOrNull()
 
     if (notTypeCast != null) {
         val notTy = if (context.supportsMultipleResults) {
@@ -103,7 +103,7 @@ private fun inferExprInner(expr: LuaPsiElement, context: SearchContext): ITy? {
         is LuaTableExpr -> expr.infer(context)
         is LuaParenExpr -> {
             context.withIndex(0, false) {
-                infer(expr.expr, context)
+                infer(expr.expression, context)
             }
         }
         is LuaNameExpr -> expr.infer(context)
@@ -119,7 +119,7 @@ private fun LuaUnaryExpr.infer(context: SearchContext): ITy? {
 
     return when (operator) {
         LuaTypes.MINUS -> { // Negative something
-            val ty = infer(expr, context)
+            val ty = infer(expression, context)
             return if (ty is TyPrimitiveLiteral) {
                 when (ty.primitiveKind) {
                     TyPrimitiveKind.Number -> {
@@ -141,7 +141,7 @@ private fun LuaUnaryExpr.infer(context: SearchContext): ITy? {
         }
         LuaTypes.GETN -> Ty.NUMBER // Table length is a number
         LuaTypes.NOT -> { // Returns a boolean; inverse of a boolean literal
-            return when (infer(expr, context)?.booleanType) {
+            return when (infer(expression, context)?.booleanType) {
                 Ty.TRUE -> Ty.FALSE
                 Ty.FALSE -> Ty.TRUE
                 else -> Ty.BOOLEAN
@@ -248,7 +248,7 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
         val list = mutableListOf<ITy>()
         // self type
         if (this.isMethodColonCall) {
-            this.prefixExpr?.let { prefix ->
+            this.prefixExpression?.let { prefix ->
                 list.add(prefix.guessType(context) ?: Ty.UNKNOWN)
             }
         }
@@ -318,7 +318,7 @@ private fun LuaCallExpr.getReturnTy(sig: IFunSignature, context: SearchContext):
 private fun LuaCallExpr.infer(context: SearchContext): ITy? {
     val luaCallExpr = this
     // xxx()
-    val expr = luaCallExpr.expr
+    val expr = luaCallExpr.expression
 
     // require('module') resolution
     // TODO: Lazy module type like TyLazyClass, but with file paths for use when context.isDumb
@@ -366,10 +366,10 @@ private fun LuaCallExpr.infer(context: SearchContext): ITy? {
 private fun LuaNameExpr.infer(context: SearchContext): ITy? {
     return recursionGuard(this, Computable {
         if (name == Constants.WORD_SELF) {
-            val methodDef = PsiTreeUtil.getStubOrPsiParentOfType(this, LuaClassMethodDef::class.java)
+            val methodDef = PsiTreeUtil.getStubOrPsiParentOfType(this, LuaClassMethodDefStat::class.java)
             if (methodDef != null && !methodDef.isStatic) {
                 val methodName = methodDef.classMethodName
-                val expr = methodName.expr
+                val expr = methodName.expression
                 val methodClassType = expr.guessType(context) as? ITyClass
 
                 if (methodClassType != null) {
@@ -523,7 +523,7 @@ private fun LuaTableExpr.infer(context: SearchContext): ITy? {
         val field = list.first()
 
         if (field.id == null) {
-            val exprList = field.exprList
+            val exprList = field.expressionList
 
             if (exprList.size == 1) {
                 val valueExpr = exprList[0]

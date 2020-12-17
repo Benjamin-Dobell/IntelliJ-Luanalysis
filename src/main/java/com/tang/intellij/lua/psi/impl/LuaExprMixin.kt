@@ -16,21 +16,28 @@
 
 package com.tang.intellij.lua.psi.impl
 
+import com.intellij.extapi.psi.StubBasedPsiElementBase
 import com.intellij.lang.ASTNode
+import com.intellij.psi.PsiReference
+import com.intellij.psi.PsiReferenceService
+import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry
 import com.intellij.psi.stubs.IStubElementType
+import com.intellij.psi.stubs.StubElement
 import com.intellij.psi.tree.IElementType
-import com.tang.intellij.lua.psi.LuaExpr
-import com.tang.intellij.lua.stubs.LuaExprStubImpl
+import com.tang.intellij.lua.psi.LuaExpression
 
-/**
- * 表达式基类
- * Created by TangZX on 2016/12/4.
- */
-abstract class LuaExprMixin : LuaExprStubMixin<LuaExprStubImpl<*>>, LuaExpr {
-
-    constructor(stub: LuaExprStubImpl<*>, nodeType: IStubElementType<*, *>) : super(stub, nodeType)
+abstract class LuaExprMixin<Stub: StubElement<*>> : StubBasedPsiElementBase<Stub>, LuaExpression<Stub> {
+    constructor(stub: Stub, nodeType: IStubElementType<*, *>) : super(stub, nodeType)
 
     constructor(node: ASTNode) : super(node)
 
-    constructor(stub: LuaExprStubImpl<*>, nodeType: IElementType, node: ASTNode) : super(stub, nodeType, node)
+    constructor(stub: Stub, nodeType: IElementType, node: ASTNode) : super(stub, nodeType, node)
+
+    override fun getReferences(): Array<PsiReference> {
+        return ReferenceProvidersRegistry.getReferencesFromProviders(this, PsiReferenceService.Hints.NO_HINTS)
+    }
+
+    override fun getReference(): PsiReference? {
+        return references.firstOrNull()
+    }
 }

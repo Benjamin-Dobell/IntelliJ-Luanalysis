@@ -121,11 +121,11 @@ class LuaParserDefinition : ParserDefinition {
                 LuaTypes.UNTIL,
                 LuaTypes.WHILE,
 
-                //lua5.3
+                // Lua 5.2+
                 LuaTypes.DOUBLE_COLON,
-                LuaTypes.GOTO
+                LuaTypes.GOTO,
         )
-        val LUA52_BIN_OP_SET = TokenSet.create(
+        val LUA53_BIN_OP_SET = TokenSet.create(
                 LuaTypes.BIT_AND,
                 LuaTypes.BIT_LTLT,
                 LuaTypes.BIT_OR,
@@ -133,7 +133,7 @@ class LuaParserDefinition : ParserDefinition {
                 LuaTypes.BIT_TILDE,
                 LuaTypes.DOUBLE_DIV
         )
-        val LUA52_UNARY_OP_SET = TokenSet.create(
+        val LUA53_UNARY_OP_SET = TokenSet.create(
                 LuaTypes.BIT_TILDE
         )
         val PRIMITIVE_TYPE_SET = TokenSet.create(
@@ -170,15 +170,15 @@ class LuaParserDefinition : ParserDefinition {
 
 fun createType(string: String): IElementType {
     return when (string) {
-        "FUNC_DEF" -> LuaElementType.FUNC_DEF
-        "CLASS_METHOD_DEF" -> LuaElementType.CLASS_METHOD_DEF
+        "FUNC_DEF_STAT" -> LuaElementType.FUNC_DEF_STAT
+        "CLASS_METHOD_DEF_STAT" -> LuaElementType.CLASS_METHOD_DEF_STAT
         "BLOCK" -> LuaElementType.BLOCK
         "TABLE_EXPR" -> LuaElementType.TABLE
         "TABLE_FIELD" -> LuaElementType.TABLE_FIELD
         "INDEX_EXPR" -> LuaElementType.INDEX
         "NAME_EXPR" -> LuaElementType.NAME_EXPR
-        "NAME_DEF" -> LuaElementType.NAME_DEF
-        "PARAM_NAME_DEF" -> LuaElementType.PARAM_NAME_DEF
+        "LOCAL_DEF" -> LuaElementType.LOCAL_DEF
+        "PARAM_DEF" -> LuaElementType.PARAM_DEF
         "LITERAL_EXPR" -> LuaElementType.LITERAL_EXPR
 
         "CALL_EXPR" -> LuaElementTypes.CALL_EXPR
@@ -186,12 +186,11 @@ fun createType(string: String): IElementType {
         "LIST_ARGS" -> LuaElementTypes.LIST_ARGS
 
         "EXPR_LIST" -> LuaElementTypes.EXPR_LIST
-        "NAME_LIST" -> LuaElementTypes.NAME_LIST
-        "LOCAL_DEF" -> LuaElementTypes.LOCAL_DEF
+        "LOCAL_DEF_STAT" -> LuaElementTypes.LOCAL_DEF_STAT
         "ASSIGN_STAT" -> LuaElementTypes.ASSIGN_STAT
         "VAR_LIST" -> LuaElementTypes.VAR_LIST
         "PAREN_EXPR" -> LuaElementTypes.PAREN_EXPR
-        "LOCAL_FUNC_DEF" -> LuaElementTypes.LOCAL_FUNC_DEF
+        "LOCAL_FUNC_DEF_STAT" -> LuaElementTypes.LOCAL_FUNC_DEF_STAT
         "CLOSURE_EXPR" -> LuaElementTypes.CLOSURE_EXPR
         "FUNC_BODY" -> LuaElementTypes.FUNC_BODY
         "CLASS_METHOD_NAME" -> LuaElementTypes.CLASS_METHOD_NAME
@@ -200,6 +199,9 @@ fun createType(string: String): IElementType {
         "DO_STAT" -> LuaElementTypes.DO_STAT
         "IF_STAT" -> LuaElementTypes.IF_STAT
         "EXPR_STAT" -> LuaElementTypes.EXPR_STAT
+
+        "FOR_A_STAT" -> LuaElementTypes.FOR_A_STAT
+        "FOR_B_STAT" -> LuaElementTypes.FOR_B_STAT
 
         "UNARY_EXPR" -> LuaElementTypes.UNARY_EXPR
         "BINARY_EXPR" -> LuaElementTypes.BINARY_EXPR

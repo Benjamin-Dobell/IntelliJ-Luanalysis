@@ -66,7 +66,7 @@ class LuaFormattingModelBuilder : FormattingModelBuilder {
                 .before(BLOCK).blankLines(0)
                 .afterInside(RPAREN, FUNC_BODY).lineBreakInCode()
                 .between(FUNCTION, FUNC_BODY).none()
-                .between(FUNCTION, NAME_DEF).spaces(1) //function<SPACE>name()
+                .between(FUNCTION, ID).spaces(1) //function<SPACE>name()
                 .around(BINARY_OP).spaces(if (commonSettings.SPACE_AROUND_ASSIGNMENT_OPERATORS) 1 else 0)
                 .around(UNARY_OP).none()
                 .around(ASSIGN).lineBreakOrForceSpace(false, commonSettings.SPACE_AROUND_ASSIGNMENT_OPERATORS) // = 号两头不能换行

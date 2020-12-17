@@ -73,10 +73,10 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
         val sb = StringBuilder()
         val tyRenderer = renderer
         when (element) {
-            is LuaParamNameDef -> renderParamNameDef(sb, element)
+            is LuaParamDef -> renderParamDef(sb, element)
             is LuaDocTagClass -> renderClassDef(sb, element, tyRenderer)
             is LuaClassMember -> renderClassMember(sb, element)
-            is LuaNameDef -> { //local xx
+            is LuaLocalDef -> { //local xx
 
                 renderDefinition(sb) {
                     sb.append("local <b>${element.name}</b>: ")
@@ -87,7 +87,7 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
                 val owner = PsiTreeUtil.getParentOfType(element, LuaCommentOwner::class.java)
                 owner?.let { renderComment(sb, owner.comment, tyRenderer) }
             }
-            is LuaLocalFuncDef -> {
+            is LuaLocalFuncDefStat -> {
                 sb.wrapTag("pre") {
                     sb.append("local function <b>${element.name}</b>")
                     val type = element.guessType(SearchContext.get(element.project)) as ITyFunction
@@ -158,15 +158,15 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
         }
     }
 
-    private fun renderParamNameDef(sb: StringBuilder, paramNameDef: LuaParamNameDef) {
-        val owner = PsiTreeUtil.getParentOfType(paramNameDef, LuaCommentOwner::class.java)
-        val docParamDef = owner?.comment?.getParamDef(paramNameDef.name)
+    private fun renderParamDef(sb: StringBuilder, paramDef: LuaParamDef) {
+        val owner = PsiTreeUtil.getParentOfType(paramDef, LuaCommentOwner::class.java)
+        val docParamDef = owner?.comment?.getParamDef(paramDef.name)
         val tyRenderer = renderer
         if (docParamDef != null) {
             renderDocParam(sb, docParamDef, tyRenderer, true)
         } else {
-            val ty = infer(paramNameDef, SearchContext.get(paramNameDef.project)) ?: Ty.UNKNOWN
-            sb.append("<b>param</b> <code>${paramNameDef.name}</code> : ")
+            val ty = infer(paramDef, SearchContext.get(paramDef.project)) ?: Ty.UNKNOWN
+            sb.append("<b>param</b> <code>${paramDef.name}</code> : ")
             renderTy(sb, ty, tyRenderer)
         }
     }

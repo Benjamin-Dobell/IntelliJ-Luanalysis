@@ -38,7 +38,7 @@ class OverrideCompletionProvider : LuaCompletionProvider() {
         val completionParameters = session.parameters
         val completionResultSet = session.resultSet
         val id = completionParameters.position
-        val methodDef = PsiTreeUtil.getParentOfType(id, LuaClassMethodDef::class.java)
+        val methodDef = PsiTreeUtil.getParentOfType(id, LuaClassMethodDefStat::class.java)
         if (methodDef != null) {
             val context = SearchContext.get(methodDef.project)
             val classType = methodDef.guessClassType(context)
@@ -64,7 +64,7 @@ class OverrideCompletionProvider : LuaCompletionProvider() {
         val context = SearchContext.get(project)
         val clazzName = sup.className
         LuaClassMemberIndex.processAll(TyLazyClass(clazzName), context, { def ->
-            if (def is LuaClassMethod) {
+            if (def is LuaClassMethod<*>) {
                 def.name?.let {
                     if (memberNameSet.add(it)) {
                         val elementBuilder = LookupElementBuilder.create(def.name!!)
@@ -80,12 +80,12 @@ class OverrideCompletionProvider : LuaCompletionProvider() {
         })
     }
 
-    internal class OverrideInsertHandler(funcBodyOwner: LuaFuncBodyOwner) : FuncInsertHandler(funcBodyOwner) {
+    internal class OverrideInsertHandler(funcBodyOwner: LuaFuncBodyOwner<*>) : FuncInsertHandler(funcBodyOwner) {
 
         override val autoInsertParameters = true
 
-        override fun createTemplate(manager: TemplateManager, paramNameDefList: Array<LuaParamInfo>): Template {
-            val template = super.createTemplate(manager, paramNameDefList)
+        override fun createTemplate(manager: TemplateManager, paramDefList: Array<LuaParamInfo>): Template {
+            val template = super.createTemplate(manager, paramDefList)
             template.addEndVariable()
             template.addTextSegment("\nend")
             return template

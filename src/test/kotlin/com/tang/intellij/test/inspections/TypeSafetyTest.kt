@@ -131,15 +131,18 @@ class TypeSafetyTest : LuaInspectionsTestBase(
     }
 
     fun testModules() {
+        val defaultLanguageLevel = LuaSettings.instance.languageLevel
         LuaSettings.instance.languageLevel = LuaLanguageLevel.LUA51
         StdLibraryProvider.reload()
         LuaSettings.instance.isNilStrict = true
         LuaSettings.instance.isUnknownCallable = false
         LuaSettings.instance.isUnknownIndexable = false
+
         myFixture.configureByFiles("moduleA.lua", "moduleA_reference.lua")
         enableInspection()
         myFixture.checkHighlighting(true, false, false)
-        LuaSettings.instance.languageLevel = LuaLanguageLevel.LUA53
+
+        LuaSettings.instance.languageLevel = defaultLanguageLevel
         StdLibraryProvider.reload()
     }
 

@@ -53,8 +53,8 @@ class LuaDocParamNameReference(element: LuaDocParamNameRef) : PsiReferenceBase<L
             var target:PsiElement? = null
             owner.accept(object :LuaVisitor() {
                 override fun visitPsiElement(o: LuaPsiElement) {
-                    if (o is LuaParametersOwner) {
-                        target = findParamWithName(o.paramNameDefList, name)
+                    if (o is LuaParametersOwner<*>) {
+                        target = findParamWithName(o.paramDefList, name)
                     }
 
                     target ?: o.acceptChildren(this)
@@ -65,7 +65,7 @@ class LuaDocParamNameReference(element: LuaDocParamNameRef) : PsiReferenceBase<L
         return null
     }
 
-    private fun findParamWithName(defList: List<LuaParamNameDef>?, str: String): PsiElement? {
+    private fun findParamWithName(defList: List<LuaParamDef>?, str: String): PsiElement? {
         return defList?.firstOrNull { it.text == str }
     }
 

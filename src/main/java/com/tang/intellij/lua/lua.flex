@@ -148,7 +148,7 @@ LONG_STRING=\[=*\[[\s\S]*\]=*\]
   "true"                      { return TRUE; }
   "until"                     { return UNTIL; }
   "while"                     { return WHILE; }
-  "goto"                      { if (level.getVersion() < LuaLanguageLevel.LUA52.getVersion()) return ID; else return GOTO; } //lua5.3
+  "goto"                      { if (level.getVersion() < LuaLanguageLevel.LUA52.getVersion()) return ID; else return GOTO; } // Lua 5.2+
   "#!"                        { yybegin(xSHEBANG); return SHEBANG; }
   "..."                       { return ELLIPSIS; }
   ".."                        { return CONCAT; }

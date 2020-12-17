@@ -38,7 +38,7 @@ class AppendCallParenIntention : BaseIntentionAction() {
 
     override fun invoke(project: Project, editor: Editor, psiFile: PsiFile) {
         val callExpr = LuaPsiTreeUtil.findElementOfClassAtOffset(psiFile, editor.caretModel.offset, LuaCallExpr::class.java, false) ?: return
-        val code = "${callExpr.expr.text}(${callExpr.args.text})"
+        val code = "${callExpr.expression.text}(${callExpr.args.text})"
         val file = LuaElementFactory.createFile(project, code)
         val newCall = PsiTreeUtil.findChildOfType(file, LuaCallExpr::class.java) ?: return
         callExpr.replace(newCall)

@@ -69,21 +69,17 @@ class LocalNameShadowed : LocalInspectionTool() {
             }
 
             override fun visitLocalDef(o: LuaLocalDef) {
-                o.nameList?.nameDefList?.forEach {
-                    val name = it.name
-                    if (name != Constants.WORD_UNDERLINE) {
-                        check(it)
-                    }
+                if (o.name != Constants.WORD_UNDERLINE) {
+                    check(o)
                 }
-                super.visitLocalDef(o)
             }
 
-            override fun visitLocalFuncDef(o: LuaLocalFuncDef) {
+            override fun visitLocalFuncDefStat(o: LuaLocalFuncDefStat) {
                 check(o)
-                super.visitLocalFuncDef(o)
+                super.visitLocalFuncDefStat(o)
             }
 
-            override fun visitParamNameDef(o: LuaParamNameDef) {
+            override fun visitParamDef(o: LuaParamDef) {
                 check(o)
             }
         }

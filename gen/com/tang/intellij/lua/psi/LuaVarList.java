@@ -9,4 +9,22 @@ import com.tang.intellij.lua.stubs.LuaPlaceholderStub;
 
 public interface LuaVarList extends LuaExprList, StubBasedPsiElement<LuaPlaceholderStub> {
 
+  @NotNull
+  List<LuaCallExpr> getCallExprList();
+
+  @NotNull
+  List<LuaIndexExpr> getIndexExprList();
+
+  @NotNull
+  List<LuaLiteralExpr> getLiteralExprList();
+
+  @NotNull
+  List<LuaNameExpr> getNameExprList();
+
+  @NotNull
+  List<LuaParenExpr> getParenExprList();
+
+  @NotNull
+  List<LuaTableExpr> getTableExprList();
+
 }

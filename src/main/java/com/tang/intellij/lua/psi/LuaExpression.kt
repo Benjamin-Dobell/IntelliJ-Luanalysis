@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017. tangzx(love.tangzx@qq.com)
+ * Copyright (c) 2020
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,9 @@
  * limitations under the License.
  */
 
-package com.tang.intellij.lua.psi;
+package com.tang.intellij.lua.psi
 
-import com.tang.intellij.lua.comment.psi.api.LuaComment;
-import org.jetbrains.annotations.Nullable;
+import com.intellij.psi.StubBasedPsiElement
+import com.intellij.psi.stubs.StubElement
 
-/**
- *
- * Created by TangZX on 2016/11/24.
- */
-public interface LuaCommentOwner extends LuaPsiElement {
-    @Nullable
-    LuaComment getComment();
-}
+interface LuaExpression<Stub: StubElement<*>> : LuaCommentOwner, LuaTypeGuessable, StubBasedPsiElement<Stub>
