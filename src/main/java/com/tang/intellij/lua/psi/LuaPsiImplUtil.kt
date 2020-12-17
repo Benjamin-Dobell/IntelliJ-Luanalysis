@@ -454,7 +454,7 @@ fun getName(localDef: LuaLocalDef): String {
 fun getName(paramDef: LuaParamDef): String {
     val stub = paramDef.stub
     if (stub != null)
-        return paramDef.name
+        return stub.name
     return paramDef.id.text
 }
 
