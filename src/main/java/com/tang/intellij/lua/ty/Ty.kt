@@ -280,19 +280,20 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
             } else 0
 
             if (processProblem != null) {
-                val contravariant = ProblemUtil.contravariantOf(paramType, argType, context, varianceFlags, null, argExpr) { _, element, message, highlightType ->
-                    var contextualMessage = message
-
-                    if (i >= args.size &&
-                            (concreteArgTypes.size > args.size || (variadicArg != null && concreteArgTypes.size >= args.size))) {
-                        contextualMessage = "Result ${i + 1}, ${message.decapitalize()}"
+                val contravariant = ProblemUtil.contravariantOf(paramType, argType, context, varianceFlags, null, argExpr) { problem ->
+                    var contextualMessage = if (i >= args.size &&
+                        (concreteArgTypes.size > args.size || (variadicArg != null && concreteArgTypes.size >= args.size))
+                    ) {
+                        "Result ${i + 1}, ${problem.message.decapitalize()}"
+                    } else {
+                        problem.message
                     }
 
                     if (!call.isMethodColonCall && i == 0 && pi.name == Constants.WORD_SELF) {
                         contextualMessage += ".\n\nDid you mean to call the method with a colon?"
                     }
 
-                    signatureProblems?.add(Problem(null, element, contextualMessage, highlightType))
+                    signatureProblems?.add(Problem(null, problem.sourceElement, contextualMessage, problem.highlightType))
                 }
 
                 if (!contravariant) {
@@ -317,8 +318,8 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                     val varianceFlags = if (argExpr is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
 
                     if (processProblem != null) {
-                        val contravariant = ProblemUtil.contravariantOf(varargParamTy, argType, context, varianceFlags, null, argExpr) { _, element, message, highlightType ->
-                            signatureProblems?.add(Problem(null, element, message, highlightType))
+                        val contravariant = ProblemUtil.contravariantOf(varargParamTy, argType, context, varianceFlags, null, argExpr) { problem ->
+                            signatureProblems?.add(Problem(null, problem.sourceElement, problem.message, problem.highlightType))
                         }
 
                         if (!contravariant) {
@@ -343,9 +344,9 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
             }
         } else if (varargParamTy != null && variadicArg != null) {
             if (processProblem != null) {
-                val contravariant = ProblemUtil.contravariantOf(varargParamTy, variadicArg.ty, context, 0, null, variadicArg.param) { _, element, message, highlightType ->
-                    val contextualMessage = "Variadic result, ${message.decapitalize()}"
-                    signatureProblems?.add(Problem(null, element, contextualMessage, highlightType))
+                val contravariant = ProblemUtil.contravariantOf(varargParamTy, variadicArg.ty, context, 0, null, variadicArg.param) { problem ->
+                    val contextualMessage = "Variadic result, ${problem.message.decapitalize()}"
+                    signatureProblems?.add(Problem(null, problem.sourceElement, contextualMessage, problem.highlightType))
                 }
 
                 if (!contravariant) {
@@ -358,9 +359,7 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
 
         if (!candidateFailed) {
             if (processProblem != null) {
-                signatureProblems?.forEach {
-                    processProblem(it.targetElement, it.sourceElement, it.message, it.highlightType)
-                }
+                signatureProblems?.forEach(processProblem)
             }
 
             return SignatureMatchResult(it, signature)
@@ -376,8 +375,8 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
 
         problems?.forEach { signature, signatureProblems ->
             signatureProblems.forEach {
-                val problem = if (multipleCandidates) "${it.message}. In: ${signature.displayName}\n" else it.message
-                processProblem(it.targetElement, it.sourceElement, problem, it.highlightType)
+                it.message = if (multipleCandidates) "${it.message}. In: ${signature.displayName}\n" else it.message
+                processProblem(it)
             }
         }
     }
@@ -386,8 +385,8 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
 }
 
 fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, problemsHolder: ProblemsHolder): SignatureMatchResult? {
-    return matchSignature(context, call) { _, sourceElement, message, highlightType ->
-        problemsHolder.registerProblem(sourceElement, message, highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
+    return matchSignature(context, call) { problem ->
+        problemsHolder.registerProblem(problem.sourceElement, problem.message, problem.highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
     }
 }
 

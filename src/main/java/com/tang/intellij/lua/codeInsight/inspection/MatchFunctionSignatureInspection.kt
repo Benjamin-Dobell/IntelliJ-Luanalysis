@@ -70,8 +70,8 @@ class MatchFunctionSignatureInspection : StrictInspection() {
                     }
 
                     var problemReported = false
-                    val signatureMatch = it.matchSignature(searchContext, o) { _, sourceElement, message, highlightType ->
-                        myHolder.registerProblem(sourceElement, message, highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
+                    val signatureMatch = it.matchSignature(searchContext, o) { problem ->
+                        myHolder.registerProblem(problem.sourceElement, problem.message, problem.highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
                         problemReported = true
                     }
 

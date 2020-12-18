@@ -204,3 +204,19 @@ primitiveAndTable = {
     primitiveField = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>,
     tableField = {}
 }
+
+---@shape UnionMemberA
+---@field tag "String"
+---@field value string
+
+---@shape UnionMemberB
+---@field tag "Number"
+---@field value number
+
+---@type (UnionMemberA | UnionMemberB)[]
+local arrayOfUnions = {
+    {
+        tag = <error descr="Type mismatch. Required: '\"String\"' Found: '\"Number\"', on union candidate UnionMemberA">"Number"</error>,
+        value = <error descr="Type mismatch. Required: 'number' Found: 'table', on union candidate UnionMemberB"><error descr="Type mismatch. Required: 'string' Found: 'table', on union candidate UnionMemberA">{}</error></error>
+    }
+}

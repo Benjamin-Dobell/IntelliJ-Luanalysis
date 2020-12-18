@@ -60,8 +60,8 @@ class GenericConstraintInspection : LocalInspectionTool() {
 
                             if (analyzedParamType != null) {
                                 val varianceFlags = TyVarianceFlags.STRICT_UNKNOWN or TyVarianceFlags.ABSTRACT_PARAMS
-                                ProblemUtil.contravariantOf(analyzedParamType, arg, context, varianceFlags, null, argElement) { _, element, message, _ ->
-                                    holder.registerProblem(element, message, ProblemHighlightType.ERROR)
+                                ProblemUtil.contravariantOf(analyzedParamType, arg, context, varianceFlags, null, argElement) { problem ->
+                                    holder.registerProblem(problem.sourceElement, problem.message, ProblemHighlightType.ERROR)
                                 }
                             }
                         }

@@ -74,11 +74,17 @@ class ReturnTypeInspection : StrictInspection() {
                     val element = o.exprList?.getExpressionAt(i) ?: o
                     val targetType = abstractTypes.getOrNull(i) ?: variadicAbstractType ?: Ty.VOID
                     val varianceFlags = if (element is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
-                    ProblemUtil.contravariantOf(targetType, concreteTypes[i], context, varianceFlags, null, element) { targetElement, sourceElement, message, highlightType ->
-                        val sourceMessage = if (concreteTypes.size > 1) "Result ${i + 1}, ${message.decapitalize()}" else message
-                        myHolder.registerProblem(sourceElement, sourceMessage, highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
+
+                    ProblemUtil.contravariantOf(targetType, concreteTypes[i], context, varianceFlags, null, element) { problem ->
+                        val sourceElement = problem.sourceElement
+                        val targetElement = problem.targetElement
+                        val sourceMessage = if (concreteTypes.size > 1) "Result ${i + 1}, ${problem.message.decapitalize()}" else problem.message
+                        val highlightType = problem.highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING
+
+                        myHolder.registerProblem(sourceElement, sourceMessage, highlightType)
+
                         if (targetElement != null && targetElement != sourceElement) {
-                            myHolder.registerProblem(targetElement, message, highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
+                            myHolder.registerProblem(targetElement, problem.message, highlightType)
                         }
                     }
                 }
