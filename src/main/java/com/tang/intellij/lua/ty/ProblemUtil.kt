@@ -51,7 +51,7 @@ object ProblemUtil {
         Ty.eachResolved(target, context) {
             val resolved = Ty.resolve(it, context)
 
-            if (resolved.isShape(context)) {
+            if (resolved is ITyArray || resolved.isShape(context)) {
                 return true
             }
         }
@@ -247,7 +247,7 @@ object ProblemUtil {
 
                 if (sourceUnitTy.isShape(context)) {
                     val sourceIsInline = sourceUnitTy is TyTable && sourceUnitTy.table == sourceElement
-                    val indexes = mutableSetOf<Int>()
+                    val indexes = sortedMapOf<Int, PsiElement>()
                     var foundNumberIndexer = false
 
                     sourceUnitTy.processMembers(context) { _, sourceMember ->
@@ -274,20 +274,20 @@ object ProblemUtil {
                         } else {
                             val index = indexTy.value.toIntOrNull()
 
-                            if (index == null) {
+                            if (index == null || index < 1) {
                                 isContravariant = false
                                 processProblem(
                                     Problem(
                                         targetElement,
                                         highlightElement,
-                                        "Type mismatch. Required: '%s' Found non-array field '[%s]'".format(targetTy.displayName, indexTy.displayName),
+                                        "Type mismatch. Required array index: '%s' Found non-array field '[%s]'".format(targetTy.displayName, indexTy.displayName),
                                         ProblemHighlightType.GENERIC_ERROR_OR_WARNING
                                     )
                                 )
                                 return@processMembers true
                             }
 
-                            indexes.add(index)
+                            indexes.put(index, highlightElement)
                         }
 
                         val sourceFieldTypes = (sourceMember.guessType(context) ?: Ty.UNKNOWN).let {
@@ -311,18 +311,24 @@ object ProblemUtil {
                     }
 
                     if (isContravariant && !foundNumberIndexer) {
-                        indexes.sorted().forEachIndexed { index, i ->
-                            if (i != index + 1) {
+                        var previousIndex = 0
+                        indexes.all { (index, highlightElement) ->
+                            val expectedIndex = previousIndex + 1
+
+                            if (index != expectedIndex) {
                                 processProblem(
                                     Problem(
                                         targetElement,
-                                        sourceElement,
-                                        "Type mismatch. Required: '%s' Found: 'table<number, %s>'".format(targetTy.displayName, base),
+                                        highlightElement,
+                                        "Type mismatch. Required array index: '%s' Found non-contiguous index: '%s'".format(expectedIndex, index),
                                         ProblemHighlightType.GENERIC_ERROR_OR_WARNING
                                     )
                                 )
                                 return false
                             }
+
+                            previousIndex = index
+                            true
                         }
                     }
 
@@ -414,7 +420,7 @@ object ProblemUtil {
 
         val resolvedTarget = Ty.resolve(target, context)
 
-        if (!acceptsShape(resolvedTarget, context) || (source !is ITyArray && (source !is TyTable || source.table != sourceElement))) {
+        if (!acceptsShape(resolvedTarget, context) || (source !is TyTable || source.table != sourceElement)) {
             return contravariantOfUnit(resolvedTarget, source, context, varianceFlags, targetElement, sourceElement, processProblem)
         }
 

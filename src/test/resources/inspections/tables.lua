@@ -50,7 +50,7 @@ numberArray = {1, 2, 3}
 numberNumberTable = {1, 2, 3}
 
 -- Widen literal tables
-numberArray = <error descr="Type mismatch. Required: 'number[]' Found: 'table<number, number>'">{[1] = 1, [3] = 3}</error>
+numberArray = {[1] = 1, <error descr="Type mismatch. Required array index: '2' Found non-contiguous index: '3'">[3] = 3</error>}
 numberNumberTable = {[1] = 1, [3] = 3}
 
 numberArray = {<error descr="Type mismatch. Required: 'number[]' Found non-array field 'one'">one = 1</error>, <error descr="Type mismatch. Required: 'number[]' Found non-array field 'two'">two = 2</error>, <error descr="Type mismatch. Required: 'number[]' Found non-array field 'three'">three = 3</error>}
@@ -60,7 +60,7 @@ stringArray = {"one", "two", "three"}
 numberStringTable = {"one", "two", "three"}
 
 -- Widen literal tables
-stringArray = <error descr="Type mismatch. Required: 'string[]' Found: 'table<number, string>'">{[1] = "one", [3] = "three"}</error>
+stringArray = {[1] = "one", <error descr="Type mismatch. Required array index: '2' Found non-contiguous index: '3'">[3] = "three"</error>}
 numberStringTable = {[1] = "three", [3] = "three"}
 
 ---@param arg table<number, number>
@@ -145,4 +145,4 @@ tableLiteralWithNonLiteralKey = <error descr="Type mismatch. Required: 'table<st
 }</error>
 
 ---@type number[]
-local arr = <error descr="Type mismatch. Required: 'number[]' Found: 'table<number, number>'">{1, 2, 3, [5]=1}</error>
+local arr = {1, 2, 3, <error descr="Type mismatch. Required array index: '4' Found non-contiguous index: '5'">[5]=1</error>}

@@ -185,7 +185,7 @@ numberTuple = {aNumber, aNumber, [3] = aNumber}
 ---@type NonContiguousNumberTuple
 local nonContiguousNumberTuple
 
-numberArray = <error descr="Type mismatch. Required: 'number[]' Found: 'table<number, number>'">nonContiguousNumberTuple</error>
+numberArray = <error descr="Type mismatch. Required array index: '4' Found non-contiguous index: '5'">nonContiguousNumberTuple</error>
 
 nonContiguousNumberTuple = {aNumber, aNumber, aNumber, [5] = aNumber}
 
@@ -219,4 +219,31 @@ local arrayOfUnions = {
         tag = <error descr="Type mismatch. Required: '\"String\"' Found: '\"Number\"', on union candidate UnionMemberA">"Number"</error>,
         value = <error descr="Type mismatch. Required: 'number' Found: 'table', on union candidate UnionMemberB"><error descr="Type mismatch. Required: 'string' Found: 'table', on union candidate UnionMemberA">{}</error></error>
     }
+}
+
+---@shape NilOrShapeArrayShape
+---@field value nil | NilOrShapeArrayShape[]
+
+---@type NilOrShapeArrayShape
+local nilOrShapeArray = {
+    value = {
+        {
+            value = {
+                {
+                    value = <error descr="Type mismatch. Required: 'NilOrShapeArrayShape[] | nil' Found: '\"invalid\"'">"invalid"</error>,
+                },
+                {
+                    value = {},
+                },
+                {
+                    value = {
+                        <error descr="Type mismatch. Required: 'NilOrShapeArrayShape[]' Found non-array field 'value'">value = {}</error>,
+                    },
+                },
+            },
+        },
+    },
+    {
+        value = nil,
+    },
 }

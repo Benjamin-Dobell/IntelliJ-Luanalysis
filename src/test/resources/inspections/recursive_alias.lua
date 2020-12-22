@@ -109,6 +109,6 @@ value = {
 }
 value = <error descr="Type mismatch. Required: 'JSONValue[] | boolean | nil | number | string | table<string, JSONValue>' Found: 'fun(): void'">function() end</error>
 value = <error descr="Type mismatch. Required: 'JSONValue[] | boolean | nil | number | string | table<string, JSONValue>' Found: 'thread'">coroutine.create(function() end)</error>
-value = <error descr="Type mismatch. Required: 'JSONValue[] | boolean | nil | number | string | table<string, JSONValue>' Found: 'table'">{
-    [3] = "bad"
-}</error>
+value = {
+    <error descr="Type mismatch. Required array index: '1' Found non-contiguous index: '3'">[3] = "bad"</error>
+}
