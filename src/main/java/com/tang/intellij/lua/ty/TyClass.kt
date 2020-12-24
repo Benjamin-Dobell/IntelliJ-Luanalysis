@@ -16,6 +16,7 @@
 
 package com.tang.intellij.lua.ty
 
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
@@ -160,6 +161,8 @@ abstract class TyClass(override val className: String,
         })
 
         for (member in members) {
+            ProgressManager.checkCanceled()
+
             if (!processor(this, member)) {
                 return false
             }
