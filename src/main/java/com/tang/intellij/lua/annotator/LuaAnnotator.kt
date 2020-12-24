@@ -103,6 +103,7 @@ class LuaAnnotator : Annotator {
 
         override fun visitTableField(o: LuaTableField) {
             super.visitTableField(o)
+
             val id = o.id
             if (id != null) {
                 createInfoAnnotation(id)

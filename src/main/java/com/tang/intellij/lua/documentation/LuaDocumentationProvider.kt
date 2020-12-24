@@ -100,10 +100,21 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
         return super<AbstractDocumentationProvider>.generateDoc(element, originalElement)
     }
 
-    private fun renderClassMember(sb: StringBuilder, classMember: LuaClassMember) {
-        val context = SearchContext.get(classMember.project)
-        val parentType = classMember.guessClassType(context)
-        val ty = classMember.guessType(context) ?: Ty.UNKNOWN
+    private fun renderClassMember(sb: StringBuilder, parentType: ITy?, classMember: LuaClassMember, context: SearchContext): Boolean {
+        val resolvedMember = parentType?.let { parentTy ->
+            classMember.name?.let {
+                parentTy.findMember(it, context)
+            } ?: classMember.guessIndexType(context)?.let {
+                parentTy.findIndexer(it, context)
+            }
+        }
+
+        if (resolvedMember == null && parentType != null) {
+            return false
+        }
+
+        val member = resolvedMember ?: classMember
+        val ty = member.guessType(context) ?: Ty.UNKNOWN
         val tyRenderer = renderer
 
         renderDefinition(sb) {
@@ -114,19 +125,19 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
                     when (ty) {
                         is TyFunction -> {
                             append(if (ty.isColonCall) ":" else ".")
-                            append(classMember.name)
+                            append(member.name)
                             renderSignature(sb, ty.mainSignature, tyRenderer)
                         }
                         else -> {
-                            append(".${classMember.name}: ")
+                            append(".${member.name}: ")
                             renderTy(sb, ty, tyRenderer)
                         }
                     }
                 }
             } else {
                 //NameExpr
-                if (classMember is LuaNameExpr) {
-                    val nameExpr: LuaNameExpr = classMember
+                if (member is LuaNameExpr) {
+                    val nameExpr: LuaNameExpr = member
                     with(sb) {
                         append(nameExpr.name)
                         when (ty) {
@@ -145,16 +156,35 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
         }
 
         //comment content
-        when (classMember) {
-            is LuaCommentOwner -> renderComment(sb, classMember.comment, tyRenderer)
-            is LuaDocTagField -> renderCommentString("  ", null, sb, classMember.commentString)
+        when (member) {
+            is LuaCommentOwner -> renderComment(sb, member.comment, tyRenderer)
+            is LuaDocTagField -> renderCommentString("  ", null, sb, member.commentString)
             is LuaIndexExpr -> {
-                val p1 = classMember.parent
+                val p1 = member.parent
                 val p2 = p1.parent
                 if (p1 is LuaVarList && p2 is LuaAssignStat) {
                     renderComment(sb, p2.comment, tyRenderer)
                 }
             }
+        }
+
+        return true
+    }
+
+    private fun renderClassMember(sb: StringBuilder, classMember: LuaClassMember) {
+        val context = SearchContext.get(classMember.project)
+        val parentType = (classMember.parent as? LuaTableExpr)?.shouldBe(context) ?: classMember.guessClassType(context)
+
+        var memberRendered = false
+
+        if (parentType != null) {
+            Ty.eachResolved(parentType, context) {
+                memberRendered = renderClassMember(sb, it, classMember, context) || memberRendered
+            }
+        }
+
+        if (!memberRendered) {
+            renderClassMember(sb, null, classMember, context)
         }
     }
 

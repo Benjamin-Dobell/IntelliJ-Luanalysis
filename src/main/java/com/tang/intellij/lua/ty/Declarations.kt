@@ -20,7 +20,6 @@ import com.intellij.openapi.util.Computable
 import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.psi.LuaDocTagField
-import com.tang.intellij.lua.comment.psi.LuaDocTagReturn
 import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
@@ -50,17 +49,10 @@ fun inferReturnTy(owner: LuaFuncBodyOwner<*>, searchContext: SearchContext): ITy
 }
 
 private fun inferReturnTyInner(owner: LuaFuncBodyOwner<*>, searchContext: SearchContext): ITy? {
-    val comment = if (owner is LuaCommentOwner) {
-        owner.comment
-    } else {
-        (owner.parent?.parent as? LuaDeclaration)?.comment // Doc comment may appear on declarations
-    }
+    val returnTag = owner.tagReturn
 
-    if (comment != null) {
-        val returnDef = PsiTreeUtil.findChildOfType(comment, LuaDocTagReturn::class.java)
-        if (returnDef != null) {
-            return returnDef.type
-        }
+    if (returnTag != null) {
+        return returnTag.type
     }
 
     //infer from return stat

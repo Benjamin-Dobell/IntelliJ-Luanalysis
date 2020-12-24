@@ -46,12 +46,7 @@ class ReturnTypeInspection : StrictInspection() {
                 val expectedReturnType = if (bodyOwner is LuaClassMethodDefStat) {
                     guessSuperReturnTypes(bodyOwner, context)
                 } else {
-                    var comment = (bodyOwner as? LuaCommentOwner)?.comment
-
-                    if (comment == null) {
-                        comment = (bodyOwner.parent?.parent as? LuaDeclaration)?.comment // Doc comment may appear on declarations
-                    }
-                    comment?.tagReturn?.type
+                    bodyOwner.tagReturn?.type
                 } ?: TyMultipleResults(listOf(Ty.UNKNOWN), true)
 
                 val concreteType = context.withMultipleResults {

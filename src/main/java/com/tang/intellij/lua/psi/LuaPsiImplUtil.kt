@@ -28,9 +28,7 @@ import com.intellij.psi.search.SearchScope
 import com.intellij.psi.stubs.StubElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.comment.LuaCommentUtil
-import com.tang.intellij.lua.comment.psi.LuaDocAccessModifier
-import com.tang.intellij.lua.comment.psi.LuaDocTagVararg
-import com.tang.intellij.lua.comment.psi.LuaDocTy
+import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.comment.psi.impl.LuaDocTagTypeImpl
 import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.lang.LuaIcons
@@ -374,6 +372,11 @@ fun getParamDefList(forAStat: LuaForAStat): List<LuaParamDef> {
 
 fun guessReturnType(owner: LuaFuncBodyOwner<*>, searchContext: SearchContext): ITy? {
     return inferReturnTy(owner, searchContext)
+}
+
+fun getTagReturn(owner: LuaFuncBodyOwner<*>): LuaDocTagReturn? {
+    val comment = (owner as? LuaCommentOwner)?.comment ?: (owner.parent?.parent as? LuaDeclaration)?.comment
+    return comment?.tagReturn
 }
 
 fun getVarargTy(owner: LuaFuncBodyOwner<*>): ITy? {

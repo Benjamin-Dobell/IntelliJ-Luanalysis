@@ -17,6 +17,8 @@
 package com.tang.intellij.lua.psi;
 
 import com.intellij.psi.stubs.StubElement;
+import com.tang.intellij.lua.comment.psi.LuaDocTagParam;
+import com.tang.intellij.lua.comment.psi.LuaDocTagReturn;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.stubs.LuaFuncBodyOwnerStub;
 import com.tang.intellij.lua.ty.ITy;
@@ -35,6 +37,11 @@ public interface LuaFuncBodyOwner<Stub extends LuaFuncBodyOwnerStub> extends Lua
 
     @Nullable
     LuaFuncBody getFuncBody();
+
+    @Nullable
+    default LuaDocTagReturn getTagReturn() {
+        return LuaPsiImplUtilKt.getTagReturn(this);
+    }
 
     /**
      * 返回类型

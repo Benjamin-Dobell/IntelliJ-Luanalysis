@@ -84,6 +84,16 @@ private fun LuaExpression<*>.shouldBeInternal(context: SearchContext): ITy? {
                     returnType.getType()
                 } else returnType.getType(context.index)
             }
+
+            val tagReturn = PsiTreeUtil.getParentOfType(p2, LuaFuncBodyOwner::class.java)?.tagReturn
+
+            if (tagReturn != null) {
+                return if (context.supportsMultipleResults) {
+                    tagReturn.getType()
+                } else {
+                    TyMultipleResults.getResult(context, tagReturn.getType(), context.index)
+                }
+            }
         }
     } else if (p1 is LuaArgs) {
         val p2 = p1.parent
@@ -105,9 +115,9 @@ private fun LuaExpression<*>.shouldBeInternal(context: SearchContext): ITy? {
             }
         }
     } else if (p1 is LuaTableField) {
-        val memberName = p1.name
         val tbl = p1.parent
-        if (memberName != null && tbl is LuaTableExpr) {
+
+        if (tbl is LuaTableExpr) {
             val tyTbl = tbl.shouldBe(context)
 
             if (tyTbl == null) {
@@ -115,16 +125,19 @@ private fun LuaExpression<*>.shouldBeInternal(context: SearchContext): ITy? {
             }
 
             var fieldType: ITy = Ty.VOID
-            tyTbl.eachTopClass(Processor { type ->
-                val classFieldTy = type.guessMemberType(memberName, context)
 
-                if (classFieldTy == null) {
-                    false
-                } else {
-                    fieldType = fieldType.union(classFieldTy, context)
-                    true
+            Ty.eachResolved(tyTbl, context) { type ->
+                val classFieldTy = p1.name?.let {
+                    type.guessMemberType(it, context)
+                } ?: p1.guessIndexType(context)?.let {
+                    type.guessIndexerType(it, context)
                 }
-            })
+
+                if (classFieldTy != null) {
+                    fieldType = fieldType.union(classFieldTy, context)
+                }
+            }
+
             return fieldType
         }
     }
