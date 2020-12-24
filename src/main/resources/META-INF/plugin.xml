@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (c) 2017. tangzx(love.tangzx@qq.com)
+  ~ Copyright (c) 2020
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 <idea-plugin xmlns:xi="http://www.w3.org/2001/XInclude">
     <id>au.com.glassechidna.luanalysis</id>
     <name>Luanalysis</name>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <vendor email="contact@glassechidna.com.au">Benjamin Dobell</vendor>
     <category>Custom Languages</category>
     <description><![CDATA[
@@ -25,6 +25,38 @@
     <p><a href="https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis">Source Code</a></p>
     ]]></description>
     <change-notes><![CDATA[
+    <strong>1.2.0</strong>
+    <ul>
+        <li><strong>Requires IntelliJ IDEA 203 (2020.3)</strong></li>
+        <li><strong>Breaking:</strong> Removed unsafe assumed constructor functionality (<a href="https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/12">#12</a>)</li>
+        <li><strong>Lua 5.4 support:</strong> &lt;const&gt; and &lt;close&gt; local variables and corresponding immutability inspections.</li>
+        <li>Removed 'Recognize global name as type' plugin option as its use encourages unsafe development practices.</li>
+        <li>Added new setting "Unknown type (any) is callable" which is enabled by default. For stricter type safety it's suggested you disable this option.</li>
+        <li>Added an "Illegal inheritance" inspection which will report inheritance cycles and inheritance from primitives.</li>
+        <li>Substantially improved (more refined) problem annotations on deeply nested table literals (<a href="https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/11">#11</a> and more.)</li>
+        <li>Ensured inspections are re-run in more situations when variable types or type definitions are modified.</li>
+        <li>Improved lookup performance for locally scoped types, currently just generic types.</li>
+        <li>Performance improvements when dealing with types defined in the non-working file.</li>
+        <li>Jump to definition behavior for fields that are members of a table, table&ltK, V&gt; or V[].</li>
+        <li>Added proper descriptions for every Luanalysis inspection.</li>
+        <li>Improved mouse-over pop-up docs for table literals that will be interpreted as a shape.</li>
+        <li>Only a subset of inspections are now run against files with the extension <strong>.def.lua</strong> e.g. return statement inspections are not run against functions</li>
+        <li>Improved inspections for missing arguments and colon/period function calls e.g. "Missing self argument. Did you mean to call the method with a colon?"</li>
+        <li>Corrected stdlib definitions for string.find()</li>
+        <li>Corrected stdlib definitions for next, ipairs and pairs.</li>
+        <li>Improved type safety of stdlib io module methods.</li>
+        <li>Improved stdlib math.random() definition. Contributed by <a href="https://github.com/omniraptorr">Omniraptor</a></li>
+        <li>Improved stdlib string.gsub() definition. Contributed by <a href="https://github.com/omniraptorr">Omniraptor</a></li>
+        <li>Fixed several related bugs that could cause Luanalysis to get into a state where it was unable to recognise both user and in-built types.</li>
+        <li>Fixed issue where shape inspections were appearing on table literals subject to a type cast (<a href="https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/14">#14</a>)</li>
+        <li>Static analysis now correctly handles use of parentheses to restrict multiple return values to just the first value.</li>
+        <li>Fixed handling of iterators.</li>
+        <li>Improved formatting/consistency of complex types displayed in the UI.</li>
+        <li><em>function</em> type is now treated as returning <em>any...</em></li>
+        <li>Fixed use of <em>@overload</em> in <em>@class</em> definitions that do not proceed a variable declaration/assignment.</li>
+        <li>Smarter union behavior that eliminates duplicate/covariant types from the union. This tends to result in much simple error message.</li>
+        <li>Fixed handling of some situations where table literals ought to be interpreted as arrays, but were not.</li>
+    </ul>
     <strong>1.1.0</strong>
     <ul>
         <li>Ctrl/Cmd + Click ("Go To") on a string literal argument of a require("file") now takes you to the return value of the referenced file, rather than simply opening the file.<li>
@@ -55,6 +87,6 @@
     ]]>
     </change-notes>
     <idea-version since-build="203.3645.34"/>
-    <xi:include href="emmylua-core.xml" xpointer="xpointer(/idea-plugin/*)"/>
-    <depends optional="true" config-file="emmylua-project.xml">com.intellij.java</depends>
+    <xi:include href="luanalysis-core.xml" xpointer="xpointer(/idea-plugin/*)"/>
+    <depends optional="true" config-file="luanalysis-project.xml">com.intellij.java</depends>
 </idea-plugin>
