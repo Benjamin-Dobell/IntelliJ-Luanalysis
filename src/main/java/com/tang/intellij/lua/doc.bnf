@@ -257,7 +257,7 @@ function_params ::= '(' function_param_list? ')' {
     pin = 1
 }
 type_list ::= complex_ty(',' complex_ty)*
-return_list ::= ('(' type_list ELLIPSIS? ')') | (type_list ELLIPSIS?) {
+return_list ::=  (type_list ELLIPSIS?) | ('(' type_list ELLIPSIS? ')') {
     methods = [
         getType
         varreturn = 'ELLIPSIS'

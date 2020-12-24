@@ -764,7 +764,7 @@ public class LuaDocParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // ('(' type_list ELLIPSIS? ')') | (type_list ELLIPSIS?)
+  // (type_list ELLIPSIS?) | ('(' type_list ELLIPSIS? ')')
   public static boolean return_list(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "return_list")) return false;
     boolean r;
@@ -775,40 +775,40 @@ public class LuaDocParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // '(' type_list ELLIPSIS? ')'
+  // type_list ELLIPSIS?
   private static boolean return_list_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "return_list_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
+    r = type_list(b, l + 1);
+    r = r && return_list_0_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // ELLIPSIS?
+  private static boolean return_list_0_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "return_list_0_1")) return false;
+    consumeToken(b, ELLIPSIS);
+    return true;
+  }
+
+  // '(' type_list ELLIPSIS? ')'
+  private static boolean return_list_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "return_list_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
     r = consumeToken(b, LPAREN);
     r = r && type_list(b, l + 1);
-    r = r && return_list_0_2(b, l + 1);
+    r = r && return_list_1_2(b, l + 1);
     r = r && consumeToken(b, RPAREN);
     exit_section_(b, m, null, r);
     return r;
   }
 
   // ELLIPSIS?
-  private static boolean return_list_0_2(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "return_list_0_2")) return false;
-    consumeToken(b, ELLIPSIS);
-    return true;
-  }
-
-  // type_list ELLIPSIS?
-  private static boolean return_list_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "return_list_1")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = type_list(b, l + 1);
-    r = r && return_list_1_1(b, l + 1);
-    exit_section_(b, m, null, r);
-    return r;
-  }
-
-  // ELLIPSIS?
-  private static boolean return_list_1_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "return_list_1_1")) return false;
+  private static boolean return_list_1_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "return_list_1_2")) return false;
     consumeToken(b, ELLIPSIS);
     return true;
   }
