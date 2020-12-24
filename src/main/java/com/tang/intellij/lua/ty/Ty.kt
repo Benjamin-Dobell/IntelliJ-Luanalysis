@@ -446,13 +446,17 @@ abstract class Ty(override val kind: TyKind) : ITy {
     }
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
-        if (this == other
-                || (other.kind == TyKind.Unknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0)
-                || (other.kind == TyKind.Nil && flags and TyVarianceFlags.STRICT_NIL == 0 && !LuaSettings.instance.isNilStrict)) {
+        if ((other.kind == TyKind.Unknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0)
+            || (other.kind == TyKind.Nil && flags and TyVarianceFlags.STRICT_NIL == 0 && !LuaSettings.instance.isNilStrict)
+        ) {
             return true
         }
 
         val resolvedOther = resolve(other, context)
+
+        if (this == resolvedOther) {
+            return true
+        }
 
         if (resolvedOther !== other) {
             return contravariantOf(resolvedOther, context, flags)

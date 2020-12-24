@@ -49,3 +49,21 @@ local shed
 shed = {
     occupant = <error descr="Type mismatch. Required: 'Engine | Horse' Found: '\"invalid\"'">"invalid"</error>
 }
+
+---@shape Foal : Horse
+
+---@shape Nursery
+---@field occupant Foal
+
+---@shape Stable
+---@field occupant Horse
+
+---@type nil | Nursery
+local maybeNursery
+
+---@type Stable
+local stable
+
+local horseShedOccupant = (maybeNursery or stable).occupant
+
+horseShedOccupant = <error descr="Type mismatch. Required: 'Horse' Found: '\"invalid\"'">"invalid"</error>
