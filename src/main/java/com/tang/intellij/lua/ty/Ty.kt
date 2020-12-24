@@ -72,6 +72,7 @@ class TyVarianceFlags {
         const val ABSTRACT_PARAMS = 0x2 // A generic is to be considered contravariant if its TyParameter generic parameters are contravariant.
         const val WIDEN_TABLES = 0x4 // Generics (and arrays) are to be considered contravariant if their generic parameters (or base) are contravariant. Additionally, shapes are contravariant if their fields are contravariant.
         const val STRICT_NIL = 0x8 // In certain contexts nil is always strict, irrespective of the user's 'Strict nil checks' setting.
+        const val NON_STRUCTURAL = 0x10 // Treat shapes as classes i.e. a shape is only covariant of another shape if it explicitly inherits from it.
     }
 }
 
@@ -467,7 +468,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
             return true
         }
 
-        if (isShape(context)) {
+        if (flags and TyVarianceFlags.NON_STRUCTURAL == 0 && isShape(context)) {
             return ProblemUtil.contravariantOfShape(this, resolvedOther, context, flags)
         } else {
             val otherSuper = other.getSuperClass(context)

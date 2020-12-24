@@ -47,7 +47,11 @@ object ProblemUtil {
         }
     }
 
-    private fun acceptsShape(target: ITy, context: SearchContext): Boolean {
+    private fun acceptsShape(target: ITy, context: SearchContext, varianceFlags: Int): Boolean {
+        if (varianceFlags and TyVarianceFlags.NON_STRUCTURAL != 0) {
+            return false
+        }
+
         Ty.eachResolved(target, context) {
             val resolved = Ty.resolve(it, context)
 
@@ -245,7 +249,7 @@ object ProblemUtil {
             if (sourceUnitTy is TyClass) {
                 sourceUnitTy.lazyInit(context)
 
-                if (sourceUnitTy.isShape(context)) {
+                if (varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 && sourceUnitTy.isShape(context)) {
                     val sourceIsInline = sourceUnitTy is TyTable && sourceUnitTy.table == sourceElement
                     val indexes = sortedMapOf<Int, PsiElement>()
                     var foundNumberIndexer = false
@@ -348,7 +352,7 @@ object ProblemUtil {
                 return false
             }
 
-            val baseAcceptsShape = base.isShape(context)
+            val baseAcceptsShape = varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 && base.isShape(context)
 
             if (sourceElement is LuaTableExpr) {
                 sourceElement.tableFieldList.forEach { sourceField ->
@@ -388,7 +392,7 @@ object ProblemUtil {
             base.lazyInit(context)
         }
 
-        if (sourceUnitTy is TyTable && sourceUnitTy.table == sourceElement && base.isShape(context)) {
+        if (varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 && sourceUnitTy is TyTable && sourceUnitTy.table == sourceElement && base.isShape(context)) {
             isContravariant = contravariantOfShape(
                 targetTy,
                 sourceUnitTy,
@@ -420,7 +424,7 @@ object ProblemUtil {
 
         val resolvedTarget = Ty.resolve(target, context)
 
-        if (!acceptsShape(resolvedTarget, context) || (source !is TyTable || source.table != sourceElement)) {
+        if (!acceptsShape(resolvedTarget, context, varianceFlags) || (source !is TyTable || source.table != sourceElement)) {
             return contravariantOfUnit(resolvedTarget, source, context, varianceFlags, targetElement, sourceElement, processProblem)
         }
 
