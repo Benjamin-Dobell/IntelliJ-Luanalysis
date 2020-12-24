@@ -114,8 +114,7 @@ private doc_item ::= '@' (tag_param
     | access_modifier
     | tag_generic_list)
 
-ty ::= union_ty
-	| function_ty
+ty ::= function_ty
 	| generic_table_ty
 	| table_ty
 	| generic_ty
@@ -127,6 +126,8 @@ ty ::= union_ty
 	| primitive_literal_ty {
     implements = ['com.tang.intellij.lua.comment.psi.LuaDocType']
 }
+
+private complex_ty ::= union_ty | ty
 
 arr_ty ::= ty '[]' {
 	implements = [
@@ -155,7 +156,7 @@ primitive_table_ty ::= 'table' {
 general_ty ::= type_ref {
     methods = [getType]
 }
-par_ty ::= ('(' ty ')') { // NOTE: Brackets are necessary to prevent GrammarKit (automatically) pinning to the left parenthesis.
+par_ty ::= ('(' complex_ty ')') { // NOTE: Brackets are necessary to prevent GrammarKit (automatically) pinning to the left parenthesis.
     methods = [getType]
 }
 snippet_ty ::= '`' SNIPPET '`' {
@@ -177,8 +178,8 @@ string_literal_ty ::= STRING_LITERAL {
 private primitive_literal_ty ::= string_literal_ty | boolean_literal_ty | number_literal_ty
 private fieldList ::= (tableField (',' tableField)* (',')?)?
 
-private tableField1 ::= '[' ty ']' ':' ty { pin = 2 }
-private tableField2 ::= ID ':' ty { pin = 1 }
+private tableField1 ::= '[' complex_ty ']' ':' complex_ty { pin = 2 }
+private tableField2 ::= ID ':' complex_ty { pin = 1 }
 
 tableField ::= tableField1 | tableField2 {
     implements = [
@@ -210,9 +211,9 @@ table_ty ::= table_def {
     methods = [getType]
 }
 
-generic_table_index_ty ::= ty
+generic_table_index_ty ::= complex_ty
 
-generic_table_ty ::= 'table' '<' generic_table_index_ty ',' ty '>' {
+generic_table_ty ::= 'table' '<' generic_table_index_ty ',' complex_ty '>' {
     pin = 2
 	implements = [
         "com.tang.intellij.lua.psi.LuaClassMember"
@@ -228,20 +229,20 @@ generic_table_ty ::= 'table' '<' generic_table_index_ty ',' ty '>' {
     ]
 }
 
-private generic_param_list ::= (ty ',')* ty
+private generic_param_list ::= (complex_ty ',')* complex_ty
 generic_ty ::= type_ref '<' generic_param_list '>' {
     pin = 2
     methods = [getType]
 }
 
-function_param ::= ID (':' ty)? {
+function_param ::= ID (':' complex_ty)? {
     pin = 1
 }
 
-private vararg_ellipsis_param ::= ELLIPSIS ':' ty {
+private vararg_ellipsis_param ::= ELLIPSIS ':' complex_ty {
     pin = 1
 }
-private vararg_word_param ::= VARARG ty {
+private vararg_word_param ::= VARARG complex_ty {
     pin = 1
 }
 vararg_param ::= vararg_ellipsis_param | vararg_word_param {
@@ -255,8 +256,8 @@ private function_generic ::= '<' generic_def (',' generic_def)* '>' {
 function_params ::= '(' function_param_list? ')' {
     pin = 1
 }
-type_list ::= ty(',' ty)*
-return_list ::= (type_list ELLIPSIS?) | ('(' type_list ELLIPSIS? ')') {
+type_list ::= complex_ty(',' complex_ty)*
+return_list ::= ('(' type_list ELLIPSIS? ')') | (type_list ELLIPSIS?) {
     methods = [
         getType
         varreturn = 'ELLIPSIS'
@@ -278,14 +279,15 @@ function_ty ::= fun function_generic? function_params? (':' function_return_type
     ]
 }
 
-union_ty ::= ty (('|' ty)+) {
+union_ty ::= ty ('|' ty)+ {
+	pin = 2
     methods = [getType]
 }
 access_modifier ::= PRIVATE | PUBLIC | PROTECTED | TAG_NAME_PRIVATE | TAG_NAME_PUBLIC | TAG_NAME_PROTECTED
 
-private tagFieldIndex ::= '[' ty ']' { pin = 2 }
+private tagFieldIndex ::= '[' complex_ty ']' { pin = 2 }
 
-tag_field ::= TAG_NAME_FIELD access_modifier? ('<' type_ref '>')? (ID | tagFieldIndex) ty comment_string? {
+tag_field ::= TAG_NAME_FIELD access_modifier? ('<' type_ref '>')? (ID | tagFieldIndex) complex_ty comment_string? {
     pin = 1
     implements = [
         "com.tang.intellij.lua.psi.LuaClassField"
@@ -328,11 +330,11 @@ tag_lan ::= TAG_NAME_LANGUAGE PROPERTY comment_string? { pin = 1 }
 param_name_ref ::= ID {
     methods = [getReference]
 }
-tag_param ::= TAG_NAME_PARAM param_name_ref ty comment_string? {
+tag_param ::= TAG_NAME_PARAM param_name_ref complex_ty comment_string? {
     pin = 1
     methods = [getType]
 }
-tag_vararg ::= TAG_NAME_VARARG ty comment_string? {
+tag_vararg ::= TAG_NAME_VARARG complex_ty comment_string? {
     pin = 1
     methods = [getType]
 }
@@ -440,7 +442,7 @@ tag_generic_list ::= TAG_NAME_GENERIC generic_def (',' generic_def)* {
     pin = 1
 }
 
-tag_alias ::= TAG_NAME_ALIAS ID ('<' generic_def_list '>')? ty {
+tag_alias ::= TAG_NAME_ALIAS ID ('<' generic_def_list '>')? complex_ty {
     pin = 2
     implements = [
         "com.tang.intellij.lua.psi.LuaTypeAlias"
