@@ -12,6 +12,9 @@
 -- License for the specific language governing permissions and limitations under
 -- the License.
 
+---@class std__Math
+---@field huge number @The float value `HUGE_VAL`, a value larger than any other numeric value.
+---@field pi number @The value of π.
 math = {}
 
 ---
@@ -95,11 +98,6 @@ function math.fmod(x, y) end
 ---@return number, number
 function math.frexp(x) end
 
----
---- The float value `HUGE_VAL`, a value larger than any other numeric value.
----@type number
-math.huge = nil
-
 --- Returns `m2^e` (`e` should be an integer).
 ---@param m number
 ---@param e number
@@ -135,10 +133,6 @@ function math.min(x, ...) end
 ---@param x number
 ---@return number
 function math.modf(x) end
-
----
---- The value of π.
-math.pi = 3.1415
 
 ---
 ---Returns `x^y`. (You can also use the expression x^y to compute this value.)

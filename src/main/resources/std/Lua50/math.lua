@@ -12,6 +12,8 @@
 -- License for the specific language governing permissions and limitations under
 -- the License.
 
+---@class std__Math
+---@field pi number @The value of π.
 math = {}
 
 ---

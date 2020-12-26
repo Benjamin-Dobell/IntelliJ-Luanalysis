@@ -12,6 +12,11 @@
 -- License for the specific language governing permissions and limitations under
 -- the License.
 
+---@class std__Math
+---@field huge number @The float value `HUGE_VAL`, a value larger than any other numeric value.
+---@field pi number @The value of π.
+---@field maxinteger number @An integer with the maximum value for an integer.
+---@field mininteger number @An integer with the minimum value for an integer.
 math = {}
 
 ---
@@ -84,11 +89,6 @@ function math.floor(x) end
 function math.fmod(x, y) end
 
 ---
---- The float value `HUGE_VAL`, a value larger than any other numeric value.
----@type number
-math.huge = nil
-
----
 --- Returns the logarithm of `x` in the given base. The default for `base` is
 --- *e* (so that the function returns the natural logarithm of `x`).
 ---@overload fun(x:number):number
@@ -105,11 +105,6 @@ function math.log(x, base) end
 function math.max(x, ...) end
 
 ---
---- An integer with the maximum value for an integer.
----@type number
-math.maxinteger = nil
-
----
 --- Returns the argument with the minimum value, according to the Lua operator
 --- `<`. (integer/float)
 ---@param x number
@@ -117,20 +112,11 @@ math.maxinteger = nil
 function math.min(x, ...) end
 
 ---
---- An integer with the minimum value for an integer.
----@type number
-math.mininteger = nil
-
----
 --- Returns the integral part of `x` and the fractional part of `x`. Its second
 --- result is always a float.
 ---@param x number
 ---@return number
 function math.modf(x) end
-
----
---- The value of π.
-math.pi = 3.1415
 
 ---
 --- Converts the angle `x` from degrees to radians.
@@ -187,7 +173,7 @@ function math.tointeger(x) end
 --- Returns "`integer`" if `x` is an integer, "`float`" if it is a float, or
 --- **nil** if `x` is not a number.
 ---@param x number
----@return number
+---@return nil | "integer" | "float"
 function math.type(x) end
 
 ---
