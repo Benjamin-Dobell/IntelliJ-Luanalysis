@@ -152,10 +152,10 @@ function math.random(m, n) end
 --- To ensure a required level of randomness to the initial state (or
 --- contrarily, to have a deterministic sequence, for instance when debugging a
 --- program), you should call math.randomseed with explicit arguments.
----@overload fun(x: number): void
+---@overload fun(x: number): number, number
 ---@param x number
 ---@param y number
----@return void
+---@return number, number
 function math.randomseed(x, y) end
 
 ---
