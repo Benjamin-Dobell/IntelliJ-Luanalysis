@@ -74,13 +74,13 @@ function string.dump(func, strip) end
 ---
 --- If the pattern has captures, then in a successful match the captured values
 --- are also returned, after the two indices.
----@overload fun(s: string, pattern: string, init: number): nil | (number,  number, string...)
----@overload fun(s: string, pattern: string): nil | (number,  number, string...)
+---@overload fun(s: string, pattern: string, init: number): nil | (number, number, (number | string)...)
+---@overload fun(s: string, pattern: string): nil | (number, number, (number | string)...)
 ---@param s string
 ---@param pattern string
 ---@param init number
 ---@param plain boolean
----@return nil | (number,  number, string...)
+---@return nil | (number, number, (number | string)...)
 function string.find(s, pattern, init, plain) end
 
 ---
@@ -217,11 +217,11 @@ function string.lower(s) end
 --- it returns **nil**. If `pattern` specifies no captures, then the whole match
 --- is returned. A third, optional numerical argument `init` specifies where
 --- to start the search; its default value is 1 and can be negative.
----@overload fun(s: string, pattern: string): nil | (string, string...)
+---@overload fun(s: string, pattern: string): nil | (number | string, (number | string)...)
 ---@param s string
 ---@param pattern string
 ---@param init number
----@return nil | (string, string...)
+---@return nil | (number | string, (number | string)...)
 function string.match(s, pattern, init) end
 
 ---
