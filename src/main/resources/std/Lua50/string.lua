@@ -126,31 +126,24 @@ function string.format(formatstring, ...) end
 function string.gfind(s, pat) end
 
 ---
---- Returns a copy of `s` in which all (or the first `n`, if given)
---- occurrences of the `pattern` have been replaced by a replacement string
---- specified by `repl`, which can be a string, a table, or a function. `gsub`
---- also returns, as its second value, the total number of matches that
---- occurred.
+--- Returns a copy of `s` in which all occurrences of the pattern `pat` have
+--- been replaced by a replacement string specified by `repl`. `gsub` also
+--- returns, as a second value, the total number of substitutions made.
 ---
---- If `repl` is a string, then its value is used for replacement. The character
---- `%` works as an escape character: any sequence in `repl` of the form `%n`,
---- with *n* between 1 and 9, stands for the value of the *n*-th captured
---- substring (see below). The sequence `%0` stands for the whole match. The
---- sequence `%%` stands for a single `%`.
----
---- If `repl` is a table, then the table is queried for every match, using
---- the first capture as the key; if the pattern specifies no captures, then
---- the whole match is used as the key.
+--- If `repl` is a string, then its value is used for replacement. Any sequence
+--- in `repl` of the form `%n`, with `n` between 1 and 9, stands for the value
+--- of the `n`-th captured substring (see below).
 ---
 --- If `repl` is a function, then this function is called every time a match
---- occurs, with all captured substrings passed as arguments, in order; if
---- the pattern specifies no captures, then the whole match is passed as a
---- sole argument.
+--- occurs, with all captured substrings passed as arguments, in order; if the
+--- pattern specifies no captures, then the whole match is passed as a sole
+--- argument. If the value returned by this function is a string, then it is
+--- used as the replacement string; otherwise, the replacement string is the
+--- empty string.
 ---
---- If the value returned by the table query or by the function call is a
---- string or a number, then it is used as the replacement string; otherwise,
---- if it is false or nil, then there is no replacement (that is, the original
---- match is kept in the string).
+--- The optional last parameter `n` limits the maximum number of substitutions
+--- to occur. For instance, when `n` is 1 only the first occurrence of `pat` is
+--- replaced.
 ---
 --- Here are some examples:
 --- `x = string.gsub("hello world", "(%w+)", "%1 %1")`
@@ -165,13 +158,15 @@ function string.gfind(s, pat) end
 ---  >> return loadstring(s)()
 ---  > end)
 --- `-- > x="4+5 = 9"`
---- `local t = {name="lua", version="5.0"}`
---- `x = string.gsub("$name-$version.tar.gz", "%$(%w+)", t)`
---- > x="lua-5.0.tar.gz"
----@overload fun(s:string, pattern:string, repl:string|fun()):string, number
+--- `local t = {name="lua", version="5.0"}
+--   x = string.gsub("$name_$version.tar.gz", "%$(%w+)", function (v)`
+--   >> return t[v]
+--   > end)
+--   --> x="lua_5.0.tar.gz"
+---@overload fun(s: string, pattern: string, repl: string | fun: string): string, number
 ---@param s string
 ---@param pattern string
----@param repl string|fun()
+---@param repl string | fun: string
 ---@param n number
 ---@return string, number
 function string.gsub(s, pattern, repl, n) end

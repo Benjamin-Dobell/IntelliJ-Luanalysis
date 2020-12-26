@@ -188,10 +188,10 @@ function string.gmatch(s, pattern) end
 --- `local t = {name="lua", version="5.4"}`
 --- `x = string.gsub("$name-$version.tar.gz", "%$(%w+)", t)`
 --- > x="lua-5.4.tar.gz"
----@overload fun(s:string, pattern:string, repl: string | table | fun(match: string): string): string, number
+---@overload fun(s: string, pattern: string, repl: string | table | fun: nil | false | string | number): string, number
 ---@param s string
 ---@param pattern string
----@param repl string | table | fun(match: string): string
+---@param repl string | table | fun: nil | false | string | number
 ---@param n number
 ---@return string, number
 function string.gsub(s, pattern, repl, n) end
