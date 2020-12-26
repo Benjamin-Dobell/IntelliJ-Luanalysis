@@ -142,7 +142,7 @@ function string.format(formatstring, ...) end
 --- an anchor, as this would prevent the iteration.
 ---@param s string
 ---@param pattern string
----@return fun():string, table
+---@return fun(): string | number
 function string.gmatch(s, pattern) end
 
 ---
