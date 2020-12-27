@@ -17,7 +17,7 @@
 <idea-plugin xmlns:xi="http://www.w3.org/2001/XInclude">
     <id>au.com.glassechidna.luanalysis</id>
     <name>Luanalysis</name>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
     <vendor email="contact@glassechidna.com.au">Benjamin Dobell</vendor>
     <category>Custom Languages</category>
     <description><![CDATA[
@@ -25,6 +25,11 @@
     <p><a href="https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis">Source Code</a></p>
     ]]></description>
     <change-notes><![CDATA[
+    <strong>1.2.1</strong>
+    <ul>
+        <li>Improved return inspection handling for unions of multiple results</li>
+        <li>Improved stdlib string module definitions</li>
+    </ul>
     <strong>1.2.0</strong>
     <ul>
         <li><strong>Requires IntelliJ IDEA 203 (2020.3)</strong></li>
