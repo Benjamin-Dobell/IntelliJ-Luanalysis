@@ -766,7 +766,7 @@ class TyUnknown : Ty(TyKind.Unknown) {
     }
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
-        return true
+        return other !is TyMultipleResults
     }
 
     override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {

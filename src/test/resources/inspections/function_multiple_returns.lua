@@ -121,3 +121,15 @@ local inferredNumberOrString = <weak_warning descr="Insufficient assignees, valu
 
 numberOrString = inferredNumberOrString
 aNumber = <error descr="Type mismatch. Required: 'number' Found: '1 | string'">inferredNumberOrString</error> -- Expect error
+
+---@param val number
+---@return (string, number) | (number, function, string)
+local function returnUnionOfMultipleResults(val)
+    if val > 0 then
+        return aString, aNumber
+    elseif val < 0 then
+        return aNumber, function() end, aString
+    end
+
+    return <error descr="Incorrect number of values. Expected 3 but found 2. for candidate return type (number, function, string)"><error descr="Result 1, type mismatch. Required: 'string' Found: 'number' for candidate return type (string, number)">aNumber</error>, <error descr="Result 2, type mismatch. Required: 'function' Found: 'number' for candidate return type (number, function, string)">aNumber</error></error>
+end
