@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017. tangzx(love.tangzx@qq.com)
+ * Copyright (c) 2020
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,12 @@
  * limitations under the License.
  */
 
-package com.tang.intellij.lua.psi
+package com.tang.intellij.lua.ty
 
-import com.intellij.navigation.NavigationItem
-import com.intellij.psi.PsiElement
-import com.tang.intellij.lua.ty.ITy
-import com.tang.intellij.lua.ty.ITyAlias
-import com.tang.intellij.lua.ty.ITyClass
+import com.tang.intellij.lua.search.SearchContext
 
-interface LuaTypeDef : PsiElement, NavigationItem {
-    val type: ITy
-}
+interface ITyResolvable : ITy {
+    fun willResolve(context: SearchContext): Boolean
 
-interface LuaClass : LuaTypeDef {
-    override val type: ITyClass
-}
-
-interface LuaTypeAlias : LuaTypeDef, LuaTypeScope {
-    override val type: ITyAlias
+    fun resolve(context: SearchContext, genericArgs: Array<out ITy>? = null): ITy
 }

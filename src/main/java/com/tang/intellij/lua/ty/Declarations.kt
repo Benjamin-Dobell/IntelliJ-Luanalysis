@@ -357,7 +357,7 @@ private fun resolveParamType(paramDef: LuaParamDef, context: SearchContext): ITy
         Ty.eachResolved(shouldBe, context) {
             if (it is ITyFunction) {
                 val paramIndex = paramOwner.getIndexFor(paramDef)
-                ret = ret.union(it.mainSignature.getParamTy(paramIndex), context)
+                ret = ret.union(it.mainSignature.getArgTy(paramIndex), context)
             }
         }
 

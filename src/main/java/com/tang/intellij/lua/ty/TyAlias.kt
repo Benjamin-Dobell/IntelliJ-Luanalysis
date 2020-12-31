@@ -24,10 +24,25 @@ import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.readGenericParamsNullable
 import com.tang.intellij.lua.stubs.writeGenericParamsNullable
 
-interface ITyAlias : ITy {
+interface ITyAlias : ITyResolvable {
     val name: String
     val params: Array<TyGenericParameter>?
     val ty: ITy
+
+    override fun willResolve(context: SearchContext): Boolean {
+        return true
+    }
+
+    override fun resolve(context: SearchContext, genericArgs: Array<out ITy>?): ITy {
+        val params = this.params
+
+        return if (params != null && genericArgs != null) {
+            val paramSubstitutor = TyParameterSubstitutor.withArgs(context, params, genericArgs)
+            ty.substitute(paramSubstitutor)
+        } else {
+            ty
+        }
+    }
 }
 
 class TyAlias(override val name: String,

@@ -28,7 +28,6 @@ import com.tang.intellij.lua.codeInsight.inspection.MatchFunctionSignatureInspec
 import com.tang.intellij.lua.comment.psi.LuaDocClassRef
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
-import com.tang.intellij.lua.psi.search.LuaShortNamesManager
 import com.tang.intellij.lua.search.SearchContext
 import java.lang.IllegalStateException
 import kotlin.contracts.ExperimentalContracts
@@ -417,7 +416,18 @@ abstract class Ty(override val kind: TyKind) : ITy {
     }
 
     override fun not(ty: ITy, context: SearchContext): ITy {
-        return TyUnion.not(this, ty, context)
+        val resolved = (this as? ITyResolvable)?.resolve(context) ?: this
+
+        if (resolved !== this) {
+            val result = resolved.not(ty, context)
+            return if (result === resolved) this else result
+        }
+
+        if (ty.contravariantOf(this, context, TyVarianceFlags.STRICT_NIL or TyVarianceFlags.STRICT_UNKNOWN or TyVarianceFlags.NON_STRUCTURAL)) {
+            return Ty.VOID
+        }
+
+        return this
     }
 
     override fun toString(): String {
@@ -458,7 +468,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
             return true
         }
 
-        if (resolvedOther !== other) {
+        if (resolvedOther != other) {
             return contravariantOf(resolvedOther, context, flags)
         }
 
@@ -657,92 +667,69 @@ abstract class Ty(override val kind: TyKind) : ITy {
         }
 
         inline fun eachResolved(ty: ITy, context: SearchContext, fn: (ITy) -> Unit) {
+            if (!TyUnion.any(ty) { it is ITyResolvable && it.willResolve(context) }) {
+                TyUnion.each(ty, fn)
+                return
+            }
+
             val visitedTys = mutableSetOf<ITy>()
-            val memberTys = mutableListOf(ty)
 
-            while (memberTys.isNotEmpty()) {
-                val memberTy = memberTys.removeAt(memberTys.lastIndex)
-                val base = if (memberTy is ITyGeneric) memberTy.base else memberTy
+            val pendingTys = if (ty is TyUnion) {
+                visitedTys.add(ty)
+                mutableListOf<ITy>().apply { addAll(ty.getChildTypes()) }
+            } else {
+                mutableListOf(ty)
+            }
 
-                if (visitedTys.add(base)) {
-                    val referencedTy = if (base is ITyAlias) {
-                        base
-                    } else if (base is ITyClass) {
-                        base.lazyInit(context)
+            while (pendingTys.isNotEmpty()) {
+                val pendingTy = pendingTys.removeLast()
 
-                        if (!base.isAnonymous && !base.isGlobal) {
-                            val className = base.className
-                            val scopedType = context.element?.let {
-                                LuaScopedTypeTree.get(it.containingFile).find(context, it, className)?.type
-                            }
+                if (visitedTys.add(pendingTy)) {
+                    val resolvedMemberTy = (pendingTy as? ITyResolvable)?.resolve(context) ?: pendingTy
 
-                            if (scopedType != null) {
-                                scopedType
-                            } else {
-                                val aliasTy = LuaShortNamesManager.getInstance(context.project).findAlias(className, context)
-
-                                if (aliasTy != null) {
-                                    aliasTy.type
-                                } else {
-                                    base
-                                }
-                            }
+                    if (resolvedMemberTy !== pendingTy) {
+                        if (resolvedMemberTy is TyUnion) {
+                            pendingTys.addAll(resolvedMemberTy.getChildTypes())
                         } else {
-                            base
+                            pendingTys.add(resolvedMemberTy)
                         }
                     } else {
-                        base
-                    }
-
-                    val resolvedMemberTy = if (referencedTy is ITyAlias) {
-                        val params = referencedTy.params
-
-                        if (params?.size ?: 0 > 0) {
-                            val paramMap = mutableMapOf<String, ITy>()
-
-                            if (memberTy is ITyGeneric) {
-                                params?.forEachIndexed { index, baseParam ->
-                                    if (index < params.size) {
-                                        paramMap[baseParam.className] = memberTy.params[index]
-                                    }
-                                }
-                            } else {
-                                params?.forEachIndexed { index, baseParam ->
-                                    paramMap[baseParam.className] = params[index]
-                                }
-                            }
-
-                            referencedTy.ty.substitute(TyParameterSubstitutor(context, paramMap))
-                        } else {
-                            referencedTy.ty
-                        }
-                    } else {
-                        referencedTy
-                    }
-
-                    if (resolvedMemberTy is TyUnion) {
-                        memberTys.addAll(resolvedMemberTy.getChildTypes())
-                    } else if (resolvedMemberTy !== base) {
-                        memberTys.add(resolvedMemberTy)
-                    } else {
-                        fn(memberTy)
+                        fn(pendingTy)
                     }
                 }
             }
         }
 
         fun resolve(ty: ITy, context: SearchContext): ITy {
-            if (ty !is TyAlias && ty !is TyClass && ty !is TyGeneric) {
+            if (!TyUnion.any(ty) { it is ITyResolvable && it.willResolve(context) }) {
                 return ty
             }
 
-            var resolvedTy: ITy = VOID
+            val tyCount = if (ty is TyUnion) ty.size else 1
+            val memberTys = ArrayList<ITy>(maxOf(10, 3 * tyCount))
 
             eachResolved(ty, context) {
-                resolvedTy = resolvedTy.union(it, context)
+                memberTys.add(it)
             }
 
-            return resolvedTy
+            if (tyCount == memberTys.size) {
+                val unresolved = if (ty is TyUnion) {
+                    val unionSet = ty.getChildTypes()
+                    memberTys.all { unionSet.contains(it) }
+                } else {
+                    memberTys.first() === ty
+                }
+
+                if (unresolved) {
+                    return ty
+                }
+            }
+
+            return if (memberTys.size == 1) {
+                memberTys.first()
+            } else {
+                TyUnion.union(memberTys, context)
+            }
         }
     }
 }

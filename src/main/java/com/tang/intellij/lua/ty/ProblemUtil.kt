@@ -53,9 +53,7 @@ object ProblemUtil {
         }
 
         Ty.eachResolved(target, context) {
-            val resolved = Ty.resolve(it, context)
-
-            if (resolved is ITyArray || resolved.isShape(context)) {
+            if (it is ITyArray || it.isShape(context)) {
                 return true
             }
         }

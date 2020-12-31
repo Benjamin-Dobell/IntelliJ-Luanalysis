@@ -124,3 +124,15 @@ local function notNilAny()
 
     return --[[---@not nil]] table.unpack(anyArray, 1)
 end
+
+---@alias ANestedUnion 1 | 2
+---@alias AUnionAlias ANestedUnion | 'a' | 'b' | 'c'
+
+---@type AUnionAlias
+local union
+
+local filteredUnion = --[[---@not 'a' | 'c']] union
+filteredUnion = <error descr="Type mismatch. Required: '\"b\" | 1 | 2' Found: '\"a\"'">'a'</error>
+filteredUnion = 'b'
+filteredUnion = <error descr="Type mismatch. Required: '\"b\" | 1 | 2' Found: '\"c\"'">'c'</error>
+filteredUnion = 1

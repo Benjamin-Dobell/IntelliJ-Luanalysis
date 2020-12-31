@@ -57,7 +57,7 @@ class LuaNameSuggestionProvider : NameSuggestionProvider {
                 collector(name, "List", false)
             }
             is ITyGeneric -> {
-                val paramTy = type.getParamTy(1)
+                val paramTy = type.getArgTy(1)
                 collectNames(paramTy, context) { name, _, _ ->
                     collector(name, "Map", false)
                 }

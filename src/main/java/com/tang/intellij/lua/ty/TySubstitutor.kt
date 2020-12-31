@@ -163,32 +163,32 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, val context: Search
                     Ty.resolve(generic.base, context).accept(this)
                 }
 
-                it.params.asSequence().zip(generic.params.asSequence()).forEach { (param, genericParam) ->
+                it.args.asSequence().zip(generic.args.asSequence()).forEach { (param, genericParam) ->
                     warp(param) {
                         Ty.resolve(genericParam, context).accept(this)
                     }
                 }
-            } else if (generic.base == Ty.TABLE && generic.params.size == 2) {
+            } else if (generic.base == Ty.TABLE && generic.args.size == 2) {
                 if (it == Ty.TABLE) {
                     warp(Ty.UNKNOWN) {
-                        Ty.resolve(generic.params.first(), context).accept(this)
+                        Ty.resolve(generic.args.first(), context).accept(this)
                     }
 
                     warp(Ty.UNKNOWN) {
-                        Ty.resolve(generic.params.last(), context).accept(this)
+                        Ty.resolve(generic.args.last(), context).accept(this)
                     }
                 } else if (it is ITyArray) {
                     warp(Ty.NUMBER) {
-                        Ty.resolve(generic.params.first(), context).accept(this)
+                        Ty.resolve(generic.args.first(), context).accept(this)
                     }
 
                     warp(it.base) {
-                        Ty.resolve(generic.params.last(), context).accept(this)
+                        Ty.resolve(generic.args.last(), context).accept(this)
                     }
                 } else if (it.isShape(context)) {
                     val genericTable = createTableGenericFromMembers(it, context)
 
-                    genericTable.params.asSequence().zip(generic.params.asSequence()).forEach { (param, genericParam) ->
+                    genericTable.args.asSequence().zip(generic.args.asSequence()).forEach { (param, genericParam) ->
                         warp(param) {
                             Ty.resolve(genericParam, context).accept(this)
                         }
@@ -231,7 +231,7 @@ open class TySubstitutor(override val searchContext: SearchContext) : ITySubstit
 
     override fun substitute(generic: ITyGeneric): ITy {
         var paramsSubstituted = false
-        val substitutedParams = generic.params.map {
+        val substitutedArgs = generic.args.map {
             val substitutedParam = it.substitute(this)
 
             if (substitutedParam !== it) {
@@ -245,9 +245,9 @@ open class TySubstitutor(override val searchContext: SearchContext) : ITySubstit
 
         return if (paramsSubstituted || substitutedBase !== generic.base) {
             if (generic is TyDocTableGeneric) {
-                TyDocTableGeneric(generic.genericTableTy, substitutedParams.first(), substitutedParams.last())
+                TyDocTableGeneric(generic.genericTableTy, substitutedArgs.first(), substitutedArgs.last())
             } else {
-                TyGeneric(substitutedParams.toTypedArray(), substitutedBase)
+                TyGeneric(substitutedArgs.toTypedArray(), substitutedBase)
             }
         } else {
             generic
@@ -356,6 +356,20 @@ class TyParameterSubstitutor(searchContext: SearchContext, val map: Map<String, 
         }
 
         return clazz
+    }
+
+    companion object {
+        fun withArgs(context: SearchContext, params: Array<out TyGenericParameter>, args: Array<out ITy>): TyParameterSubstitutor {
+            val paramMap = mutableMapOf<String, ITy>()
+            val lastIndex = minOf(params.size, args.size) - 1
+
+            for (index in 0..lastIndex) {
+                val param = params[index]
+                paramMap[param.className] = args[index]
+            }
+
+            return TyParameterSubstitutor(context, paramMap)
+        }
     }
 }
 

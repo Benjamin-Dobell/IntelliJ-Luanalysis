@@ -469,7 +469,7 @@ fun getNameIdentifier(g: LuaDocTagAlias): PsiElement {
     return g.id
 }
 
-fun getType(alias: LuaDocTagAlias): ITy {
+fun getType(alias: LuaDocTagAlias): TyAlias {
     val stub = alias.stub
     return if (stub != null) {
         return stub.type

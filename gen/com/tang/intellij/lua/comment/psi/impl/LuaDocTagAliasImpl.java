@@ -11,7 +11,7 @@ import static com.tang.intellij.lua.comment.psi.LuaDocTypes.*;
 import com.intellij.extapi.psi.StubBasedPsiElementBase;
 import com.tang.intellij.lua.stubs.LuaDocTagAliasStub;
 import com.tang.intellij.lua.comment.psi.*;
-import com.tang.intellij.lua.ty.ITy;
+import com.tang.intellij.lua.ty.TyAlias;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.tree.IElementType;
 
@@ -82,7 +82,7 @@ public class LuaDocTagAliasImpl extends StubBasedPsiElementBase<LuaDocTagAliasSt
 
   @Override
   @NotNull
-  public ITy getType() {
+  public TyAlias getType() {
     return LuaDocPsiImplUtilKt.getType(this);
   }
 

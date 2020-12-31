@@ -29,6 +29,7 @@ import com.tang.intellij.lua.psi.LuaElementType
 import com.tang.intellij.lua.stubs.index.StubKeys
 import com.tang.intellij.lua.ty.ITy
 import com.tang.intellij.lua.ty.Ty
+import com.tang.intellij.lua.ty.TyAlias
 
 class LuaDocTagAliasType : LuaStubElementType<LuaDocTagAliasStub, LuaDocTagAlias>("DOC_TAG_ALIAS") {
     override fun createPsi(stub: LuaDocTagAliasStub): LuaDocTagAlias {
@@ -42,7 +43,7 @@ class LuaDocTagAliasType : LuaStubElementType<LuaDocTagAliasStub, LuaDocTagAlias
 
     override fun deserialize(stream: StubInputStream, parent: StubElement<*>): LuaDocTagAliasStub {
         val name = stream.readName()
-        val ty = Ty.deserialize(stream)
+        val ty = Ty.deserialize(stream) as TyAlias
         return LuaDocTagAliasStubImpl(StringRef.toString(name), ty, parent)
     }
 
@@ -58,11 +59,11 @@ class LuaDocTagAliasType : LuaStubElementType<LuaDocTagAliasStub, LuaDocTagAlias
 
 interface LuaDocTagAliasStub : StubElement<LuaDocTagAlias> {
     val name: String
-    val type: ITy
+    val type: TyAlias
 }
 
 class LuaDocTagAliasStubImpl(
         override val name: String,
-        override val type: ITy,
+        override val type: TyAlias,
         parent: StubElement<*>
 ) : LuaDocStubBase<LuaDocTagAlias>(parent, LuaElementType.DOC_ALIAS), LuaDocTagAliasStub

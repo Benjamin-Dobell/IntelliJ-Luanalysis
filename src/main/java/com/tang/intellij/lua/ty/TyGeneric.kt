@@ -69,6 +69,14 @@ class TyGenericParameter(val name: String, varName: String, superClass: ITy? = n
     }
 
     override fun doLazyInit(searchContext: SearchContext) {}
+
+    override fun willResolve(context: SearchContext): Boolean {
+        return false
+    }
+
+    override fun resolve(context: SearchContext, genericArgs: Array<out ITy>?): ITy {
+        return this
+    }
 }
 
 object TyGenericParamSerializer : TySerializer<TyGenericParameter>() {
@@ -86,30 +94,37 @@ object TyGenericParamSerializer : TySerializer<TyGenericParameter>() {
     }
 }
 
-interface ITyGeneric : ITy {
-    val params: Array<out ITy>
+interface ITyGeneric : ITyResolvable {
+    val args: Array<out ITy>
     val base: ITy
 
-    fun getParamTy(index: Int): ITy {
-        return params.elementAtOrNull(index) ?: Ty.UNKNOWN
+    fun getArgTy(index: Int): ITy {
+        return args.elementAtOrNull(index) ?: Ty.UNKNOWN
     }
 
     override fun getMemberSubstitutor(context: SearchContext): ITySubstitutor {
-        val paramMap = mutableMapOf<String, ITy>()
         val resolvedBase = TyAliasSubstitutor.substitute(base, context)
-        val baseParams = resolvedBase.getParams(context)
+        val baseParams = resolvedBase.getParams(context) ?: arrayOf()
+        return TyChainSubstitutor.chain(super.getMemberSubstitutor(context), TyParameterSubstitutor.withArgs(context, baseParams, args))!!
+    }
 
-        baseParams?.forEachIndexed { index, baseParam ->
-            if (index < params.size) {
-                paramMap[baseParam.className] = params[index]
+    override fun willResolve(context: SearchContext): Boolean {
+        TyUnion.each(base) {
+            if ((it as? ITyResolvable)?.willResolve(context) == true) {
+                return true
             }
         }
 
-        return TyChainSubstitutor.chain(super.getMemberSubstitutor(context), TyParameterSubstitutor(context, paramMap))!!
+        return false
+    }
+
+    override fun resolve(context: SearchContext, genericArgs: Array<out ITy>?): ITy {
+        val resolved = (base as? ITyResolvable)?.resolve(context, args) ?: base
+        return if (resolved !== base) resolved else this
     }
 }
 
-open class TyGeneric(override val params: Array<out ITy>, override val base: ITy) : Ty(TyKind.Generic), ITyGeneric {
+open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) : Ty(TyKind.Generic), ITyGeneric {
 
     override fun equals(other: Any?): Boolean {
         return other is ITyGeneric && other.base == base && other.displayName == displayName
@@ -122,8 +137,8 @@ open class TyGeneric(override val params: Array<out ITy>, override val base: ITy
 
         val resolvedOther = Ty.resolve(other, context)
 
-        if (resolvedOther is ITyGeneric && params.size == resolvedOther.params.size && base.equals(resolvedOther.base, context)) {
-            val allParamsEqual = params.asSequence().zip(resolvedOther.params.asSequence()).all { (param, otherParam) ->
+        if (resolvedOther is ITyGeneric && args.size == resolvedOther.args.size && base.equals(resolvedOther.base, context)) {
+            val allParamsEqual = args.asSequence().zip(resolvedOther.args.asSequence()).all { (param, otherParam) ->
                 param.equals(otherParam)
             }
 
@@ -149,15 +164,10 @@ open class TyGeneric(override val params: Array<out ITy>, override val base: ITy
 
         if (superClass is ITyGeneric) {
             val baseParams = base.getParams(context)
-            val paramMap = mutableMapOf<String, ITy>()
 
-            baseParams?.forEachIndexed { index, baseParam ->
-                if (index < params.size) {
-                    paramMap[baseParam.className] = params[index]
-                }
+            if (baseParams != null) {
+                return superClass.substitute(TyParameterSubstitutor.withArgs(context, baseParams, args))
             }
-
-            return superClass.substitute(TyParameterSubstitutor(context, paramMap))
         }
 
         return superClass
@@ -208,9 +218,9 @@ open class TyGeneric(override val params: Array<out ITy>, override val base: ITy
         }
 
         if (resolvedOther is ITyArray) {
-            return if (resolvedBase == Ty.TABLE && params.size == 2) {
-                val keyTy = params.first()
-                val valueTy = params.last()
+            return if (resolvedBase == Ty.TABLE && args.size == 2) {
+                val keyTy = args.first()
+                val valueTy = args.last()
                 val resolvedOtherBase = Ty.resolve(resolvedOther.base, context)
                 return (keyTy == Ty.NUMBER || (keyTy is TyUnknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0))
                         && (valueTy == resolvedOtherBase || (flags and TyVarianceFlags.WIDEN_TABLES != 0 && valueTy.contravariantOf(resolvedOtherBase, context, flags)))
@@ -218,38 +228,37 @@ open class TyGeneric(override val params: Array<out ITy>, override val base: ITy
         }
 
         var otherBase: ITy? = null
-        var otherParams: Array<out ITy>? =  null
+        var otherArgs: Array<out ITy>? =  null
         var contravariantParams = false
 
         if (resolvedOther is ITyGeneric) {
             otherBase = resolvedOther.base
-            otherParams = resolvedOther.params
-        } else if (resolvedBase == Ty.TABLE && params.size == 2) {
+            otherArgs = resolvedOther.args
+        } else if (resolvedBase == Ty.TABLE && args.size == 2) {
             if (resolvedOther == Ty.TABLE) {
-                return params.first() is TyUnknown && params.last() is TyUnknown
+                return args.first() is TyUnknown && args.last() is TyUnknown
             }
 
             if (resolvedOther.isShape(context)) {
                 val genericTable = createTableGenericFromMembers(resolvedOther, context)
                 otherBase = genericTable.base
-                otherParams = genericTable.params
+                otherArgs = genericTable.args
                 contravariantParams = flags and TyVarianceFlags.WIDEN_TABLES != 0
             }
         } else if (resolvedOther is ITyClass) {
             otherBase = resolvedOther
-            otherParams = resolvedOther.getParams(context)
+            otherArgs = resolvedOther.getParams(context)
         }
 
         if (otherBase != null) {
             if (otherBase.equals(resolvedBase, context)) {
-                return params.size == otherParams?.size
-                        && params.asSequence().zip(otherParams.asSequence()).all { (param, otherParam) ->
-                    // Params are always invariant as we don't support use-site variance nor immutable/read-only annotations
-                    param.equals(otherParam, context)
-                            || (flags and TyVarianceFlags.STRICT_UNKNOWN == 0 && otherParam is TyUnknown)
+                return args.size == otherArgs?.size && args.asSequence().zip(otherArgs.asSequence()).all { (arg, otherArg) ->
+                    // Args are always invariant as we don't support use-site variance nor immutable/read-only annotations
+                    arg.equals(otherArg, context)
+                            || (flags and TyVarianceFlags.STRICT_UNKNOWN == 0 && otherArg is TyUnknown)
                             || (
-                                (contravariantParams || (flags and TyVarianceFlags.ABSTRACT_PARAMS != 0 && param is TyGenericParameter))
-                                && param.contravariantOf(otherParam, context, flags)
+                                (contravariantParams || (flags and TyVarianceFlags.ABSTRACT_PARAMS != 0 && arg is TyGenericParameter))
+                                && arg.contravariantOf(otherArg, context, flags)
                             )
                 }
             }
@@ -279,17 +288,17 @@ open class TyGeneric(override val params: Array<out ITy>, override val base: ITy
     }
 
     override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
-        if (base == Ty.TABLE && params.size == 2 && (params[0] == Ty.STRING
-                        || params[0].contravariantOf(TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name), searchContext, 0))) {
-            return params[1]
+        if (base == Ty.TABLE && args.size == 2 && (args[0] == Ty.STRING
+                        || args[0].contravariantOf(TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name), searchContext, 0))) {
+            return args[1]
         }
 
         return super<Ty>.guessMemberType(name, searchContext)
     }
 
     override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
-        if (base == Ty.TABLE && params.size == 2 && ((!exact && params[0].contravariantOf(indexTy, searchContext, 0)) || indexTy == params[0])) {
-            return params[1]
+        if (base == Ty.TABLE && args.size == 2 && ((!exact && args[0].contravariantOf(indexTy, searchContext, 0)) || indexTy == args[0])) {
+            return args[1]
         }
 
         return super<Ty>.guessIndexerType(indexTy, searchContext, exact)
@@ -324,8 +333,8 @@ object TyGenericSerializer : TySerializer<ITyGeneric>() {
 
     override fun serializeTy(ty: ITyGeneric, stream: StubOutputStream) {
         Ty.serialize(ty.base, stream)
-        stream.writeByte(ty.params.size)
-        ty.params.forEach { Ty.serialize(it, stream) }
+        stream.writeByte(ty.args.size)
+        ty.args.forEach { Ty.serialize(it, stream) }
     }
 }
 

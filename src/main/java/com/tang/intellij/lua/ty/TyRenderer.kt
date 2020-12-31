@@ -47,7 +47,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                             visitClass(base)
                         } else {
                             val list = mutableListOf<String>()
-                            ty.params.forEach { list.add(it.displayName) }
+                            ty.args.forEach { list.add(it.displayName) }
 
                             val baseName = if (base is ITyClass) base.className else base.displayName
                             sb.append("${baseName}${renderParamsList(list)}")

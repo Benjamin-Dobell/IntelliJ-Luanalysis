@@ -97,7 +97,7 @@ fun IFunSignature.getFirstParam(thisTy: ITy?, colonStyle: Boolean): LuaParamInfo
     return pi
 }
 
-fun IFunSignature.getParamTy(index: Int): ITy {
+fun IFunSignature.getArgTy(index: Int): ITy {
     return params?.getOrNull(index)?.ty ?: Ty.UNKNOWN
 }
 

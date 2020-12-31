@@ -124,6 +124,14 @@ open class TyPrimitiveClass(override val primitiveKind: TyPrimitiveKind,
         return (other is ITyPrimitive && other.primitiveKind == primitiveKind) ||
                 super.contravariantOf(other, context, flags)
     }
+
+    override fun willResolve(context: SearchContext): Boolean {
+        return false
+    }
+
+    override fun resolve(context: SearchContext, genericArgs: Array<out ITy>?): ITy {
+        return this
+    }
 }
 
 object TyPrimitiveSerializer : TySerializer<ITy>() {

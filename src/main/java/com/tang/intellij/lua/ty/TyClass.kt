@@ -37,7 +37,7 @@ import com.tang.intellij.lua.search.PsiSearchContext
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.*
 
-interface ITyClass : ITy {
+interface ITyClass : ITyResolvable {
     val className: String
     val varName: String
 
@@ -51,6 +51,39 @@ interface ITyClass : ITy {
 
     fun recoverAlias(context: SearchContext, aliasSubstitutor: TyAliasSubstitutor): ITy {
         return this
+    }
+
+    override fun willResolve(context: SearchContext): Boolean {
+        lazyInit(context)
+        return !isAnonymous && !isGlobal
+    }
+
+    override fun resolve(context: SearchContext, genericArgs: Array<out ITy>?): ITy {
+        return if (willResolve(context)) {
+            val scopedType = context.element?.let {
+                LuaScopedTypeTree.get(it.containingFile).find(context, it, className)?.type
+            }
+
+            if (scopedType != null) {
+                scopedType
+            } else {
+                val aliasDef = LuaShortNamesManager.getInstance(context.project).findAlias(className, context)
+
+                if (aliasDef != null) {
+                    val aliasTy = aliasDef.type
+
+                    if (genericArgs != null) {
+                        TyGeneric(genericArgs, aliasTy)
+                    } else {
+                        aliasTy
+                    }
+                } else {
+                    this
+                }
+            }
+        } else {
+            this
+        }
     }
 }
 

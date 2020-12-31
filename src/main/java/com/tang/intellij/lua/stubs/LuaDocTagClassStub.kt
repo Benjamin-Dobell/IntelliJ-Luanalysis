@@ -116,8 +116,6 @@ class LuaDocTagClassStubImpl(override val className: String,
     override val classType: TyClass
         get() {
             val flags = if (isShape) TyFlags.SHAPE else 0
-            val luaType = createSerializedClass(className, params, className, superClass, signatures, null, flags)
-            luaType.aliasName = aliasName
-            return luaType
+            return createSerializedClass(className, params, className, superClass, signatures, aliasName, flags)
         }
 }

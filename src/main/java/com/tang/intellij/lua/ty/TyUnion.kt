@@ -29,9 +29,9 @@ import kotlin.contracts.contract
 private val displayNameComparator: Comparator<ITy> = Comparator { a, b -> a.displayName.compareTo(b.displayName) }
 
 class TyUnion : Ty {
-    private val childSet: TreeSet<ITy>
+    private val childSet: LinkedHashSet<ITy>
 
-    private constructor(childSet: TreeSet<ITy>) : super(TyKind.Union) {
+    private constructor(childSet: LinkedHashSet<ITy>) : super(TyKind.Union) {
         if (childSet.size < 2) {
             throw IllegalArgumentException("Unions must contain two or more types. ${childSet.size} were provided.")
         }
@@ -39,7 +39,7 @@ class TyUnion : Ty {
         this.childSet = childSet
     }
 
-    constructor(childTys: Collection<ITy>) : this(sortedSetOf(displayNameComparator).also { it.addAll(childTys) })
+    constructor(childTys: Collection<ITy>) : this(linkedSetOf<ITy>().apply { addAll(childTys.sortedWith(displayNameComparator)) })
 
     fun getChildTypes() = childSet
 
@@ -85,39 +85,30 @@ class TyUnion : Ty {
     }
 
     override fun not(ty: ITy, context: SearchContext): ITy {
-        val childTys = mutableListOf<ITy>()
-        childTys.addAll(childSet)
+        val resultantChildTys = ArrayList<ITy>(childSet.size)
+        var altered = false
 
-        val notTypes = if (ty is TyUnion) ty.childSet else listOf(ty)
+        childSet.forEach { childTy ->
+            val resultantChildTy = childTy.not(ty, context)
 
-        notTypes.forEach { notTy ->
-            if (!childTys.remove(notTy)) {
-                if (notTy == Ty.FALSE) {
-                    if (childTys.remove(Ty.BOOLEAN)) {
-                        childTys.add(Ty.TRUE)
-                    }
-                } else if (notTy == Ty.TRUE) {
-                    if (childTys.remove(Ty.BOOLEAN)) {
-                        childTys.add(Ty.FALSE)
-                    }
-                } else if (notTy == Ty.BOOLEAN) {
-                    childTys.remove(Ty.TRUE)
-                    childTys.remove(Ty.FALSE)
+            if (resultantChildTy !== childTy) {
+                altered = true
+
+                if (resultantChildTy is TyUnion) {
+                    resultantChildTys.addAll(resultantChildTy.childSet)
                 } else {
-                    childTys.removeIf { childTy ->
-                        notTy.contravariantOf(childTy, context, TyVarianceFlags.STRICT_NIL)
-                    }
+                    resultantChildTys.add(resultantChildTy)
                 }
+            } else {
+                resultantChildTys.add(childTy)
             }
         }
 
-        return if (childTys.size == 1) {
-            childTys.first()
-        } else if (childTys.size == 0) {
-            Ty.VOID
-        } else {
-            TyUnion.union(childTys, context)
+        if (!altered) {
+            return this
         }
+
+        return TyUnion.union(resultantChildTys, context)
     }
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
@@ -241,6 +232,22 @@ class TyUnion : Ty {
             return null
         }
 
+        inline fun all(ty: ITy, fn: (ITy) -> Boolean): Boolean {
+            if (ty is TyUnion) {
+                return ty.getChildTypes().all(fn)
+            }
+
+            return fn(ty)
+        }
+
+        inline fun any(ty: ITy, fn: (ITy) -> Boolean): Boolean {
+            if (ty is TyUnion) {
+                return ty.getChildTypes().any(fn)
+            }
+
+            return fn(ty)
+        }
+
         inline fun each(ty: ITy, fn: (ITy) -> Unit) {
             if (ty is TyUnion) {
                 for (child in ty.getChildTypes()) {
@@ -327,22 +334,6 @@ class TyUnion : Ty {
                 childSet.first()
             } else {
                 TyUnion(childSet)
-            }
-        }
-
-        // NOTE: This is *not* set subtraction because TyUnion can only represent a union of types, not a true type set.
-        // i.e. if t2 contains a type that is covariant of a type in t1, this case is not handled.
-        fun not(t1: ITy, t2: ITy, context: SearchContext): ITy {
-            return when {
-                t1 is TyUnion -> t1.not(t2, context)
-                t2 is TyUnion -> {
-                    if (t2.childSet.contains(t1)
-                            || t2.childSet.find { childTy -> childTy.contravariantOf(t1, context, TyVarianceFlags.STRICT_NIL) } != null) {
-                        Ty.VOID
-                    } else t1
-                }
-                t2 is TyUnknown || t1 == t2 -> Ty.VOID
-                else -> t1
             }
         }
 
