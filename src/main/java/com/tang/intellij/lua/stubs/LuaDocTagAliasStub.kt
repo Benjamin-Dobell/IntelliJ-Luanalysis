@@ -56,7 +56,7 @@ class LuaDocTagAliasType : LuaStubElementType<LuaDocTagAliasStub, LuaDocTagAlias
     }
 }
 
-interface LuaDocTagAliasStub : StubElement<LuaDocTagClass> {
+interface LuaDocTagAliasStub : StubElement<LuaDocTagAlias> {
     val name: String
     val type: ITy
 }
@@ -65,4 +65,4 @@ class LuaDocTagAliasStubImpl(
         override val name: String,
         override val type: ITy,
         parent: StubElement<*>
-) : LuaDocStubBase<LuaDocTagClass>(parent, LuaElementType.DOC_ALIAS), LuaDocTagAliasStub
+) : LuaDocStubBase<LuaDocTagAlias>(parent, LuaElementType.DOC_ALIAS), LuaDocTagAliasStub
