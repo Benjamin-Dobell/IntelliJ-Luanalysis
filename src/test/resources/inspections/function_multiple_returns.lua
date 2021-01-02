@@ -133,3 +133,21 @@ local function returnUnionOfMultipleResults(val)
 
     return <error descr="Incorrect number of values. Expected 3 but found 2. for candidate return type (number, function, string)"><error descr="Result 1, type mismatch. Required: 'string' Found: 'number' for candidate return type (string, number)">aNumber</error>, <error descr="Result 2, type mismatch. Required: 'function' Found: 'number' for candidate return type (number, function, string)">aNumber</error></error>
 end
+
+---@param val number
+---@return (string, number) | (number, function, string)
+local function proxyMultipleResults(val)
+    return returnUnionOfMultipleResults(val)
+end
+
+---@param val number
+---@return (number, string) | (number, function, string)
+local function invalidProxyMultipleResults(val)
+    <error descr="Result 2, type mismatch. Required: 'function' Found: 'number' for candidate return type (number, function, string)"><error descr="Result 2, type mismatch. Required: 'string' Found: 'number' for candidate return type (number, string)">return <error descr="Incorrect number of values. Expected 3 but found 2. for candidate return type (number, function, string)"><error descr="Result 1, type mismatch. Required: 'number' Found: 'string' for candidate return type (number, function, string)"><error descr="Result 1, type mismatch. Required: 'number' Found: 'string' for candidate return type (number, string)">returnUnionOfMultipleResults(val)</error></error></error></error></error>
+end
+
+---@param val number
+---@return (number, number) | (string, string)
+local function returnUnionOfMultipleResultsExpression(val)
+    return val > 0 and returnsNumberNumber() or returnsStringString()
+end

@@ -360,7 +360,7 @@ private fun LuaCallExpr.infer(context: SearchContext): ITy? {
         ret = ret.union(returnTy, context)
     }
 
-    return TyMultipleResults.flatten(context, ret)
+    return ret
 }
 
 private fun LuaNameExpr.infer(context: SearchContext): ITy? {

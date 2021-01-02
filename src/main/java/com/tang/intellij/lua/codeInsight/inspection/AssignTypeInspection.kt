@@ -96,7 +96,7 @@ class AssignTypeInspection : StrictInspection() {
                         return
                     }
 
-                    val searchContext = PsiSearchContext(expressions.first())
+                    val context = PsiSearchContext(expressions.first())
                     var assigneeIndex = 0
                     var variadicTy: ITy? = null
                     var lastExpressionFirstAssigneeIndex = 0
@@ -105,9 +105,11 @@ class AssignTypeInspection : StrictInspection() {
                         val isLastExpression = expressionIndex == expressions.size - 1
                         val expression = expressions[expressionIndex]
                         val expressionType = if (isLastExpression) {
-                            searchContext.withMultipleResults { expression.guessType(searchContext) }
+                            context.withMultipleResults { expression.guessType(context) }?.let {
+                                TyMultipleResults.flatten(context, it)
+                            }
                         } else {
-                            searchContext.withIndex(0) { expression.guessType(searchContext) }
+                            context.withIndex(0) { expression.guessType(context) }
                         }
 
                         if (expressionType == null) {
@@ -131,11 +133,11 @@ class AssignTypeInspection : StrictInspection() {
                             if (isLastValue) {
                                 if (variadicTy == null && isLastExpression && multipleResults?.variadic == true) {
                                     variadicTy = if (value is TyMultipleResults) {
-                                        TyMultipleResults.getResult(searchContext, value)
+                                        TyMultipleResults.getResult(context, value)
                                     } else value
 
                                     if (LuaSettings.instance.isNilStrict) {
-                                        variadicTy = Ty.NIL.union(variadicTy, searchContext)
+                                        variadicTy = Ty.NIL.union(variadicTy, context)
                                     }
                                 }
 
@@ -160,7 +162,7 @@ class AssignTypeInspection : StrictInspection() {
                             val assignee = assignees[assigneeIndex++]
 
                             if (variadicTy != null) {
-                                variadicTy = variadicTy.union(value, searchContext)
+                                variadicTy = variadicTy.union(value, context)
                                 value = variadicTy
                             }
 
@@ -170,7 +172,7 @@ class AssignTypeInspection : StrictInspection() {
                                 }
                             } else {
                                 val inspectionTargetElement = if (assignees.size > 1) assignee else null
-                                inspectAssignee(assignee, value, varianceFlags, inspectionTargetElement, expression, searchContext) { problem ->
+                                inspectAssignee(assignee, value, varianceFlags, inspectionTargetElement, expression, context) { problem ->
                                     val sourceElement = problem.sourceElement
                                     val targetElement = problem.targetElement
                                     val sourceMessage = if (assignees.size > 1 && values.size > 1) "Result ${valueIndex + 1}, ${problem.message.decapitalize()}" else problem.message
@@ -197,7 +199,7 @@ class AssignTypeInspection : StrictInspection() {
                             if (variadicTy != null) {
                                 val assignee = assignees[assigneeIndex]
 
-                                inspectAssignee(assignee, variadicTy, 0, assignee, expressions.last(), searchContext) { problem ->
+                                inspectAssignee(assignee, variadicTy, 0, assignee, expressions.last(), context) { problem ->
                                     val sourceElement = problem.sourceElement
                                     val targetElement = problem.targetElement
                                     val sourceMessage = if (assignees.size > 1) {
