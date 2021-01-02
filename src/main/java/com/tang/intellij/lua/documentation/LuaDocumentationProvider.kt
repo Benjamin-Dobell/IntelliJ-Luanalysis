@@ -119,36 +119,38 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
 
         renderDefinition(sb) {
             //base info
-            if (parentType != null) {
-                renderTy(sb, parentType, tyRenderer)
-                with(sb) {
-                    when (ty) {
-                        is TyFunction -> {
-                            append(if (ty.isColonCall) ":" else ".")
-                            append(member.name)
-                            renderSignature(sb, ty.mainSignature, tyRenderer)
-                        }
-                        else -> {
-                            append(".${member.name}: ")
-                            renderTy(sb, ty, tyRenderer)
-                        }
-                    }
+            with(sb) {
+                if (ty is ITyFunction) {
+                    append("function ")
                 }
-            } else {
-                //NameExpr
-                if (member is LuaNameExpr) {
-                    val nameExpr: LuaNameExpr = member
-                    with(sb) {
-                        append(nameExpr.name)
-                        when (ty) {
-                            is TyFunction -> renderSignature(sb, ty.mainSignature, tyRenderer)
-                            else -> {
-                                append(": ")
-                                renderTy(sb, ty, tyRenderer)
-                            }
-                        }
+
+                if (parentType != null) {
+                    renderTy(sb, parentType, tyRenderer)
+                }
+
+                val name = member.name
+
+                if (name != null) {
+                    if (ty.isColonCall) {
+                        append(":")
+                    } else {
+                        append(".")
                     }
 
+                    append(name)
+                } else {
+                    val indexName = member.guessIndexType(context)?.displayName ?: "unknown"
+                    append("[${indexName}]")
+                }
+
+                if (ty is ITyFunction) {
+                    renderSignature(sb, ty.mainSignature, tyRenderer)
+                } else {
+                    sb.append(": ")
+                    renderTy(sb, ty, tyRenderer)
+                }
+
+                (member as? LuaNameExpr)?.let { nameExpr ->
                     val stat = nameExpr.parent.parent // VAR_LIST ASSIGN_STAT
                     if (stat is LuaAssignStat) renderComment(sb, stat.comment, tyRenderer)
                 }
