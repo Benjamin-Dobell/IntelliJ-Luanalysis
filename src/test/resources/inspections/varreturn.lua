@@ -95,3 +95,14 @@ local nilOrBooleanParameter
 
 nilOrBooleanParameter(booleanVarreturn()<error descr="Missing argument: a: boolean | nil">)</error> -- Expect error
 nilOrBooleanParameter((booleanVarreturn()))
+
+---@type fun(): number...
+local numberVarreturn
+
+---@type number
+local aNumber
+
+aNumber = numberVarreturn() or aNumber
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'boolean | number'">numberVarreturn() or aBoolean</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'nil | number'">numberVarreturn() or numberVarreturn()</error>
+nilOrNumber = numberVarreturn() or numberVarreturn()

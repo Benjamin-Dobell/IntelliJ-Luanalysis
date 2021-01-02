@@ -178,7 +178,7 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
     val lhs = binaryExpr.left
     val rhs = binaryExpr.right
 
-    val lty = infer(lhs, context)
+    val lty = context.withIndex(0) { infer(lhs, context) }
 
     if (lty == null) {
         return null
@@ -187,17 +187,17 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
     //and
     if (operator == LuaTypes.AND) {
         return when (lty.booleanType) {
-            Ty.TRUE -> infer(rhs, context)
+            Ty.TRUE -> context.withIndex(0) { infer(rhs, context) }
             Ty.FALSE -> lty
             else -> {
-                val rhsTy = infer(rhs, context)
+                val rhsTy = context.withIndex(0) { infer(rhs, context) }
 
                 if (rhsTy == null) {
                     return null
                 }
 
                 val tys = mutableListOf<ITy>()
-                TyUnion.each(lty) {
+                Ty.eachResolved(lty, context) {
                     if (it == Ty.BOOLEAN) {
                         tys.add(Ty.FALSE)
                     } else if (it.booleanType != Ty.TRUE) {
@@ -213,16 +213,16 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
     //or
     return when (lty.booleanType) {
         Ty.TRUE -> lty
-        Ty.FALSE -> infer(rhs, context)
+        Ty.FALSE -> context.withIndex(0) { infer(rhs, context) }
         else -> {
-            val rhsTy = infer(rhs, context)
+            val rhsTy = context.withIndex(0) { infer(rhs, context) }
 
             if (rhsTy == null) {
                 return null
             }
 
             val tys = mutableListOf<ITy>()
-            TyUnion.each(lty) {
+            Ty.eachResolved(lty, context) {
                 if (it == Ty.BOOLEAN) {
                     tys.add(Ty.TRUE)
                 } else if (it.booleanType != Ty.FALSE) {
@@ -235,7 +235,7 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
     }
 }
 
-private fun guessBinaryOpType(binaryExpr : LuaBinaryExpr, context:SearchContext): ITy? {
+private fun guessBinaryOpType(binaryExpr: LuaBinaryExpr, context: SearchContext): ITy? {
     val type = infer(binaryExpr.left, context)
     return if (type is TyPrimitiveLiteral) type.primitiveType else type
 }

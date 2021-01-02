@@ -147,7 +147,7 @@ local function invalidProxyMultipleResults(val)
 end
 
 ---@param val number
----@return (number, number) | (string, string)
-local function returnUnionOfMultipleResultsExpression(val)
+---@return number | string
+local function returnBooleanOperationOnMultipleResults(val)
     return val > 0 and returnsNumberNumber() or returnsStringString()
 end
