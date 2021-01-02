@@ -215,12 +215,14 @@ fun renderDocParam(sb: StringBuilder, child: LuaDocTagParam, tyRenderer: ITyRend
 
 fun renderCommentString(prefix: String?, postfix: String?, sb: StringBuilder, child: LuaDocCommentString?) {
     child?.string?.text?.let {
-        if (prefix != null) sb.append(prefix)
-        var html = markdownToHtml(it)
-        if (html.startsWith("<p>"))
-            html = html.substring(3, html.length - 4)
-        sb.append(html)
-        if (postfix != null) sb.append(postfix)
+        sb.wrap("<div class='content'>", "</div>") {
+            if (prefix != null) sb.append(prefix)
+            var html = markdownToHtml(it)
+            if (html.startsWith("<p>"))
+                html = html.substring(3, html.length - 4)
+            sb.append(html)
+            if (postfix != null) sb.append(postfix)
+        }
     }
 }
 
