@@ -138,14 +138,10 @@ private fun renderReturn(sb: StringBuilder, tagReturn: LuaDocTagReturn, tyRender
     val returnType = tagReturn.functionReturnType
     if (returnType != null) {
         val list = returnType.returnListList
-        if (list.size > 1)
-            sb.append("(")
         list.forEachIndexed { index, returnList ->
-            renderTypeUnion(if (index != 0) ", " else null, null, sb, returnList, tyRenderer)
+            renderDocType(if (index != 0) " | " else null, null, sb, returnList, tyRenderer)
             sb.append(" ")
         }
-        if (list.size > 1)
-            sb.append(")")
         renderCommentString(" - ", null, sb, tagReturn.commentString)
     }
 }
@@ -174,7 +170,7 @@ fun renderClassDef(sb: StringBuilder, tag: LuaDocTagClass, tyRenderer: ITyRender
 private fun renderFieldDef(sb: StringBuilder, tagField: LuaDocTagField, tyRenderer: ITyRenderer) {
     val name = tagField.name ?: "[${tagField.guessIndexType(SearchContext.get(tagField.project))}]"
     sb.append("${name}: ")
-    renderTypeUnion(null, null, sb, tagField.valueType, tyRenderer)
+    renderDocType(null, null, sb, tagField.valueType, tyRenderer)
     renderCommentString(" - ", null, sb, tagField.commentString)
 }
 
@@ -212,7 +208,7 @@ fun renderDocParam(sb: StringBuilder, child: LuaDocTagParam, tyRenderer: ITyRend
         if (paramTitle)
             sb.append("<b>param</b> ")
         sb.append("<code>${paramNameRef.text}</code>: ")
-        renderTypeUnion(null, null, sb, child.ty, tyRenderer)
+        renderDocType(null, null, sb, child.ty, tyRenderer)
         renderCommentString(" - ", null, sb, child.commentString)
     }
 }
@@ -228,7 +224,7 @@ fun renderCommentString(prefix: String?, postfix: String?, sb: StringBuilder, ch
     }
 }
 
-private fun renderTypeUnion(prefix: String?, postfix: String?, sb: StringBuilder, type: LuaDocType?, tyRenderer: ITyRenderer) {
+private fun renderDocType(prefix: String?, postfix: String?, sb: StringBuilder, type: LuaDocType?, tyRenderer: ITyRenderer) {
     if (type != null) {
         if (prefix != null) sb.append(prefix)
 
