@@ -58,14 +58,14 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
         val flags = BitUtil.set(0, FLAG_DEPRECATED, field.isDeprecated)
         var valueTy = field.comment?.docTy ?: (field.valueExpr as? LuaLiteralExpr)?.infer()
 
-        if (field.fieldName != null) {
+        if (field.name != null) {
             valueTy = if (valueTy is TyMultipleResults) valueTy.list.first() else valueTy
 
             return LuaTableFieldStubImpl(
                     parentStub,
                     this,
                     className,
-                    field.fieldName,
+                    field.name,
                     flags,
                     valueTy)
         } else if (indexTy != null) {
@@ -86,7 +86,7 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
             for (i in 0 until siblingFields.size) {
                 val siblingField = siblingFields[i]
 
-                if (siblingField is LuaTableField && field.idExpr == null && field.fieldName == null) {
+                if (siblingField is LuaTableField && field.idExpr == null && field.name == null) {
                     fieldIndex += 1
                 }
 

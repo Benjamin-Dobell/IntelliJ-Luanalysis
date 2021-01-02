@@ -110,7 +110,7 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
         var element: PsiElement? = firstChild
         while (element != null) {
             if (element is LuaDocTagField) {
-                val nameRef = element.fieldName
+                val nameRef = element.name
                 if (nameRef != null && nameRef == name)
                     return element
             }

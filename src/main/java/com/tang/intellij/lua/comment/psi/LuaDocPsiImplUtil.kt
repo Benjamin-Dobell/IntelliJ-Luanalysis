@@ -298,13 +298,6 @@ fun getName(tagField: LuaDocTagField): String? {
     return getName(tagField as PsiNameIdentifierOwner)
 }
 
-fun getFieldName(tagField: LuaDocTagField): String? {
-    val stub = tagField.stub
-    if (stub != null)
-        return stub.name
-    return tagField.name
-}
-
 fun getPresentation(tagField: LuaDocTagField): ItemPresentation {
     return object : ItemPresentation {
         override fun getPresentableText(): String? {

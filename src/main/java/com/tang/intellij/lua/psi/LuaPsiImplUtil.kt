@@ -484,7 +484,7 @@ fun guessParentType(tableField: LuaTableField, context: SearchContext): ITy {
 }
 
 fun guessIndexType(tableField: LuaTableField, context: SearchContext): ITy? {
-    if (tableField.fieldName != null) {
+    if (tableField.name != null) {
         return null
     }
 
@@ -499,7 +499,7 @@ fun guessIndexType(tableField: LuaTableField, context: SearchContext): ITy? {
         for (i in 0 until siblingFields.size) {
             val siblingField = siblingFields[i]
 
-            if (siblingField is LuaTableField && tableField.idExpr == null && tableField.fieldName == null) {
+            if (siblingField is LuaTableField && tableField.idExpr == null && tableField.name == null) {
                 fieldIndex += 1
             }
 
@@ -523,20 +523,12 @@ fun guessType(tableField: LuaTableField, context: SearchContext): ITy? {
 
 fun getName(tableField: LuaTableField): String? {
     val stub = tableField.stub
-    if (stub != null)
+
+    if (stub != null) {
         return stub.name
-    val id = tableField.id
-    if (id != null)
-        return id.text
+    }
 
-    val idExpr = tableField.idExpr
-    if (idExpr is LuaLiteralExpr && idExpr.kind == LuaLiteralKind.String)
-        return LuaString.getContent(idExpr.text).value
-    return null
-}
-
-fun getFieldName(tableField: LuaTableField): String? {
-    return getName(tableField)
+    return tableField.id?.text
 }
 
 fun getPresentation(tableField: LuaTableField): ItemPresentation {

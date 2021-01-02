@@ -53,9 +53,6 @@ public interface LuaDocTagField extends LuaClassField, LuaDocPsiElement, PsiName
 
   int getTextOffset();
 
-  @Nullable
-  String getFieldName();
-
   @NotNull
   ItemPresentation getPresentation();
 

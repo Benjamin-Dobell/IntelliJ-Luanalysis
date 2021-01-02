@@ -565,7 +565,6 @@ tableField ::= tableField1 | tableField2 | expr {
 
         toString
 
-        getFieldName
         getPresentation
         guessIndexType
         guessParentType

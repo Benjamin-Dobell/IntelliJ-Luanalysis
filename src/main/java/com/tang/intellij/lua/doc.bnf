@@ -304,7 +304,6 @@ tag_field ::= TAG_NAME_FIELD access_modifier? ('<' type_ref '>')? (ID | tagField
         getIndexType
         getValueType
         getTextOffset
-        getFieldName
         toString
         getPresentation
         isDeprecated

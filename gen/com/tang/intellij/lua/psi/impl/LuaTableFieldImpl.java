@@ -78,12 +78,6 @@ public class LuaTableFieldImpl extends StubBasedPsiElementBase<LuaTableFieldStub
   }
 
   @Override
-  @Nullable
-  public String getFieldName() {
-    return LuaPsiImplUtilKt.getFieldName(this);
-  }
-
-  @Override
   @NotNull
   public ItemPresentation getPresentation() {
     return LuaPsiImplUtilKt.getPresentation(this);
