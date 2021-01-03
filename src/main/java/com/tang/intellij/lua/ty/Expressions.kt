@@ -152,20 +152,14 @@ private fun LuaUnaryExpr.infer(context: SearchContext): ITy? {
 }
 
 private fun LuaBinaryExpr.infer(context: SearchContext): ITy? {
-    val stub = stub
-    val operator = if (stub != null) stub.opType else {
-        val firstChild = firstChild
-        val nextVisibleLeaf = PsiTreeUtil.nextVisibleLeaf(firstChild)
-        nextVisibleLeaf?.node?.elementType
-    }
-    return operator.let {
+    return operationType.let {
         when (it) {
         //..
             LuaTypes.CONCAT -> Ty.STRING
         //<=, ==, <, ~=, >=, >
             LuaTypes.LE, LuaTypes.EQ, LuaTypes.LT, LuaTypes.NE, LuaTypes.GE, LuaTypes.GT -> Ty.BOOLEAN
         //and, or
-            LuaTypes.AND, LuaTypes.OR -> guessAndOrType(this, operator, context)
+            LuaTypes.AND, LuaTypes.OR -> guessAndOrType(this, it, context)
         //&, <<, |, >>, ~, ^,    +, -, *, /, //, %
             LuaTypes.BIT_AND, LuaTypes.BIT_LTLT, LuaTypes.BIT_OR, LuaTypes.BIT_RTRT, LuaTypes.BIT_TILDE, LuaTypes.EXP,
             LuaTypes.PLUS, LuaTypes.MINUS, LuaTypes.MULT, LuaTypes.DIV, LuaTypes.DOUBLE_DIV, LuaTypes.MOD -> guessBinaryOpType(this, context)

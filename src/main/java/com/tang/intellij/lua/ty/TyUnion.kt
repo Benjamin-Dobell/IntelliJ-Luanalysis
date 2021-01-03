@@ -295,6 +295,10 @@ class TyUnion : Ty {
                 }
             }
 
+            if (expandedTys.size == 0) {
+                return Ty.VOID
+            }
+
             val childSet = sortedSetOf(displayNameComparator)
 
             expandedTys.forEach {

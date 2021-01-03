@@ -26,6 +26,7 @@ import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.SearchScope
 import com.intellij.psi.stubs.StubElement
+import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.*
@@ -671,6 +672,10 @@ fun getExpression(singleArg: LuaSingleArg): LuaExpression<*> {
 
 fun getExpressionList(element: StubBasedPsiElement<*>): List<LuaExpression<*>> {
     return PsiTreeUtil.getStubChildrenOfTypeAsList(element, LuaExpression::class.java)
+}
+
+fun getOperationType(element: LuaBinaryExpr): IElementType {
+    return element.stub?.opType ?: element.binaryOp.firstChild.node.elementType
 }
 
 fun isDeprecated(member: LuaClassMember): Boolean {

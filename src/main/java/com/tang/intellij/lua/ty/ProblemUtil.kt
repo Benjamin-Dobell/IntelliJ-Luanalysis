@@ -21,6 +21,8 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 data class Problem(
     val targetElement: PsiElement?,
@@ -415,28 +417,91 @@ object ProblemUtil {
         return isContravariant
     }
 
-    fun contravariantOf(target: ITy, source: ITy, context: SearchContext, varianceFlags: Int, targetElement: PsiElement?, sourceElement: PsiElement, processProblem: ProcessProblem): Boolean {
-        if (target === source) {
-            return true
+    @ExperimentalContracts
+    private fun isTraversableExpression(element: PsiElement): Boolean {
+        contract {
+            returns(true) implies (element is LuaExpression<*>)
+        }
+        return element is LuaTableExpr || element is LuaParenExpr || (element as? LuaBinaryExpr)?.operationType?.let { it == LuaTypes.AND || it == LuaTypes.OR } == true
+    }
+
+    private fun expressionTraversingContravariantOf(
+        targetTy: ITy,
+        sourceTy: ITy,
+        context: SearchContext,
+        varianceFlags: Int,
+        sourceExpression: LuaExpression<*>,
+        processProblem: ProcessProblem
+    ): Boolean {
+        if (sourceExpression is LuaParenExpr) {
+            sourceExpression.expression?.let {
+                return expressionTraversingContravariantOf(targetTy, sourceTy, context, varianceFlags, it, processProblem)
+            }
+        } else if (sourceExpression is LuaBinaryExpr) {
+            val op = sourceExpression.operationType
+            val leftExpression = sourceExpression.left
+            val rightExpression = sourceExpression.right
+
+            if (leftExpression != null && rightExpression != null) {
+                if (op == LuaTypes.AND) {
+                    val leftSourceTy = context.withIndex(0) { leftExpression.guessType(context) } ?: Ty.UNKNOWN
+                    return when (leftSourceTy.booleanType) {
+                        Ty.TRUE -> {
+                            val rightSourceTy = context.withIndex(0) { rightExpression.guessType(context) } ?: Ty.UNKNOWN
+                            expressionTraversingContravariantOf(targetTy, rightSourceTy, context, varianceFlags, rightExpression, processProblem)
+                        }
+                        Ty.FALSE -> {
+                            contravariantOfUnit(targetTy, leftSourceTy, context, varianceFlags, null, leftExpression, processProblem)
+                        }
+                        else -> {
+                            var leftFalseyTy: ITy = Ty.VOID
+
+                            Ty.eachResolved(leftSourceTy, context) {
+                                if (it == Ty.BOOLEAN) {
+                                    leftFalseyTy = leftFalseyTy.union(Ty.FALSE, context)
+                                } else if (it.booleanType != Ty.TRUE) {
+                                    leftFalseyTy = leftFalseyTy.union(it, context)
+                                }
+                            }
+
+                            val leftContravariant = contravariantOfUnit(targetTy, leftFalseyTy, context, varianceFlags, null, leftExpression, processProblem)
+                            val rightSourceTy = context.withIndex(0) { rightExpression.guessType(context) } ?: Ty.UNKNOWN
+                            expressionTraversingContravariantOf(targetTy, rightSourceTy, context, varianceFlags, rightExpression, processProblem) && leftContravariant
+                        }
+                    }
+                } else if (op == LuaTypes.OR) {
+                    val leftSourceTy = context.withIndex(0) { leftExpression.guessType(context) } ?: Ty.UNKNOWN
+                    return when (leftSourceTy.booleanType) {
+                        Ty.TRUE -> {
+                            expressionTraversingContravariantOf(targetTy, leftSourceTy, context, varianceFlags, leftExpression, processProblem)
+                        }
+                        Ty.FALSE -> {
+                            val rightSourceTy = context.withIndex(0) { rightExpression.guessType(context) } ?: Ty.UNKNOWN
+                            expressionTraversingContravariantOf(targetTy, rightSourceTy, context, varianceFlags, rightExpression, processProblem)
+                        }
+                        else -> {
+                            val leftTargetTy = TyUnion.union(listOf(targetTy, Ty.FALSE, Ty.NIL), context)
+                            val leftContravariant = expressionTraversingContravariantOf(leftTargetTy, leftSourceTy, context, varianceFlags, leftExpression, processProblem)
+
+                            val rightSourceTy = context.withIndex(0) { rightExpression.guessType(context) } ?: Ty.UNKNOWN
+                            expressionTraversingContravariantOf(targetTy, rightSourceTy, context, varianceFlags, rightExpression, processProblem) && leftContravariant
+                        }
+                    }
+                }
+            }
         }
 
-        val resolvedTarget = Ty.resolve(target, context)
-
-        if (!acceptsShape(resolvedTarget, context, varianceFlags) || (source !is TyTable || source.table != sourceElement)) {
-            return contravariantOfUnit(resolvedTarget, source, context, varianceFlags, targetElement, sourceElement, processProblem)
-        }
-
-        if (TyUnion.isUnion(resolvedTarget, context) && resolvedTarget.contravariantOf(source, context, varianceFlags)) {
-            return true
+        if (sourceExpression !is LuaTableExpr) {
+            return contravariantOfUnit(targetTy, sourceTy, context, varianceFlags, null, sourceExpression, processProblem)
         }
 
         val targetCandidateProblems = mutableMapOf<String, Collection<Problem>>()
 
-        Ty.eachResolved(resolvedTarget, context) {
+        Ty.eachResolved(targetTy, context) {
             val candidateProblems = mutableListOf<Problem>()
             targetCandidateProblems[it.displayName] = candidateProblems
 
-            if (contravariantOfUnit(it, source, context, varianceFlags, targetElement, sourceElement) { candidateProblems.add(it) }) {
+            if (contravariantOfUnit(it, sourceTy, context, varianceFlags, null, sourceExpression) { candidateProblems.add(it) }) {
                 return true
             }
         }
@@ -455,7 +520,7 @@ object ProblemUtil {
             // Count with matching depth
 
             candidateProblems.forEach {
-                val depth = PsiTreeUtil.getDepth(it.sourceElement, sourceElement)
+                val depth = PsiTreeUtil.getDepth(it.sourceElement, sourceExpression)
 
                 if (depth < candidateMinDepth) {
                     candidateMinDepth = depth
@@ -488,6 +553,24 @@ object ProblemUtil {
         }
 
         return false
+    }
+
+    fun contravariantOf(target: ITy, source: ITy, context: SearchContext, varianceFlags: Int, targetElement: PsiElement?, sourceElement: PsiElement, processProblem: ProcessProblem): Boolean {
+        if (target === source) {
+            return true
+        }
+
+        val resolvedTarget = Ty.resolve(target, context)
+
+        if (isTraversableExpression(sourceElement) && acceptsShape(resolvedTarget, context, varianceFlags)) {
+            if (TyUnion.isUnion(resolvedTarget, context) && resolvedTarget.contravariantOf(source, context, varianceFlags)) {
+                return true
+            }
+
+            return expressionTraversingContravariantOf(target, source, context, varianceFlags, sourceElement, processProblem)
+        }
+
+        return contravariantOfUnit(resolvedTarget, source, context, varianceFlags, targetElement, sourceElement, processProblem)
     }
 
     fun contravariantOfShape(target: ITy, source: ITy, context: SearchContext, varianceFlags: Int): Boolean {

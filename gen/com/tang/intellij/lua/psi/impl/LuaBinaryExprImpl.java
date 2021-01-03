@@ -10,8 +10,8 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.psi.LuaTypes.*;
 import com.tang.intellij.lua.stubs.LuaBinaryExprStub;
 import com.tang.intellij.lua.psi.*;
-import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.stubs.IStubElementType;
 
 public class LuaBinaryExprImpl extends LuaExprMixin<LuaBinaryExprStub> implements LuaBinaryExpr {
 
@@ -41,6 +41,12 @@ public class LuaBinaryExprImpl extends LuaExprMixin<LuaBinaryExprStub> implement
   @NotNull
   public LuaBinaryOp getBinaryOp() {
     return notNullChild(PsiTreeUtil.getChildOfType(this, LuaBinaryOp.class));
+  }
+
+  @Override
+  @NotNull
+  public IElementType getOperationType() {
+    return LuaPsiImplUtilKt.getOperationType(this);
   }
 
 }

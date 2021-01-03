@@ -6,10 +6,14 @@ import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 import com.tang.intellij.lua.stubs.LuaBinaryExprStub;
 import com.intellij.psi.StubBasedPsiElement;
+import com.intellij.psi.tree.IElementType;
 
 public interface LuaBinaryExpr extends LuaExpression<LuaBinaryExprStub>, StubBasedPsiElement<LuaBinaryExprStub> {
 
   @NotNull
   LuaBinaryOp getBinaryOp();
+
+  @NotNull
+  IElementType getOperationType();
 
 }

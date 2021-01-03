@@ -433,6 +433,9 @@ left binaryExpr ::= binaryOp expr {
     implements = [
         "com.tang.intellij.lua.psi.LuaExpression<com.tang.intellij.lua.stubs.LuaBinaryExprStub>"
     ]
+    methods = [
+        getOperationType
+    ]
     stubClass = "com.tang.intellij.lua.stubs.LuaBinaryExprStub"
 }
 
