@@ -24,9 +24,9 @@ local stringArray
 local stringStringTable
 
 numberNumberTable[1] = 1
-numberNumberTable[1] = <error descr="Type mismatch. Required: 'number' Found: '\"a string\"'">"a string"</error>
+numberNumberTable[1] = <error descr="Type mismatch. Required: 'nil | number' Found: '\"a string\"'">"a string"</error>
 
-numberStringTable[1] = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>
+numberStringTable[1] = <error descr="Type mismatch. Required: 'nil | string' Found: '1'">1</error>
 numberStringTable[1] = "a string"
 numberStringTable[1] = nil
 
@@ -38,9 +38,9 @@ stringArray[1] = <error descr="Type mismatch. Required: 'string' Found: '1'">1</
 stringArray[1] = "a string"
 
 stringStringTable['a'] = 'a string'
-stringStringTable['a'] = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>
+stringStringTable['a'] = <error descr="Type mismatch. Required: 'nil | string' Found: '1'">1</error>
 stringStringTable.a = 'a string'
-stringStringTable.a = <error descr="Type mismatch. Required: 'string' Found: '1'">1</error>
+stringStringTable.a = <error descr="Type mismatch. Required: 'nil | string' Found: '1'">1</error>
 
 numberNumberTable = numberArray
 numberNumberTable = <error descr="Type mismatch. Required: 'table<number, number>' Found: 'string[]'">stringArray</error>

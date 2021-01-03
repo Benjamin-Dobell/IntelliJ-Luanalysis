@@ -40,24 +40,10 @@ class AssignTypeInspection : StrictInspection() {
                         }
 
                         Ty.eachResolved(assigneeOwnerType, context) { assigneeCandidateOwnerTy ->
-                            // table<K, V> will always accept nil value assignment i.e. entry removal
-                            val sourceTy = if (assigneeCandidateOwnerTy is ITyGeneric && assigneeCandidateOwnerTy.base == Ty.TABLE) {
-                                if (value == Ty.NIL) {
-                                    return
-                                }
-                                if (value is TyUnion) {
-                                    value.getChildTypes().fold(Ty.VOID as ITy) { acc, ty ->
-                                        if (ty == Ty.NIL) acc else acc.union(ty, context)
-                                    }
-                                } else {
-                                    value
-                                }
-                            } else value
-
                             val idExpr = assignee.idExpr
                             val memberName = assignee.name
 
-                            val targetMemberType = if (memberName != null) {
+                            val assigneeMemberType = if (memberName != null) {
                                 assigneeCandidateOwnerTy.guessMemberType(memberName, context)
                             } else {
                                 idExpr?.guessType(context)?.let {
@@ -65,10 +51,15 @@ class AssignTypeInspection : StrictInspection() {
                                 }
                             }
 
-                            if (targetMemberType != null) {
+                            if (assigneeMemberType != null) {
+                                // table<K, V> will always accept nil value assignment i.e. entry removal
+                                val targetTy = if (assigneeCandidateOwnerTy is ITyGeneric && assigneeCandidateOwnerTy.base == Ty.TABLE) {
+                                    assigneeMemberType.union(Ty.NIL, context)
+                                } else assigneeMemberType
+
                                 val processor = ProblemUtil.unionAwareProblemProcessor(assigneeOwnerType, assigneeCandidateOwnerTy, context, processProblem)
                                 val flags = if (assigneeCandidateOwnerTy is ITyArray) varianceFlags or TyVarianceFlags.STRICT_NIL else varianceFlags
-                                ProblemUtil.contravariantOf(targetMemberType, sourceTy, context, flags, targetElement, expressionElement, processor)
+                                ProblemUtil.contravariantOf(targetTy, value, context, flags, targetElement, expressionElement, processor)
                             }
                         }
                     } else {

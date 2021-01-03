@@ -28,6 +28,9 @@ local numberArray
 ---@type {x: number}
 local xShape
 
+---@type table<number, number>
+local numberNumberTable
+
 -- or
 theNumberOne = 1 or 1
 theNumberOne = 1 or nil
@@ -198,6 +201,9 @@ numberArray = {1, 2} or (aBoolean and {invalid = 1})
 numberArray = {<error descr="Type mismatch. Required: 'number[]' Found non-array field 'invalid'">invalid = 1</error>} or (aBoolean and {1, 2})
 numberArray = {1, 2} or ({invalid = 1} and aBoolean)
 numberArray = {<error descr="Type mismatch. Required: 'number[]' Found non-array field 'invalid'">invalid = 1</error>} or ({1, 2} and aBoolean)
+
+numberNumberTable[1] = false or nil
+numberNumberTable[1] = <error descr="Type mismatch. Required: 'nil | number' Found: 'false'">nil or false</error>
 
 ---@return number[]
 local function returnTableLiteralThroughBinaryOp()
