@@ -17,6 +17,8 @@
 package com.tang.intellij.lua.psi
 
 import com.intellij.psi.tree.IElementType
+import com.tang.intellij.lua.search.SearchContext
+import com.tang.intellij.lua.ty.Ty
 
 data class ComputeResult(val kind: ComputeKind,
                          var bValue: Boolean = false,
@@ -45,9 +47,9 @@ class ExpressionUtil {
             return when (expression) {
                 is LuaLiteralExpr -> {
                     when (expression.kind) {
-                        LuaLiteralKind.String -> ComputeResult(ComputeKind.String, false, 0f, expression.stringValue)
+                        LuaLiteralKind.String -> ComputeResult(ComputeKind.String, true, 0f, expression.stringValue)
                         LuaLiteralKind.Bool -> ComputeResult(ComputeKind.Bool, expression.boolValue)
-                        LuaLiteralKind.Number -> ComputeResult(ComputeKind.Number, false, expression.numberValue)
+                        LuaLiteralKind.Number -> ComputeResult(ComputeKind.Number, true, expression.numberValue)
                         LuaLiteralKind.Nil -> ComputeResult(ComputeKind.Nil, false, 0f, "nil")
                         else -> null
                     }
@@ -56,14 +58,22 @@ class ExpressionUtil {
                     val left = compute(expression.left!!) ?: return null
                     val rExpr = expression.right ?: return null
                     val right = compute(rExpr) ?: return null
-                    val op = expression.binaryOp
-                    return calcBinary(left, right, op.node.firstChildNode.elementType)
+                    calcBinary(left, right, expression.operationType)
                 }
                 is LuaParenExpr -> {
-                    val inner = expression
+                    val inner = expression.expression
                     if (inner != null) compute(inner) else null
                 }
-                else -> return ComputeResult(ComputeKind.Other, true, 0f, "", expression)
+                else -> {
+                    val context = SearchContext.get(expression.project)
+                    val booleanTy = expression.guessType(context)?.booleanType
+
+                    if (booleanTy != null && booleanTy != Ty.BOOLEAN) {
+                        ComputeResult(ComputeKind.Other, booleanTy == Ty.TRUE, 0f, "", expression)
+                    } else {
+                        null
+                    }
+                }
             }
         }
 
