@@ -22,7 +22,7 @@ import com.intellij.openapi.vfs.VirtualFile
 
 interface ILuaFileResolver {
     companion object {
-        private val EP_NAME = ExtensionPointName.create<ILuaFileResolver>("com.tang.intellij.lua.luaFileResolver")
+        private val EP_NAME = ExtensionPointName.create<ILuaFileResolver>("au.com.glassechidna.luanalysis.luaFileResolver")
 
         fun findLuaFile(project: Project, shortUrl: String, extNames: Array<String>): VirtualFile? {
             for (resolver in EP_NAME.extensions) {

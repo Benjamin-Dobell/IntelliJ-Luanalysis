@@ -30,7 +30,12 @@ import javax.swing.*;
  */
 public class LuaAppConfigurationType implements ConfigurationType {
 
-    private LuaAppConfigurationFactory factory = new LuaAppConfigurationFactory(this);
+    private final LuaAppConfigurationFactory factory = new LuaAppConfigurationFactory(this);
+
+    public LuaAppConfigurationFactory getFactory()
+    {
+        return factory;
+    }
 
     @Override
     public String getDisplayName() {

@@ -16,21 +16,24 @@
 
 package com.tang.intellij.lua.psi.search
 
+import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.SearchScope
 import com.intellij.psi.search.searches.ExtensibleQueryFactory
 import com.intellij.util.Query
+import com.intellij.util.QueryExecutor
 import com.tang.intellij.lua.ty.ITyClass
 
 /**
  *
  * Created by tangzx on 2017/3/29.
  */
-class LuaAllClassesSearch : ExtensibleQueryFactory<ITyClass, LuaAllClassesSearch.SearchParameters>("com.tang.intellij.lua") {
+class LuaAllClassesSearch : ExtensibleQueryFactory<ITyClass, LuaAllClassesSearch.SearchParameters>(EP_NAME) {
 
     class SearchParameters(val searchScope: SearchScope, val project: Project)
 
     companion object {
+        private val EP_NAME = ExtensionPointName.create<QueryExecutor<ITyClass, SearchParameters>>("au.com.glassechidna.luanalysis.luaAllClassesSearch")
 
         private val INSTANCE = LuaAllClassesSearch()
 

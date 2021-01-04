@@ -18,7 +18,6 @@
     <id>au.com.glassechidna.luanalysis</id>
     <name>Luanalysis</name>
     <version>1.2.1</version>
-    <vendor email="contact@glassechidna.com.au">Benjamin Dobell</vendor>
     <category>Custom Languages</category>
     <description><![CDATA[
     An IDE for statically typed Lua development.<br>

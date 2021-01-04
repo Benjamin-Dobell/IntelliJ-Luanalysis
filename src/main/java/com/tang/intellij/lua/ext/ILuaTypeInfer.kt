@@ -24,10 +24,10 @@ import com.tang.intellij.lua.ty.ITy
 
 interface ILuaTypeInfer {
     companion object {
-        private val EP_NAME = ExtensionPointName.create<ILuaTypeInfer>("com.tang.intellij.lua.luaTypeInfer")
+        private val EP_NAME = ExtensionPointName.create<ILuaTypeInfer>("au.com.glassechidna.luanalysis.luaTypeInfer")
 
         fun infer(target: LuaTypeGuessable, context: SearchContext): ITy? {
-            for (typeInfer in EP_NAME.extensions) {
+            for (typeInfer in EP_NAME.extensionList) {
                 ProgressManager.checkCanceled()
                 return typeInfer.inferType(target, context)
             }

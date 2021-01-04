@@ -16,6 +16,7 @@
 
 package com.tang.intellij.lua.psi.search
 
+import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.openapi.project.Project
 import com.intellij.util.Processor
 import com.tang.intellij.lua.psi.LuaClass
@@ -25,11 +26,9 @@ import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.ITy
 import com.tang.intellij.lua.ty.ITyClass
 
-class CompositeLuaShortNamesManager : LuaShortNamesManager() {
-    private val list: Array<LuaShortNamesManager> = LuaShortNamesManager.EP_NAME.extensions
-
+class CompositeLuaShortNamesManager : LuaShortNamesManager {
     override fun findAlias(name: String, context: SearchContext): LuaTypeAlias? {
-        for (manager in list) {
+        for (manager in EP_NAME.extensionList) {
             val alias = manager.findAlias(name, context)
             if (alias != null)
                 return alias
@@ -38,8 +37,8 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager() {
     }
 
     override fun findClass(name: String, context: SearchContext): LuaClass? {
-        for (ep in list) {
-            val c = ep.findClass(name, context)
+        for (manager in EP_NAME.extensionList) {
+            val c = manager.findClass(name, context)
             if (c != null)
                 return c
         }
@@ -47,7 +46,7 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager() {
     }
 
     override fun findMember(type: ITyClass, fieldName: String, context: SearchContext): LuaClassMember? {
-        for (manager in list) {
+        for (manager in EP_NAME.extensionList) {
             val ret = manager.findMember(type, fieldName, context)
             if (ret != null) return ret
         }
@@ -55,7 +54,7 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager() {
     }
 
     override fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, exact: Boolean): LuaClassMember? {
-        for (manager in list) {
+        for (manager in EP_NAME.extensionList) {
             val ret = manager.findIndexer(type, indexTy, context, exact)
             if (ret != null) return ret
         }
@@ -63,7 +62,7 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager() {
     }
 
     override fun processAllAliases(project: Project, processor: Processor<String>): Boolean {
-        for (manager in list) {
+        for (manager in EP_NAME.extensionList) {
             if (!manager.processAllAliases(project, processor))
                 return false
         }
@@ -71,24 +70,24 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager() {
     }
 
     override fun processAliases(name: String, context: SearchContext, processor: Processor<in LuaTypeAlias>): Boolean {
-        for (ep in list) {
-            if (!ep.processAliases(name, context, processor))
+        for (manager in EP_NAME.extensionList) {
+            if (!manager.processAliases(name, context, processor))
                 return false
         }
         return true
     }
 
     override fun processAllClasses(project: Project, processor: Processor<String>): Boolean {
-        for (ep in list) {
-            if (!ep.processAllClasses(project, processor))
+        for (manager in EP_NAME.extensionList) {
+            if (!manager.processAllClasses(project, processor))
                 return false
         }
         return true
     }
 
     override fun processClasses(name: String, context: SearchContext, processor: Processor<in LuaClass>): Boolean {
-        for (ep in list) {
-            if (!ep.processClasses(name, context, processor))
+        for (manager in EP_NAME.extensionList) {
+            if (!manager.processClasses(name, context, processor))
                 return false
         }
         return true
@@ -96,7 +95,7 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager() {
 
     override fun getClassMembers(clazzName: String, context: SearchContext): Collection<LuaClassMember> {
         val collection = mutableListOf<LuaClassMember>()
-        for (manager in list) {
+        for (manager in EP_NAME.extensionList) {
             val col = manager.getClassMembers(clazzName, context)
             collection.addAll(col)
         }
@@ -104,7 +103,7 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager() {
     }
 
     override fun processMember(type: ITyClass, fieldName: String, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean {
-        for (manager in list) {
+        for (manager in EP_NAME.extensionList) {
             if (!manager.processMember(type, fieldName, context, processor))
                 return false
         }
@@ -112,10 +111,14 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager() {
     }
 
     override fun processIndexer(type: ITyClass, indexTy: ITy, exact: Boolean, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean {
-        for (manager in list) {
+        for (manager in EP_NAME.extensionList) {
             if (!manager.processIndexer(type, indexTy, false, context, processor))
                 return false
         }
         return true
+    }
+
+    companion object {
+        private val EP_NAME = ExtensionPointName.create<LuaShortNamesManager>("au.com.glassechidna.luanalysis.luaShortNamesManager")
     }
 }

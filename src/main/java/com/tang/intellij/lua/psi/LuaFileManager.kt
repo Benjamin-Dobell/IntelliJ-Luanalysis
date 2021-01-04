@@ -16,15 +16,16 @@
 
 package com.tang.intellij.lua.psi
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ex.ApplicationManagerEx
-import com.intellij.openapi.components.ApplicationComponent
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.fileTypes.FileTypeEvent
 import com.intellij.openapi.fileTypes.FileTypeListener
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.tang.intellij.lua.lang.LuaFileType
 
-class LuaFileManager : ApplicationComponent, FileTypeListener {
+class LuaFileManager : FileTypeListener, Disposable {
 
     private val myMessageBus = ApplicationManager.getApplication().messageBus
 
@@ -33,18 +34,17 @@ class LuaFileManager : ApplicationComponent, FileTypeListener {
 
     companion object {
         fun getInstance(): LuaFileManager {
-            return ApplicationManagerEx.getApplicationEx().getComponent(LuaFileManager::class.java)
+            return ServiceManager.getService(LuaFileManager::class.java)
         }
     }
 
-    override fun initComponent() {
+    init {
         myMessageBus.connect().subscribe(FileTypeManager.TOPIC, this)
     }
 
-    override fun disposeComponent() {
+    override fun dispose() {
+        myMessageBus.dispose()
     }
-
-    override fun getComponentName() = "LuaFileManager"
 
     override fun fileTypesChanged(event: FileTypeEvent) {
         dirty = true

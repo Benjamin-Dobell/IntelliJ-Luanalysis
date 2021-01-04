@@ -1,4 +1,5 @@
 <!--
+  ~ Copyright (c) 2017. tangzx(love.tangzx@qq.com)
   ~ Copyright (c) 2020
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +16,8 @@
   -->
 
 <idea-plugin>
+    <id>au.com.glassechidna.luanalysis</id>
+    <vendor email="contact@glassechidna.com.au">Benjamin Dobell</vendor>
 
     <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
          on how to target different products -->
@@ -22,6 +25,10 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!--<<errorHandler implementation="com.tang.intellij.lua.errorreporting.GitHubErrorReporter"/>-->
+
+        <applicationService serviceImplementation="com.tang.intellij.lua.psi.LuaFileManager"/>
+
+        <projectService serviceImplementation="com.tang.intellij.lua.project.LuaSourceRootManager"/>
 
         <!--LuaCheck-->
         <toolWindow id="LuaCheck"
@@ -58,7 +65,7 @@
         <lang.quoteHandler language="Lua" implementationClass="com.tang.intellij.lua.codeInsight.editorActions.LuaQuoteHandler"/>
         <highlightErrorFilter implementation="com.tang.intellij.lua.highlighting.LuaHighlightErrorFilter"/>
         <iconProvider implementation="com.tang.intellij.lua.editor.LuaIconProvider"/>
-        <fileTypeFactory implementation="com.tang.intellij.lua.lang.LuaFileTypeFactory"/>
+        <fileType name="lua" implementationClass="com.tang.intellij.lua.lang.LuaFileType" fieldName="INSTANCE" language="Lua" extensions="lua;ttslua"/>
         <psi.referenceContributor language="Lua" implementation="com.tang.intellij.lua.reference.LuaReferenceContributor"/>
         <languageInjector implementation="com.tang.intellij.lua.lang.LuaLanguageInjector"/>
 
@@ -369,19 +376,6 @@
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.doc.GenericParameterShadowed"/>
     </extensions>
 
-    <application-components>
-        <component>
-            <implementation-class>com.tang.intellij.lua.project.StdSDK</implementation-class>
-            <implementation-class>com.tang.intellij.lua.psi.LuaFileManager</implementation-class>
-        </component>
-    </application-components>
-
-    <project-components>
-        <component>
-            <implementation-class>com.tang.intellij.lua.project.LuaSourceRootManager</implementation-class>
-        </component>
-    </project-components>
-
     <actions>
         <group id="LuaCallHierarchyPopupMenu">
             <reference ref="EditSource"/>
@@ -409,16 +403,16 @@
     </actions>
 
     <extensionPoints>
-        <extensionPoint qualifiedName="com.tang.intellij.lua.luaClassInheritorsSearch" interface="com.intellij.util.QueryExecutor"/>
-        <extensionPoint qualifiedName="com.tang.intellij.lua.luaAllClassesSearch" interface="com.intellij.util.QueryExecutor"/>
-        <extensionPoint qualifiedName="com.tang.intellij.lua.luaOverridingMethodsSearch" interface="com.intellij.util.QueryExecutor"/>
-        <extensionPoint qualifiedName="com.tang.intellij.lua.luaOverridenMethodsSearch" interface="com.intellij.util.QueryExecutor"/>
-        <extensionPoint qualifiedName="com.tang.intellij.lua.luaFileResolver" interface="com.tang.intellij.lua.ext.ILuaFileResolver"/>
-        <extensionPoint qualifiedName="com.tang.intellij.lua.luaTypeInfer" interface="com.tang.intellij.lua.ext.ILuaTypeInfer"/>
-        <extensionPoint qualifiedName="com.tang.intellij.lua.luaShortNamesManager" interface="com.tang.intellij.lua.psi.search.LuaShortNamesManager"/>
+        <extensionPoint name="luaClassInheritorsSearch" interface="com.intellij.util.QueryExecutor" dynamic="true"/>
+        <extensionPoint name="luaAllClassesSearch" interface="com.intellij.util.QueryExecutor" dynamic="true"/>
+        <extensionPoint name="luaOverridingMethodsSearch" interface="com.intellij.util.QueryExecutor" dynamic="true"/>
+        <extensionPoint name="luaOverridenMethodsSearch" interface="com.intellij.util.QueryExecutor" dynamic="true"/>
+        <extensionPoint name="luaFileResolver" interface="com.tang.intellij.lua.ext.ILuaFileResolver" dynamic="true"/>
+        <extensionPoint name="luaTypeInfer" interface="com.tang.intellij.lua.ext.ILuaTypeInfer" dynamic="true"/>
+        <extensionPoint name="luaShortNamesManager" interface="com.tang.intellij.lua.psi.search.LuaShortNamesManager" dynamic="true"/>
     </extensionPoints>
 
-    <extensions defaultExtensionNs="com.tang.intellij.lua">
+    <extensions defaultExtensionNs="au.com.glassechidna.luanalysis">
         <luaClassInheritorsSearch implementation="com.tang.intellij.lua.psi.search.LuaClassInheritorsSearchExecutor" id="base"/>
         <luaAllClassesSearch implementation="com.tang.intellij.lua.psi.search.LuaAllClassesSearchExecutor" id="base"/>
         <luaOverridingMethodsSearch implementation="com.tang.intellij.lua.psi.search.LuaOverridingMethodsSearchExecutor" id="base"/>

@@ -29,7 +29,7 @@ import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.ty.ITy
 import com.tang.intellij.lua.ty.ITyClass
 
-class LuaShortNamesManagerImpl : LuaShortNamesManager() {
+class LuaShortNamesManagerImpl : LuaShortNamesManager {
 
     override fun findAlias(name: String, context: SearchContext): LuaTypeAlias? {
         return LuaAliasIndex.find(name, context)
