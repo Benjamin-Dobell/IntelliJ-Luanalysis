@@ -247,3 +247,14 @@ local nilOrShapeArray = {
         value = nil,
     },
 }
+
+---@shape Thing
+---@field a nil | number
+
+---@type Thing
+local thing
+
+thing = {}
+thing = <error descr="Type mismatch. Required: 'Thing' Found: '1'">1</error>
+thing = <error descr="Type mismatch. Required: 'Thing' Found: '\"invalid\"'">"invalid"</error>
+

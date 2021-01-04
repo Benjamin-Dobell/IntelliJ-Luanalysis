@@ -64,6 +64,20 @@ object ProblemUtil {
     }
 
     private fun contravariantOfShape(target: ITy, source: ITy, context: SearchContext, varianceFlags: Int, targetElement: PsiElement?, sourceElement: PsiElement?, processProblem: ProcessProblem?): Boolean {
+        if (source !is ITyClass || source is ITyPrimitive) {
+            if (processProblem != null && sourceElement != null) {
+                processProblem(
+                    Problem(
+                        targetElement,
+                        sourceElement,
+                        "Type mismatch. Required: '%s' Found: '%s'".format(target.displayName, source.displayName)
+                    )
+                )
+            }
+
+            return false
+        }
+
         val sourceSubstitutor = source.getMemberSubstitutor(context)
         val targetSubstitutor = target.getMemberSubstitutor(context)
 
