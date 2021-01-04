@@ -21,6 +21,9 @@ public interface LuaDocArrTy extends LuaDocTy, LuaClassMember {
   Visibility getVisibility();
 
   @NotNull
+  ITy guessIndexType(@NotNull SearchContext context);
+
+  @NotNull
   ITy guessType(@NotNull SearchContext context);
 
   @NotNull

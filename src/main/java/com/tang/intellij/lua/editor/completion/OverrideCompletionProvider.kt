@@ -63,14 +63,14 @@ class OverrideCompletionProvider : LuaCompletionProvider() {
         val project = completionParameters.originalFile.project
         val context = SearchContext.get(project)
         val clazzName = sup.className
-        LuaClassMemberIndex.processAll(TyLazyClass(clazzName), context, { def ->
-            if (def is LuaClassMethod<*>) {
-                def.name?.let {
+        LuaClassMemberIndex.processAll(TyLazyClass(clazzName), context, { member, _ ->
+            if (member is LuaClassMethod<*>) {
+                member.name?.let {
                     if (memberNameSet.add(it)) {
-                        val elementBuilder = LookupElementBuilder.create(def.name!!)
+                        val elementBuilder = LookupElementBuilder.create(member.name!!)
                                 .withIcon(LuaIcons.CLASS_METHOD_OVERRIDING)
-                                .withInsertHandler(OverrideInsertHandler(def))
-                                .withTailText(def.paramSignature)
+                                .withInsertHandler(OverrideInsertHandler(member))
+                                .withTailText(member.paramSignature)
 
                         completionResultSet.addElement(elementBuilder)
                     }

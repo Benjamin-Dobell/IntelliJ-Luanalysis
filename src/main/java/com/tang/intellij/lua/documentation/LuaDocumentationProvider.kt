@@ -125,7 +125,8 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
                 }
 
                 if (parentType != null) {
-                    renderTy(sb, parentType, tyRenderer)
+                    val renderedParentTy = if (parentType is ITyArray) parentType.base else parentType
+                    renderTy(sb, renderedParentTy, tyRenderer)
                 }
 
                 val name = member.name

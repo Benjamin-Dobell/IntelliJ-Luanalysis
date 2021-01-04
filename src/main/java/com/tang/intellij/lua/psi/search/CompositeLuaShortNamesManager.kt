@@ -23,6 +23,7 @@ import com.tang.intellij.lua.psi.LuaClass
 import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.psi.LuaTypeAlias
 import com.tang.intellij.lua.search.SearchContext
+import com.tang.intellij.lua.stubs.index.ProcessClassMember
 import com.tang.intellij.lua.ty.ITy
 import com.tang.intellij.lua.ty.ITyClass
 
@@ -102,17 +103,17 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager {
         return collection
     }
 
-    override fun processMember(type: ITyClass, fieldName: String, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean {
+    override fun processMember(type: ITyClass, fieldName: String, context: SearchContext, process: ProcessClassMember): Boolean {
         for (manager in EP_NAME.extensionList) {
-            if (!manager.processMember(type, fieldName, context, processor))
+            if (!manager.processMember(type, fieldName, context, process))
                 return false
         }
         return true
     }
 
-    override fun processIndexer(type: ITyClass, indexTy: ITy, exact: Boolean, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean {
+    override fun processIndexer(type: ITyClass, indexTy: ITy, exact: Boolean, context: SearchContext, process: ProcessClassMember): Boolean {
         for (manager in EP_NAME.extensionList) {
-            if (!manager.processIndexer(type, indexTy, false, context, processor))
+            if (!manager.processIndexer(type, indexTy, false, context, process))
                 return false
         }
         return true

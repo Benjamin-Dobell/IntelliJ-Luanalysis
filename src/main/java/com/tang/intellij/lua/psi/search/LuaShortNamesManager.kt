@@ -25,6 +25,7 @@ import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.psi.LuaTypeAlias
 import com.tang.intellij.lua.psi.LuaTypeDef
 import com.tang.intellij.lua.search.SearchContext
+import com.tang.intellij.lua.stubs.index.ProcessClassMember
 import com.tang.intellij.lua.ty.ITy
 import com.tang.intellij.lua.ty.ITyClass
 
@@ -60,9 +61,9 @@ interface LuaShortNamesManager {
 
     fun getClassMembers(clazzName: String, context: SearchContext): Collection<LuaClassMember>
 
-    fun processMember(type: ITyClass, fieldName: String, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean
+    fun processMember(type: ITyClass, fieldName: String, context: SearchContext, process: ProcessClassMember): Boolean
 
-    fun processIndexer(type: ITyClass, indexTy: ITy, exact: Boolean, context: SearchContext, processor: Processor<in LuaClassMember>): Boolean
+    fun processIndexer(type: ITyClass, indexTy: ITy, exact: Boolean, context: SearchContext, process: ProcessClassMember): Boolean
 
     fun findType(name: String, context: SearchContext): LuaTypeDef? {
         return findClass(name, context) ?: findAlias(name, context)

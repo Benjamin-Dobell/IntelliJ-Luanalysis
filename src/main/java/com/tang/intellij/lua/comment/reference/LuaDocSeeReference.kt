@@ -50,8 +50,8 @@ class LuaDocSeeReference(see: LuaDocTagSee) :
         val list = mutableListOf<ResolveResult>()
         val searchContext = SearchContext.get(myElement.project)
         val type = myElement.typeRef?.resolveType(searchContext) as ITyClass
-        LuaClassMemberIndex.processMember(type, id.text, searchContext, Processor {
-            list.add(PsiElementResolveResult(it))
+        LuaClassMemberIndex.processMember(type, id.text, searchContext, { member, _ ->
+            list.add(PsiElementResolveResult(member))
             true
         })
         return list.toTypedArray()

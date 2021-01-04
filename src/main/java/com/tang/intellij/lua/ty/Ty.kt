@@ -482,7 +482,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
             return true
         }
 
-        if (flags and TyVarianceFlags.NON_STRUCTURAL == 0 && isShape(context)) {
+        if ((flags and TyVarianceFlags.NON_STRUCTURAL == 0 || other.isAnonymous) && isShape(context)) {
             return ProblemUtil.contravariantOfShape(this, resolvedOther, context, flags)
         } else {
             val otherSuper = other.getSuperClass(context)

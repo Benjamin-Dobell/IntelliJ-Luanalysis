@@ -489,8 +489,7 @@ fun LuaClassMethod<*>.findOverridingMethod(context: SearchContext): LuaClassMeth
         ProgressManager.checkCanceled()
         val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass
         if (superClass != null) {
-            val superTypeName = superClass.className
-            superMethod = LuaClassMemberIndex.findMethod(superTypeName, methodName, context)
+            superMethod = LuaClassMemberIndex.findMethod(superClass, methodName, context)
             superMethod == null
         } else true
     }

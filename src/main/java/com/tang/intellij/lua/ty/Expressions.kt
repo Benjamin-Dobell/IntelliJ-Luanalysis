@@ -472,18 +472,21 @@ private fun LuaIndexExpr.infer(context: SearchContext): ITy? {
         if (docTy != null)
             return@Computable docTy
 
-        // xxx.yyy = zzz
         //from value
-        var result: ITy? = indexExpr.assignStat?.let {
-            context.withIndex(it.getIndexFor(indexExpr), false) {
-                it.valueExprList?.guessTypeAt(context)
-            }
-        }
-
+        var result: ITy? = null
         val prefixType = indexExpr.guessParentType(context)
 
         Ty.eachResolved(prefixType, context) { ty ->
             result = TyUnion.union(result, guessFieldType(indexExpr, ty, context), context)
+        }
+
+        if (result == null) {
+            // xxx.yyy = zzz
+            result = indexExpr.assignStat?.let {
+                context.withIndex(it.getIndexFor(indexExpr), false) {
+                    it.valueExprList?.guessTypeAt(context)
+                }
+            }
         }
 
         result

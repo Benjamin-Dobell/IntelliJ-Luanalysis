@@ -258,3 +258,13 @@ thing = {}
 thing = <error descr="Type mismatch. Required: 'Thing' Found: '1'">1</error>
 thing = <error descr="Type mismatch. Required: 'Thing' Found: '\"invalid\"'">"invalid"</error>
 
+---@shape ThingWrapper
+---@field things Thing[]
+
+---@type ThingWrapper
+local thingWrapper
+
+thingWrapper.things = {}
+
+---@type Thing[]
+local things = thingWrapper.things

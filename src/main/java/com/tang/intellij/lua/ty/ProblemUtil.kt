@@ -263,7 +263,7 @@ object ProblemUtil {
             if (sourceUnitTy is TyClass) {
                 sourceUnitTy.lazyInit(context)
 
-                if (varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 && sourceUnitTy.isShape(context)) {
+                if ((varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 || sourceUnitTy.isAnonymous) && sourceUnitTy.isShape(context)) {
                     val sourceIsInline = sourceUnitTy is TyTable && sourceUnitTy.table == sourceElement
                     val indexes = sortedMapOf<Int, PsiElement>()
                     var foundNumberIndexer = false
@@ -366,7 +366,7 @@ object ProblemUtil {
                 return false
             }
 
-            val baseAcceptsShape = varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 && base.isShape(context)
+            val baseAcceptsShape = (varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 || sourceUnitTy.isAnonymous) && base.isShape(context)
 
             if (sourceElement is LuaTableExpr) {
                 sourceElement.tableFieldList.forEach { sourceField ->

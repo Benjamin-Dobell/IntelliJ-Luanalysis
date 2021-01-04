@@ -525,6 +525,10 @@ fun getVisibility(luaDocArrTy: LuaDocArrTy): Visibility {
     return Visibility.PUBLIC
 }
 
+fun guessIndexType(luaDocArrTy: LuaDocArrTy, context: SearchContext): ITy {
+    return Ty.NUMBER
+}
+
 // WARNING: LuaClassMember requires us to implement guessType() returning the *member* value type.
 fun guessType(luaDocArrTy: LuaDocArrTy, context: SearchContext): ITy {
     return luaDocArrTy.ty.getType()

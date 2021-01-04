@@ -65,12 +65,11 @@ class LuaLineMarkerProvider : LineMarkerProvider {
 
                 while (superType != null && superType is TyClass) {
                     ProgressManager.checkCanceled()
-                    val superTypeName = superType.className
-                    val superMethod = LuaClassMemberIndex.findMethod(superTypeName, methodName, context)
+                    val superMethod = LuaClassMemberIndex.findMethod(superType, methodName, context)
                     if (superMethod != null) {
                         val builder = NavigationGutterIconBuilder.create(AllIcons.Gutter.OverridingMethod)
                                 .setTargets(superMethod)
-                                .setTooltipText("Overrides function in $superTypeName")
+                                .setTooltipText("Overrides function in ${superType.className}")
                         result.add(builder.createLineMarkerInfo(classMethodNameId))
                         break
                     }

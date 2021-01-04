@@ -96,7 +96,7 @@ fun resolve(nameExpr: LuaNameExpr, context: SearchContext): PsiElement? {
         val moduleName = if (refName != Constants.WORD_MODULE) {
             nameExpr.getModuleName(context) ?: Constants.WORD_G
         } else Constants.WORD_G
-        LuaClassMemberIndex.processMember(moduleName, refName, context, Processor {
+        LuaClassMemberIndex.processNamespaceMember(moduleName, refName, context, {
             resolveResult = it
             false
         })
@@ -114,12 +114,12 @@ fun multiResolve(ref: LuaNameExpr, context: SearchContext): Array<PsiElement> {
     } else {
         val refName = ref.name
         val module = ref.getModuleName(context) ?: Constants.WORD_G
-        LuaClassMemberIndex.processMember(module, refName, context, Processor {
+        LuaClassMemberIndex.processNamespaceMember(module, refName, context, {
             list.add(it)
             true
         })
         if (list.isEmpty() && refName == Constants.WORD_MODULE && module != Constants.WORD_G) {
-            LuaClassMemberIndex.processMember(Constants.WORD_G, refName, context, Processor {
+            LuaClassMemberIndex.processNamespaceMember(Constants.WORD_G, refName, context, {
                 list.add(it)
                 true
             })
@@ -146,7 +146,7 @@ fun resolve(indexExpr: LuaIndexExpr, context: SearchContext): PsiElement? {
 
     var member: PsiElement? = null
 
-    parentType.eachTopClass(Processor { ty ->
+    parentType.eachTopClass({ ty ->
         val cls = (if (ty is ITyGeneric) ty.base else ty) as? ITyClass
         member = cls?.findIndexer(indexTy, context)
         member == null
