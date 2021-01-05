@@ -101,8 +101,8 @@ function getmetatable(object) end
 --- Level 1 is the function calling `getfenv`. If the given function is not a
 --- Lua function, or if `f` is 0, `getfenv` returns the global environment. The
 --- default for `f` is 1.
----@overload fun():function
----@param f function|number
+---@overload fun(): any
+---@param f function | number
 ---@return any
 function getfenv(f) end
 
@@ -124,55 +124,39 @@ function ipairs(t) end
 --- must return a string that concatenates with previous results. A return of
 --- an empty string, **nil**, or no value signals the end of the chunk.
 ---
---- If there are no syntactic errors, returns the compiled chunk as a function;
---- otherwise, returns **nil** plus the error message.
----
---- If the resulting function has upvalues, the first upvalue is set to the
---- value of `env`, if that parameter is given, or to the value of the global
---- environment. Other upvalues are initialized with **nil**. (When you load a
---- main chunk, the resulting function will always have exactly one upvalue, the
---- _ENV variable. However, when you load a binary chunk created from a
---- function (see string.dump), the resulting function can have an arbitrary
---- number of upvalues.) All upvalues are fresh, that is, they are not shared
---- with any other function.
+--- If there are no errors, returns the compiled chunk as a function; otherwise,
+--- returns nil plus the error message. The environment of the returned function
+--- is the global environment.
 ---
 --- `chunkname` is used as the name of the chunk for error messages and debug
 --- information. When absent, it defaults to `chunk`, if `chunk` is a string,
 --- or to "=(`load`)" otherwise.
----
---- The string `mode` controls whether the chunk can be text or binary (that is,
---- a precompiled chunk). It may be the string "b" (only binary chunks), "t"
---- (only text chunks), or "bt" (both binary and text). The default is "bt".
----
---- Lua does not check the consistency of binary chunks. Maliciously crafted
---- binary chunks can crash the interpreter.
----@overload fun(chunk:fun():string):any
----@param chunk fun():string
+---@overload fun(func: (fun(): nil | string)): function | (nil, string)
+---@param func fun(): nil | string
 ---@param chunkname string
----@param mode string
----@param env any
-function load(chunk, chunkname, mode, env) end
+---@return function | (nil, string)
+function load(chunk, chunkname) end
 
----Similar to `load`, but gets the chunk from the given string.
+--- Similar to `load`, but gets the chunk from the given string.
 ---
 --- To load and run a given string, use the idiom
 ---
 ---      `assert(loadstring(s))()`
+---
 --- When absent, `chunkname` defaults to the given string.
----@overload fun(string:string):any
----@param string string
+---@overload fun(chunk: string): function | (nil, string)
+---@param chunk string
 ---@param chunkname string
----@return any
-function loadstring(string, chunkname) end
+---@return function | (nil, string)
+function loadstring(chunk, chunkname) end
 
 ---
 --- Similar to `load`, but gets the chunk from file `filename` or from the
 --- standard input, if no file name is given.
----@overload fun()
+---@overload fun(): function | (nil, string)
 ---@param filename string
----@param mode string
----@param env any
-function loadfile(filename, mode, env) end
+---@return function | (nil, string)
+function loadfile(filename) end
 
 --- Creates a module. If there is a table in `package.loaded[name]`, this table
 --- is the module. Otherwise, if there is a global table `t` with the given name,

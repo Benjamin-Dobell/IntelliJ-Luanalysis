@@ -136,20 +136,26 @@ function ipairs(t) end
 ---
 --- Lua does not check the consistency of binary chunks. Maliciously crafted
 --- binary chunks can crash the interpreter.
----@overload fun(chunk:fun():string):any
----@param chunk fun():string
+---@overload fun(chunk: string | (fun(): nil | string)): function | (nil, string)
+---@overload fun(chunk: string | (fun(): nil | string), chunkname: string): function | (nil, string)
+---@overload fun(chunk: string | (fun(): nil | string), chunkname: string, mode: "b" | "t" | "bt"): function | (nil, string)
+---@param chunk string | (fun(): nil | string)
 ---@param chunkname string
----@param mode string
----@param env any
+---@param mode "b" | "t" | "bt"
+---@param env table
+---@return function | (nil, string)
 function load(chunk, chunkname, mode, env) end
 
 ---
 --- Similar to `load`, but gets the chunk from file `filename` or from the
 --- standard input, if no file name is given.
----@overload fun()
+---@overload fun(): function | (nil, string)
+---@overload fun(filename: string): function | (nil, string)
+---@overload fun(filename: string, mode: "b" | "t" | "bt"): function | (nil, string)
 ---@param filename string
----@param mode string
----@param env any
+---@param mode "b" | "t" | "bt"
+---@param env table
+---@return function | (nil, string)
 function loadfile(filename, mode, env) end
 
 ---

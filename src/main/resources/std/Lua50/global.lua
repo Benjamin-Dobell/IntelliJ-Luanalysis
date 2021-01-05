@@ -101,8 +101,8 @@ function getmetatable(object) end
 --- Level 1 is the function calling `getfenv`. If the given function is not a
 --- Lua function, or if `f` is 0, `getfenv` returns the global environment. The
 --- default for `f` is 1.
----@overload fun():function
----@param f function|number
+---@overload fun(): any
+---@param f function | number
 ---@return any
 function getfenv(f) end
 
@@ -122,26 +122,14 @@ function gcinfo() end
 ---@return (fun(tab: V[], k: nil | number): nil | (number, V)), V[], number
 function ipairs(t) end
 
----Similar to `load`, but gets the chunk from the given string.
 ---
---- To load and run a given string, use the idiom
----
----      `assert(loadstring(s))()`
---- When absent, `chunkname` defaults to the given string.
----@overload fun(string:string):any
----@param string string
----@param chunkname string
----@return any
-function loadstring(string, chunkname) end
-
----
---- Similar to `load`, but gets the chunk from file `filename` or from the
---- standard input, if no file name is given.
----@overload fun()
+--- Loads a file as a Lua chunk (without running it). If there are no errors,
+--- returns the compiled chunk as a function; otherwise, returns nil plus the
+--- error message. The environment of the returned function is the global
+--- environment.
 ---@param filename string
----@param mode string
----@param env any
-function loadfile(filename, mode, env) end
+---@return function | (nil, string)
+function loadfile(filename) end
 
 --- Links the program with the dynamic C library `libname`. Inside this library,
 --- looks for a function `funcname` and returns this function as a C function.
@@ -155,7 +143,25 @@ function loadfile(filename, mode, env) end
 ---
 ---@param libname string
 ---@param funcname string
+---@return function | (nil, string)
 function loadlib(libname, funcname) end
+
+--- Loads a string as a Lua chunk (without running it). If there are no errors,
+--- returns the compiled chunk as a function; otherwise, returns nil plus the
+--- error message. The environment of the returned function is the global
+--- environment.
+---
+--- The optional parameter chunkname is the name to be used in error messages
+--- and debug information.
+---
+--- To load and run a given string, use the idiom
+---
+---      `assert(loadstring(s))()`
+---@overload fun(chunk: string): function | (nil, string)
+---@param chunk string
+---@param chunkname string
+---@return function | (nil, string)
+function loadstring(chunk, chunkname) end
 
 ---
 --- Allows a program to traverse all fields of a table. Its first argument is
@@ -282,8 +288,8 @@ function require(modname) end
 --- function or a number that specifies the function at that stack level:
 --- Level 1 is the function calling `setfenv`. `setfenv` returns the given function.
 ---
----@param f function|number
----@param table any
+---@param f function | number
+---@param table table
 ---@return function
 function setfenv(f, table) end
 
