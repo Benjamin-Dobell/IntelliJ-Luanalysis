@@ -343,7 +343,7 @@ function setfenv(f, table) end
 --- This function returns `table`.
 ---@generic T
 ---@param table T
----@param metatable table
+---@param metatable nil | table
 ---@return T
 function setmetatable(table, metatable) end
 
