@@ -76,9 +76,12 @@ function dofile(filename) end
 --- `error` function was called. Level 2 points the error to where the function
 --- that called `error` was called; and so on. Passing a level 0 avoids the
 --- addition of error position information to the message.
----@overload fun(message:string)
+---
+--- _**Note**: Return type is inaccurate. This function never returns._
+---@overload fun(message: any): void
 ---@param message string
 ---@param level number
+---@return void
 function error(message, level) end
 
 ---
@@ -205,11 +208,11 @@ function pairs(t) end
 --- boolean), which is true if the call succeeds without errors. In such case,
 --- `pcall` also returns all results from the call, after this first result. In
 --- case of any error, `pcall` returns **false** plus the error message.
----@overload fun(f: (fun: void), ...: any): true | (false, string)
+---@overload fun(f: (fun: void), ...: any): true | (false, any)
 ---@generic T
 ---@param f fun: T
 ---@vararg any
----@return (true, T) | (false, string)
+---@return (true, T) | (false, any)
 function pcall(f, ...) end
 
 ---
@@ -319,7 +322,10 @@ _VERSION = "Lua 5.4"
 ---
 --- This function is similar to `pcall`, except that it sets a new message
 --- handler `msgh`.
----@param f fun():any
----@param msgh fun():string
----@return any
-function xpcall(f, msgh, arg1, ...) end
+---@overload fun(f: (fun: void), msgh: fun(message: any): any, ...: any): true | (false, any)
+---@generic T
+---@param f fun: T
+---@param msgh fun(message: any): any
+---@vararg any
+---@return (true, T) | (false, any)
+function xpcall(f, ...) end
