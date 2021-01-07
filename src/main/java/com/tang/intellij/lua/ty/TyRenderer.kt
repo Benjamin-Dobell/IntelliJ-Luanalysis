@@ -129,7 +129,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                 sb.append(it.name)
                 sb.append(": ")
 
-                val paramTy = it.ty
+                val paramTy = it.ty ?: Ty.UNKNOWN
                 if (paramTy is TyGenericParameter && paramTy.superClass != null) {
                     sb.append("(")
                     render(paramTy, sb)
@@ -139,6 +139,10 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                 }
             }
             varargTy?.let {
+                if (params?.size ?: 0 > 0) {
+                    sb.append(", ")
+                }
+
                 sb.append("...: ")
                 render(it, sb)
             }

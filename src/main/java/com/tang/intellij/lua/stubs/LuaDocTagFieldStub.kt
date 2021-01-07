@@ -70,6 +70,7 @@ class LuaDocTagFieldType : LuaStubElementType<LuaDocTagFieldStub, LuaDocTagField
 
         var flags = BitUtil.set(0, tagField.visibility.bitMask, true)
         flags = BitUtil.set(flags, FLAG_DEPRECATED, tagField.isDeprecated)
+        flags = BitUtil.set(flags, FLAG_EXPLICITLY_TYPED, tagField.isExplicitlyTyped)
 
         return if (name != null) {
             LuaDocFieldDefStubImpl(stubElement,
@@ -131,6 +132,7 @@ class LuaDocTagFieldType : LuaStubElementType<LuaDocTagFieldStub, LuaDocTagField
 
     companion object {
         const val FLAG_DEPRECATED = 0x20
+        const val FLAG_EXPLICITLY_TYPED = 0x40
     }
 }
 
@@ -154,6 +156,7 @@ class LuaDocFieldDefStubImpl : LuaDocStubBase<LuaDocTagField>, LuaDocTagFieldStu
     override val indexTy: ITy?
     override val flags: Int
     override val valueTy: ITy
+    override val isExplicitlyTyped: Boolean = true
 
     override val isDeprecated: Boolean
         get() = BitUtil.isSet(flags, LuaDocTagFieldType.FLAG_DEPRECATED)

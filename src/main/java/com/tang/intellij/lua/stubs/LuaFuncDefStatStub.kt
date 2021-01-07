@@ -55,6 +55,7 @@ class LuaFuncType : LuaStubElementType<LuaFuncDefStatStub, LuaFuncDefStat>("Glob
 
         var flags = BitUtil.set(0, funcDefStat.visibility.bitMask, true)
         flags = BitUtil.set(flags, FLAG_DEPRECATED, funcDefStat.isDeprecated)
+        flags = BitUtil.set(flags, FLAG_EXPLICITLY_TYPED, funcDefStat.isExplicitlyTyped)
 
         return LuaFuncDefStatStubImpl(nameRef.text,
                 moduleName,
@@ -114,6 +115,7 @@ class LuaFuncType : LuaStubElementType<LuaFuncDefStatStub, LuaFuncDefStat>("Glob
 
     companion object {
         const val FLAG_DEPRECATED = 0x20
+        const val FLAG_EXPLICITLY_TYPED = 0x40
     }
 }
 
@@ -139,6 +141,9 @@ class LuaFuncDefStatStubImpl(
 
     override val isDeprecated: Boolean
         get() = BitUtil.isSet(flags, LuaFuncType.FLAG_DEPRECATED)
+
+    override val isExplicitlyTyped: Boolean
+        get() = BitUtil.isSet(flags, LuaFuncType.FLAG_EXPLICITLY_TYPED)
 
     override val visibility: Visibility
         get() = Visibility.getWithMask(flags)

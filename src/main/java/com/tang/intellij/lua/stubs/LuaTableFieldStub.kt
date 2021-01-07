@@ -55,7 +55,9 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
             }
         }
 
-        val flags = BitUtil.set(0, FLAG_DEPRECATED, field.isDeprecated)
+        var flags = BitUtil.set(0, FLAG_DEPRECATED, field.isDeprecated)
+        flags = BitUtil.set(flags, FLAG_EXPLICITLY_TYPED, field.isExplicitlyTyped)
+
         var valueTy = field.comment?.docTy ?: (field.valueExpr as? LuaLiteralExpr)?.infer()
 
         if (field.name != null) {
@@ -181,6 +183,7 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
 
     companion object {
         const val FLAG_DEPRECATED = 0x20
+        const val FLAG_EXPLICITLY_TYPED = 0x40
     }
 }
 
@@ -212,7 +215,10 @@ class LuaTableFieldStubImpl : LuaStubBase<LuaTableField>, LuaTableFieldStub {
     override val valueTy: ITy?
 
     override val isDeprecated: Boolean
-        get() = BitUtil.isSet(flags, LuaDocTagFieldType.FLAG_DEPRECATED)
+        get() = BitUtil.isSet(flags, LuaTableFieldType.FLAG_DEPRECATED)
+
+    override val isExplicitlyTyped: Boolean
+        get() = BitUtil.isSet(flags, LuaTableFieldType.FLAG_EXPLICITLY_TYPED)
 
     override val visibility: Visibility = Visibility.PUBLIC
 

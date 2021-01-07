@@ -182,7 +182,7 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
         val namedParams = mutableListOf<Pair<String, ITy>>()
 
         params?.forEach {
-            namedParams.add(Pair(it.name, it.ty))
+            namedParams.add(Pair(it.name, it.ty ?: Ty.UNKNOWN))
         }
 
         variadicParamTy?.let {
@@ -257,8 +257,8 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
 
             for (i in otherParams.indices) {
                 val param = it.getOrNull(i) ?: return false
-                val otherParam = otherParams[i]
-                if (!otherParam.ty.contravariantOf(param.ty, context, flags)) {
+                val otherParamTy = otherParams[i].ty ?: Ty.UNKNOWN
+                if (!otherParamTy.contravariantOf(param.ty ?: Ty.UNKNOWN, context, flags)) {
                     return false
                 }
             }

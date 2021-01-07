@@ -108,9 +108,10 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
             o.sig.processParameters(null, o.isColonStyle) { idx, pi ->
                 if (idx > 0) append(", ")
                 if (idx == index) start = length
+                val ty = pi.ty ?: Ty.UNKNOWN
                 append(pi.name)
                 append(": ")
-                append(pi.ty.displayName)
+                append(ty.displayName)
                 if (idx == index) end = length
                 true
             }

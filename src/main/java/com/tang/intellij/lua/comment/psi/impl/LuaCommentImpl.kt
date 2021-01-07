@@ -54,24 +54,16 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
         return genericDefs
     }
 
-    override fun <T : LuaDocPsiElement> findTag(t:Class<T>): T? {
-        var element: PsiElement? = firstChild
-        while (element != null) {
-            if (t.isInstance(element)) {
-                @Suppress("UNCHECKED_CAST")
-                return element as T
-            }
-            element = element.nextSibling
-        }
-        return null
+    override fun <T : LuaDocPsiElement> findTag(t: Class<T>): T? {
+        return PsiTreeUtil.getChildOfType(this, t)
     }
 
     override fun <T : LuaDocPsiElement> findTags(t:Class<T>): Collection<T> {
-        return PsiTreeUtil.findChildrenOfType(this, t)
+        return PsiTreeUtil.getChildrenOfTypeAsList(this, t)
     }
 
     override fun findTags(name: String): Collection<LuaDocTagDef> {
-        return PsiTreeUtil.findChildrenOfType(this, LuaDocTagDef::class.java).filter { it.tagName.text == name }
+        return PsiTreeUtil.getChildrenOfTypeAsList(this, LuaDocTagDef::class.java).filter { it.tagName.text == name }
     }
 
     override fun getTokenType(): IElementType {
@@ -92,6 +84,12 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
 
     override val isDeprecated: Boolean
         get() = findTags("deprecated").isNotEmpty()
+
+    override val isFunctionImplementation: Boolean
+        get() = PsiTreeUtil.getChildOfType(this, LuaDocTagOverload::class.java)
+                ?: PsiTreeUtil.getChildOfType(this, LuaDocTagParam::class.java)
+                ?: PsiTreeUtil.getChildOfType(this, LuaDocTagReturn::class.java)
+                ?: PsiTreeUtil.getChildOfType(this, LuaDocTagVararg::class.java) != null
 
     override fun getParamDef(name: String): LuaDocTagParam? {
         var element: PsiElement? = firstChild
@@ -119,29 +117,17 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
         return null
     }
 
-    override val tagClass: LuaDocTagClass?
-        get() {
-        var element: PsiElement? = firstChild
-        while (element != null) {
-            if (element is LuaDocTagClass) {
-                return element
-            }
-            element = element.nextSibling
-        }
-        return null
-    }
+    override val tagClass: LuaDocTagClass? =
+        PsiTreeUtil.getStubChildOfType(this, LuaDocTagClass::class.java)
 
-    override val tagReturn: LuaDocTagReturn?
-        get() {
-            var element: PsiElement? = firstChild
-            while (element != null) {
-                if (element is LuaDocTagReturn) {
-                    return element
-                }
-                element = element.nextSibling
-            }
-            return null
-        }
+    override val tagReturn: LuaDocTagReturn? =
+        PsiTreeUtil.getChildOfType(this, LuaDocTagReturn::class.java)
+
+    override val tagType: LuaDocTagType? =
+        PsiTreeUtil.getStubChildOfType(this, LuaDocTagType::class.java)
+
+    override val tagVararg: LuaDocTagVararg? =
+        PsiTreeUtil.getChildOfType(this, LuaDocTagVararg::class.java)
 
     override val overloads: Array<IFunSignature>?
         get() {
@@ -163,18 +149,6 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
 
             return if (list.size != 0) list.toTypedArray() else null
         }
-
-    override val tagType: LuaDocTagType?
-        get() {
-        var element: PsiElement? = firstChild
-        while (element != null) {
-            if (element is LuaDocTagType) {
-                return element
-            }
-            element = element.nextSibling
-        }
-        return null
-    }
 
     override fun guessType(context: SearchContext): ITy {
         val classDef = tagClass

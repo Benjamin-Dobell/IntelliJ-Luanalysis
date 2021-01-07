@@ -28,7 +28,7 @@ import com.tang.intellij.lua.ty.*
  * Created by TangZX on 2017/2/4.
  */
 interface LuaFuncBodyOwnerStub<T : PsiElement> : StubElement<T> {
-    val returnDocTy:ITy?
+    val returnDocTy: ITy?
     val params: Array<LuaParamInfo>
     val genericParams: Array<TyGenericParameter>?
     val overloads: Array<IFunSignature>

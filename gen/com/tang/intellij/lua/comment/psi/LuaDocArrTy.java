@@ -31,4 +31,6 @@ public interface LuaDocArrTy extends LuaDocTy, LuaClassMember {
 
   boolean isDeprecated();
 
+  boolean isExplicitlyTyped();
+
 }

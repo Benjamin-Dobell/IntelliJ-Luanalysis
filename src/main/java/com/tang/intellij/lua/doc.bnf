@@ -140,6 +140,7 @@ arr_ty ::= ty '[]' {
         guessType
         guessParentType
         isDeprecated
+        isExplicitlyTyped
     ]
 }
 primitive_table_ty ::= 'table' {
@@ -152,6 +153,7 @@ primitive_table_ty ::= 'table' {
         guessType
         guessParentType
         isDeprecated
+        isExplicitlyTyped
     ]
 }
 general_ty ::= type_ref {
@@ -198,6 +200,7 @@ tableField ::= tableField1 | tableField2 {
         getValueType
         guessType
         isDeprecated
+        isExplicitlyTyped
         lbrack = 'LBRACK'
     ]
     stubClass = "com.tang.intellij.lua.stubs.LuaDocTableFieldStub"
@@ -225,6 +228,7 @@ generic_table_ty ::= 'table' '<' generic_table_index_ty ',' complex_ty '>' {
         guessType
         guessParentType
         isDeprecated
+        isExplicitlyTyped
         keyType = '/ty[0]'
         valueType = '/ty[1]'
     ]
@@ -308,6 +312,7 @@ tag_field ::= TAG_NAME_FIELD access_modifier? ('<' type_ref '>')? (ID | tagField
         toString
         getPresentation
         isDeprecated
+        isExplicitlyTyped
         lbrack = 'LBRACK'
     ]
 }
@@ -343,7 +348,6 @@ tag_vararg ::= TAG_NAME_VARARG complex_ty comment_string? {
 tag_return ::= TAG_NAME_RETURN function_return_type comment_string? {
     pin = 1
     methods = [
-        resolveTypeAt
         getType
     ]
 }
@@ -357,7 +361,6 @@ type_ref ::= 'table' | ID {
 }
 
 class_ref ::= type_ref ('<' generic_param_list '>')? {
-	methods = [getReference]
 }
 
 generic_def ::= ID (EXTENDS class_ref)? {

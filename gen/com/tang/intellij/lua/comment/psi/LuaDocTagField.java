@@ -58,6 +58,8 @@ public interface LuaDocTagField extends LuaClassField, LuaDocPsiElement, PsiName
 
   boolean isDeprecated();
 
+  boolean isExplicitlyTyped();
+
   @Nullable
   PsiElement getLbrack();
 

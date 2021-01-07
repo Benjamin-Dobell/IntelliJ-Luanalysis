@@ -66,6 +66,11 @@ public class LuaDocGenericTableTyImpl extends LuaDocTyImpl implements LuaDocGene
   }
 
   @Override
+  public boolean isExplicitlyTyped() {
+    return LuaDocPsiImplUtilKt.isExplicitlyTyped(this);
+  }
+
+  @Override
   @Nullable
   public LuaDocTy getKeyType() {
     List<LuaDocTy> p1 = getTyList();

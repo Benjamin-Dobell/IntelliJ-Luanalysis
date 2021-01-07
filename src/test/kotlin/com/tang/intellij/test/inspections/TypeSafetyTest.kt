@@ -162,6 +162,10 @@ class TypeSafetyTest : LuaInspectionsTestBase(
         check("overloads.lua")
     }
 
+    fun testOverrides() {
+        check("overrides.lua")
+    }
+
     fun testPoorlyNamedParams() {
         check("poorly_named_params.lua")
     }

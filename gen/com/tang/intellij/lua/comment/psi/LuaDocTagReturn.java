@@ -14,10 +14,6 @@ public interface LuaDocTagReturn extends LuaDocTag {
   @Nullable
   LuaDocFunctionReturnType getFunctionReturnType();
 
-  //WARNING: resolveTypeAt(...) is skipped
-  //matching resolveTypeAt(LuaDocTagReturn, ...)
-  //methods are not found in LuaDocPsiImplUtilKt
-
   @NotNull
   ITy getType();
 

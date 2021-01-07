@@ -56,15 +56,17 @@ class LuaClassMethodType : LuaStubElementType<LuaClassMethodDefStatStub, LuaClas
             classNameSet.add(createSerializedClass(expr.text))
         }
 
-        var flags = 0
-
-        val isStatic = methodName.dot != null
-        val isDeprecated = def.isDeprecated
-        flags = BitUtil.set(flags, FLAG_STATIC, isStatic)
-        flags = BitUtil.set(flags, FLAG_DEPRECATED, isDeprecated)
 
         val visibility = def.visibility
+        val isStatic = methodName.dot != null
+        val isDeprecated = def.isDeprecated
+        val isExplicitlyTyped = def.isExplicitlyTyped
+
+        var flags = 0
         flags = BitUtil.set(flags, visibility.bitMask, true)
+        flags = BitUtil.set(flags, FLAG_STATIC, isStatic)
+        flags = BitUtil.set(flags, FLAG_DEPRECATED, isDeprecated)
+        flags = BitUtil.set(flags, FLAG_EXPLICITLY_TYPED, isExplicitlyTyped)
 
         val retDocTy = def.comment?.tagReturn?.type
         val params = def.params
@@ -147,6 +149,7 @@ class LuaClassMethodType : LuaStubElementType<LuaClassMethodDefStatStub, LuaClas
     companion object {
         const val FLAG_STATIC = 0x10
         const val FLAG_DEPRECATED = 0x20
+        const val FLAG_EXPLICITLY_TYPED = 0x40
     }
 }
 
@@ -179,6 +182,9 @@ class LuaClassMethodDefStatStubImpl(
 
     override val isDeprecated: Boolean
         get() = BitUtil.isSet(flags, LuaClassMethodType.FLAG_DEPRECATED)
+
+    override val isExplicitlyTyped: Boolean
+        get() = BitUtil.isSet(flags, LuaClassMethodType.FLAG_EXPLICITLY_TYPED)
 
     override val visibility: Visibility
         get() = Visibility.getWithMask(flags)

@@ -46,6 +46,8 @@ public interface LuaDocTableField extends LuaDocPsiElement, LuaClassField, PsiNa
 
   boolean isDeprecated();
 
+  boolean isExplicitlyTyped();
+
   @Nullable
   PsiElement getLbrack();
 

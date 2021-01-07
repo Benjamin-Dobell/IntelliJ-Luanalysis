@@ -120,6 +120,11 @@ public class LuaFuncDefStatImpl extends StubBasedPsiElementBase<LuaFuncDefStatSt
   }
 
   @Override
+  public boolean isExplicitlyTyped() {
+    return LuaPsiImplUtilKt.isExplicitlyTyped(this);
+  }
+
+  @Override
   @NotNull
   public LuaParamInfo[] getParams() {
     return LuaPsiImplUtilKt.getParams(this);

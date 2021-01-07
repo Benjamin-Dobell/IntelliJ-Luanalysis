@@ -71,4 +71,9 @@ public class LuaDocArrTyImpl extends LuaDocTyImpl implements LuaDocArrTy {
     return LuaDocPsiImplUtilKt.isDeprecated(this);
   }
 
+  @Override
+  public boolean isExplicitlyTyped() {
+    return LuaDocPsiImplUtilKt.isExplicitlyTyped(this);
+  }
+
 }

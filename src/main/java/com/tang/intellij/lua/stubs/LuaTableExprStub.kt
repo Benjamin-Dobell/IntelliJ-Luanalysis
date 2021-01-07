@@ -21,10 +21,11 @@ import com.intellij.psi.stubs.IndexSink
 import com.intellij.psi.stubs.StubElement
 import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.io.StringRef
-import com.tang.intellij.lua.psi.LuaTableExpr
+import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.impl.LuaTableExprImpl
-import com.tang.intellij.lua.psi.shouldCreateStub
+import com.tang.intellij.lua.ty.getGlobalTypeName
 import com.tang.intellij.lua.ty.getTableTypeName
 
 /**

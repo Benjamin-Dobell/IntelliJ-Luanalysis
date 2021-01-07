@@ -141,6 +141,11 @@ public class LuaIndexExprImpl extends LuaIndexExprMixin implements LuaIndexExpr 
   }
 
   @Override
+  public boolean isExplicitlyTyped() {
+    return LuaPsiImplUtilKt.isExplicitlyTyped(this);
+  }
+
+  @Override
   @NotNull
   public List<LuaExpression<?>> getExpressionList() {
     return LuaPsiImplUtilKt.getExpressionList(this);

@@ -166,6 +166,7 @@ private fun isValidTypeScope(element: PsiElement?): Boolean {
 
     return when (element) {
         is LuaLocalDefStat -> {
+            // TODO: The closure really ought to be a scope, not the statement.
             if (element.localDefList.size == 1) {
                 element.exprList?.expressionList?.let {
                     (it.firstOrNull() as? LuaClosureExpr)?.comment != null
@@ -173,6 +174,7 @@ private fun isValidTypeScope(element: PsiElement?): Boolean {
             } else false
         }
         is LuaAssignStat -> {
+            // TODO: As above, assign statements should not be scopes.
             if (element.varExprList.expressionList.size == 1) {
                 element.valueExprList?.expressionList?.let {
                     (it.firstOrNull() as? LuaClosureExpr)?.comment != null

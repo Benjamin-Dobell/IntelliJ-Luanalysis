@@ -45,6 +45,8 @@ public interface LuaTableField extends LuaClassField, PsiNameIdentifierOwner, Lu
 
   boolean isDeprecated();
 
+  boolean isExplicitlyTyped();
+
   @Nullable
   LuaExpression<?> getIdExpr();
 

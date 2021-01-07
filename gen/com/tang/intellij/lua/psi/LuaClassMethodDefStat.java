@@ -26,6 +26,8 @@ public interface LuaClassMethodDefStat extends LuaClassMethod<LuaClassMethodDefS
 
   boolean isDeprecated();
 
+  boolean isExplicitlyTyped();
+
   @NotNull
   List<LuaParamDef> getParamDefList();
 

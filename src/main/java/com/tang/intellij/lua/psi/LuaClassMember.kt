@@ -35,6 +35,7 @@ interface LuaClassMember : LuaTypeGuessable {
 
     val visibility: Visibility
     val isDeprecated: Boolean
+    val isExplicitlyTyped: Boolean
 
     val indexType: LuaDocTy?
         get() = null

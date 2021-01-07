@@ -85,6 +85,7 @@ class LuaIndexExprType : LuaStubElementType<LuaIndexExprStub, LuaIndexExpr>("IND
         flags = BitUtil.set(flags, LuaIndexExprType.FLAG_DEPRECATED, indexExpr.isDeprecated)
         flags = BitUtil.set(flags, LuaIndexExprType.FLAG_BRACK, indexExpr.lbrack != null)
         flags = BitUtil.set(flags, LuaIndexExprType.FLAG_ASSIGN, stat != null)
+        flags = BitUtil.set(flags, LuaIndexExprType.FLAG_EXPLICITLY_TYPED, indexExpr.isExplicitlyTyped)
 
         val idTy = indexExpr.idExpr?.let {
             SearchContext.withDumb(indexExpr.project, null) { context ->
@@ -148,6 +149,7 @@ class LuaIndexExprType : LuaStubElementType<LuaIndexExprStub, LuaIndexExpr>("IND
         const val FLAG_DEPRECATED = 0x20
         const val FLAG_BRACK = 0x40
         const val FLAG_ASSIGN = 0x80
+        const val FLAG_EXPLICITLY_TYPED = 0x100
     }
 }
 
@@ -170,6 +172,9 @@ class LuaIndexExprStubImpl(override val classNames: Array<String>,
     : LuaStubBase<LuaIndexExpr>(stubElement, indexType), LuaIndexExprStub {
     override val isDeprecated: Boolean
         get() = BitUtil.isSet(flags, LuaIndexExprType.FLAG_DEPRECATED)
+
+    override val isExplicitlyTyped: Boolean
+        get() = BitUtil.isSet(flags, LuaIndexExprType.FLAG_EXPLICITLY_TYPED)
 
     override val visibility: Visibility
         get() = Visibility.getWithMask(flags)

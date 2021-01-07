@@ -13,8 +13,4 @@ public interface LuaDocClassRef extends LuaDocPsiElement {
   @NotNull
   LuaDocTypeRef getTypeRef();
 
-  //WARNING: getReference(...) is skipped
-  //matching getReference(LuaDocClassRef, ...)
-  //methods are not found in LuaDocPsiImplUtilKt
-
 }

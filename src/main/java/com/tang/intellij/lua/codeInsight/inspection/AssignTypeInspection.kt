@@ -21,6 +21,7 @@ import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
+import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.PsiSearchContext
@@ -82,7 +83,7 @@ class AssignTypeInspection : StrictInspection() {
                     }
                 }
 
-                fun inspectAssignment(assignees: List<LuaTypeGuessable>, expressions: List<LuaExpression<*>>?) {
+                fun inspectAssignment(statement: LuaStatement?, assignees: List<LuaTypeGuessable>, expressions: List<LuaExpression<*>>?) {
                     if (expressions == null || expressions.size == 0) {
                         return
                     }
@@ -91,6 +92,7 @@ class AssignTypeInspection : StrictInspection() {
                     var assigneeIndex = 0
                     var variadicTy: ITy? = null
                     var lastExpressionFirstAssigneeIndex = 0
+                    val isClassDeclaration = statement?.comment?.tagClass != null
 
                     for (expressionIndex in 0 until expressions.size) {
                         val isLastExpression = expressionIndex == expressions.size - 1
@@ -157,7 +159,7 @@ class AssignTypeInspection : StrictInspection() {
                                 value = variadicTy
                             }
 
-                            if (assignees.size == 1 && LuaPsiTreeUtil.findAncestorOfType(assignee, LuaStatement::class.java)?.comment?.tagClass != null) {
+                            if (isClassDeclaration) {
                                 if (value !is TyTable) {
                                     myHolder.registerProblem(expression, "Type mismatch. Required: 'table' Found: '%s'".format(value.displayName))
                                 }
@@ -218,12 +220,22 @@ class AssignTypeInspection : StrictInspection() {
 
                 override fun visitAssignStat(o: LuaAssignStat) {
                     super.visitAssignStat(o)
-                    inspectAssignment(o.varExprList.expressionList, o.valueExprList?.expressionList)
+                    inspectAssignment(o, o.varExprList.expressionList, o.valueExprList?.expressionList)
                 }
 
                 override fun visitLocalDefStat(o: LuaLocalDefStat) {
                     super.visitLocalDefStat(o)
-                    inspectAssignment(o.localDefList, o.exprList?.expressionList)
+                    inspectAssignment(o, o.localDefList, o.exprList?.expressionList)
+                }
+
+                override fun visitTableField(o: LuaTableField) {
+                    super.visitTableField(o)
+
+                    o.valueExpr?.let { valueExpr ->
+                        if (o.isExplicitlyTyped) {
+                            inspectAssignment(null, listOf(o), listOf(valueExpr))
+                        }
+                    }
                 }
             }
 }

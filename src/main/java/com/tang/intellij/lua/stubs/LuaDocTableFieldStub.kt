@@ -117,6 +117,7 @@ class LuaDocTableFieldStubImpl : LuaDocStubBase<LuaDocTableField>, LuaDocTableFi
     override val indexTy: ITy?
     override val valueTy: ITy?
     override val parentTypeName: String
+    override val isExplicitlyTyped: Boolean = true
 
     constructor(parent: StubElement<*>, name: String, parentTypeName: String, valueTy: ITy?)
             : super(parent, LuaElementType.DOC_TABLE_FIELD_DEF) {

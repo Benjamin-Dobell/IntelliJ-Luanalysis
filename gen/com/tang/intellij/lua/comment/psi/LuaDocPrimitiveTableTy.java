@@ -25,4 +25,6 @@ public interface LuaDocPrimitiveTableTy extends LuaDocTy, LuaClassMember {
 
   boolean isDeprecated();
 
+  boolean isExplicitlyTyped();
+
 }

@@ -59,4 +59,9 @@ public class LuaDocPrimitiveTableTyImpl extends LuaDocTyImpl implements LuaDocPr
     return LuaDocPsiImplUtilKt.isDeprecated(this);
   }
 
+  @Override
+  public boolean isExplicitlyTyped() {
+    return LuaDocPsiImplUtilKt.isExplicitlyTyped(this);
+  }
+
 }

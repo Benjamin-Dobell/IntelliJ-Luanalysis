@@ -271,7 +271,7 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
         sig.processParameters { index, param ->
             val arg = list.getOrNull(index)
             if (arg != null) {
-                genericAnalyzer.analyze(arg, param.ty)
+                genericAnalyzer.analyze(arg, param.ty ?: Ty.UNKNOWN)
             }
             processedIndex = index
             true
@@ -509,7 +509,7 @@ private fun guessFieldType(indexExpr: LuaIndexExpr, ty: ITy, context: SearchCont
     }
 }
 
-private fun LuaTableExpr.infer(context: SearchContext): ITy? {
+private fun LuaTableExpr.infer(context: SearchContext): ITy {
     val list = this.tableFieldList
 
     if (list.size == 0) {

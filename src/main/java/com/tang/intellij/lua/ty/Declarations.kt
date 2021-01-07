@@ -262,7 +262,7 @@ private fun resolveParamType(paramDef: LuaParamDef, context: SearchContext): ITy
     if (paramOwner is LuaClassMethodDefStat) {
         val classType = paramOwner.guessClassType(context)
         val methodName = paramOwner.name
-        var set: ITy = Ty.UNKNOWN
+        var set: ITy? = null
         if (classType != null && methodName != null) {
             Ty.processSuperClasses(classType, context) { superType ->
                 val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass
@@ -272,16 +272,19 @@ private fun resolveParamType(paramDef: LuaParamDef, context: SearchContext): ITy
                     for (param in params) {
                         if (paramName == param.name) {
                             set = param.ty
-                            if (set != Ty.UNKNOWN)
+                            if (set != null) {
                                 return@processSuperClasses false
+                            }
                         }
                     }
                 }
                 true
             }
         }
-        if (set !is TyUnknown)
+
+        if (set != null) {
             return set
+        }
     }
 
     // module fun

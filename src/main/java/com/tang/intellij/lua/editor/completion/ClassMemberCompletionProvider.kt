@@ -188,11 +188,11 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
 
             ty.processSignatures(context, Processor {
 
-                val firstParam = it.getFirstParam(thisType, isColonStyle)
                 if (isColonStyle) {
-                    if (firstParam == null) return@Processor true
-                    if (!firstParam.ty.contravariantOf(callType, context, TyVarianceFlags.STRICT_UNKNOWN))
+                    val firstParamTy = it.getFirstParam(thisType, isColonStyle)?.ty
+                    if (firstParamTy == null || !firstParamTy.contravariantOf(callType, context, TyVarianceFlags.STRICT_UNKNOWN)) {
                         return@Processor true
+                    }
                 }
 
                 val lookupString = handlerProcessor?.processLookupString(name, classMember, ty) ?: name

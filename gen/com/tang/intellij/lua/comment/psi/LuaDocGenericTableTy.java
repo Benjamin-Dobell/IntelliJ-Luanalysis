@@ -28,6 +28,8 @@ public interface LuaDocGenericTableTy extends LuaDocTy, LuaClassMember {
 
   boolean isDeprecated();
 
+  boolean isExplicitlyTyped();
+
   @Nullable
   LuaDocTy getKeyType();
 

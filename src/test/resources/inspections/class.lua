@@ -1,6 +1,9 @@
 ---@class EmptyClass
 local EmptyClass = {}
 
+---@class InvalidClassAssignment
+local InvalidClassAssignment = <error descr="Type mismatch. Required: 'table' Found: 'nil'">nil</error>
+
 ---@type EmptyClass
 local emptyClass
 

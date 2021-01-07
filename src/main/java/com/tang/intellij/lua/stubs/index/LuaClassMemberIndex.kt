@@ -60,19 +60,30 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
                 return false
             }
 
-            if (deep) {
-                owner.lazyInit(context)
+            owner.lazyInit(context)
 
-                val notFound = owner.processAlias({ aliasedName ->
+            val notFound = owner.processAlias({ aliasedName ->
+                if (className == aliasedName) {
+                    return@processAlias true
+                }
+
+                val aliasedTy = LuaClassIndex.find(aliasedName, context)?.type
+
+                if (aliasedTy != null) {
                     LuaClassIndex.find(aliasedName, context)?.type?.let { aliasedClass ->
                         processClassKey(aliasedClass, aliasedName, key, context, process, deep)
                     } ?: true
-                })
-
-                if (!notFound) {
-                    return false
+                } else {
+                    // Anonymous type not in the class index i.e. table expression
+                    processClassKey(owner, aliasedName, key, context, process, false)
                 }
+            })
 
+            if (!notFound) {
+                return false
+            }
+
+            if (deep) {
                 return Ty.processSuperClasses(owner, context) { superType ->
                     val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass
                     if (superClass != null) {
@@ -105,78 +116,35 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
         }
 
         fun findMember(cls: ITyClass, fieldName: String, context: SearchContext, searchIndexers: Boolean = true, deep: Boolean = true): LuaClassMember? {
-            var perfect: LuaClassMember? = null
-            var tagField: LuaDocTagField? = null
-            var tableField: LuaTableField? = null
+            var explicitMember: LuaClassMember? = null
+            var implicitMember: LuaClassMember? = null
 
-            var shallowestTy: ITyClass? = null
+            var explicitOwnerTy: ITyClass? = null
 
             processMember(cls, fieldName, context, { member, ownerTy ->
-                if (shallowestTy != null && ownerTy !== shallowestTy) {
+                if (explicitOwnerTy != null && ownerTy !== explicitOwnerTy) {
                     return@processMember false
                 }
 
-                when (member) {
-                    is LuaDocTagField -> {
-                        shallowestTy = ownerTy
-                        tagField = member
-                        false
-                    }
-                    is LuaTableField -> {
-                        shallowestTy = ownerTy
-                        tableField = member
-                        true
-                    }
-                    else -> {
-                        var isTypeOverride = false
-
-                        if (member is LuaIndexExpr) {
-                            val assignStat = member.assignStat
-                            val comment = assignStat?.comment
-
-                            if (comment != null) {
-                                val tagType = comment.tagType
-
-                                if (tagType != null) {
-                                    val docTyCount = tagType.typeList?.tyList?.size
-                                    isTypeOverride = docTyCount != null && assignStat.getIndexFor(member) < docTyCount
-                                } else {
-                                    isTypeOverride = (
-                                            comment.findTag(LuaDocTagOverload::class.java)
-                                                ?: comment.findTag(LuaDocTagParam::class.java)
-                                                ?: comment.findTag(LuaDocTagReturn::class.java)
-                                                ?: comment.findTag(LuaDocTagVararg::class.java)
-                                            ) != null
-                                }
-                            }
-                        } else if (member is LuaClassMethodDefStat) {
-                            val comment = member.comment
-
-                            if (comment != null) {
-                                isTypeOverride = (
-                                        comment.findTag(LuaDocTagOverload::class.java)
-                                            ?: comment.findTag(LuaDocTagParam::class.java)
-                                            ?: comment.findTag(LuaDocTagReturn::class.java)
-                                            ?: comment.findTag(LuaDocTagVararg::class.java)
-                                        ) != null
-                            }
-                        }
-
-                        if (isTypeOverride) {
-                            shallowestTy = ownerTy
-                            perfect = member
-                        } else if (perfect == null) {
-                            perfect = member
-                        }
-
-                        true
-                    }
+                if (member is LuaDocTagField) {
+                    explicitMember = member
+                    return@processMember false
                 }
+
+                if (member.isExplicitlyTyped) {
+                    if (explicitMember == null) {
+                        explicitOwnerTy = ownerTy
+                        explicitMember = member
+                    }
+                } else if (implicitMember == null) {
+                    implicitMember = member
+                }
+
+                true
             }, deep)
 
-            if (tagField != null) return tagField
-            if (tableField != null) return tableField
-            if (perfect != null) return perfect
+            if (explicitMember != null) return explicitMember
+            if (implicitMember != null) return implicitMember
 
             return if (searchIndexers) {
                 findIndexer(cls, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, fieldName), context, false, false, deep)

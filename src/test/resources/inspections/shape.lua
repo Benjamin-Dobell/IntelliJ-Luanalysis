@@ -248,23 +248,12 @@ local nilOrShapeArray = {
     },
 }
 
----@shape Thing
+---@shape PotentiallyEmptyShape
 ---@field a nil | number
 
----@type Thing
-local thing
+---@type PotentiallyEmptyShape
+local potentiallyEmpty
 
-thing = {}
-thing = <error descr="Type mismatch. Required: 'Thing' Found: '1'">1</error>
-thing = <error descr="Type mismatch. Required: 'Thing' Found: '\"invalid\"'">"invalid"</error>
-
----@shape ThingWrapper
----@field things Thing[]
-
----@type ThingWrapper
-local thingWrapper
-
-thingWrapper.things = {}
-
----@type Thing[]
-local things = thingWrapper.things
+potentiallyEmpty = {}
+potentiallyEmpty = <error descr="Type mismatch. Required: 'PotentiallyEmptyShape' Found: '1'">1</error>
+potentiallyEmpty = <error descr="Type mismatch. Required: 'PotentiallyEmptyShape' Found: '\"invalid\"'">"invalid"</error>

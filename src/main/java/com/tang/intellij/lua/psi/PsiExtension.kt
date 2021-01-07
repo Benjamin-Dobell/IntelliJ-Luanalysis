@@ -170,7 +170,7 @@ val LuaLocalDef.docTy: ITy? get() {
 
 fun LuaAssignStat.getIndexFor(psi: LuaExpression<*>): Int {
     var idx = 0
-    val stub = valueExprList?.stub
+    val stub = varExprList.stub
     if (stub != null) {
         val children = stub.childrenStubs
         for (i in 0 until children.size) {
@@ -180,7 +180,7 @@ fun LuaAssignStat.getIndexFor(psi: LuaExpression<*>): Int {
             }
         }
     } else {
-        LuaPsiTreeUtilEx.processChildren(this.varExprList, Processor{
+        LuaPsiTreeUtilEx.processChildren(varExprList, Processor{
             if (it is LuaExpression<*>) {
                 if (it == psi)
                     return@Processor false
@@ -373,6 +373,7 @@ val LuaDocTagClass.aliasName: String? get() {
 
         is LuaLocalDefStat -> {
             val expr = owner.exprList?.getExpressionAt(0)
+
             if (expr is LuaTableExpr)
                 return getTableTypeName(expr)
         }

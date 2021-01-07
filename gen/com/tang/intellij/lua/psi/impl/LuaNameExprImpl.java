@@ -81,6 +81,11 @@ public class LuaNameExprImpl extends LuaNameExprMixin implements LuaNameExpr {
   }
 
   @Override
+  public boolean isExplicitlyTyped() {
+    return LuaPsiImplUtilKt.isExplicitlyTyped(this);
+  }
+
+  @Override
   @NotNull
   public String toString() {
     return LuaPsiImplUtilKt.toString(this);

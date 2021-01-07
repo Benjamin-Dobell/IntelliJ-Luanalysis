@@ -137,6 +137,11 @@ public class LuaDocTagFieldImpl extends StubBasedPsiElementBase<LuaDocTagFieldSt
   }
 
   @Override
+  public boolean isExplicitlyTyped() {
+    return LuaDocPsiImplUtilKt.isExplicitlyTyped(this);
+  }
+
+  @Override
   @Nullable
   public PsiElement getLbrack() {
     return findChildByType(LBRACK);

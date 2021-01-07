@@ -145,8 +145,10 @@ fun guessParentType(luaClosureExpr: LuaClosureExpr, context: SearchContext): ITy
     }
 
     (luaClosureExpr.parent.parent as? LuaAssignStat)?.let { assignment ->
-        if (assignment.varExprList.expressionList.size == 1) {
-            val expr = assignment.varExprList.expressionList[0]
+        val index = assignment.valueExprList?.expressionList?.indexOf(luaClosureExpr)
+
+        if (index != null) {
+            val expr = assignment.varExprList.expressionList.getOrNull(index)
 
             if (expr is LuaIndexExpr) {
                 return expr.guessParentType(context)
@@ -376,18 +378,16 @@ fun guessReturnType(owner: LuaFuncBodyOwner<*>, searchContext: SearchContext): I
 }
 
 fun getTagReturn(owner: LuaFuncBodyOwner<*>): LuaDocTagReturn? {
-    val comment = (owner as? LuaCommentOwner)?.comment ?: (owner.parent?.parent as? LuaDeclaration)?.comment
-    return comment?.tagReturn
+    return (owner as? LuaCommentOwner)?.comment?.tagReturn
+}
+
+fun getTagVararg(owner: LuaFuncBodyOwner<*>): LuaDocTagVararg? {
+    return (owner as? LuaCommentOwner)?.comment?.tagVararg
 }
 
 fun getVarargTy(owner: LuaFuncBodyOwner<*>): ITy? {
     return owner.stub?.varargTy ?: owner.funcBody?.ellipsis?.let {
-        var ret: ITy? = null
-        if (owner is LuaCommentOwner) {
-            val varargDef = owner.comment?.findTag(LuaDocTagVararg::class.java)
-            ret = varargDef?.type
-        }
-        return ret ?: Ty.UNKNOWN
+        return owner.tagVararg?.type ?: Ty.UNKNOWN
     }
 }
 
@@ -413,7 +413,7 @@ private fun getParamsInner(funcBodyOwner: LuaFuncBodyOwner<*>): Array<LuaParamIn
             val name = paramNameList[i].text
             val ty = comment?.let {
                 comment.getParamDef(name)?.type
-            } ?: Ty.UNKNOWN
+            }
             list.add(LuaParamInfo(name, ty))
         }
 
@@ -681,15 +681,75 @@ fun getOperationType(element: LuaBinaryExpr): IElementType {
 fun isDeprecated(member: LuaClassMember): Boolean {
     if (member is StubBasedPsiElement<*>) {
         val stub = member.stub
+
         if (stub is LuaClassMemberStub) {
             return stub.isDeprecated
         }
     }
 
-    if (member is LuaCommentOwner) {
-        val comment = member.comment
-        if (comment != null)
-            return comment.isDeprecated
+    return (member as? LuaCommentOwner)?.comment?.isDeprecated == true
+}
+
+fun isExplicitlyTyped(member: LuaClassMember): Boolean {
+    if (member is StubBasedPsiElement<*>) {
+        val stub = member.stub
+
+        if (stub is LuaClassMemberStub) {
+            return stub.isExplicitlyTyped
+        }
     }
-    return false
+
+    if (member !is LuaExpression<*>) {
+        return false
+    }
+
+    val assignStat = member.assignStat
+    val comment = assignStat?.comment
+
+    return if (comment != null) {
+        val tagType = comment.tagType
+
+        if (tagType != null) {
+            val docTyCount = tagType.typeList?.tyList?.size
+            docTyCount != null && assignStat.getIndexFor(member) < docTyCount
+        } else {
+            val valueExpression = assignStat.getExpressionAt(assignStat.getIndexFor(member))
+            valueExpression is LuaFuncBodyOwner<*> && comment.isFunctionImplementation
+        }
+    } else {
+        false
+    }
+}
+
+fun isExplicitlyTyped(luaClassMethod: LuaClassMethod<*>): Boolean {
+    val stub = luaClassMethod.stub
+
+    if (stub is LuaClassMemberStub<*>) {
+        return stub.isExplicitlyTyped
+    }
+
+    return (luaClassMethod as? LuaCommentOwner)?.comment?.isFunctionImplementation == true
+}
+
+fun isExplicitlyTyped(luaTableField: LuaTableField): Boolean {
+    return luaTableField.stub?.isExplicitlyTyped ?: luaTableField.comment?.tagType != null
+}
+
+fun isExplicitlyTyped(luaIndexExpr: LuaIndexExpr): Boolean {
+    val assignStat = luaIndexExpr.assignStat
+    val comment = assignStat?.comment
+
+    return if (comment != null) {
+        val tagType = comment.tagType
+
+        if (tagType != null) {
+            val docTyCount = tagType.typeList?.tyList?.size
+            docTyCount != null && assignStat.getIndexFor(luaIndexExpr) <= docTyCount
+        } else {
+            val expr = assignStat.getExpressionAt(assignStat.getIndexFor(luaIndexExpr))
+            return expr is LuaFuncBodyOwner<*> && comment.isFunctionImplementation
+        }
+    } else {
+        false
+    }
 }

@@ -21,13 +21,15 @@ import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.search.SearchContext
+import com.tang.intellij.lua.stubs.readTyNullable
+import com.tang.intellij.lua.stubs.writeTyNullable
 import com.tang.intellij.lua.ty.*
 
 /**
  * parameter info
  * Created by tangzx on 2017/2/4.
  */
-class LuaParamInfo(val name: String, val ty: ITy) {
+class LuaParamInfo(val name: String, val ty: ITy?) {
 
     override fun equals(other: Any?): Boolean {
         //only check ty
@@ -35,6 +37,12 @@ class LuaParamInfo(val name: String, val ty: ITy) {
     }
 
     fun equals(other: LuaParamInfo, context: SearchContext): Boolean {
+        if (ty == null) {
+            return other.ty == null
+        } else if (other.ty == null) {
+            return false
+        }
+
         return ty.equals(other.ty, context)
     }
 
@@ -43,6 +51,7 @@ class LuaParamInfo(val name: String, val ty: ITy) {
     }
 
     fun substitute(substitutor: ITySubstitutor): LuaParamInfo {
+        val ty = this.ty ?: Ty.UNKNOWN
         val substitutedTy = TyMultipleResults.getResult(substitutor.searchContext, ty.substitute(substitutor))
 
         if (substitutedTy === ty) {
@@ -54,18 +63,18 @@ class LuaParamInfo(val name: String, val ty: ITy) {
 
     companion object {
         fun createSelf(thisType: ITy? = null): LuaParamInfo {
-            return LuaParamInfo(Constants.WORD_SELF, thisType ?: Ty.UNKNOWN)
+            return LuaParamInfo(Constants.WORD_SELF, thisType)
         }
 
         fun deserialize(stubInputStream: StubInputStream): LuaParamInfo {
             val name = StringRef.toString(stubInputStream.readName())
-            val ty = Ty.deserialize(stubInputStream)
+            val ty = stubInputStream.readTyNullable()
             return LuaParamInfo(name, ty)
         }
 
         fun serialize(param: LuaParamInfo, stubOutputStream: StubOutputStream) {
             stubOutputStream.writeName(param.name)
-            Ty.serialize(param.ty, stubOutputStream)
+            stubOutputStream.writeTyNullable(param.ty)
         }
     }
 }

@@ -32,6 +32,7 @@ interface LuaComment : PsiComment, LuaDocPsiElement {
     val owner: LuaCommentOwner?
     val moduleName: String?
     val isDeprecated: Boolean
+    val isFunctionImplementation: Boolean
     fun findGenericDefs(): Collection<LuaDocGenericDef>
     fun <T : LuaDocPsiElement> findTag(t:Class<T>): T?
     fun <T : LuaDocPsiElement> findTags(t:Class<T>): Collection<T>
@@ -39,8 +40,9 @@ interface LuaComment : PsiComment, LuaDocPsiElement {
     fun getParamDef(name: String): LuaDocTagParam?
     fun getFieldDef(name: String): LuaDocTagField?
     val tagClass: LuaDocTagClass?
-    val tagType: LuaDocTagType?
     val tagReturn: LuaDocTagReturn?
+    val tagType: LuaDocTagType?
+    val tagVararg: LuaDocTagVararg?
     val overloads: Array<IFunSignature>?
     fun guessType(context: SearchContext): ITy
     fun isOverride(): Boolean

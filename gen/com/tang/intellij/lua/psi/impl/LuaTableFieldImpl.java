@@ -113,6 +113,11 @@ public class LuaTableFieldImpl extends StubBasedPsiElementBase<LuaTableFieldStub
   }
 
   @Override
+  public boolean isExplicitlyTyped() {
+    return LuaPsiImplUtilKt.isExplicitlyTyped(this);
+  }
+
+  @Override
   @Nullable
   public LuaExpression<?> getIdExpr() {
     return LuaPsiImplUtilKt.getIdExpr(this);

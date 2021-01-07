@@ -32,4 +32,6 @@ public interface LuaNameExpr extends LuaModuleClassField, LuaExpression<LuaNameE
 
   boolean isDeprecated();
 
+  boolean isExplicitlyTyped();
+
 }

@@ -271,6 +271,7 @@ funcDefStat ::= 'function' ID funcBody {
         guessParentType
         getVisibility
         isDeprecated
+        isExplicitlyTyped
         getParams
         getReferences
     ]
@@ -301,6 +302,7 @@ classMethodDefStat ::= 'function' classMethodName funcBody {
         guessParentType
         getVisibility
         isDeprecated
+        isExplicitlyTyped
         getParamDefList
         getNameIdentifier
         setName
@@ -453,6 +455,7 @@ left indexExpr ::= '[' expr ']' | '.' ID | ':' ID {
         guessIndexType
         guessParentType
         isDeprecated
+        isExplicitlyTyped
 
         getExpressionList
 
@@ -574,6 +577,7 @@ tableField ::= tableField1 | tableField2 | expr {
         getIndexType
         getVisibility
         isDeprecated
+        isExplicitlyTyped
         getIdExpr
         getValueExpr
 
@@ -620,6 +624,7 @@ nameExpr ::= ID {
         getPresentation
         getReferences
         isDeprecated
+        isExplicitlyTyped
 
         toString
     ]

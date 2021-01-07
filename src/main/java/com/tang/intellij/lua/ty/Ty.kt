@@ -272,7 +272,7 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                 }
             }
 
-            val paramType = pi.ty
+            val paramType = pi.ty ?: Ty.UNKNOWN
             val argType = typeInfo.ty
             val argExpr = args.getOrNull(i) ?: args.last()
             val varianceFlags = if (argExpr is LuaTableExpr) {

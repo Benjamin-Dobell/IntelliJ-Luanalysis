@@ -71,7 +71,8 @@ public class LuaDocParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // type_ref ('<' generic_param_list '>')?
+  // type_ref ('<' generic_param_list '>')? {
+  // }
   public static boolean class_ref(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "class_ref")) return false;
     if (!nextTokenIs(b, "<class ref>", ID, TABLE)) return false;
@@ -79,6 +80,7 @@ public class LuaDocParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, CLASS_REF, "<class ref>");
     r = type_ref(b, l + 1);
     r = r && class_ref_1(b, l + 1);
+    r = r && class_ref_2(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -100,6 +102,12 @@ public class LuaDocParser implements PsiParser, LightPsiParser {
     r = r && consumeToken(b, GT);
     exit_section_(b, m, null, r);
     return r;
+  }
+
+  // {
+  // }
+  private static boolean class_ref_2(PsiBuilder b, int l) {
+    return true;
   }
 
   /* ********************************************************** */

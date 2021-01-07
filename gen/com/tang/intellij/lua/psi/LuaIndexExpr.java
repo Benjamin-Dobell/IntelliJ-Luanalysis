@@ -59,6 +59,8 @@ public interface LuaIndexExpr extends LuaClassMember, LuaExpression<LuaIndexExpr
 
   boolean isDeprecated();
 
+  boolean isExplicitlyTyped();
+
   @NotNull
   List<LuaExpression<?>> getExpressionList();
 

@@ -314,6 +314,10 @@ fun getPresentation(tagField: LuaDocTagField): ItemPresentation {
     }
 }
 
+fun isExplicitlyTyped(tagField: LuaDocTagField): Boolean {
+    return true
+}
+
 fun getType(luaDocGeneralTy: LuaDocGeneralTy): ITy {
     val typeRef = luaDocGeneralTy.typeRef
 
@@ -335,7 +339,7 @@ fun getType(luaDocFunctionTy: LuaDocFunctionTy): ITy {
 fun getParams(luaDocFunctionTy: LuaDocFunctionTy): Array<LuaParamInfo>? {
     return luaDocFunctionTy.functionParams?.let  {
         it.functionParamList.map {
-            LuaParamInfo(it.id.text, it.ty?.getType() ?: Ty.UNKNOWN)
+            LuaParamInfo(it.id.text, it.ty?.getType())
         }.toTypedArray()
     }
 }
@@ -441,13 +445,17 @@ fun getValueType(f: LuaDocTableField): LuaDocTy? {
     } else PsiTreeUtil.getStubChildOfType(f, LuaDocTy::class.java)
 }
 
-fun guessType(f:LuaDocTableField, context: SearchContext): ITy {
+fun guessType(f: LuaDocTableField, context: SearchContext): ITy {
     val stub = f.stub
     return if (stub != null) {
         stub.valueTy
     } else {
         f.valueType?.getType()
     } ?: Ty.UNKNOWN
+}
+
+fun isExplicitlyTyped(f: LuaDocTableField): Boolean {
+    return true
 }
 
 fun getNameIdentifier(g: LuaDocGenericDef): PsiElement? {
@@ -492,6 +500,10 @@ fun guessParentType(luaDocPrimitiveTableTy: LuaDocPrimitiveTableTy, context: Sea
     return luaDocPrimitiveTableTy.getType()
 }
 
+fun isExplicitlyTyped(luaDocPrimitiveTableTy: LuaDocPrimitiveTableTy): Boolean {
+    return true
+}
+
 fun getName(luaDocGenericTableTy: LuaDocGenericTableTy): String? {
     return null
 }
@@ -511,6 +523,10 @@ fun guessType(luaDocGenericTableTy: LuaDocGenericTableTy, context: SearchContext
 
 fun guessParentType(luaDocGenericTableTy: LuaDocGenericTableTy, context: SearchContext): ITy {
     return luaDocGenericTableTy.getType()
+}
+
+fun isExplicitlyTyped(luaDocGenericTableTy: LuaDocGenericTableTy): Boolean {
+    return true
 }
 
 fun getName(luaDocArrTy: LuaDocArrTy): String? {
@@ -536,4 +552,8 @@ fun guessType(luaDocArrTy: LuaDocArrTy, context: SearchContext): ITy {
 
 fun guessParentType(luaDocArrTy: LuaDocArrTy, context: SearchContext): ITy {
     return luaDocArrTy.getType()
+}
+
+fun isExplicitlyTyped(luaDocArrTy: LuaDocArrTy): Boolean {
+    return true
 }

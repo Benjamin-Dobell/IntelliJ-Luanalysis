@@ -48,6 +48,8 @@ public interface LuaFuncDefStat extends LuaClassMethod<LuaFuncDefStatStub>, LuaD
 
   boolean isDeprecated();
 
+  boolean isExplicitlyTyped();
+
   @NotNull
   LuaParamInfo[] getParams();
 
