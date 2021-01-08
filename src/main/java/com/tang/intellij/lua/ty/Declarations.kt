@@ -189,7 +189,7 @@ fun LuaPsiFile.returnStatement(): LuaReturnStat? {
         return null
     }
 
-    return recursionGuard(this, Computable {
+    return recursionGuard(this, {
         val stub = this.stub
         if (stub != null) {
             val statStub = stub.childrenStubs.lastOrNull { it.psi is LuaReturnStat }
@@ -207,7 +207,7 @@ fun LuaPsiFile.returnStatement(): LuaReturnStat? {
 }
 
 private fun inferFile(file: LuaPsiFile, context: SearchContext): ITy {
-    return recursionGuard(file, Computable {
+    return recursionGuard(file, {
         val moduleName = file.getModuleName(context)
         if (moduleName != null)
             TyLazyClass(moduleName)

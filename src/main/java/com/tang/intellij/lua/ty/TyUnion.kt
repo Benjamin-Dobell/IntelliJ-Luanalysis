@@ -133,12 +133,24 @@ class TyUnion : Ty {
         } else this
     }
 
-    override fun findMember(name: String, searchContext: SearchContext): LuaClassMember? {
-        return childSet.firstOrNull()?.findMember(name, searchContext)
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        childSet.forEach {
+            if (!it.processMember(context, name, deep, process)) {
+                return false
+            }
+        }
+
+        return true
     }
 
-    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember? {
-        return childSet.firstOrNull()?.findIndexer(indexTy, searchContext, exact)
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        childSet.forEach {
+            if (!it.processIndexer(context, indexTy, exact, deep, process)) {
+                return false
+            }
+        }
+
+        return true
     }
 
     override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {

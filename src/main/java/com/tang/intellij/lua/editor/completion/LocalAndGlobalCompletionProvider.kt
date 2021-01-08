@@ -44,11 +44,11 @@ class LocalAndGlobalCompletionProvider(private val mask: Int) : ClassMemberCompl
             else
                 LuaIcons.LOCAL_FUNCTION
 
-            ty.processSignatures(ctx, Processor {
+            ty.processSignatures(ctx) {
                 val le = LookupElementFactory.createFunctionLookupElement(name, psi, it, false, ty, icon)
                 session.resultSet.addElement(le)
                 true
-            })
+            }
         }
         when (psi) {
             is LuaFuncBodyOwner<*> -> {

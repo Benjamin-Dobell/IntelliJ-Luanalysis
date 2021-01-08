@@ -46,13 +46,13 @@ class TyGenericParameter(val name: String, varName: String, superClass: ITy? = n
     override val kind: TyKind
         get() = TyKind.GenericParam
 
-    override fun processMembers(context: SearchContext, processor: (ITy, LuaClassMember) -> Boolean, deep: Boolean): Boolean {
+    override fun processMembers(context: SearchContext, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
         val superType = getSuperClass(context)
 
         if (superType is ITyClass) {
-            return superType.processMembers(context, processor, deep)
+            return superType.processMembers(context, deep, process)
         } else if (superType is ITyGeneric) {
-            return (superType.base as? ITyClass)?.processMembers(context, processor, deep) ?: true
+            return (superType.base as? ITyClass)?.processMembers(context, deep, process) ?: true
         }
 
         return true
@@ -191,7 +191,7 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
             val memberSubstitutor = getMemberSubstitutor(context)
             val otherMemberSubstitutor = resolvedOther.getMemberSubstitutor(context)
 
-            return processMembers(context, { _, classMember ->
+            return processMembers(context, true) { _, classMember ->
                 val memberTy = classMember.guessType(context)?.substitute(memberSubstitutor)
 
                 if (memberTy == null) {
@@ -202,7 +202,7 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
                 val otherMember = if (indexTy != null) {
                     resolvedOther.findIndexer(indexTy, context, false)
                 } else {
-                    classMember.name?.let { resolvedOther.findMember(it, context) }
+                    classMember.name?.let { resolvedOther.findEffectiveMember(it, context) }
                 }
 
                 if (otherMember == null) {
@@ -214,7 +214,7 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
                 }
 
                 memberTy.contravariantOf(otherMemberTy, context, flags)
-            }, true)
+            }
         }
 
         if (resolvedOther is ITyArray) {
@@ -275,12 +275,12 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
         return substitutor.substitute(this)
     }
 
-    override fun findMember(name: String, searchContext: SearchContext): LuaClassMember? {
-        return base.findMember(name, searchContext)
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        return base.processMember(context, name, deep, process)
     }
 
-    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember? {
-        return base.findIndexer(indexTy, searchContext, exact)
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        return base.processIndexer(context, indexTy, exact, deep, process)
     }
 
     override fun isShape(searchContext: SearchContext): Boolean {
@@ -304,15 +304,15 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
         return super<Ty>.guessIndexerType(indexTy, searchContext, exact)
     }
 
-    override fun processMembers(context: SearchContext, processor: (ITy, LuaClassMember) -> Boolean, deep: Boolean): Boolean {
-        if (!base.processMembers(context, { _, classMember -> processor(this, classMember) }, false)) {
+    override fun processMembers(context: SearchContext, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        if (!base.processMembers(context, false, { _, classMember -> process(this, classMember) })) {
             return false
         }
 
         // super
         if (deep) {
             return Ty.processSuperClasses(this, context) {
-                it.processMembers(context, processor, false)
+                it.processMembers(context, false, process)
             }
         }
 
@@ -346,29 +346,29 @@ class TyDocTableGeneric(
         arrayOf(keyType, valueType),
         Ty.TABLE
 ) {
-    override fun findMember(name: String, searchContext: SearchContext): LuaClassMember? {
-        Ty.eachResolved(keyType, searchContext) {
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        Ty.eachResolved(keyType, context) {
             if ((it is ITyPrimitive && it.primitiveKind == TyPrimitiveKind.String)
-                    || (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String && it.value == name)) {
-                return genericTableTy
+                || (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String && it.value == name)) {
+                return process(this, genericTableTy)
             }
         }
 
-        return null
+        return true
     }
 
-    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember? {
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
         if (exact) {
-            Ty.eachResolved(keyType, searchContext) {
-                if (it.equals(indexTy, searchContext)) {
-                    return genericTableTy
+            Ty.eachResolved(keyType, context) {
+                if (it.equals(indexTy, context)) {
+                    return process(this, genericTableTy)
                 }
             }
-        } else if (keyType.contravariantOf(indexTy, searchContext, TyVarianceFlags.STRICT_UNKNOWN)) {
-            return genericTableTy
+        } else if (keyType.contravariantOf(indexTy, context, TyVarianceFlags.STRICT_UNKNOWN)) {
+            return process(this, genericTableTy)
         }
 
-        return null
+        return true
     }
 }
 

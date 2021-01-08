@@ -40,7 +40,7 @@ class LuaOverridingMethodsSearchExecutor : QueryExecutor<LuaClassMethod<*>, LuaO
             val search = LuaClassInheritorsSearch.search(scope, project, type.className, searchParameters.isDeep)
 
             return search.forEach(Processor { luaClass ->
-                val classMethod = LuaClassMemberIndex.findMethod(luaClass.type, methodName, context, false)
+                val classMethod = LuaClassMemberIndex.findMethod(context, luaClass.type, methodName, false)
                 classMethod == null || processor.process(classMethod)
             })
         }

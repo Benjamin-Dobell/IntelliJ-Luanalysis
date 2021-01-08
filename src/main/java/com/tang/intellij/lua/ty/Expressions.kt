@@ -358,7 +358,7 @@ private fun LuaCallExpr.infer(context: SearchContext): ITy? {
 }
 
 private fun LuaNameExpr.infer(context: SearchContext): ITy? {
-    return recursionGuard(this, Computable {
+    return recursionGuard(this, {
         if (name == Constants.WORD_SELF) {
             val methodDef = PsiTreeUtil.getStubOrPsiParentOfType(this, LuaClassMethodDefStat::class.java)
             if (methodDef != null && !methodDef.isStatic) {
@@ -367,7 +367,7 @@ private fun LuaNameExpr.infer(context: SearchContext): ITy? {
                 val methodClassType = expr.guessType(context) as? ITyClass
 
                 if (methodClassType != null) {
-                    return@Computable TyClass.createSelfType(methodClassType)
+                    return@recursionGuard TyClass.createSelfType(methodClassType)
                 }
             }
         }
@@ -464,13 +464,13 @@ fun LuaLiteralExpr.infer(): ITy {
 }
 
 private fun LuaIndexExpr.infer(context: SearchContext): ITy? {
-    return recursionGuard(this, Computable {
+    return recursionGuard(this, {
         val indexExpr = this
 
         //from @type annotation
         val docTy = indexExpr.docTy
         if (docTy != null)
-            return@Computable docTy
+            return@recursionGuard docTy
 
         //from value
         var result: ITy? = null

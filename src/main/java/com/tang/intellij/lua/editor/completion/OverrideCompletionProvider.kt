@@ -22,7 +22,6 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.codeInsight.template.Template
 import com.intellij.codeInsight.template.TemplateManager
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.util.Processor
 import com.tang.intellij.lua.lang.LuaIcons
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
@@ -44,10 +43,10 @@ class OverrideCompletionProvider : LuaCompletionProvider() {
             val classType = methodDef.guessClassType(context)
             if (classType != null) {
                 val memberNameSet = mutableSetOf<String>()
-                classType.processMembers(context, { _, m ->
+                classType.processMembers(context, false) { _, m ->
                     m.name?.let { memberNameSet.add(it) }
                     true
-                }, false)
+                }
                 Ty.processSuperClasses(classType, context) { sup ->
                     val clazz = (if (sup is ITyGeneric) sup.base else sup) as? ITyClass
                     if (clazz != null) {
@@ -63,21 +62,21 @@ class OverrideCompletionProvider : LuaCompletionProvider() {
         val project = completionParameters.originalFile.project
         val context = SearchContext.get(project)
         val clazzName = sup.className
-        LuaClassMemberIndex.processAll(TyLazyClass(clazzName), context, { member, _ ->
+        LuaClassMemberIndex.processAll(context, TyLazyClass(clazzName)) { _, member ->
             if (member is LuaClassMethod<*>) {
                 member.name?.let {
                     if (memberNameSet.add(it)) {
                         val elementBuilder = LookupElementBuilder.create(member.name!!)
-                                .withIcon(LuaIcons.CLASS_METHOD_OVERRIDING)
-                                .withInsertHandler(OverrideInsertHandler(member))
-                                .withTailText(member.paramSignature)
+                            .withIcon(LuaIcons.CLASS_METHOD_OVERRIDING)
+                            .withInsertHandler(OverrideInsertHandler(member))
+                            .withTailText(member.paramSignature)
 
                         completionResultSet.addElement(elementBuilder)
                     }
                 }
             }
             true
-        })
+        }
     }
 
     internal class OverrideInsertHandler(funcBodyOwner: LuaFuncBodyOwner<*>) : FuncInsertHandler(funcBodyOwner) {

@@ -46,7 +46,7 @@ class DuplicateTypeDeclaration : LocalInspectionTool() {
                 context.withScope(useScope) {
                     LuaShortNamesManager
                             .getInstance(project)
-                            .processTypes(nameIdentifier.text, context, Processor {
+                            .processTypes(context, nameIdentifier.text, Processor {
                                 val path = it.containingFile?.virtualFile?.canonicalPath
                                 if (it != typeDef && path != null) {
                                     holder.registerProblem(

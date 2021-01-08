@@ -100,21 +100,22 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
         return super<AbstractDocumentationProvider>.generateDoc(element, originalElement)
     }
 
-    private fun renderClassMember(sb: StringBuilder, parentType: ITy?, classMember: LuaClassMember, context: SearchContext): Boolean {
-        val resolvedMember = parentType?.let { parentTy ->
+    private fun renderClassMember(sb: StringBuilder, parentTy: ITy?, classMember: LuaClassMember, context: SearchContext): Boolean {
+        val effectiveMember = if (parentTy != null) {
             classMember.name?.let {
-                parentTy.findMember(it, context)
+                parentTy.findEffectiveMember(it, context)
             } ?: classMember.guessIndexType(context)?.let {
-                parentTy.findIndexer(it, context)
+                parentTy.findEffectiveIndexer(it, context)
             }
+        } else {
+            classMember
         }
 
-        if (resolvedMember == null && parentType != null) {
+        if (effectiveMember == null) {
             return false
         }
 
-        val member = resolvedMember ?: classMember
-        val ty = member.guessType(context) ?: Ty.UNKNOWN
+        val ty = effectiveMember.guessType(context) ?: Ty.UNKNOWN
         val tyRenderer = renderer
 
         renderDefinition(sb) {
@@ -124,12 +125,12 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
                     append("function ")
                 }
 
-                if (parentType != null) {
-                    val renderedParentTy = if (parentType is ITyArray) parentType.base else parentType
+                if (parentTy != null) {
+                    val renderedParentTy = if (parentTy is ITyArray) parentTy.base else parentTy
                     renderTy(sb, renderedParentTy, tyRenderer)
                 }
 
-                val name = member.name
+                val name = classMember.name
 
                 if (name != null) {
                     if (ty.isColonCall) {
@@ -140,7 +141,7 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
 
                     append(name)
                 } else {
-                    val indexName = member.guessIndexType(context)?.displayName ?: "unknown"
+                    val indexName = classMember.guessIndexType(context)?.displayName ?: "unknown"
                     append("[${indexName}]")
                 }
 
@@ -151,24 +152,32 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
                     renderTy(sb, ty, tyRenderer)
                 }
 
-                (member as? LuaNameExpr)?.let { nameExpr ->
+                (classMember as? LuaNameExpr)?.let { nameExpr ->
                     val stat = nameExpr.parent.parent // VAR_LIST ASSIGN_STAT
                     if (stat is LuaAssignStat) renderComment(sb, stat.comment, tyRenderer)
                 }
             }
         }
 
-        //comment content
-        when (member) {
-            is LuaCommentOwner -> renderComment(sb, member.comment, tyRenderer)
-            is LuaDocTagField -> renderCommentString("  ", null, sb, member.commentString)
-            is LuaIndexExpr -> {
-                val p1 = member.parent
-                val p2 = p1.parent
-                if (p1 is LuaVarList && p2 is LuaAssignStat) {
-                    renderComment(sb, p2.comment, tyRenderer)
-                }
-            }
+        val commentOwner = classMember as? LuaCommentOwner ?: effectiveMember as? LuaCommentOwner
+
+        if (commentOwner != null) {
+            renderComment(sb, commentOwner.comment, tyRenderer)
+            return true
+        }
+
+        val docTagField = classMember as? LuaDocTagField ?: effectiveMember as? LuaDocTagField
+
+        if (docTagField != null) {
+            renderCommentString("  ", null, sb, docTagField.commentString)
+            return true
+        }
+
+        val assignStat = ((classMember as? LuaIndexExpr)?.parent as? LuaVarList)?.parent as? LuaAssignStat
+            ?: ((effectiveMember as? LuaIndexExpr)?.parent as? LuaVarList)?.parent as? LuaAssignStat
+
+        if (assignStat != null) {
+            renderComment(sb, assignStat.comment, tyRenderer)
         }
 
         return true

@@ -100,10 +100,10 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
                          prefixMatcher: PrefixMatcher,
                          handlerProcessor: HandlerProcessor?) {
         val mode = if (isColon) MemberCompletionMode.Colon else MemberCompletionMode.Dot
-        prefixType.eachTopClass(Processor { luaType ->
+        prefixType.eachTopClass { luaType ->
             addClass(contextTy, luaType, project, mode, completionResultSet, prefixMatcher, handlerProcessor)
             true
-        })
+        }
     }
 
     protected fun addClass(contextTy: ITy,
@@ -117,7 +117,6 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
         luaType.processMembers(context) { curType, member ->
             val curClass = (if (curType is ITyGeneric) curType.base else curType) as? ITyClass
             if (curClass != null) {
-                ProgressManager.checkCanceled()
                 member.name?.let {
                     if (prefixMatcher.prefixMatches(it) && curClass.isVisibleInScope(project, contextTy, member.visibility)) {
                         addMember(completionResultSet,
@@ -186,12 +185,11 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
         if (name != null) {
             val context = SearchContext.get(classMember.project)
 
-            ty.processSignatures(context, Processor {
-
+            ty.processSignatures(context) {
                 if (isColonStyle) {
                     val firstParamTy = it.getFirstParam(thisType, isColonStyle)?.ty
                     if (firstParamTy == null || !firstParamTy.contravariantOf(callType, context, TyVarianceFlags.STRICT_UNKNOWN)) {
-                        return@Processor true
+                        return@processSignatures true
                     }
                 }
 
@@ -208,7 +206,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
                 val ele = handlerProcessor?.process(element, classMember, ty) ?: element
                 completionResultSet.addElement(ele)
                 true
-            })
+            }
         }
     }
 }

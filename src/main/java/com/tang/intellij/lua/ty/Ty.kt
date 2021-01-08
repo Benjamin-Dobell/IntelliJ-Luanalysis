@@ -18,6 +18,7 @@ package com.tang.intellij.lua.ty
 
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
@@ -110,15 +111,66 @@ interface ITy : Comparable<ITy> {
 
     fun acceptChildren(visitor: ITyVisitor)
 
-    fun findMember(name: String, searchContext: SearchContext): LuaClassMember?
-    fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean = false): LuaClassMember?
+    fun findMember(name: String, context: SearchContext): LuaClassMember? {
+        var foundMember: LuaClassMember? = null
+
+        processMember(context, name) { _, member ->
+            foundMember = member
+            false
+        }
+
+        return foundMember
+    }
+
+    fun findIndexer(indexTy: ITy, context: SearchContext, exact: Boolean = false): LuaClassMember?{
+        var foundMember: LuaClassMember? = null
+
+        processIndexer(context, indexTy, exact) { _, member ->
+            foundMember = member
+            false
+        }
+
+        return foundMember
+    }
+
+    fun findEffectiveMember(name: String, context: SearchContext): LuaClassMember? {
+        var foundMember: LuaClassMember? = null
+
+        processMember(context, name) { _, member ->
+            if (member.isExplicitlyTyped) {
+                foundMember = member
+                return@processMember false
+            } else if (foundMember == null) {
+                foundMember = member
+            }
+            true
+        }
+
+        return foundMember
+    }
+
+    fun findEffectiveIndexer(indexTy: ITy, context: SearchContext, exact: Boolean = false): LuaClassMember? {
+        var foundMember: LuaClassMember? = null
+
+        processIndexer(context, indexTy, exact) { _, member ->
+            if (member.isExplicitlyTyped) {
+                foundMember = member
+                return@processIndexer false
+            } else if (foundMember == null) {
+                foundMember = member
+            }
+            true
+        }
+
+        return foundMember
+    }
 
     fun isShape(searchContext: SearchContext): Boolean {
         return flags and TyFlags.SHAPE != 0
     }
 
     fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
-        return findMember(name, searchContext)?.guessType(searchContext)?.let {
+        return findEffectiveMember(name, searchContext)?.guessType(searchContext)?.let {
             val substitutor = getMemberSubstitutor(searchContext)
             return if (substitutor != null) it.substitute(substitutor) else it
         }
@@ -126,45 +178,34 @@ interface ITy : Comparable<ITy> {
 
     fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean = false): ITy? {
         var ty: ITy? = null
+        val substitutor: Lazy<ITySubstitutor?> = lazy {
+            getMemberSubstitutor(searchContext)
+        }
 
-        Ty.eachResolved(indexTy, searchContext) {
-            val valueTy = if (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String) {
-                guessMemberType(it.value, searchContext)
-            } else {
-                findIndexer(it, searchContext, exact)?.guessType(searchContext)?.let {
-                    val substitutor = getMemberSubstitutor(searchContext)
-                    if (substitutor != null) it.substitute(substitutor) else it
-                }
+        Ty.eachResolved(indexTy, searchContext) { resolvedIndexTy ->
+            val memberTy = findEffectiveIndexer(resolvedIndexTy, searchContext, exact)?.guessType(searchContext)?.let {
+                substitutor.value?.let { substitutor ->
+                    it.substitute(substitutor)
+                } ?: it
             }
 
-            ty = TyUnion.union(ty, valueTy, searchContext)
+            ty = TyUnion.union(ty, memberTy, searchContext)
         }
 
         return ty
     }
 
-    fun processMembers(context: SearchContext, processor: (ITy, LuaClassMember) -> Boolean, deep: Boolean = true): Boolean
-
-    fun processMembers(context: SearchContext, processor: (ITy, LuaClassMember) -> Boolean): Boolean {
-        return processMembers(context, processor, true)
-    }
-
-    fun processSignatures(context: SearchContext, processor: Processor<IFunSignature>): Boolean
-
-    fun findSuperMember(name: String, searchContext: SearchContext): LuaClassMember? {
-        // Travel up the hierarchy to find the lowest member of this type on a superclass (excluding this class)
-        var member: LuaClassMember? = null
-        Ty.processSuperClasses(this, searchContext) { superType ->
-            val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass
-            member = superClass?.findMember(name, searchContext)
-            member == null
-        }
-        return member
-    }
-
     fun getMemberSubstitutor(context: SearchContext): ITySubstitutor? {
         return getSuperClass(context)?.getMemberSubstitutor(context)
     }
+
+    fun processMember(context: SearchContext, name: String, deep: Boolean = true, process: (ITy, LuaClassMember) -> Boolean): Boolean
+
+    fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean = false, deep: Boolean = true, process: (ITy, LuaClassMember) -> Boolean): Boolean
+
+    fun processMembers(context: SearchContext, deep: Boolean = true, process: (ITy, LuaClassMember) -> Boolean): Boolean
+
+    fun processSignatures(context: SearchContext, processor: Processor<IFunSignature>): Boolean
 }
 
 fun ITy.hasFlag(flag: Int): Boolean = flags and flag == flag
@@ -181,14 +222,14 @@ val ITy.isColonCall: Boolean
 fun ITy.findCandidateSignatures(context: SearchContext, nArgs: Int): Collection<IFunSignature> {
     val candidates = mutableListOf<IFunSignature>()
     var lastCandidate: IFunSignature? = null
-    processSignatures(context, {
+    processSignatures(context) {
         val params = it.params
         if (params == null || params.size >= nArgs || it.variadicParamTy != null) {
             candidates.add(it)
         }
         lastCandidate = it
         true
-    })
+    }
     if (candidates.size == 0) {
         lastCandidate?.let { candidates.add(it) }
     }
@@ -533,15 +574,15 @@ abstract class Ty(override val kind: TyKind) : ITy {
         }
     }
 
-    override fun findMember(name: String, searchContext: SearchContext): LuaClassMember? {
-        return null
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        return true
     }
 
-    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember? {
-        return null
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        return true
     }
 
-    override fun processMembers(context: SearchContext, processor: (ITy, LuaClassMember) -> Boolean, deep: Boolean): Boolean {
+    override fun processMembers(context: SearchContext, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
         return true
     }
 
@@ -652,8 +693,12 @@ abstract class Ty(override val kind: TyKind) : ITy {
         fun processSuperClasses(start: ITy, searchContext: SearchContext, processor: (ITy) -> Boolean): Boolean {
             val processedName = mutableSetOf<String>()
             var cur: ITy? = start
+
             while (cur != null) {
+                ProgressManager.checkCanceled()
+
                 val superType = cur.getSuperClass(searchContext)
+
                 if (superType != null) {
                     if (!processedName.add(superType.displayName)) {
                         return true
@@ -661,8 +706,10 @@ abstract class Ty(override val kind: TyKind) : ITy {
                     if (!processor(superType))
                         return false
                 }
+
                 cur = superType
             }
+
             return true
         }
 

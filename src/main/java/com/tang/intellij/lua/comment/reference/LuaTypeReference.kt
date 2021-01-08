@@ -55,7 +55,7 @@ class LuaTypeReference(element: LuaDocTypeRef) : PsiReferenceBase<LuaDocTypeRef>
             return scopedType
         }
 
-        return LuaShortNamesManager.getInstance(project).findType(name, context)
+        return LuaShortNamesManager.getInstance(project).findType(context, name)
     }
 
     override fun getVariants(): Array<Any> = emptyArray()

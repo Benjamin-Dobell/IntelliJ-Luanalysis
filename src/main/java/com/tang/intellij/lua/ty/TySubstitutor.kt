@@ -108,10 +108,10 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, val context: Search
                 }
             }
         } else if (clazz is TyDocTable) {
-            clazz.processMembers(context, { _, classMember ->
+            clazz.processMembers(context, true) { _, classMember ->
                 val curMember = classMember.guessIndexType(context)?.let {
-                    cur.findIndexer(it, context, false)
-                } ?: classMember.name?.let { cur.findMember(it, context) }
+                    cur.findEffectiveIndexer(it, context, false)
+                } ?: classMember.name?.let { cur.findEffectiveMember(it, context) }
 
                 val classMemberTy = classMember.guessType(context) ?: Ty.UNKNOWN
                 val curMemberTy = curMember?.guessType(context) ?: Ty.NIL
@@ -121,7 +121,7 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, val context: Search
                 }
 
                 true
-            }, true)
+            }
         }
     }
 

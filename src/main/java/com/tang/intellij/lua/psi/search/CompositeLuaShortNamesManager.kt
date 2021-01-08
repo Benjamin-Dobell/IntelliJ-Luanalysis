@@ -28,36 +28,20 @@ import com.tang.intellij.lua.ty.ITy
 import com.tang.intellij.lua.ty.ITyClass
 
 class CompositeLuaShortNamesManager : LuaShortNamesManager {
-    override fun findAlias(name: String, context: SearchContext): LuaTypeAlias? {
+    override fun findAlias(context: SearchContext, name: String): LuaTypeAlias? {
         for (manager in EP_NAME.extensionList) {
-            val alias = manager.findAlias(name, context)
+            val alias = manager.findAlias(context, name)
             if (alias != null)
                 return alias
         }
         return null
     }
 
-    override fun findClass(name: String, context: SearchContext): LuaClass? {
+    override fun findClass(context: SearchContext, name: String): LuaClass? {
         for (manager in EP_NAME.extensionList) {
-            val c = manager.findClass(name, context)
+            val c = manager.findClass(context, name)
             if (c != null)
                 return c
-        }
-        return null
-    }
-
-    override fun findMember(type: ITyClass, fieldName: String, context: SearchContext): LuaClassMember? {
-        for (manager in EP_NAME.extensionList) {
-            val ret = manager.findMember(type, fieldName, context)
-            if (ret != null) return ret
-        }
-        return null
-    }
-
-    override fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, exact: Boolean): LuaClassMember? {
-        for (manager in EP_NAME.extensionList) {
-            val ret = manager.findIndexer(type, indexTy, context, exact)
-            if (ret != null) return ret
         }
         return null
     }
@@ -70,9 +54,9 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager {
         return true
     }
 
-    override fun processAliases(name: String, context: SearchContext, processor: Processor<in LuaTypeAlias>): Boolean {
+    override fun processAliases(context: SearchContext, name: String, processor: Processor<in LuaTypeAlias>): Boolean {
         for (manager in EP_NAME.extensionList) {
-            if (!manager.processAliases(name, context, processor))
+            if (!manager.processAliases(context, name, processor))
                 return false
         }
         return true
@@ -86,34 +70,42 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager {
         return true
     }
 
-    override fun processClasses(name: String, context: SearchContext, processor: Processor<in LuaClass>): Boolean {
+    override fun processClasses(context: SearchContext, name: String, processor: Processor<in LuaClass>): Boolean {
         for (manager in EP_NAME.extensionList) {
-            if (!manager.processClasses(name, context, processor))
+            if (!manager.processClasses(context, name, processor))
                 return false
         }
         return true
     }
 
-    override fun getClassMembers(clazzName: String, context: SearchContext): Collection<LuaClassMember> {
+    override fun getClassMembers(context: SearchContext, clazzName: String): Collection<LuaClassMember> {
         val collection = mutableListOf<LuaClassMember>()
         for (manager in EP_NAME.extensionList) {
-            val col = manager.getClassMembers(clazzName, context)
+            val col = manager.getClassMembers(context, clazzName)
             collection.addAll(col)
         }
         return collection
     }
 
-    override fun processMember(type: ITyClass, fieldName: String, context: SearchContext, process: ProcessClassMember): Boolean {
+    override fun processMember(context: SearchContext, type: ITyClass, fieldName: String, searchIndexers: Boolean, deep: Boolean, process: ProcessClassMember): Boolean {
         for (manager in EP_NAME.extensionList) {
-            if (!manager.processMember(type, fieldName, context, process))
+            if (!manager.processMember(context, type, fieldName, searchIndexers, deep, process))
                 return false
         }
         return true
     }
 
-    override fun processIndexer(type: ITyClass, indexTy: ITy, exact: Boolean, context: SearchContext, process: ProcessClassMember): Boolean {
+    override fun processIndexer(
+        context: SearchContext,
+        type: ITyClass,
+        indexTy: ITy,
+        exact: Boolean,
+        searchMembers: Boolean,
+        deep: Boolean,
+        process: ProcessClassMember
+    ): Boolean {
         for (manager in EP_NAME.extensionList) {
-            if (!manager.processIndexer(type, indexTy, false, context, process))
+            if (!manager.processIndexer(context, type, indexTy, exact, searchMembers, deep, process))
                 return false
         }
         return true

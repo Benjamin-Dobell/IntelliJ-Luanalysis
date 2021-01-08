@@ -72,7 +72,7 @@ class TableCompletionProvider : ClassMemberCompletionProvider() {
                 return
             }
 
-            ty.eachTopClass(Processor { luaType ->
+            ty.eachTopClass { luaType ->
                 val context = SearchContext.get(project)
                 luaType.processMembers(context) { curType, member ->
                     member.name?.let {
@@ -93,7 +93,7 @@ class TableCompletionProvider : ClassMemberCompletionProvider() {
                     true
                 }
                 true
-            })
+            }
         }
     }
 }

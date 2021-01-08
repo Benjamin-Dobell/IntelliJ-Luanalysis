@@ -67,7 +67,7 @@ interface ITyClass : ITyResolvable {
             if (scopedType != null) {
                 scopedType
             } else {
-                val aliasDef = LuaShortNamesManager.getInstance(context.project).findAlias(className, context)
+                val aliasDef = LuaShortNamesManager.getInstance(context.project).findAlias(context, className)
 
                 if (aliasDef != null) {
                     val aliasTy = aliasDef.type
@@ -178,7 +178,7 @@ abstract class TyClass(override val className: String,
         return true
     }
 
-    override fun processMembers(context: SearchContext, processor: (ITy, LuaClassMember) -> Boolean, deep: Boolean): Boolean {
+    override fun processMembers(context: SearchContext, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
         lazyInit(context)
 
         val clazzName = className
@@ -186,17 +186,17 @@ abstract class TyClass(override val className: String,
 
         val manager = LuaShortNamesManager.getInstance(project)
         val members = mutableListOf<LuaClassMember>()
-        members.addAll(manager.getClassMembers(clazzName, context))
+        members.addAll(manager.getClassMembers(context, clazzName))
 
-        processAlias({ alias ->
-            val classMembers = manager.getClassMembers(alias, context)
+        processAlias { alias ->
+            val classMembers = manager.getClassMembers(context, alias)
             members.addAll(classMembers)
-        })
+        }
 
         for (member in members) {
             ProgressManager.checkCanceled()
 
-            if (!processor(this, member)) {
+            if (!process(this, member)) {
                 return false
             }
         }
@@ -219,7 +219,7 @@ abstract class TyClass(override val className: String,
             }
 
             return processSuperClasses(this, context) {
-                it.processMembers(context, { _, superMember ->
+                it.processMembers(context, false) { _, superMember ->
                     val superMemberName = superMember.name
 
                     val memberOverridden = if (superMemberName != null) {
@@ -235,9 +235,9 @@ abstract class TyClass(override val className: String,
                     if (memberOverridden) {
                         true
                     } else {
-                        processor(this, superMember)
+                        process(this, superMember)
                     }
-                }, false)
+                }
             }
         }
 
@@ -258,12 +258,12 @@ abstract class TyClass(override val className: String,
         return true
     }
 
-    override fun findMember(name: String, searchContext: SearchContext): LuaClassMember? {
-        return LuaShortNamesManager.getInstance(searchContext.project).findMember(this, name, searchContext)
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        return LuaShortNamesManager.getInstance(context.project).processMember(context, this, name, true, deep, process)
     }
 
-    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember? {
-        return LuaShortNamesManager.getInstance(searchContext.project).findIndexer(this, indexTy, searchContext, exact)
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        return LuaShortNamesManager.getInstance(context.project).processIndexer(context, this, indexTy, exact, true, deep, process)
     }
 
     override fun accept(visitor: ITyVisitor) {
@@ -367,7 +367,7 @@ open class TySerializedClass(name: String,
     override fun recoverAlias(context: SearchContext, aliasSubstitutor: TyAliasSubstitutor): ITy {
         if (this.isAnonymous || this.isGlobal)
             return this
-        val alias = LuaShortNamesManager.getInstance(context.project).findAlias(className, context)
+        val alias = LuaShortNamesManager.getInstance(context.project).findAlias(context, className)
         return alias?.type?.substitute(aliasSubstitutor) ?: this
     }
 }
@@ -554,36 +554,38 @@ class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table)
 
     override fun doLazyInit(searchContext: SearchContext) {}
 
-    override fun processMembers(context: SearchContext, processor: (ITy, LuaClassMember) -> Boolean, deep: Boolean): Boolean {
+    override fun processMembers(context: SearchContext, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
         table.tableFieldList.forEach {
-            if (!processor(this, it)) {
+            if (!process(this, it)) {
                 return false
             }
         }
         return true
     }
 
-    override fun findMember(name: String, searchContext: SearchContext): LuaClassMember? {
-        return table.tableFieldList.firstOrNull { it.name == name }
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        return table.tableFieldList.firstOrNull { it.name == name }?.let {
+            process(this, it)
+        } ?: true
     }
 
-    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember? {
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
         var narrowestClassMember: LuaClassMember? = null
         var narrowestIndexTy: ITy? = null
 
         table.tableFieldList.forEach {
-            val candidateIndexerTy = it.guessIndexType(searchContext)
+            val candidateIndexerTy = it.guessIndexType(context)
 
-            if ((!exact && candidateIndexerTy?.contravariantOf(indexTy, searchContext, TyVarianceFlags.STRICT_UNKNOWN) == true)
-                    || candidateIndexerTy == indexTy) {
-                if (narrowestIndexTy?.contravariantOf(candidateIndexerTy, searchContext, TyVarianceFlags.STRICT_UNKNOWN) != false) {
+            if ((!exact && candidateIndexerTy?.contravariantOf(indexTy, context, TyVarianceFlags.STRICT_UNKNOWN) == true)
+                || candidateIndexerTy == indexTy) {
+                if (narrowestIndexTy?.contravariantOf(candidateIndexerTy, context, TyVarianceFlags.STRICT_UNKNOWN) != false) {
                     narrowestClassMember = it
                     narrowestIndexTy = candidateIndexerTy
                 }
             }
         }
 
-        return narrowestClassMember
+        return narrowestClassMember?.let { process(this, it) } ?: true
     }
 
     // TODO: TyDocTable should implement this. However, there's no sensible way

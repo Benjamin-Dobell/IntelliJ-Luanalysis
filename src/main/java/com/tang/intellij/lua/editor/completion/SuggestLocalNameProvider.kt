@@ -26,7 +26,7 @@ import com.tang.intellij.lua.psi.search.LuaShortNamesManager
 class SuggestLocalNameProvider : LuaCompletionProvider() {
     override fun addCompletions(session: CompletionSession) {
         val project = session.parameters.position.project
-        LuaShortNamesManager.getInstance(project).processAllClasses(project, Processor{ className ->
+        LuaShortNamesManager.getInstance(project).processAllClasses(project) { className ->
             NameUtil.getSuggestionsByName(className, "", "", false, false, false).forEach {
                 val name = LuaNameSuggestionProvider.fixName(it)
                 if (session.addWord(name)) {
@@ -34,6 +34,6 @@ class SuggestLocalNameProvider : LuaCompletionProvider() {
                 }
             }
             true
-        })
+        }
     }
 }

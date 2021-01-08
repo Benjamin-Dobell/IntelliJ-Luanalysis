@@ -83,7 +83,7 @@ object ProblemUtil {
 
         var isContravariant = true
 
-        target.processMembers(context, { _, targetMember ->
+        target.processMembers(context, true) { _, targetMember ->
             val indexTy = targetMember.guessIndexType(context)
 
             val targetMemberTy = targetMember.guessType(context).let {
@@ -164,13 +164,13 @@ object ProblemUtil {
             }
 
             true
-        }, true)
+        }
 
         if (!isContravariant && processProblem == null) {
             return false
         }
 
-        source.processMembers(context, { _, sourceMember ->
+        source.processMembers(context, true) { _, sourceMember ->
             val indexTy = sourceMember.guessIndexType(context)
 
             val sourceMemberTy = if (indexTy != null) {
@@ -245,7 +245,7 @@ object ProblemUtil {
             }
 
             true
-        }, true)
+        }
 
         return isContravariant
     }

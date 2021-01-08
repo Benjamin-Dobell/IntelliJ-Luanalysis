@@ -61,7 +61,7 @@ object LuaPsiTreeUtilEx {
                 var cur: STUB_ELE = stub
                 do {
                     val scope = cur.parentStub
-                    scope.walkUp(cur, Processor { next ->
+                    scope.walkUp(cur) { next ->
                         val element = next.psi
                         when (element) {
                             is LuaLocalDefStat -> {
@@ -75,7 +75,7 @@ object LuaPsiTreeUtilEx {
                             else -> { }
                         }
                         continueSearch
-                    })
+                    }
 
                     if (scope is LuaFileStub)
                         break
@@ -129,13 +129,13 @@ object LuaPsiTreeUtilEx {
                 var cur: STUB_ELE = stub
                 do {
                     val scope = cur.parentStub
-                    scope.walkUp(cur, Processor { next ->
+                    scope.walkUp(cur) { next ->
                         val psiElement = next.psi
                         if (psiElement is LuaLocalFuncDefStat) {
                             continueSearch = processor.process(psiElement)
                         }
                         continueSearch
-                    })
+                    }
                     if (scope is LuaFileStub)
                         break
                     cur = scope

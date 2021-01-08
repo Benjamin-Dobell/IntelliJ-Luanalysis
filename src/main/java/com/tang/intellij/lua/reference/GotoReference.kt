@@ -18,12 +18,10 @@ package com.tang.intellij.lua.reference
 
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiReferenceBase
 import com.intellij.util.IncorrectOperationException
 import com.tang.intellij.lua.psi.LuaElementFactory
 import com.tang.intellij.lua.psi.LuaGotoStat
-import com.tang.intellij.lua.psi.LuaLabelStat
 import com.tang.intellij.lua.psi.LuaPsiTreeUtil
 
 class GotoReference(val goto: LuaGotoStat)

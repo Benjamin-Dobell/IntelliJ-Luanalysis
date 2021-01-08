@@ -21,7 +21,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementResolveResult
 import com.intellij.psi.PsiPolyVariantReferenceBase
 import com.intellij.psi.ResolveResult
-import com.intellij.util.Processor
 import com.tang.intellij.lua.comment.psi.LuaDocTagSee
 import com.tang.intellij.lua.psi.LuaElementFactory
 import com.tang.intellij.lua.search.SearchContext
@@ -50,10 +49,10 @@ class LuaDocSeeReference(see: LuaDocTagSee) :
         val list = mutableListOf<ResolveResult>()
         val searchContext = SearchContext.get(myElement.project)
         val type = myElement.typeRef?.resolveType(searchContext) as ITyClass
-        LuaClassMemberIndex.processMember(type, id.text, searchContext, { member, _ ->
+        LuaClassMemberIndex.processMember(searchContext, type, id.text, true, true) { _, member ->
             list.add(PsiElementResolveResult(member))
             true
-        })
+        }
         return list.toTypedArray()
     }
 }

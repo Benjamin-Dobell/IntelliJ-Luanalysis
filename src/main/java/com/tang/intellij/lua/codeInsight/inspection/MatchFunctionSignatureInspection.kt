@@ -88,7 +88,7 @@ class MatchFunctionSignatureInspection : StrictInspection() {
                             val idExpr = prefixExpr.idExpr
 
                             if (memberName != null) {
-                                val method = parentType.findSuperMember(memberName, searchContext)?.guessType(searchContext) as? ITyFunction
+                                val method = parentType.getSuperClass(searchContext)?.guessMemberType(memberName, searchContext) as? ITyFunction
 
                                 if (method != null) {
                                     method.matchSignature(searchContext, o, myHolder)

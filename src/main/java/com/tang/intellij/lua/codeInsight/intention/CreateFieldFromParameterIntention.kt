@@ -82,7 +82,7 @@ class CreateFieldFromParameterIntention : BaseIntentionAction() {
                         val context = SearchContext.get(project)
                         val classType = methodDef.guessClassType(context)
                         if (classType != null) {
-                            val def = LuaShortNamesManager.getInstance(project).findClass(classType.className, context)
+                            val def = LuaShortNamesManager.getInstance(project).findClass(context, classType.className)
                             if (def != null) {
                                 val tempString = String.format("\n---@field public %s \$type$\$END$", fieldName)
                                 val templateManager = TemplateManager.getInstance(project)

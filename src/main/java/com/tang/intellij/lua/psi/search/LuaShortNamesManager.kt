@@ -16,7 +16,6 @@
 
 package com.tang.intellij.lua.psi.search
 
-import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.util.Processor
@@ -43,33 +42,29 @@ interface LuaShortNamesManager {
         }
     }
 
-    fun findAlias(name: String, context: SearchContext): LuaTypeAlias?
+    fun findAlias(context: SearchContext, name: String): LuaTypeAlias?
 
-    fun findClass(name: String, context: SearchContext): LuaClass?
-
-    fun findMember(type: ITyClass, fieldName: String, context: SearchContext): LuaClassMember?
-
-    fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, exact: Boolean = false): LuaClassMember?
+    fun findClass(context: SearchContext, name: String): LuaClass?
 
     fun processAllAliases(project: Project, processor: Processor<String>): Boolean
 
     fun processAllClasses(project: Project, processor: Processor<String>): Boolean
 
-    fun processAliases(name: String, context: SearchContext, processor: Processor<in LuaTypeAlias>): Boolean
+    fun processAliases(context: SearchContext, name: String, processor: Processor<in LuaTypeAlias>): Boolean
 
-    fun processClasses(name: String, context: SearchContext, processor: Processor<in LuaClass>): Boolean
+    fun processClasses(context: SearchContext, name: String, processor: Processor<in LuaClass>): Boolean
 
-    fun getClassMembers(clazzName: String, context: SearchContext): Collection<LuaClassMember>
+    fun getClassMembers(context: SearchContext, clazzName: String): Collection<LuaClassMember>
 
-    fun processMember(type: ITyClass, fieldName: String, context: SearchContext, process: ProcessClassMember): Boolean
+    fun processMember(context: SearchContext, type: ITyClass, fieldName: String, searchIndexers: Boolean, deep: Boolean, process: ProcessClassMember): Boolean
 
-    fun processIndexer(type: ITyClass, indexTy: ITy, exact: Boolean, context: SearchContext, process: ProcessClassMember): Boolean
+    fun processIndexer(context: SearchContext, type: ITyClass, indexTy: ITy, exact: Boolean, searchMembers: Boolean, deep: Boolean, process: ProcessClassMember): Boolean
 
-    fun findType(name: String, context: SearchContext): LuaTypeDef? {
-        return findClass(name, context) ?: findAlias(name, context)
+    fun findType(context: SearchContext, name: String): LuaTypeDef? {
+        return findClass(context, name) ?: findAlias(context, name)
     }
 
-    fun processTypes(name: String, context: SearchContext, processor: Processor<in LuaTypeDef>): Boolean {
-        return processClasses(name, context, processor) && processAliases(name, context, processor)
+    fun processTypes(context: SearchContext, name: String, processor: Processor<in LuaTypeDef>): Boolean {
+        return processClasses(context, name, processor) && processAliases(context, name, processor)
     }
 }

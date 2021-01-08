@@ -66,16 +66,16 @@ class TyAlias(override val name: String,
         return name.hashCode()
     }
 
-    override fun processMembers(context: SearchContext, processor: (ITy, LuaClassMember) -> Boolean, deep: Boolean): Boolean {
-        return ty.processMembers(context, processor, deep)
+    override fun processMembers(context: SearchContext, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        return ty.processMembers(context, deep, process)
     }
 
-    override fun findMember(name: String, searchContext: SearchContext): LuaClassMember? {
-        return ty.findMember(name, searchContext)
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        return ty.processMember(context, name, deep, process)
     }
 
-    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember? {
-        return ty.findIndexer(indexTy, searchContext, exact)
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        return ty.processIndexer(context, indexTy, exact, deep, process)
     }
 
     override fun accept(visitor: ITyVisitor) {

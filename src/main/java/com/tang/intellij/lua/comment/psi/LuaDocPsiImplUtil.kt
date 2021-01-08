@@ -163,9 +163,9 @@ fun getType(returnList: LuaDocReturnList): ITy {
 
 private fun getReturnType(functionReturnType: LuaDocFunctionReturnType): ITy? {
     return SearchContext.withDumb(functionReturnType.project, null) { context ->
-        functionReturnType.returnListList.fold(null as ITy?, { returnTy, returnList ->
+        functionReturnType.returnListList.fold(null as ITy?) { returnTy, returnList ->
             TyUnion.union(returnTy, getType(returnList), context)
-        })
+        }
     }
 }
 
@@ -387,11 +387,11 @@ fun getType(snippet: LuaDocSnippetTy): ITy {
 }
 
 fun getType(unionTy: LuaDocUnionTy): ITy {
-    return unionTy.tyList.fold<LuaDocTy, ITy?>(null, { ty, docTy ->
+    return unionTy.tyList.fold<LuaDocTy, ITy?>(null) { ty, docTy ->
         SearchContext.withDumb(unionTy.project, null) { context ->
             TyUnion.union(ty, docTy.getType(), context)
         }
-    }) ?: Ty.UNKNOWN
+    } ?: Ty.UNKNOWN
 }
 
 fun getReference(see: LuaDocTagSee): PsiReference? {

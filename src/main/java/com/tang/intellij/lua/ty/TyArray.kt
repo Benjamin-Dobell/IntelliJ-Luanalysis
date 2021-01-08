@@ -185,20 +185,16 @@ object TyArraySerializer : TySerializer<ITyArray>() {
 }
 
 class TyDocArray(val luaDocArrTy: LuaDocArrTy, base: ITy = luaDocArrTy.ty.getType()) : TyArray(base) {
-    override fun findMember(name: String, searchContext: SearchContext): LuaClassMember? {
-        return null
-    }
-
-    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember? {
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
         if (exact) {
-            if (Ty.NUMBER.equals(indexTy, searchContext)) {
-                return luaDocArrTy
+            if (Ty.NUMBER.equals(indexTy, context)) {
+                return process(this, luaDocArrTy)
             }
-        } else if (Ty.NUMBER.contravariantOf(indexTy, searchContext, TyVarianceFlags.STRICT_UNKNOWN)) {
-            return luaDocArrTy
+        } else if (Ty.NUMBER.contravariantOf(indexTy, context, TyVarianceFlags.STRICT_UNKNOWN)) {
+            return process(this, luaDocArrTy)
         }
 
-        return null
+        return true
     }
 
     override fun substitute(substitutor: ITySubstitutor): ITy {

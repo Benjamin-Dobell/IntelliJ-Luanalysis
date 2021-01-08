@@ -105,7 +105,7 @@ public class LuaPsiTreeUtil {
 
         if (parentType instanceof ITyClass) {
             ITyClass cls = (ITyClass) parentType;
-            LuaClass luaClass = LuaShortNamesManager.Companion.getInstance(context.getProject()).findClass(cls.getClassName(), context);
+            LuaClass luaClass = LuaShortNamesManager.Companion.getInstance(context.getProject()).findClass(context, cls.getClassName());
 
             if (luaClass instanceof LuaDocTagClass) {
                 LuaDocTagClass docTagClass = (LuaDocTagClass) luaClass;
@@ -212,7 +212,7 @@ public class LuaPsiTreeUtil {
             }
         }
 
-        return LuaShortNamesManager.Companion.getInstance(searchContext.getProject()).findClass(name, searchContext);
+        return LuaShortNamesManager.Companion.getInstance(searchContext.getProject()).findClass(searchContext, name);
     }
 
     @Nullable
@@ -227,7 +227,7 @@ public class LuaPsiTreeUtil {
             }
         }
 
-        return LuaShortNamesManager.Companion.getInstance(searchContext.getProject()).findType(name, searchContext);
+        return LuaShortNamesManager.Companion.getInstance(searchContext.getProject()).findType(searchContext, name);
     }
 
     public static void processChildren(PsiElement parent, PsiElementProcessor<PsiElement> processor) {

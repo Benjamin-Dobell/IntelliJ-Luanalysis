@@ -84,12 +84,12 @@ class LuaNameSuggestionProvider : NameSuggestionProvider {
                         }
 
                         TyUnion.each(ty) { iTy ->
-                            iTy.processSignatures(context, Processor { sig ->
+                            iTy.processSignatures(context) { sig ->
                                 sig.params?.getOrNull(paramIndex)?.let { paramInfo ->
                                     set.add(paramInfo.name)
                                 }
-                                return@Processor false
-                            })
+                                return@processSignatures false
+                            }
                         }
                     }
                 }

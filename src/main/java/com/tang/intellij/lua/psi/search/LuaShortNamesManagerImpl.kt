@@ -32,27 +32,19 @@ import com.tang.intellij.lua.ty.ITyClass
 
 class LuaShortNamesManagerImpl : LuaShortNamesManager {
 
-    override fun findAlias(name: String, context: SearchContext): LuaTypeAlias? {
+    override fun findAlias(context: SearchContext, name: String): LuaTypeAlias? {
         return LuaAliasIndex.find(name, context)
     }
 
-    override fun findClass(name: String, context: SearchContext): LuaClass? {
+    override fun findClass(context: SearchContext, name: String): LuaClass? {
         return LuaClassIndex.find(name, context)
-    }
-
-    override fun findMember(type: ITyClass, fieldName: String, context: SearchContext): LuaClassMember? {
-        return LuaClassMemberIndex.findMember(type, fieldName, context)
-    }
-
-    override fun findIndexer(type: ITyClass, indexTy: ITy, context: SearchContext, exact: Boolean): LuaClassMember? {
-        return LuaClassMemberIndex.findIndexer(type, indexTy, context, exact)
     }
 
     override fun processAllAliases(project: Project, processor: Processor<String>): Boolean {
         return LuaAliasIndex.instance.processAllKeys(project, processor)
     }
 
-    override fun processAliases(name: String, context: SearchContext, processor: Processor<in LuaTypeAlias>): Boolean {
+    override fun processAliases(context: SearchContext, name: String, processor: Processor<in LuaTypeAlias>): Boolean {
         return ContainerUtil.process(LuaAliasIndex.instance.get(name, context.project, context.scope), processor)
     }
 
@@ -60,19 +52,34 @@ class LuaShortNamesManagerImpl : LuaShortNamesManager {
         return LuaClassIndex.processKeys(project, processor)
     }
 
-    override fun processClasses(name: String, context: SearchContext, processor: Processor<in LuaClass>): Boolean {
+    override fun processClasses(context: SearchContext, name: String, processor: Processor<in LuaClass>): Boolean {
         return LuaClassIndex.process(name, context.project, context.scope, { processor.process(it) })
     }
 
-    override fun getClassMembers(clazzName: String, context: SearchContext): Collection<LuaClassMember> {
-        return LuaClassMemberIndex.getMembers(clazzName, context)
+    override fun getClassMembers(context: SearchContext, clazzName: String): Collection<LuaClassMember> {
+        return LuaClassMemberIndex.getMembers(context, clazzName)
     }
 
-    override fun processMember(type: ITyClass, fieldName: String, context: SearchContext, process: ProcessClassMember): Boolean {
-        return LuaClassMemberIndex.processMember(type, fieldName, context, process)
+    override fun processMember(
+        context: SearchContext,
+        type: ITyClass,
+        fieldName: String,
+        searchIndexers: Boolean,
+        deep: Boolean,
+        process: ProcessClassMember
+    ): Boolean {
+        return LuaClassMemberIndex.processMember(context, type, fieldName, searchIndexers, deep, process)
     }
 
-    override fun processIndexer(type: ITyClass, indexTy: ITy, exact: Boolean, context: SearchContext, process: ProcessClassMember): Boolean {
-        return LuaClassMemberIndex.processIndexer(type, indexTy, exact, context, process)
+    override fun processIndexer(
+        context: SearchContext,
+        type: ITyClass,
+        indexTy: ITy,
+        exact: Boolean,
+        searchMembers: Boolean,
+        deep: Boolean,
+        process: ProcessClassMember
+    ): Boolean {
+        return LuaClassMemberIndex.processIndexer(context, type, indexTy, exact, searchMembers, deep, process)
     }
 }

@@ -180,14 +180,14 @@ fun LuaAssignStat.getIndexFor(psi: LuaExpression<*>): Int {
             }
         }
     } else {
-        LuaPsiTreeUtilEx.processChildren(varExprList, Processor{
+        LuaPsiTreeUtilEx.processChildren(varExprList) {
             if (it is LuaExpression<*>) {
                 if (it == psi)
-                    return@Processor false
+                    return@processChildren false
                 idx++
             }
-            return@Processor true
-        })
+            return@processChildren true
+        }
     }
     return idx
 }
@@ -198,12 +198,12 @@ fun LuaAssignStat.getLastIndex(): Int {
         return stub.childrenStubs.size
     }
     var count = 0
-    LuaPsiTreeUtilEx.processChildren(this.varExprList, Processor{
+    LuaPsiTreeUtilEx.processChildren(this.varExprList) {
         if (it is LuaExpression<*>) {
             count++
         }
-        return@Processor true
-    })
+        return@processChildren true
+    }
     return count - 1
 }
 
@@ -216,14 +216,14 @@ fun LuaArgs.getIndexFor(psi: LuaExpression<*>): Int {
     if (this is LuaSingleArg)
         return 0
     var idx = 0
-    LuaPsiTreeUtilEx.processChildren(this, Processor {
+    LuaPsiTreeUtilEx.processChildren(this) {
         if (it is LuaExpression<*>) {
             if (it == psi)
-                return@Processor false
+                return@processChildren false
             idx++
         }
-        return@Processor true
-    })
+        return@processChildren true
+    }
     return idx
 }
 
@@ -490,7 +490,7 @@ fun LuaClassMethod<*>.findOverridingMethod(context: SearchContext): LuaClassMeth
         ProgressManager.checkCanceled()
         val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass
         if (superClass != null) {
-            superMethod = LuaClassMemberIndex.findMethod(superClass, methodName, context)
+            superMethod = LuaClassMemberIndex.findMethod(context, superClass, methodName)
             superMethod == null
         } else true
     }

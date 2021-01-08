@@ -156,12 +156,12 @@ object TyPrimitiveSerializer : TySerializer<ITy>() {
 }
 
 class TyDocPrimitiveTable(val luaDocPrimitiveTableTy: LuaDocPrimitiveTableTy) : TyPrimitiveClass(TyPrimitiveKind.Table, Constants.WORD_TABLE) {
-    override fun findMember(name: String, searchContext: SearchContext): LuaClassMember {
-        return luaDocPrimitiveTableTy
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        return process(this, luaDocPrimitiveTableTy)
     }
 
-    override fun findIndexer(indexTy: ITy, searchContext: SearchContext, exact: Boolean): LuaClassMember {
-        return luaDocPrimitiveTableTy
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+        return process(this, luaDocPrimitiveTableTy)
     }
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
