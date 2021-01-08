@@ -324,6 +324,13 @@
                 runForWholeFile="true"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.AssignTypeInspection"/>
         <localInspection
+                displayName="Illegal override"
+                enabledByDefault="true"
+                groupName="Lua > Lint > Type safety"
+                level="ERROR"
+                language="Lua"
+                implementationClass="com.tang.intellij.lua.codeInsight.inspection.IllegalOverrideInspection"/>
+        <localInspection
                 displayName="Global name can be local"
                 enabledByDefault="false"
                 groupName="Lua"

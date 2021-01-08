@@ -27,6 +27,7 @@ class TypeSafetyTest : LuaInspectionsTestBase(
         AssignTypeInspection(),
         GenericConstraintInspection(),
         GenericParameterShadowed(),
+        IllegalOverrideInspection(),
         MatchFunctionSignatureInspection(),
         ReturnTypeInspection(),
         UndeclaredMemberInspection(),

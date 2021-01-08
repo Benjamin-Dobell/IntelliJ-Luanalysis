@@ -1,6 +1,9 @@
 ---@type number
 local anyNumber
 
+---@type string
+local anyString
+
 ---@type 1
 local one
 
@@ -681,3 +684,50 @@ local declaredImplicitMethodChildDeclaredImplicitMethod
 
 one = declaredExplicitMethodChildDeclaredImplicitMethod.method()
 one = declaredImplicitMethodChildDeclaredImplicitMethod.method()
+
+
+
+---@class IllegalDocFieldChildDocField : DocField
+---@field value <error descr="Illegal override of \"value\". Type mismatch. Required: 'number' Found: 'string'">string</error>
+---@field method <error descr="Illegal override of \"method\". Type mismatch. Required: 'fun(): number' Found: 'fun(): string'">fun(): string</error>
+
+---@class IllegalTableExplicitFieldChildDocField : DocField
+local IllegalTableExplicitFieldChildDocField = {
+    ---@type <error descr="Illegal override of \"value\". Type mismatch. Required: 'number' Found: 'string'">string</error>
+    value = "",
+    ---@type <error descr="Illegal override of \"method\". Type mismatch. Required: 'fun(): number' Found: 'fun(): string'">fun(): string</error>
+    method = function()
+        return anyString
+    end,
+}
+
+---@class IllegalTableImplicitFieldChildDocField : DocField
+local IllegalTableImplicitFieldChildDocField = {
+    value = <error descr="Illegal override of \"value\". Type mismatch. Required: 'number' Found: 'string'">anyString</error>,
+    method = <error descr="Illegal override of \"method\". Type mismatch. Required: 'fun(): number' Found: 'fun(): string'">function()
+        return anyString
+    end</error>,
+}
+
+---@class IllegalAssignedImplicitFieldChildDocField : DocField
+local IllegalAssignedImplicitFieldChildDocField = {}
+
+IllegalAssignedImplicitFieldChildDocField.value = <error descr="Type mismatch. Required: 'number' Found: 'string'">anyString</error>
+IllegalAssignedImplicitFieldChildDocField.method = <error descr="Type mismatch. Required: 'fun(): number' Found: 'fun(): string'">function()
+    return anyString
+end</error>
+
+---@class IllegalDeclaredExplicitMethodChildDocField : DocField
+local IllegalDeclaredExplicitMethodChildDocField = {}
+
+<error descr="Illegal override of \"method\". Type mismatch. Required: 'fun(): number' Found: 'fun(): string'">---@return string
+function IllegalDeclaredExplicitMethodChildDocField.method()
+    return anyString
+end</error>
+
+---@class IllegalDeclaredImplicitMethodChildDocField : DocField
+local IllegalDeclaredImplicitMethodChildDocField = {}
+
+<error descr="Illegal override of \"method\". Type mismatch. Required: 'fun(): number' Found: 'fun(): string'">function IllegalDeclaredImplicitMethodChildDocField.method()
+    return anyString
+end</error>
