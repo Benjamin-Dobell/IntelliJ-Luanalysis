@@ -27,15 +27,13 @@ import com.tang.intellij.lua.ty.processParameters
 
 open class SignatureInsertHandler(val sig: IFunSignature, private val isColonStyle: Boolean = false) : ArgsInsertHandler() {
 
-    private val myParams: Array<LuaParamInfo> by lazy {
+    override val params: Array<LuaParamInfo> by lazy {
         val list = mutableListOf<LuaParamInfo>()
         sig.processParameters(null, isColonStyle) { _, param ->
             list.add(param)
         }
         list.toTypedArray()
     }
-
-    override fun getParams(): Array<LuaParamInfo> = myParams
 
     override val isVarargs: Boolean
         get() = sig.hasVarargs()

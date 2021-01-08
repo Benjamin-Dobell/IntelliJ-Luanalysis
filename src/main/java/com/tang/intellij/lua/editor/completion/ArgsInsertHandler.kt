@@ -36,7 +36,7 @@ import com.tang.intellij.lua.psi.LuaTypes
 
 abstract class ArgsInsertHandler : InsertHandler<LookupElement> {
 
-    protected abstract fun getParams(): Array<LuaParamInfo>
+    protected abstract val params: Array<out LuaParamInfo>
 
     protected open val isVarargs = false
 
@@ -95,14 +95,13 @@ abstract class ArgsInsertHandler : InsertHandler<LookupElement> {
 
     protected open fun appendSignature(insertionContext: InsertionContext, editor: Editor, element: PsiElement?) {
         if (autoInsertParameters) {
-            val paramDefList = getParams()
             val manager = TemplateManager.getInstance(insertionContext.project)
-            val template = createTemplate(manager, paramDefList)
+            val template = createTemplate(manager, params)
             editor.caretModel.moveToOffset(insertionContext.selectionEndOffset)
             manager.startTemplate(editor, template)
         } else {
             editor.document.insertString(insertionContext.selectionEndOffset, "()")
-            if (getParams().isEmpty() && !isVarargs) {
+            if (params.isEmpty() && !isVarargs) {
                 editor.caretModel.moveToOffset(insertionContext.selectionEndOffset)
             } else {
                 editor.caretModel.moveToOffset(insertionContext.selectionEndOffset - 1)
@@ -122,7 +121,7 @@ abstract class ArgsInsertHandler : InsertHandler<LookupElement> {
         return expr
     }
 
-    protected open fun createTemplate(manager: TemplateManager, paramDefList: Array<LuaParamInfo>): Template {
+    protected open fun createTemplate(manager: TemplateManager, paramDefList: Array<out LuaParamInfo>): Template {
         val template = manager.createTemplate("", "")
         template.addTextSegment("(")
 

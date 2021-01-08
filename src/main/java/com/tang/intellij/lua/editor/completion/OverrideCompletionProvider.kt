@@ -63,15 +63,31 @@ class OverrideCompletionProvider : LuaCompletionProvider() {
         val context = SearchContext.get(project)
         val clazzName = sup.className
         LuaClassMemberIndex.processAll(context, TyLazyClass(clazzName)) { _, member ->
-            if (member is LuaClassMethod<*>) {
-                member.name?.let {
-                    if (memberNameSet.add(it)) {
-                        val elementBuilder = LookupElementBuilder.create(member.name!!)
+            member.name?.let { memberName ->
+                if (!memberNameSet.contains(memberName)) {
+                    if (member is LuaClassMethod<*>) {
+                        val elementBuilder = LookupElementBuilder.create(memberName)
                             .withIcon(LuaIcons.CLASS_METHOD_OVERRIDING)
-                            .withInsertHandler(OverrideInsertHandler(member))
+                            .withInsertHandler(OverrideInsertHandler(member.params, member.varargType != null))
                             .withTailText(member.paramSignature)
 
                         completionResultSet.addElement(elementBuilder)
+                        memberNameSet.add(memberName)
+                    } else {
+                        val memberTy = member.guessType(context)
+
+                        if (memberTy is ITyFunction) {
+                            val mainSignature = memberTy.mainSignature
+                            val params = mainSignature.params ?: arrayOf()
+
+                            val elementBuilder = LookupElementBuilder.create(memberName)
+                                .withIcon(LuaIcons.CLASS_METHOD_OVERRIDING)
+                                .withInsertHandler(OverrideInsertHandler(params, mainSignature.hasVarargs()))
+                                .withTailText(getParamSignature(params))
+
+                            completionResultSet.addElement(elementBuilder)
+                            memberNameSet.add(memberName)
+                        }
                     }
                 }
             }
@@ -79,11 +95,11 @@ class OverrideCompletionProvider : LuaCompletionProvider() {
         }
     }
 
-    internal class OverrideInsertHandler(funcBodyOwner: LuaFuncBodyOwner<*>) : FuncInsertHandler(funcBodyOwner) {
+    internal class OverrideInsertHandler(override val params: Array<out LuaParamInfo>, override val isVarargs: Boolean) : ArgsInsertHandler() {
 
         override val autoInsertParameters = true
 
-        override fun createTemplate(manager: TemplateManager, paramDefList: Array<LuaParamInfo>): Template {
+        override fun createTemplate(manager: TemplateManager, paramDefList: Array<out LuaParamInfo>): Template {
             val template = super.createTemplate(manager, paramDefList)
             template.addEndVariable()
             template.addTextSegment("\nend")

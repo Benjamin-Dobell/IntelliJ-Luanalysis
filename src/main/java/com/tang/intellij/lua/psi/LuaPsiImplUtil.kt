@@ -423,14 +423,17 @@ private fun getParamsInner(funcBodyOwner: LuaFuncBodyOwner<*>): Array<LuaParamIn
     return emptyArray()
 }
 
-fun getParamSignature(funcBodyOwner: LuaFuncBodyOwner<*>): String {
-    val params = funcBodyOwner.params
+fun getParamSignature(params: Array<out LuaParamInfo>): String {
     val list = arrayOfNulls<String>(params.size)
     for (i in params.indices) {
         val lpi = params[i]
         list[i] = lpi.name
     }
     return "(" + list.joinToString(", ") + ")"
+}
+
+fun getParamSignature(funcBodyOwner: LuaFuncBodyOwner<*>): String {
+    return getParamSignature(funcBodyOwner.params)
 }
 
 fun getName(localFuncDefStat: LuaLocalFuncDefStat): String? {
