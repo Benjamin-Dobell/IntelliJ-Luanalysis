@@ -27,6 +27,7 @@ import com.intellij.util.containers.ContainerUtil
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.codeInsight.inspection.MatchFunctionSignatureInspection
 import com.tang.intellij.lua.comment.psi.LuaDocClassRef
+import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
@@ -524,11 +525,17 @@ abstract class Ty(override val kind: TyKind) : ITy {
         }
 
         if ((flags and TyVarianceFlags.NON_STRUCTURAL == 0 || other.isAnonymous) && isShape(context)) {
-            return ProblemUtil.contravariantOfShape(this, resolvedOther, context, flags)
-        } else {
-            val otherSuper = other.getSuperClass(context)
-            return otherSuper != null && contravariantOf(otherSuper, context, flags)
+            val isCovariant: Boolean? = recursionGuard(resolvedOther, {
+                ProblemUtil.contravariantOfShape(this, resolvedOther, context, flags)
+            })
+
+            if (isCovariant != null) {
+                return isCovariant
+            }
         }
+
+        val otherSuper = other.getSuperClass(context)
+        return otherSuper != null && contravariantOf(otherSuper, context, flags)
     }
 
     override fun covariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {

@@ -257,3 +257,13 @@ local potentiallyEmpty
 potentiallyEmpty = {}
 potentiallyEmpty = <error descr="Type mismatch. Required: 'PotentiallyEmptyShape' Found: '1'">1</error>
 potentiallyEmpty = <error descr="Type mismatch. Required: 'PotentiallyEmptyShape' Found: '\"invalid\"'">"invalid"</error>
+
+
+local RecursiveField = {}
+RecursiveField.recursiveField = RecursiveField
+
+local CrossRecursiveField1 = {}
+local CrossRecursiveField2 = {}
+
+CrossRecursiveField1.recursiveField = CrossRecursiveField2
+CrossRecursiveField2.recursiveField = CrossRecursiveField1
