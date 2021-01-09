@@ -102,15 +102,15 @@ private fun inferReturnTyInner(owner: LuaFuncBodyOwner<*>, searchContext: Search
 }
 
 private fun LuaParamDef.infer(context: SearchContext): ITy {
-    val type = resolveParamType(this, context)
+    val ty = resolveParamType(this, context)
 
-    if (Ty.isInvalid(type)) {
+    if (ty == null) {
         val stub = this.stub
         val tyName = stub?.anonymousType ?: getAnonymousTypeName(this)
-        return createSerializedClass(tyName, null, this.name, null, null, null, TyFlags.ANONYMOUS)
+        return createSerializedClass(tyName, null, this.name, null, null, null, TyFlags.ANONYMOUS or TyFlags.UNKNOWN)
     }
 
-    return type
+    return ty
 }
 
 private fun LuaLocalDef.infer(context: SearchContext): ITy? {
@@ -143,7 +143,11 @@ private fun LuaLocalDef.infer(context: SearchContext): ITy? {
                 context.withIndex(index, false) {
                     exprList.guessTypeAt(context)
                 } ?: Ty.UNKNOWN
-            } else Ty.VOID
+            } else {
+                val stub = this.stub
+                val tyName = stub?.anonymousType ?: getAnonymousTypeName(this)
+                createSerializedClass(tyName, null, this.name, null, null, null, TyFlags.ANONYMOUS or TyFlags.UNKNOWN)
+            }
 
             if (type is TyPrimitiveLiteral) {
                 type = type.primitiveType
@@ -355,12 +359,12 @@ private fun resolveParamType(paramDef: LuaParamDef, context: SearchContext): ITy
             return null
         }
 
-        var ret: ITy = Ty.VOID
+        var ret: ITy? = null
 
         Ty.eachResolved(shouldBe, context) {
             if (it is ITyFunction) {
                 val paramIndex = paramOwner.getIndexFor(paramDef)
-                ret = ret.union(it.mainSignature.getArgTy(paramIndex), context)
+                ret = TyUnion.union(ret, it.mainSignature.getArgTy(paramIndex), context)
             }
         }
 

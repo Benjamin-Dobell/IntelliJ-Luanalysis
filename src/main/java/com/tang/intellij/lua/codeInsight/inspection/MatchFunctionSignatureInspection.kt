@@ -65,7 +65,7 @@ class MatchFunctionSignatureInspection : StrictInspection() {
                 }
 
                 TyUnion.each(resolvedTy) {
-                    if (it == Ty.FUNCTION || (it is TyUnknown && LuaSettings.instance.isUnknownCallable)) {
+                    if (it == Ty.FUNCTION || (it.isUnknown && LuaSettings.instance.isUnknownCallable)) {
                         return@each
                     }
 

@@ -115,10 +115,6 @@ class TypeSafetyTest : LuaInspectionsTestBase(
         check("global_usage.lua")
     }
 
-    fun testImplicitTypes() {
-        check("implicit_types.lua")
-    }
-
     fun testIndexedFields() {
         check("indexed_fields.lua")
     }
@@ -149,6 +145,9 @@ class TypeSafetyTest : LuaInspectionsTestBase(
 
         LuaSettings.instance.languageLevel = defaultLanguageLevel
         StdLibraryProvider.reload()
+        LuaSettings.instance.isNilStrict = false
+        LuaSettings.instance.isUnknownCallable = true
+        LuaSettings.instance.isUnknownIndexable = true
     }
 
     fun testNumbers() {
@@ -219,7 +218,15 @@ class TypeSafetyTest : LuaInspectionsTestBase(
     }
 
     fun testUnknown() {
-        check("unknown.lua")
+        LuaSettings.instance.isUnknownCallable = true
+        LuaSettings.instance.isUnknownIndexable = true
+        checkByFile("unknown.lua")
+        LuaSettings.instance.isUnknownCallable = false
+        LuaSettings.instance.isUnknownIndexable = false
+    }
+
+    fun testUnknownStrict() {
+        check("unknown_strict.lua")
     }
 
     fun testVarargs() {

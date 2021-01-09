@@ -64,6 +64,10 @@ object ProblemUtil {
     }
 
     private fun contravariantOfShape(target: ITy, source: ITy, context: SearchContext, varianceFlags: Int, targetElement: PsiElement?, sourceElement: PsiElement?, processProblem: ProcessProblem?): Boolean {
+        if (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0 && source.isUnknown) {
+            return true
+        }
+
         if (source !is ITyClass || source is ITyPrimitive) {
             if (processProblem != null && sourceElement != null) {
                 processProblem(
@@ -122,7 +126,7 @@ object ProblemUtil {
                 if (sourceSubstitutor != null) it.substitute(sourceSubstitutor) else it
             }
 
-            if (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN != 0 || sourceMemberTy !is TyUnknown) {
+            if (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN != 0 || !sourceMemberTy.isUnknown) {
                 // TODO: Always allowing widening is unsound. However, usage of Luanalysis without shape widening is presently impractical as we lack required
                 //       functionality such as getter/setter types, readonly properties and maybe use-site variance. Mind you, even TypeScript fails at this.
                 /*if (varianceFlags and TyVarianceFlags.WIDEN_TABLES == 0) {
@@ -206,7 +210,7 @@ object ProblemUtil {
             }
 
             // TODO: DRY
-            if (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN != 0 || sourceMemberTy !is TyUnknown) {
+            if (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN != 0 || !sourceMemberTy.isUnknown) {
                 if (varianceFlags and TyVarianceFlags.WIDEN_TABLES == 0) {
                     if (!targetMemberTy.equals(sourceMemberTy, context)) {
                         isContravariant = false
@@ -251,6 +255,10 @@ object ProblemUtil {
     }
 
     private fun contravariantOfUnit(targetTy: ITy, sourceUnitTy: ITy, context: SearchContext, varianceFlags: Int, targetElement: PsiElement?, sourceElement: PsiElement, processProblem: ProcessProblem): Boolean {
+        if (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0 && sourceUnitTy.isUnknown) {
+            return true
+        }
+
         var isContravariant = true
 
         if (targetTy is ITyArray) {
@@ -263,7 +271,7 @@ object ProblemUtil {
             if (sourceUnitTy is TyClass) {
                 sourceUnitTy.lazyInit(context)
 
-                if ((varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 || sourceUnitTy.isAnonymous) && sourceUnitTy.isShape(context)) {
+                if ((varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 || sourceUnitTy.isAnonymousTable) && sourceUnitTy.isShape(context)) {
                     val sourceIsInline = sourceUnitTy is TyTable && sourceUnitTy.table == sourceElement
                     val indexes = sortedMapOf<Int, PsiElement>()
                     var foundNumberIndexer = false
@@ -366,7 +374,7 @@ object ProblemUtil {
                 return false
             }
 
-            val baseAcceptsShape = (varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 || sourceUnitTy.isAnonymous) && base.isShape(context)
+            val baseAcceptsShape = (varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 || sourceUnitTy.isAnonymousTable) && base.isShape(context)
 
             if (sourceElement is LuaTableExpr) {
                 sourceElement.tableFieldList.forEach { sourceField ->

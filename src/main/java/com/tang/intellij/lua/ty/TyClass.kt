@@ -29,6 +29,7 @@ import com.tang.intellij.lua.comment.psi.LuaDocGeneralTy
 import com.tang.intellij.lua.comment.psi.LuaDocGenericDef
 import com.tang.intellij.lua.comment.psi.LuaDocTableDef
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass
+import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.search.LuaClassInheritorsSearch
 import com.tang.intellij.lua.psi.search.LuaShortNamesManager
@@ -370,6 +371,35 @@ open class TySerializedClass(name: String,
         val alias = LuaShortNamesManager.getInstance(context.project).findAlias(context, className)
         return alias?.type?.substitute(aliasSubstitutor) ?: this
     }
+
+    override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
+        if (isUnknown) {
+            // Same behaviour as TyUnknown
+            return other !is TyMultipleResults
+        }
+
+        return super.contravariantOf(other, context, flags)
+    }
+
+    override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
+        val memberTy = super.guessMemberType(name, searchContext)
+
+        if (memberTy == null && isUnknown && LuaSettings.instance.isUnknownIndexable) {
+            return Ty.UNKNOWN
+        }
+
+        return memberTy
+    }
+
+    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
+        val memberTy = super.guessIndexerType(indexTy, searchContext, exact)
+
+        if (memberTy == null && isUnknown && LuaSettings.instance.isUnknownIndexable) {
+            return Ty.UNKNOWN
+        }
+
+        return memberTy
+    }
 }
 
 class TyLazyClass(name: String, val psi: PsiElement? = null) : TySerializedClass(name, null) {
@@ -474,7 +504,7 @@ fun createTableGenericFromMembers(ty: ITy, context: SearchContext): ITyGeneric {
             elementType = Ty.UNKNOWN
         }
 
-        keyType !is TyUnknown || elementType !is TyUnknown
+        keyType?.isUnknown == false || elementType?.isUnknown == false
     }
 
     return TyGeneric(arrayOf(keyType ?: Ty.UNKNOWN, elementType ?: Ty.UNKNOWN), Ty.TABLE)
@@ -494,7 +524,7 @@ fun getAnonymousTypeName(variableDef: LuaPsiElement): String {
 }
 
 fun getSelfType(classTy: ITyClass): String {
-    return "${classTy.className}:${Constants.WORD_SELF}"
+    return "${classTy.className}#${Constants.WORD_SELF}"
 }
 
 fun getGlobalTypeName(text: String): String {
@@ -507,7 +537,7 @@ fun getGlobalTypeName(nameExpr: LuaNameExpr): String {
 
 class TyTable(val table: LuaTableExpr) : TyClass(getTableTypeName(table)) {
     init {
-        this.flags = TyFlags.ANONYMOUS or TyFlags.ANONYMOUS_TABLE or TyFlags.SHAPE
+        this.flags = TyFlags.ANONYMOUS_TABLE or TyFlags.SHAPE
     }
 
     override fun toString(): String = displayName

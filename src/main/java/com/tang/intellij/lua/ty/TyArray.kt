@@ -88,7 +88,7 @@ open class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
 
         return flags and TyVarianceFlags.WIDEN_TABLES != 0
                 || Ty.resolve(resolvedBase, context).equals(indexedMemberType, context)
-                || (resolvedBase is TyUnknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0)
+                || (resolvedBase.isUnknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0)
     }
 
     override fun substitute(substitutor: ITySubstitutor): ITy {

@@ -14,9 +14,9 @@ function SelfA:colonMethod()
     local someSelfA
 
     someSelfA = self
-    self = <error descr="Type mismatch. Required: '[local self]' Found: 'SelfA'">someSelfA</error>
-    selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'SelfA'">someSelfA</error>
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: '[local self]'">self</error>
+    self = <error descr="Type mismatch. Required: 'SelfA#self' Found: 'SelfA'">someSelfA</error>
+    selfTypedVar = <error descr="Type mismatch. Required: 'SelfA#self' Found: 'SelfA'">someSelfA</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'SelfA#self'">self</error>
 
     aNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">self.a</error>
     aString = self.a
@@ -33,8 +33,8 @@ function SelfA.dotMethod()
     local someSelfA
 
     someSelfA = selfTypedVar
-    selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'SelfA'">someSelfA</error>
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: '[local self]'">selfTypedVar</error>
+    selfTypedVar = <error descr="Type mismatch. Required: 'SelfA#self' Found: 'SelfA'">someSelfA</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'SelfA#self'">selfTypedVar</error>
 
     aNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">selfTypedVar.a</error>
     aString = selfTypedVar.a
@@ -51,8 +51,8 @@ SelfA.lambdaMethod = function()
     local someSelfA
 
     someSelfA = selfTypedVar
-    selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'SelfA'">someSelfA</error>
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: '[local self]'">selfTypedVar</error>
+    selfTypedVar = <error descr="Type mismatch. Required: 'SelfA#self' Found: 'SelfA'">someSelfA</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'SelfA#self'">selfTypedVar</error>
 
     aNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">selfTypedVar.a</error>
     aString = selfTypedVar.a

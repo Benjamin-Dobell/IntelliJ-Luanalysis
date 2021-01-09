@@ -183,8 +183,8 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
             clazz is TyGenericParameter -> {
                 clazz.superClass?.let { "${clazz.varName} : ${it.displayName}" } ?: clazz.varName
             }
-            clazz.hasFlag(TyFlags.ANONYMOUS_TABLE) -> renderType(Constants.WORD_TABLE)
-            clazz.isAnonymous -> "[local ${clazz.varName}]"
+            clazz.isAnonymousTable -> renderType(Constants.WORD_TABLE)
+            clazz.isAnonymous && !clazz.className.endsWith("#${Constants.WORD_SELF}") -> "[local ${clazz.varName}]"
             clazz.isGlobal -> "[global ${clazz.varName}]"
             else -> "${clazz.className}${renderParamsList(clazz.params?.map { it.toString() })}"
         }

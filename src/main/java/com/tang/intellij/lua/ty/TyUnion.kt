@@ -68,7 +68,7 @@ class TyUnion : Ty {
     override fun union(ty: ITy, context: SearchContext): ITy {
         if (ty is TyVoid) {
             return this
-        } else if (ty is TyUnknown && childSet.find { it is TyMultipleResults } == null) {
+        } else if (ty.isUnknown && childSet.find { it is TyMultipleResults } == null) {
             return Ty.UNKNOWN
         }
 

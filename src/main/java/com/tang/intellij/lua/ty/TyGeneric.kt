@@ -222,7 +222,7 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
                 val keyTy = args.first()
                 val valueTy = args.last()
                 val resolvedOtherBase = Ty.resolve(resolvedOther.base, context)
-                return (keyTy == Ty.NUMBER || (keyTy is TyUnknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0))
+                return (keyTy == Ty.NUMBER || (keyTy.isUnknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0))
                         && (valueTy == resolvedOtherBase || (flags and TyVarianceFlags.WIDEN_TABLES != 0 && valueTy.contravariantOf(resolvedOtherBase, context, flags)))
             } else false
         }
@@ -236,7 +236,7 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
             otherArgs = resolvedOther.args
         } else if (resolvedBase == Ty.TABLE && args.size == 2) {
             if (resolvedOther == Ty.TABLE) {
-                return args.first() is TyUnknown && args.last() is TyUnknown
+                return args.first().isUnknown && args.last().isUnknown
             }
 
             if (resolvedOther.isShape(context)) {
@@ -255,7 +255,7 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
                 return args.size == otherArgs?.size && args.asSequence().zip(otherArgs.asSequence()).all { (arg, otherArg) ->
                     // Args are always invariant as we don't support use-site variance nor immutable/read-only annotations
                     arg.equals(otherArg, context)
-                            || (flags and TyVarianceFlags.STRICT_UNKNOWN == 0 && otherArg is TyUnknown)
+                            || (flags and TyVarianceFlags.STRICT_UNKNOWN == 0 && otherArg.isUnknown)
                             || (
                                 (contravariantParams || (flags and TyVarianceFlags.ABSTRACT_PARAMS != 0 && arg is TyGenericParameter))
                                 && arg.contravariantOf(otherArg, context, flags)

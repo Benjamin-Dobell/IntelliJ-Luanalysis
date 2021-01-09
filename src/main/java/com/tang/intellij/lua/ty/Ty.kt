@@ -65,11 +65,12 @@ class TyFlags {
         const val SELF_FUNCTION = 0x4 // xxx.method()
         const val ANONYMOUS_TABLE = 0x8 // local xx = {}, flag of this table `{}`
         const val SHAPE = 0x10 // variance is considered per field
+        const val UNKNOWN = 0x20 // Unless STRICT_UNKNOWN is enabled, this type is covariant of all other types.
     }
 }
 class TyVarianceFlags {
     companion object {
-        const val STRICT_UNKNOWN = 0x1
+        const val STRICT_UNKNOWN = 0x1 // When enabled UNKNOWN types are no longer treated as covariant of all types.
         const val ABSTRACT_PARAMS = 0x2 // A generic is to be considered contravariant if its TyParameter generic parameters are contravariant.
         const val WIDEN_TABLES = 0x4 // Generics (and arrays) are to be considered contravariant if their generic parameters (or base) are contravariant. Additionally, shapes are contravariant if their fields are contravariant.
         const val STRICT_NIL = 0x8 // In certain contexts nil is always strict, irrespective of the user's 'Strict nil checks' setting.
@@ -216,6 +217,12 @@ val ITy.isGlobal: Boolean
 
 val ITy.isAnonymous: Boolean
     get() = hasFlag(TyFlags.ANONYMOUS)
+
+val ITy.isAnonymousTable: Boolean
+    get() = hasFlag(TyFlags.ANONYMOUS_TABLE)
+
+val ITy.isUnknown: Boolean
+    get() = hasFlag(TyFlags.UNKNOWN)
 
 val ITy.isColonCall: Boolean
     get() = hasFlag(TyFlags.SELF_FUNCTION)
@@ -524,7 +531,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
             return true
         }
 
-        if ((flags and TyVarianceFlags.NON_STRUCTURAL == 0 || other.isAnonymous) && isShape(context)) {
+        if ((flags and TyVarianceFlags.NON_STRUCTURAL == 0 || other.isAnonymousTable) && isShape(context)) {
             val isCovariant: Boolean? = recursionGuard(resolvedOther, {
                 ProblemUtil.contravariantOfShape(this, resolvedOther, context, flags)
             })
@@ -789,6 +796,10 @@ abstract class Ty(override val kind: TyKind) : ITy {
 }
 
 class TyUnknown : Ty(TyKind.Unknown) {
+
+    init {
+        this.flags = this.flags or TyFlags.UNKNOWN
+    }
 
     override fun equals(other: Any?): Boolean {
         return other is TyUnknown

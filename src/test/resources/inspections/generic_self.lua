@@ -16,10 +16,10 @@ function GenericSelfA:colonMethod()
     ---@type GenericSelfA<string>
     local someGenericSelfA
 
-    someGenericSelfA = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: '[local self]'">selfTypedVar</error>
-    self = <error descr="Type mismatch. Required: '[local self]' Found: 'GenericSelfA<string>'">someGenericSelfA</error>
-    selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'GenericSelfA<string>'">someGenericSelfA</error>
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: '[local self]'">selfTypedVar</error>
+    someGenericSelfA = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: 'GenericSelfA#self'">selfTypedVar</error>
+    self = <error descr="Type mismatch. Required: 'GenericSelfA#self' Found: 'GenericSelfA<string>'">someGenericSelfA</error>
+    selfTypedVar = <error descr="Type mismatch. Required: 'GenericSelfA#self' Found: 'GenericSelfA<string>'">someGenericSelfA</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'GenericSelfA#self'">selfTypedVar</error>
 
 
     aNumber = <error descr="Type mismatch. Required: 'number' Found: 'T : string'">selfTypedVar.a</error>
@@ -36,9 +36,9 @@ function GenericSelfA.dotMethod()
     ---@type GenericSelfA<string>
     local someGenericSelfA
 
-    someGenericSelfA = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: '[local self]'">selfTypedVar</error>
-    selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'GenericSelfA<string>'">someGenericSelfA</error>
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: '[local self]'">selfTypedVar</error>
+    someGenericSelfA = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: 'GenericSelfA#self'">selfTypedVar</error>
+    selfTypedVar = <error descr="Type mismatch. Required: 'GenericSelfA#self' Found: 'GenericSelfA<string>'">someGenericSelfA</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'GenericSelfA#self'">selfTypedVar</error>
 
     aNumber = <error descr="Type mismatch. Required: 'number' Found: 'T : string'">selfTypedVar.a</error>
     aString = selfTypedVar.a
@@ -54,9 +54,9 @@ GenericSelfA.lambdaMethod = function()
     ---@type GenericSelfA<string>
     local someGenericSelfA
 
-    someGenericSelfA = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: '[local self]'">selfTypedVar</error>
-    selfTypedVar = <error descr="Type mismatch. Required: '[local self]' Found: 'GenericSelfA<string>'">someGenericSelfA</error>
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: '[local self]'">selfTypedVar</error>
+    someGenericSelfA = <error descr="Type mismatch. Required: 'GenericSelfA<string>' Found: 'GenericSelfA#self'">selfTypedVar</error>
+    selfTypedVar = <error descr="Type mismatch. Required: 'GenericSelfA#self' Found: 'GenericSelfA<string>'">someGenericSelfA</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'GenericSelfA#self'">selfTypedVar</error>
 
     aNumber = <error descr="Type mismatch. Required: 'number' Found: 'T : string'">selfTypedVar.a</error>
     aString = selfTypedVar.a
