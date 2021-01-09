@@ -24,6 +24,7 @@ import com.intellij.psi.stubs.IntStubIndexExtension
 import com.intellij.psi.stubs.StubIndex
 import com.intellij.util.Processor
 import com.intellij.util.containers.ContainerUtil
+import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
@@ -39,6 +40,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
 
     companion object {
         val instance = LuaClassMemberIndex()
+        val selfRegex = Regex("#self$")
 
         private fun processKey(context: SearchContext, type: ITyClass, key: String, process: ProcessClassMember): Boolean {
             if (context.isDumb) {
@@ -244,8 +246,9 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
         }
 
         fun indexMemberStub(indexSink: IndexSink, className: String, memberName: String) {
-            indexSink.occurrence(StubKeys.CLASS_MEMBER, className.hashCode())
-            indexSink.occurrence(StubKeys.CLASS_MEMBER, "$className*$memberName".hashCode())
+            val cleanClassName = className.replace(selfRegex, "")
+            indexSink.occurrence(StubKeys.CLASS_MEMBER, cleanClassName.hashCode())
+            indexSink.occurrence(StubKeys.CLASS_MEMBER, "$cleanClassName*$memberName".hashCode())
         }
 
         fun indexIndexerStub(indexSink: IndexSink, className: String, indexTy: ITy) {

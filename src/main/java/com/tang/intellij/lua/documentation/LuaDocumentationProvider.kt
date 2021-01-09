@@ -133,10 +133,12 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
                 val name = classMember.name
 
                 if (name != null) {
-                    if (ty.isColonCall) {
-                        append(":")
-                    } else {
-                        append(".")
+                    if (parentTy != null) {
+                        if (ty.isColonCall) {
+                            append(":")
+                        } else {
+                            append(".")
+                        }
                     }
 
                     append(name)
