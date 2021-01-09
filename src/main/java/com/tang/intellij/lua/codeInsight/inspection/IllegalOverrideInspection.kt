@@ -38,19 +38,27 @@ class IllegalOverrideInspection : LocalInspectionTool() {
         return object : LuaVisitor() {
             private fun inspectMember(context: SearchContext, superTy: ITy, member: LuaClassMember, sourceTy: ITy, source: LuaPsiElement) {
                 val indexTy = member.guessIndexType(context)
-                val superMemberTy = if (indexTy != null) {
-                    superTy.guessIndexerType(indexTy, context, true)
+                val superMember = if (indexTy != null) {
+                    superTy.findEffectiveIndexer(indexTy, context, true)
                 } else {
-                    member.name?.let { superTy.guessMemberType(it, context) }
+                    member.name?.let { superTy.findEffectiveMember(it, context) }
                 }
+                val superMemberTy = superMember?.guessType(context)
 
                 if (superMemberTy != null) {
                     val varianceFlags = if (source is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
                     val fieldIdentifier = member.name?.let { "\"${it}\"" } ?: "[${indexTy!!.displayName}]"
 
                     ProblemUtil.contravariantOf(superMemberTy, sourceTy, context, varianceFlags, null, source) { problem ->
-                        val message = "Illegal override of ${fieldIdentifier}. ${problem.message}"
-                        val highlightType = problem.highlightType ?: ProblemHighlightType.ERROR
+                        val isPublic = superMember.visibility != Visibility.PROTECTED && superMember.visibility != Visibility.PRIVATE
+
+                        val severity = if (isPublic) "Illegal" else "Incompatible"
+                        val message = "${severity} override of ${fieldIdentifier}. ${problem.message}"
+                        val highlightType = if (isPublic) {
+                            problem.highlightType ?: ProblemHighlightType.ERROR
+                        } else {
+                            ProblemHighlightType.WEAK_WARNING
+                        }
 
                         holder.registerProblem(problem.sourceElement, message, highlightType)
                     }
