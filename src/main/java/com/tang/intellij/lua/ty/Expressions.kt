@@ -16,7 +16,6 @@
 
 package com.tang.intellij.lua.ty
 
-import com.intellij.openapi.util.Computable
 import com.intellij.psi.PsiElement
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
@@ -298,17 +297,6 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
     return selfSubstitutor
 }
 
-private fun LuaCallExpr.getReturnTy(sig: IFunSignature, context: SearchContext): ITy? {
-    val substitutor = createSubstitutor(sig, context)
-    val returnTy = sig.returnTy?.substitute(substitutor) ?: TyMultipleResults(listOf(Ty.UNKNOWN), true)
-
-    return if (context.supportsMultipleResults) {
-        returnTy
-    } else {
-        TyMultipleResults.getResult(context, returnTy, context.index)
-    }
-}
-
 private fun LuaCallExpr.infer(context: SearchContext): ITy? {
     val luaCallExpr = this
     // xxx()
@@ -343,15 +331,19 @@ private fun LuaCallExpr.infer(context: SearchContext): ITy? {
             return TyMultipleResults(listOf(Ty.UNKNOWN), true)
         }
 
-        val returnTy = it.matchSignature(context, this)?.substitutedSignature?.let {
-            getReturnTy(it, context)
-        }
+        val signatureReturnTy = it.matchSignature(context, this)?.returnTy
 
-        if (returnTy == null) {
+        if (signatureReturnTy == null) {
             return null
         }
 
-        ret = ret.union(returnTy, context)
+        val contextualReturnTy = if (context.supportsMultipleResults) {
+            signatureReturnTy
+        } else {
+            TyMultipleResults.getResult(context, signatureReturnTy, context.index)
+        }
+
+        ret = ret.union(contextualReturnTy, context)
     }
 
     return ret

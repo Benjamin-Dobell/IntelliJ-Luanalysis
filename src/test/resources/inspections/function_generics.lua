@@ -221,7 +221,7 @@ local stringNumberTable
 stringOrNumber = <error descr="Type mismatch. Required: 'number | string' Found: 'table<string, number>'">fn8(anyString, number1, stringNumberTable)</error>
 stringNumberTable = fn8(anyString, number1, stringNumberTable)
 stringNumberTable = fn8(string1, number1, stringNumberTable)
-stringNumberTable = fn8(anyString, number1, <error descr="Type mismatch. Required: 'table<number | string, number>' Found: 'number[]'">numberArray</error>)
+stringNumberTable = <error descr="Type mismatch. Required: 'table<string, number>' Found: 'table<number | string, number>'">fn8(anyString, number1, <error descr="Type mismatch. Required: 'table<number | string, number>' Found: 'number[]'">numberArray</error>)</error>
 stringNumberTable = <error descr="Type mismatch. Required: 'table<string, number>' Found: 'table<number, number>'">fn8(anyNumber, number1, numberArray)</error>
 
 

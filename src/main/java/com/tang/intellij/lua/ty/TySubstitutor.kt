@@ -373,6 +373,16 @@ class TyParameterSubstitutor(searchContext: SearchContext, val map: Map<String, 
     }
 }
 
+class ParameterOmissionSubstitutor(context: SearchContext) : TySubstitutor(context) {
+    override fun substitute(clazz: ITyClass): ITy {
+        if (clazz is TyGenericParameter) {
+            return clazz.getSuperClass(searchContext)?.substitute(this) ?: Ty.UNKNOWN
+        }
+
+        return clazz
+    }
+}
+
 class TyChainSubstitutor private constructor(a: ITySubstitutor, b: ITySubstitutor) : ITySubstitutor {
     val substitutors = mutableListOf<ITySubstitutor>()
 

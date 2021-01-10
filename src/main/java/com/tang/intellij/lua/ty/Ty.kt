@@ -78,7 +78,7 @@ class TyVarianceFlags {
     }
 }
 
-class SignatureMatchResult(val signature: IFunSignature, val substitutedSignature: IFunSignature)
+data class SignatureMatchResult(val signature: IFunSignature?, val substitutedSignature: IFunSignature?, val returnTy: ITy)
 
 interface ITy : Comparable<ITy> {
     val kind: TyKind
@@ -285,6 +285,7 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
     val variadicArg: MatchFunctionSignatureInspection.ConcreteTypeInfo? = multipleResultsVariadicTypeInfo
     val problems = if (processProblem != null) mutableMapOf<IFunSignature, Collection<Problem>>() else null
     val candidates = findCandidateSignatures(context, call)
+    var fallbackReturnTy: ITy? = null
 
     candidates.forEach {
         var parameterCount = 0
@@ -411,7 +412,11 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                 signatureProblems?.forEach(processProblem)
             }
 
-            return SignatureMatchResult(it, signature)
+            return SignatureMatchResult(it, signature, signature.returnTy ?: TyMultipleResults(listOf(Ty.UNKNOWN), true))
+        }
+
+        if (fallbackReturnTy == null && signature.returnTy != Ty.VOID) {
+            fallbackReturnTy = signature.returnTy
         }
 
         if (signatureProblems != null) {
@@ -430,7 +435,31 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
         }
     }
 
-    return null
+    if (fallbackReturnTy == null) {
+        fallbackReturnTy = if (candidates.size > 0) {
+            Ty.VOID
+        } else if (this is ITyFunction) {
+            val substitutor = call.createSubstitutor(this.mainSignature, context)
+            this.mainSignature.substitute(substitutor).returnTy ?: TyMultipleResults(listOf(Ty.UNKNOWN), true)
+        } else {
+            var fallbackSignature: IFunSignature? = null
+
+            processSignatures(context) {
+                fallbackSignature = it
+                false
+            }
+
+            fallbackSignature?.let { it.returnTy ?: TyMultipleResults(listOf(Ty.UNKNOWN), true) }
+        }
+    }
+
+    if (fallbackReturnTy == null) {
+        // Not callable
+        return null
+    }
+
+    // Callable, but no matching signature
+    return SignatureMatchResult(null, null, fallbackReturnTy!!.substitute(ParameterOmissionSubstitutor(context)))
 }
 
 fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, problemsHolder: ProblemsHolder): SignatureMatchResult? {

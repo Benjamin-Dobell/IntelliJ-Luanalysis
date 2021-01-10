@@ -69,13 +69,11 @@ class MatchFunctionSignatureInspection : StrictInspection() {
                         return@each
                     }
 
-                    var problemReported = false
-                    val signatureMatch = it.matchSignature(searchContext, o) { problem ->
+                    val matchResult = it.matchSignature(searchContext, o) { problem ->
                         myHolder.registerProblem(problem.sourceElement, problem.message, problem.highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
-                        problemReported = true
                     }
 
-                    if (signatureMatch != null || problemReported) {
+                    if (matchResult != null) {
                         return
                     }
 
@@ -88,25 +86,9 @@ class MatchFunctionSignatureInspection : StrictInspection() {
                             val idExpr = prefixExpr.idExpr
 
                             if (memberName != null) {
-                                val method = parentType.getSuperClass(searchContext)?.guessMemberType(memberName, searchContext) as? ITyFunction
-
-                                if (method != null) {
-                                    method.matchSignature(searchContext, o, myHolder)
-                                } else {
-                                    myHolder.registerProblem(o, "Unknown function '$memberName'.")
-                                }
+                                myHolder.registerProblem(o, "Unknown function '$memberName'.")
                             } else if (idExpr != null) {
-                                val indexTy = idExpr.guessType(searchContext) ?: Ty.UNKNOWN
-
-                                TyUnion.each(indexTy) {
-                                    val method = parentType.findIndexer(it, searchContext)?.guessType(searchContext) as? ITyFunction
-
-                                    if (method != null) {
-                                        method.matchSignature(searchContext, o, myHolder)
-                                    } else {
-                                        myHolder.registerProblem(o, "Unknown function '[${it.displayName}]'")
-                                    }
-                                }
+                                myHolder.registerProblem(o, "Unknown function '[${it.displayName}]'.")
                             }
                         }
                     } else {
