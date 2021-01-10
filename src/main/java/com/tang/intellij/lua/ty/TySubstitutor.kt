@@ -318,7 +318,13 @@ class TyAliasSubstitutor private constructor(searchContext: SearchContext) : TyS
 
 class TySelfSubstitutor(context: SearchContext, val call: LuaCallExpr?, val self: ITy? = null) : TySubstitutor(context) {
     private val selfType: ITy by lazy {
-        self ?: (call?.prefixExpression?.guessType(searchContext) ?: Ty.UNKNOWN)
+        if (self != null) {
+            return@lazy self
+        }
+
+        call?.let {
+            it.prefixExpression?.guessType(searchContext) ?: it.expression.guessType(searchContext)
+        } ?: Ty.UNKNOWN
     }
 
     override fun substitute(clazz: ITyClass): ITy {

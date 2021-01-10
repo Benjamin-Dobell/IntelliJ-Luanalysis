@@ -62,7 +62,7 @@ interface ITyClass : ITyResolvable {
     override fun resolve(context: SearchContext, genericArgs: Array<out ITy>?): ITy {
         return if (willResolve(context)) {
             val scopedType = context.element?.let {
-                LuaScopedTypeTree.get(it.containingFile).find(context, it, className)?.type
+                LuaScopedTypeTree.get(it.containingFile).findName(context, it, className)?.type
             }
 
             if (scopedType != null) {
@@ -563,7 +563,7 @@ private fun getDocTableImplicitParams(table: LuaDocTableDef): Array<TyGenericPar
         if (value is LuaDocGeneralTy) {
             val name = value.typeRef.name
             val scopedType = SearchContext.withDumb(value.project, null) {
-                (LuaScopedTypeTree.get(value.containingFile).find(it, value, name) as? LuaDocGenericDef)?.type
+                (LuaScopedTypeTree.get(value.containingFile).findName(it, value, name) as? LuaDocGenericDef)?.type
             }
 
             if (scopedType != null && !params.contains(scopedType)) {

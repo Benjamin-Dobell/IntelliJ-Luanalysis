@@ -3,6 +3,7 @@ local aNumber
 
 ---@class SelfA
 ---@field a string
+---@overload fun(): self
 local SelfA = {}
 
 ---@return self
@@ -64,32 +65,39 @@ end
 local selfA
 
 ---@class SelfB : SelfA
+---@overload fun(): self
 ---@field bb string
 local SelfB = {}
 
 ---@type SelfB
 local selfB
 
+selfB = SelfB()
 selfB = SelfB:colonMethod()
 selfB = SelfB:dotMethod()
 selfB = SelfB:lambdaMethod()
 
+selfA = SelfA()
 selfA = SelfB:colonMethod()
 selfA = SelfB:dotMethod()
 selfA = SelfB:lambdaMethod()
 
+selfB = <error descr="Type mismatch. Required: 'SelfB' Found: 'SelfA'">SelfA()</error>
 selfB = <error descr="Type mismatch. Required: 'SelfB' Found: 'SelfA'">SelfA:colonMethod()</error>
 selfB = <error descr="Type mismatch. Required: 'SelfB' Found: 'SelfA'">SelfA:dotMethod()</error>
 selfB = <error descr="Type mismatch. Required: 'SelfB' Found: 'SelfA'">SelfA:lambdaMethod()</error>
 
+selfB = selfB()
 selfB = selfB:colonMethod()
 selfB = selfB:dotMethod()
 selfB = selfB:lambdaMethod()
 
+selfA = selfA()
 selfA = selfB:colonMethod()
 selfA = selfB:dotMethod()
 selfA = selfB:lambdaMethod()
 
+selfB = <error descr="Type mismatch. Required: 'SelfB' Found: 'SelfA'">selfA()</error>
 selfB = <error descr="Type mismatch. Required: 'SelfB' Found: 'SelfA'">selfA:colonMethod()</error>
 selfB = <error descr="Type mismatch. Required: 'SelfB' Found: 'SelfA'">selfA:dotMethod()</error>
 selfB = <error descr="Type mismatch. Required: 'SelfB' Found: 'SelfA'">selfA:lambdaMethod()</error>

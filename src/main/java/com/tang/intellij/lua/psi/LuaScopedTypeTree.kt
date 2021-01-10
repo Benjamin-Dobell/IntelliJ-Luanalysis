@@ -61,7 +61,8 @@ interface LuaScopedTypeTree {
         }
     }
 
-    fun find(context: SearchContext, pin: PsiElement, name: String): LuaScopedType?
+    fun findOwner(context: SearchContext, pin: PsiElement): LuaScopedType?
+    fun findName(context: SearchContext, pin: PsiElement, name: String): LuaScopedType?
 }
 
 private class ScopedTypeTreeScope(val psi: PsiElement, val treeBuilder: ScopedTypeTree, val parent: ScopedTypeTreeScope?) {
@@ -115,15 +116,19 @@ private class ScopedTypeTreeScope(val psi: PsiElement, val treeBuilder: ScopedTy
         return null
     }
 
-    fun find(context: SearchContext, name: String, beforeIndex: Int? = null): LuaScopedType? {
-        val type = if (beforeIndex != null) {
-            get(name, beforeIndex)
-        } else {
-            get(name)
-        }
+    fun find(context: SearchContext, name: String? = null, beforeIndex: Int? = null): LuaScopedType? {
+        if (name != null) {
+            val type = if (beforeIndex != null) {
+                get(name, beforeIndex)
+            } else {
+                get(name)
+            }
 
-        if (type != null) {
-            return type
+            if (type != null) {
+                return type
+            }
+        } else if (psi is LuaDocTagClass) {
+            return psi
         }
 
         val cls: ITyClass? = if (psi is LuaClassMethodDefStat) {
@@ -140,6 +145,10 @@ private class ScopedTypeTreeScope(val psi: PsiElement, val treeBuilder: ScopedTy
             } else if (cls is TyPsiDocClass) {
                 cls.tagClass
             } else null
+
+            if (name == null) {
+                return classTag
+            }
 
             val genericDef = PsiTreeUtil.getStubChildrenOfTypeAsList(classTag, LuaDocGenericDef::class.java).firstOrNull {
                 it.name == name
@@ -243,7 +252,11 @@ private abstract class ScopedTypeTree(val file: PsiFile) : LuaRecursiveVisitor()
 
     abstract fun findScope(element: PsiElement): FoundScope?
 
-    override fun find(context: SearchContext, pin: PsiElement, name: String): LuaScopedType? {
+    override fun findOwner(context: SearchContext, pin: PsiElement): LuaScopedType? {
+        return findScope(pin)?.scope?.find(context)
+    }
+
+    override fun findName(context: SearchContext, pin: PsiElement, name: String): LuaScopedType? {
         return findScope(pin)?.let {
             it.scope.find(context, name, it.psiScopedTypeIndex)
         }
@@ -258,7 +271,7 @@ private abstract class ScopedTypeTree(val file: PsiFile) : LuaRecursiveVisitor()
             push(create(element))
             traverseChildren(element)
             pop()
-        } else if (element is LuaDocTagOverload) {
+        } else if (element is LuaDocTagOverload && currentScope.psi !is LuaDocTagClass) {
             // Typically generic defs (@generic) are scoped to the function owner. However, overloads are a special case
             // where generics defs must be scoped to the overload only i.e. cannot be referenced in the function body.
             val previousScope = currentScope
@@ -288,23 +301,23 @@ private class ScopedTypePsiTree(file: PsiFile) : ScopedTypeTree(file) {
         var psiScopedType: LuaScopedType? = null
 
         while (psi != null) {
-            if (psi is LuaScopedType) {
+            if (psiScopedType == null && psi is LuaScopedType) {
                 psiScopedType = psi
-            } else {
-                val candidatePsi = (psi as? LuaComment)?.tagClass ?: psi
+            }
 
-                if (isValidTypeScope(candidatePsi)) {
-                    var scope = candidatePsi.getUserData(scopeKey)
+            val candidatePsi = (psi as? LuaComment)?.tagClass ?: psi
 
-                    if (scope == null) {
-                        buildTree(element.containingFile)
-                        scope = candidatePsi.getUserData(scopeKey)
-                    }
+            if (isValidTypeScope(candidatePsi)) {
+                var scope = candidatePsi.getUserData(scopeKey)
 
-                    return if (scope != null) {
-                        FoundScope(scope, psiScopedType?.let { scope.indexOf(psiScopedType) })
-                    } else null
+                if (scope == null) {
+                    buildTree(element.containingFile)
+                    scope = candidatePsi.getUserData(scopeKey)
                 }
+
+                return if (scope != null) {
+                    FoundScope(scope, psiScopedType?.let { scope.indexOf(psiScopedType) })
+                } else null
             }
 
             psi = psi.parent

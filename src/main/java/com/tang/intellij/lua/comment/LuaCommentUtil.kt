@@ -20,7 +20,6 @@ import com.intellij.codeInsight.template.Template
 import com.intellij.codeInsight.template.TemplateManager
 import com.intellij.openapi.editor.Editor
 import com.tang.intellij.lua.comment.psi.LuaDocPsiElement
-import com.tang.intellij.lua.comment.psi.LuaDocTagType
 import com.tang.intellij.lua.comment.psi.api.LuaComment
 import com.tang.intellij.lua.psi.*
 

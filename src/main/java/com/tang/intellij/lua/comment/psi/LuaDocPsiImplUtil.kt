@@ -63,7 +63,7 @@ fun resolveType(docTypeRef: LuaDocTypeRef, context: SearchContext): ITy {
         return if (contextClass != null) TyClass.createSelfType(contextClass) else Ty.UNKNOWN
     }
 
-    return LuaScopedTypeTree.get(docTypeRef.containingFile).find(context, docTypeRef, docTypeRef.text)?.type ?: Ty.create(docTypeRef.text)
+    return LuaScopedTypeTree.get(docTypeRef.containingFile).findName(context, docTypeRef, docTypeRef.text)?.type ?: Ty.create(docTypeRef.text)
 }
 
 fun getName(identifierOwner: PsiNameIdentifierOwner): String? {

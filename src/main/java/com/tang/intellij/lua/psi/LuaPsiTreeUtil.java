@@ -164,40 +164,8 @@ public class LuaPsiTreeUtil {
 
     @NotNull
     public static ITy findContextClass(PsiElement current, SearchContext context) {
-        while (!(current instanceof PsiFile)) {
-            if (current instanceof LuaFuncBodyOwner<?>) {
-                LuaFuncBodyOwner<?> funcBodyOwner = (LuaFuncBodyOwner<?>) current;
-                ITy ty = funcBodyOwner.guessParentType(context);
-
-                if (ty != null) {
-                    return ty;
-                }
-            } else if (current instanceof LuaAssignStat) {
-                LuaAssignStat assignStat = (LuaAssignStat) current;
-                LuaExprList valueExprList = assignStat.getValueExprList();
-                List<LuaExpression<?>> expressionList = valueExprList != null ? valueExprList.getExpressionList() : null;
-
-                if (expressionList != null && expressionList.size() == 1) {
-                    LuaExpression<?> luaExpression = expressionList.get(0);
-                    LuaExpression<?> varExpr = assignStat.getVarExprList().getExpressionList().get(0);
-
-                    if (luaExpression instanceof LuaFuncBodyOwner<?> && varExpr instanceof LuaIndexExpr) {
-                        LuaIndexExpr indexExpr = (LuaIndexExpr) varExpr;
-
-                        if (indexExpr.getExpressionList().size() != 1 || !indexExpr.getFirstChild().getText().equals(Constants.WORD_SELF)) {
-                            ITy ty = indexExpr.guessParentType(context);
-
-                            if (ty != Ty.Companion.getUNKNOWN()) {
-                                return ty;
-                            }
-                        }
-                    }
-                }
-            }
-
-            current = current.getParent();
-        }
-        return Ty.Companion.getUNKNOWN();
+        LuaScopedType scopedType = LuaScopedTypeTree.Companion.get(current.getContainingFile()).findOwner(context, current);
+        return scopedType != null ? scopedType.getType() : Ty.Companion.getUNKNOWN();
     }
 
     @Nullable
@@ -205,7 +173,7 @@ public class LuaPsiTreeUtil {
         PsiElement contextElement = searchContext.getElement();
 
         if (contextElement != null) {
-            LuaScopedType scopedType = LuaScopedTypeTree.Companion.get(contextElement.getContainingFile()).find(searchContext, contextElement, name);
+            LuaScopedType scopedType = LuaScopedTypeTree.Companion.get(contextElement.getContainingFile()).findName(searchContext, contextElement, name);
 
             if (scopedType instanceof LuaClass) {
                 return (LuaClass) scopedType;
@@ -220,7 +188,7 @@ public class LuaPsiTreeUtil {
         PsiElement contextElement = searchContext.getElement();
 
         if (contextElement != null) {
-            LuaScopedType scopedType = LuaScopedTypeTree.Companion.get(contextElement.getContainingFile()).find(searchContext, contextElement, name);
+            LuaScopedType scopedType = LuaScopedTypeTree.Companion.get(contextElement.getContainingFile()).findName(searchContext, contextElement, name);
 
             if (scopedType != null) {
                 return scopedType;

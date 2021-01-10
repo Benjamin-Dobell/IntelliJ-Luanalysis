@@ -127,6 +127,7 @@ public class LuaDocVisitor extends PsiElementVisitor {
     visitPsiElement(o);
     // visitPsiNameIdentifierOwner(o);
     // visitLuaClass(o);
+    // visitLuaScopedType(o);
     // visitLuaTypeScope(o);
     // visitTag(o);
   }
