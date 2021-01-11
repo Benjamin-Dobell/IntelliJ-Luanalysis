@@ -380,26 +380,6 @@ open class TySerializedClass(name: String,
 
         return super.contravariantOf(other, context, flags)
     }
-
-    override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
-        val memberTy = super.guessMemberType(name, searchContext)
-
-        if (memberTy == null && isUnknown && LuaSettings.instance.isUnknownIndexable) {
-            return Ty.UNKNOWN
-        }
-
-        return memberTy
-    }
-
-    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
-        val memberTy = super.guessIndexerType(indexTy, searchContext, exact)
-
-        if (memberTy == null && isUnknown && LuaSettings.instance.isUnknownIndexable) {
-            return Ty.UNKNOWN
-        }
-
-        return memberTy
-    }
 }
 
 class TyLazyClass(name: String, val psi: PsiElement? = null) : TySerializedClass(name, null) {

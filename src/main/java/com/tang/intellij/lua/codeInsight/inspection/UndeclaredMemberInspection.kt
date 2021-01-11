@@ -40,13 +40,13 @@ class UndeclaredMemberInspection : StrictInspection() {
                     Ty.eachResolved(prefix, context) { prefixTy ->
                         if (!prefixTy.isGlobal && !(prefixTy.isUnknown && LuaSettings.instance.isUnknownIndexable)) {
                             if (memberName != null) {
-                                if (prefixTy.findMember(memberName, context) == null) {
+                                if (prefixTy.guessMemberType(memberName, context) == null) {
                                     myHolder.registerProblem(o, "No such member '%s' found on type '%s'".format(memberName, prefixTy))
                                 }
                             } else {
                                 o.idExpr?.guessType(context)?.let { indexTy ->
                                     Ty.eachResolved(indexTy, context) {
-                                        if (it !is TySnippet && prefixTy.findIndexer(it, context) == null) {
+                                        if (it !is TySnippet && prefixTy.guessIndexerType(it, context) == null) {
                                             myHolder.registerProblem(o, "No such indexer '[%s]' found on type '%s'".format(it.displayName, prefixTy))
                                         }
                                     }

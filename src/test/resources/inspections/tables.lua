@@ -14,6 +14,9 @@ local numberNumberTable
 ---@type table<number, string>
 local numberStringTable
 
+---@type number
+local aNumber
+
 ---@type number[]
 local numberArray
 
@@ -146,3 +149,10 @@ tableLiteralWithNonLiteralKey = <error descr="Type mismatch. Required: 'table<st
 
 ---@type number[]
 local arr = {1, 2, 3, <error descr="Type mismatch. Required array index: '4' Found non-contiguous index: '5'">[5]=1</error>}
+
+---@vararg number
+local function returnsImplicitNumberArray(...)
+    return {...}
+end
+
+aNumber = returnsImplicitNumberArray(1)[1]

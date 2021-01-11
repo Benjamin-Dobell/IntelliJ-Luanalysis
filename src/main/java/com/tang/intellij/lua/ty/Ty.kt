@@ -172,10 +172,20 @@ interface ITy : Comparable<ITy> {
     }
 
     fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
-        return findEffectiveMember(name, searchContext)?.guessType(searchContext)?.let {
+        val member = findEffectiveMember(name, searchContext)
+
+        if (member == null) {
+            return if (isUnknown && LuaSettings.instance.isUnknownIndexable) {
+                Ty.UNKNOWN
+            } else {
+                null
+            }
+        }
+
+        return member.guessType(searchContext)?.let {
             val substitutor = getMemberSubstitutor(searchContext)
             return if (substitutor != null) it.substitute(substitutor) else it
-        }
+        } ?: Ty.UNKNOWN
     }
 
     fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean = false): ITy? {
@@ -185,10 +195,24 @@ interface ITy : Comparable<ITy> {
         }
 
         Ty.eachResolved(indexTy, searchContext) { resolvedIndexTy ->
-            val memberTy = findEffectiveIndexer(resolvedIndexTy, searchContext, exact)?.guessType(searchContext)?.let {
+            val member = findEffectiveIndexer(resolvedIndexTy, searchContext, exact)
+
+            if (member == null) {
+                if (isUnknown && LuaSettings.instance.isUnknownIndexable) {
+                    return Ty.UNKNOWN
+                } else {
+                    return@eachResolved
+                }
+            }
+
+            val memberTy = member.guessType(searchContext)?.let {
                 substitutor.value?.let { substitutor ->
                     it.substitute(substitutor)
                 } ?: it
+            }
+
+            if (memberTy == null) {
+                return Ty.UNKNOWN
             }
 
             ty = TyUnion.union(ty, memberTy, searchContext)

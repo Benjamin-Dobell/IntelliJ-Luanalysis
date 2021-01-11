@@ -403,8 +403,7 @@ private fun getType(context: SearchContext, def: PsiElement): ITy? {
 
             var type: ITy? = def.docTy
 
-            //guess from value expr
-            if (Ty.isInvalid(type) /*&& !context.forStub*/) {
+            if (type == null) {
                 val stat = def.assignStat
                 if (stat != null) {
                     val exprList = stat.valueExprList
@@ -472,7 +471,7 @@ private fun LuaIndexExpr.infer(context: SearchContext): ITy? {
             result = TyUnion.union(result, guessFieldType(indexExpr, ty, context), context)
         }
 
-        if (result == null) {
+        if (result?.isUnknown != false) {
             // xxx.yyy = zzz
             result = indexExpr.assignStat?.let {
                 context.withIndex(it.getIndexFor(indexExpr), false) {
