@@ -520,6 +520,10 @@ class TyTable(val table: LuaTableExpr) : TyClass(getTableTypeName(table)) {
         this.flags = TyFlags.ANONYMOUS_TABLE or TyFlags.SHAPE
     }
 
+    override fun willResolve(context: SearchContext): Boolean {
+        return false
+    }
+
     override fun toString(): String = displayName
 
     override fun doLazyInit(searchContext: SearchContext) = Unit
@@ -562,7 +566,11 @@ class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table)
         this.flags = TyFlags.SHAPE
     }
 
-    override fun doLazyInit(searchContext: SearchContext) {}
+    override fun willResolve(context: SearchContext): Boolean {
+        return false
+    }
+
+    override fun doLazyInit(searchContext: SearchContext) = Unit
 
     override fun processMembers(context: SearchContext, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
         table.tableFieldList.forEach {
