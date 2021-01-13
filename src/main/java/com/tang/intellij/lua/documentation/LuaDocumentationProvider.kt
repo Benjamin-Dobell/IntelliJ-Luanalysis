@@ -127,7 +127,17 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
 
                 if (parentTy != null) {
                     val renderedParentTy = if (parentTy is ITyArray) parentTy.base else parentTy
+                    val parenthesesRequired = renderedParentTy is TyUnion || (renderedParentTy is TyGenericParameter && renderedParentTy.superClass != null)
+
+                    if (parenthesesRequired) {
+                        sb.append("(")
+                    }
+
                     renderTy(sb, renderedParentTy, tyRenderer)
+
+                    if (parenthesesRequired) {
+                        sb.append(")")
+                    }
                 }
 
                 val name = classMember.name
@@ -151,7 +161,18 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
                     renderSignature(sb, ty.mainSignature, tyRenderer)
                 } else {
                     sb.append(": ")
+
+                    val parenthesesRequired = ty is TyGenericParameter && ty.superClass != null
+
+                    if (parenthesesRequired) {
+                        sb.append("(")
+                    }
+
                     renderTy(sb, ty, tyRenderer)
+
+                    if (parenthesesRequired) {
+                        sb.append(")")
+                    }
                 }
 
                 (classMember as? LuaNameExpr)?.let { nameExpr ->

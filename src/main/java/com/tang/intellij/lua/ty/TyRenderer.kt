@@ -90,7 +90,8 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
             }
 
             override fun visitArray(array: ITyArray) {
-                val parenthesesRequired = array.base is TyUnion
+                val base = array.base
+                val parenthesesRequired = base is TyUnion || (base is TyGenericParameter && base.superClass != null)
 
                 if (parenthesesRequired) {
                     sb.append("(")
