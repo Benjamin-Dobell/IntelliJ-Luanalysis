@@ -48,7 +48,7 @@ class GenericConstraintInspection : LocalInspectionTool() {
 
                     params.forEachIndexed { index, param ->
                         if (index < args.size) {
-                            genericAnalyzer.analyze(args[index].getType(), param)
+                            genericAnalyzer.analyze(args[index].getType(), param, context)
                         }
                     }
 

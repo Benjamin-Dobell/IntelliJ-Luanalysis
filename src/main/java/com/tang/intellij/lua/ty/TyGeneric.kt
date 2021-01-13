@@ -64,11 +64,13 @@ class TyGenericParameter(val name: String, varName: String, superClass: ITy? = n
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
         return if (flags and TyVarianceFlags.ABSTRACT_PARAMS != 0) {
-            superClass?.contravariantOf(other, context, flags) ?: true
-        } else super.contravariantOf(other, context, flags)
+            getSuperClass(context)?.contravariantOf(other, context, flags) ?: true
+        } else {
+            super.contravariantOf(other, context, flags)
+        }
     }
 
-    override fun doLazyInit(searchContext: SearchContext) {}
+    override fun doLazyInit(searchContext: SearchContext) = Unit
 
     override fun willResolve(context: SearchContext): Boolean {
         return false

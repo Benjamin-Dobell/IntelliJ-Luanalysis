@@ -239,7 +239,7 @@ local stringStringTable
 -- K = string, T = table<string, string>
 anyString = <error descr="Type mismatch. Required: 'string' Found: 'table<string, string>'">fn9(anyString, stringStringTable)</error>
 stringStringTable = fn9(anyString, stringStringTable)
-stringStringTable = fn9(anyString, <error descr="Type mismatch. Required: 'T : table<K : string, string>' Found: 'table<string, number>'">stringNumberTable</error>)
+stringStringTable = <error descr="Type mismatch. Required: 'table<string, string>' Found: 'T : table<K : string, string>'">fn9(anyString, <error descr="Type mismatch. Required: 'T : table<K : string, string>' Found: 'table<string, number>'">stringNumberTable</error>)</error>
 stringStringTable = fn9(string1, stringStringTable)
 
 ---@type table<"string1", string>
@@ -568,3 +568,56 @@ end
 local substitutedArray = genericArray( anyNumber)
 anyNumber = substitutedArray[1]
 numberArray = substitutedArray
+
+---@class BaseClassForGeneric
+---@field A number
+
+---@class DerivedClassForGeneric : BaseClassForGeneric
+---@field B number
+
+---@generic T : BaseClassForGeneric
+---@param t T
+---@return T
+local function genericPassThrough1(t)
+    return t
+end
+
+---@generic T : BaseClassForGeneric
+---@param t T
+local function genericPassThrough2(t)
+    ---@type T
+    local result = genericPassThrough1(t)
+end
+
+---@generic B, D: B
+---@param base B
+---@param derivedArray D[]
+---@return D
+local function genericReferencingConstraint(base, derivedArray)
+    return derivedArray[1]
+end
+
+---@type BaseClassForGeneric
+local baseClass
+
+---@type DerivedClassForGeneric
+local derivedClass
+
+---@type BaseClassForGeneric[]
+local baseClassArray
+
+---@type DerivedClassForGeneric[]
+local derivedClassArray
+
+derivedClass = genericReferencingConstraint(baseClass, {[1] = derivedClass})
+derivedClass = genericReferencingConstraint(baseClass, derivedClassArray)
+baseClass = genericReferencingConstraint(baseClass, {[1] = baseClass})
+derivedClass = <error descr="Type mismatch. Required: 'DerivedClassForGeneric' Found: 'BaseClassForGeneric'">genericReferencingConstraint(baseClass, {[1] = baseClass})</error> -- Expect error
+
+---@generic A: B, B: A
+---@param a A
+---@param b B
+local function illegalGenericConstraint(a, b) end
+
+-- Not valid, but shouldn't raise an exception (i.e. no stack overflow).
+illegalGenericConstraint(<error descr="Type mismatch. Required: 'A : B' Found: '1'">1</error>, <error descr="Type mismatch. Required: 'B : A' Found: '1'">1</error>) -- Expect error

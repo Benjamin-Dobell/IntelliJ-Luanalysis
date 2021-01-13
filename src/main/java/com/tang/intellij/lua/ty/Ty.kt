@@ -483,7 +483,7 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
     }
 
     // Callable, but no matching signature
-    return SignatureMatchResult(null, null, fallbackReturnTy!!.substitute(ParameterOmissionSubstitutor(context)))
+    return SignatureMatchResult(null, null, fallbackReturnTy!!)
 }
 
 fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, problemsHolder: ProblemsHolder): SignatureMatchResult? {

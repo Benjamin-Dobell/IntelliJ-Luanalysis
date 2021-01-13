@@ -140,7 +140,7 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
                     val fty = element.functionTy
 
                     if (fty != null) {
-                        list.add(FunSignature.create(colonCall, fty))
+                        list.add(TyDocFunSignature(fty, colonCall))
                     }
                 }
 

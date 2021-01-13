@@ -28,6 +28,7 @@ import com.tang.intellij.lua.lang.type.LuaString
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.impl.LuaNameExprMixin
+import com.tang.intellij.lua.search.PsiSearchContext
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.search.withSearchGuard
 
@@ -264,13 +265,14 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
             }
         }
 
-        val genericAnalyzer = GenericAnalyzer(genericParams, context, this.args)
+        val paramContext = (sig as? IPsiFunSignature)?.psi?.let { PsiSearchContext(it) } ?: context
+        val genericAnalyzer = GenericAnalyzer(genericParams, paramContext, this.args)
 
         var processedIndex = -1
         sig.processParameters { index, param ->
             val arg = list.getOrNull(index)
             if (arg != null) {
-                genericAnalyzer.analyze(arg, param.ty ?: Ty.UNKNOWN)
+                genericAnalyzer.analyze(arg, param.ty ?: Ty.UNKNOWN, context)
             }
             processedIndex = index
             true
@@ -280,7 +282,7 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
         if (varargTy != null) {
             for (i in processedIndex + 1 until list.size) {
                 val argTy = list[i]
-                genericAnalyzer.analyze(argTy, varargTy)
+                genericAnalyzer.analyze(argTy, varargTy, context)
             }
         }
 
@@ -291,7 +293,7 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
             if (superCls != null && Ty.isInvalid(analyzedParams[it.name])) analyzedParams[it.name] = superCls
         }
 
-        return TyChainSubstitutor.chain(selfSubstitutor, TyParameterSubstitutor(context, analyzedParams))!!
+        return TyChainSubstitutor.chain(selfSubstitutor, TyParameterSubstitutor(paramContext, analyzedParams))!!
     }
 
     return selfSubstitutor

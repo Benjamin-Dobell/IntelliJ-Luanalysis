@@ -24,7 +24,6 @@ import com.intellij.psi.stubs.IntStubIndexExtension
 import com.intellij.psi.stubs.StubIndex
 import com.intellij.util.Processor
 import com.intellij.util.containers.ContainerUtil
-import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext

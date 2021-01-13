@@ -16,6 +16,7 @@
 
 package com.tang.intellij.lua.ty
 
+import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.Processor
@@ -39,6 +40,10 @@ interface IFunSignature {
     fun substitute(substitutor: ITySubstitutor): IFunSignature
     fun equals(other: IFunSignature, context: SearchContext): Boolean
     fun contravariantOf(other: IFunSignature, context: SearchContext, flags: Int): Boolean
+}
+
+interface IPsiFunSignature : IFunSignature {
+    val psi: PsiElement
 }
 
 fun IFunSignature.processParameters(callExpr: LuaCallExpr, processor: (index: Int, param: LuaParamInfo) -> Boolean) {
@@ -272,7 +277,7 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
     }
 }
 
-class FunSignature(colonCall: Boolean,
+open class FunSignature(colonCall: Boolean,
                    override val returnTy: ITy?,
                    params: Array<out LuaParamInfo>?,
                    override val variadicParamTy: ITy? = null,
@@ -280,16 +285,6 @@ class FunSignature(colonCall: Boolean,
 ) : FunSignatureBase(colonCall, params, genericParams) {
 
     companion object {
-        fun create(colonCall: Boolean, functionTy: LuaDocFunctionTy): FunSignature {
-            return FunSignature(
-                    colonCall,
-                    functionTy.returnType,
-                    functionTy.params as? Array<out LuaParamInfo>, // TODO: Remove cast once https://youtrack.jetbrains.com/issue/KT-36399 lands
-                    functionTy.varargParam,
-                    functionTy.genericDefList.map { TyGenericParameter(it) }.toTypedArray()
-            )
-        }
-
         fun serialize(sig: IFunSignature, stream: StubOutputStream) {
             stream.writeBoolean(sig.colonCall)
             stream.writeTyNullable(sig.returnTy)
@@ -307,6 +302,16 @@ class FunSignature(colonCall: Boolean,
             return FunSignature(colonCall, ret, params, varargTy, genericParams)
         }
     }
+}
+
+class TyDocFunSignature(luaDocFunctionTy: LuaDocFunctionTy, colonCall: Boolean) : FunSignature(
+    colonCall,
+    luaDocFunctionTy.returnType,
+    luaDocFunctionTy.params as? Array<out LuaParamInfo>, // TODO: Remove cast once https://youtrack.jetbrains.com/issue/KT-36399 lands
+    luaDocFunctionTy.varargParam,
+    luaDocFunctionTy.genericDefList.map { TyGenericParameter(it) }.toTypedArray()
+), IPsiFunSignature {
+    override val psi = luaDocFunctionTy
 }
 
 interface ITyFunction : ITy {
@@ -404,8 +409,11 @@ class TyPsiFunction(private val colonCall: Boolean, val psi: LuaFuncBodyOwner<*>
     }
 
     override val mainSignature: IFunSignature by lazy {
+        val funcBodyOwner = psi
 
-        object : FunSignatureBase(colonCall, psi.params, psi.genericParams) {
+        object : FunSignatureBase(colonCall, funcBodyOwner.params, funcBodyOwner.genericParams), IPsiFunSignature {
+            override val psi = funcBodyOwner
+
             override val returnTy: ITy by lazy {
                 val context = SearchContext.get(psi.project)
                 var returnTy = context.withMultipleResults { psi.guessReturnType(context) ?: Ty.UNKNOWN }
@@ -434,7 +442,7 @@ class TyPsiFunction(private val colonCall: Boolean, val psi: LuaFuncBodyOwner<*>
 }
 
 class TyDocPsiFunction(func: LuaDocFunctionTy) : TyFunction() {
-    override val mainSignature: IFunSignature = FunSignature.create(false, func)
+    override val mainSignature: IFunSignature = TyDocFunSignature(func, false)
     override val signatures: Array<IFunSignature> = emptyArray()
 }
 
