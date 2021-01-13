@@ -1,6 +1,14 @@
 = Luanalysis (an EmmyLua fork) for IntelliJ IDEA
 :toc:
 :toc-placement!:
+ifndef::env-github[:icons: font]
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
 
 An IDE for statically typed Lua development.
 
@@ -361,6 +369,7 @@ image:./snapshot/26_2_variadic_casts.png[image]
 
 To build, you will require a Java 11 SDK.
 
+[TIP]
 ====
 On macOS you can install Jetbrain's Java 11 SDK with:
 
@@ -372,8 +381,9 @@ brew install java11
 
 === Building
 
-You will then need to ensure the `JAVA_HOME` environment variable is point to a Java 11 SDK.
+You will then need to ensure the `JAVA_HOME` environment variable points to a Java 11 SDK.
 
+[TIP]
 ====
 On macOS, with OpenJDK 11 installed from Homebrew, this can be achieved with:
 
