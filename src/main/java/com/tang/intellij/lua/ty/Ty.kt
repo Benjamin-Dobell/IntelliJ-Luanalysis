@@ -566,7 +566,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
 
         val resolvedOther = resolve(other, context)
 
-        if (this == resolvedOther) {
+        if (this.equals(resolvedOther, context)) {
             return true
         }
 

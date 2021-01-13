@@ -106,6 +106,68 @@ fun ITyClass.isVisibleInScope(project: Project, contextTy: ITy, visibility: Visi
     return false
 }
 
+private fun equalToShape(target: ITy, source: ITy, context: SearchContext): Boolean {
+    if (source !is ITyClass || source is ITyPrimitive) {
+        return false
+    }
+
+    val sourceSubstitutor = source.getMemberSubstitutor(context)
+    val targetSubstitutor = target.getMemberSubstitutor(context)
+
+    var isEqual = true
+    var targetMemberCount = 0
+
+    target.processMembers(context, true) { _, targetMember ->
+        targetMemberCount++
+
+        val indexTy = targetMember.guessIndexType(context)
+
+        val targetMemberTy = targetMember.guessType(context).let {
+            if (it == null) {
+                return@processMembers true
+            }
+
+            if (targetSubstitutor != null) {
+                it.substitute(targetSubstitutor)
+            } else it
+        }
+
+        val sourceMember = if (indexTy != null) {
+            source.findIndexer(indexTy, context, true)
+        } else {
+            targetMember.name?.let { source.findMember(it, context) }
+        }
+
+        if (sourceMember == null) {
+            isEqual = TyUnion.find(targetMemberTy, TyNil::class.java) == null
+            return@processMembers isEqual
+        }
+
+        val sourceMemberTy = (sourceMember.guessType(context) ?: Ty.UNKNOWN).let {
+            if (sourceSubstitutor != null) it.substitute(sourceSubstitutor) else it
+        }
+
+        if (!targetMemberTy.equals(sourceMemberTy, context)) {
+            isEqual = false
+            return@processMembers false
+        }
+
+        true
+    }
+
+    if (!isEqual) {
+        return false
+    }
+
+    var sourceMemberCount = 0
+
+    source.processMembers(context, true) { _, sourceMember ->
+        sourceMemberCount++ < targetMemberCount
+    }
+
+    return targetMemberCount == sourceMemberCount
+}
+
 abstract class TyClass(override val className: String,
                        override var params: Array<TyGenericParameter>? = null,
                        override val varName: String = "",
@@ -147,9 +209,8 @@ abstract class TyClass(override val className: String,
             }
         }
 
-        if (isShape(context) && resolvedOther.isShape(context)) {
-            return contravariantOf(resolvedOther, context, 0)
-                    && resolvedOther.contravariantOf(this, context, 0)
+        if (flags and TyVarianceFlags.NON_STRUCTURAL == 0 && isShape(context) && resolvedOther.isShape(context)) {
+            return equalToShape(this, resolvedOther, context)
         }
 
         return false
