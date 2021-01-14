@@ -17,13 +17,41 @@
 <idea-plugin xmlns:xi="http://www.w3.org/2001/XInclude">
     <id>au.com.glassechidna.luanalysis</id>
     <name>Luanalysis</name>
-    <version>1.2.1</version>
+    <version>1.2.2</version>
     <category>Custom Languages</category>
     <description><![CDATA[
     An IDE for statically typed Lua development.<br>
     <p><a href="https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis">Source Code</a></p>
     ]]></description>
     <change-notes><![CDATA[
+    <strong>1.2.2</strong>
+    <ul>
+        <li>New "Illegal Overrides" inspection. Reports illegal member overrides when declaring a field/method on an inherited type.&lt;br />If you're overriding a method with an incompatible type (e.g. subclass `init` function with different parameters) then you should annotate the parent `init` (and child) as `@private`.</li>
+        <li>Improved support for progressively adding type annotations to an existing Lua codebase. Essentially, local variables (without a declaration site assignment) and function parameters are now assumed to be of type `any`.</li>
+        <li>Mouse-over documentation now supports indexed fields e.g. docs are now displayed when hovering over the `[1]` in `arr[1]`.</li>
+        <li>Inspections now traverse expressions (function calls, binary operators etc.) so you'll see more specific errors within table literals in more circumstances.</li>
+        <li>Many stdlib improvements/fixes (setmetatable, load* functions, getfenv, tostring, pcall, xpcall, assert & collectgarbage).</li>
+        <li>Migrated stdlib to the .def.lua extension. If you're writing API types (i.e. files that are never executed) it's suggested you adopt this file extension too.</li>
+        <li><a href="https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/commit/230b7fbe51999c984e991c30ed09001a4b6f2297">Formalised type widening behaviour for overridden fields</a>.</li>
+        <li>Best effort type inference for the return type of invalid function calls i.e. more chance of just seeing errors at the call site, rather than all through-out a function.</li>
+        <li>Special case handling for resolution of the `self` type when writing classes as closures i.e. expressions that look like `setmetatable(someTable, {__call=function() end})`. In such cases `self` type will be resolved based on the return type of `__call`.</li>
+        <li>Various type inference and variance detection performance improvements.</li>
+        <li>Improved handling of return types that are a union of multiple results. Rather than being flattened into a multiple result list where each component is a union during type checking, the initial structure is preserved.</li>
+        <li>Ensured method override auto-completion works in more circumstances.</li>
+        <li>Ensured primitives are never covariant of shapes.</li>
+        <li>Made an attempt to ensure the plugin is considered <a href="https://jetbrains.org/intellij/sdk/docs/basics/plugin_structure/dynamic_plugins.html">"dynamic"</a> by IDEA.</li>
+        <li>Fixed clashes between anonymous types declared at the same offer in files with the same name (in different directories or virtual file systems).</li>
+        <li>Fixed several complex type rendering issues (missing brackets etc.) in the UI.</li>
+        <li>Fixed a boolean operator type inference bug in the presence of variadic return types.</li>
+        <li>Fixed some incorrect inspections when "Unknown type (any) is indexable" is enabled".</li>
+        <li>Fixed type inference/inspections involving assignment of `nil` to a member of `table&lt;K, nil | V&gt;`</li>
+        <li>Fixed "Compute constant value" intention. However, many of the cases supported seem excessive and quite impractical. As such, this intention may be simplified in a future release.</li>
+        <li>Fixed type inference & inspections for shapes that recursively reference themselves in their fields.</li>
+        <li>Fixed auto-complete and type resolution for fields that are written to `self` typed variables.</li>
+        <li>Fixed several bugs where generic parameters declared in multiple scopes are involved in type inference.</li>
+        <li>Fixed support for generic parameters referring to other generic parameters in their type constraints.<li>
+        <li>Fixed occasional misreported generic parameter shadowed errors.</li>
+    </ul>
     <strong>1.2.1</strong>
     <ul>
         <li>Improved return inspection handling for unions of multiple results</li>
@@ -41,7 +69,7 @@
         <li>Ensured inspections are re-run in more situations when variable types or type definitions are modified.</li>
         <li>Improved lookup performance for locally scoped types, currently just generic types.</li>
         <li>Performance improvements when dealing with types defined in the non-working file.</li>
-        <li>Jump to definition behavior for fields that are members of a table, table&ltK, V&gt; or V[].</li>
+        <li>Jump to definition behavior for fields that are members of a table, table&lt;K, V&gt; or V[].</li>
         <li>Added proper descriptions for every Luanalysis inspection.</li>
         <li>Improved mouse-over pop-up docs for table literals that will be interpreted as a shape.</li>
         <li>Only a subset of inspections are now run against files with the extension <strong>.def.lua</strong> e.g. return statement inspections are not run against functions</li>
