@@ -38,4 +38,9 @@ public class Constants {
     public static final String WORD_REQUIRE = "require";
     public static final String WORD_CLOSE = "close";
     public static final String WORD_CONST = "const";
+
+    public static final String FUNCTION_SETMETATABLE = "setmetatable";
+    public static final String METAMETHOD_CALL = "__call";
+
+    public static final String SUFFIX_CLASS_SELF = "#self";
 }

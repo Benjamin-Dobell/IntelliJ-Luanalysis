@@ -124,3 +124,30 @@ classWithInstanceMethods.withParam(<error descr="Type mismatch. Required: 'Class
 Did you mean to call the method with a colon?">"abc"</error><error descr="Missing argument: a: string">)</error>
 classWithInstanceMethods.withoutParam(classWithInstanceMethods)
 classWithInstanceMethods.withParam(classWithInstanceMethods, "abc")
+
+---@class SetmetatableSelf
+---@overload fun(): self
+local SetmetatableSelf = {}
+
+setmetatable(SetmetatableSelf,  {
+    ---@return SetmetatableSelf @In the presence of setmetatable, self is given the return type of __call
+    __call = function(_)
+        ---@type self
+        local self
+
+        ---@return self
+        function self.returnsSelf()
+            return self
+        end
+
+        return self
+    end
+})
+
+---@type SetmetatableSelf
+local setmetatableSelf
+
+setmetatableSelf = SetmetatableSelf()
+setmetatableSelf = setmetatableSelf.returnsSelf()
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'SetmetatableSelf'">SetmetatableSelf()</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'SetmetatableSelf'">setmetatableSelf.returnsSelf()</error>

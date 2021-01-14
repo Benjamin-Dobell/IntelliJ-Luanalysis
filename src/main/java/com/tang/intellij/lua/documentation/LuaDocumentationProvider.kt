@@ -22,6 +22,7 @@ import com.intellij.lang.documentation.DocumentationProvider
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import com.intellij.psi.util.PsiTreeUtil
+import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass
 import com.tang.intellij.lua.comment.psi.LuaDocTagField
 import com.tang.intellij.lua.editor.completion.LuaDocumentationLookupElement
@@ -126,7 +127,12 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
                 }
 
                 if (parentTy != null) {
-                    val renderedParentTy = if (parentTy is ITyArray) parentTy.base else parentTy
+                    var renderedParentTy = if (parentTy is ITyArray) parentTy.base else parentTy
+
+                    if (renderedParentTy is TySerializedClass && renderedParentTy.className.endsWith(Constants.SUFFIX_CLASS_SELF)) {
+                        renderedParentTy = TySerializedClass(getNonSelfTypeName(renderedParentTy))
+                    }
+
                     val parenthesesRequired = renderedParentTy is TyUnion || (renderedParentTy is TyGenericParameter && renderedParentTy.superClass != null)
 
                     if (parenthesesRequired) {

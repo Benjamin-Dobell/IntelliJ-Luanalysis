@@ -164,8 +164,8 @@ public class LuaPsiTreeUtil {
 
     @NotNull
     public static ITy findContextClass(PsiElement current, SearchContext context) {
-        LuaScopedType scopedType = LuaScopedTypeTree.Companion.get(current.getContainingFile()).findOwner(context, current);
-        return scopedType != null ? scopedType.getType() : Ty.Companion.getUNKNOWN();
+        ITy ownerTy = LuaScopedTypeTree.Companion.get(current.getContainingFile()).findOwner(context, current);
+        return ownerTy != null ? ownerTy : Ty.Companion.getUNKNOWN();
     }
 
     @Nullable

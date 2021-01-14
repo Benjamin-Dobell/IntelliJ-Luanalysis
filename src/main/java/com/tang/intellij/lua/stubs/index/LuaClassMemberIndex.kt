@@ -39,7 +39,6 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
 
     companion object {
         val instance = LuaClassMemberIndex()
-        val selfRegex = Regex("#self$")
 
         private fun processKey(context: SearchContext, type: ITyClass, key: String, process: ProcessClassMember): Boolean {
             if (context.isDumb) {
@@ -245,18 +244,19 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
         }
 
         fun indexMemberStub(indexSink: IndexSink, className: String, memberName: String) {
-            val cleanClassName = className.replace(selfRegex, "")
-            indexSink.occurrence(StubKeys.CLASS_MEMBER, cleanClassName.hashCode())
-            indexSink.occurrence(StubKeys.CLASS_MEMBER, "$cleanClassName*$memberName".hashCode())
+            val nonSelfClassName = getNonSelfTypeName(className)
+            indexSink.occurrence(StubKeys.CLASS_MEMBER, nonSelfClassName.hashCode())
+            indexSink.occurrence(StubKeys.CLASS_MEMBER, "$nonSelfClassName*$memberName".hashCode())
         }
 
         fun indexIndexerStub(indexSink: IndexSink, className: String, indexTy: ITy) {
+            val nonSelfClassName = getNonSelfTypeName(className)
             TyUnion.each(indexTy) {
                 if (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String) {
-                    indexMemberStub(indexSink, className, it.value)
+                    indexMemberStub(indexSink, nonSelfClassName, it.value)
                 } else {
-                    indexMemberStub(indexSink, className, "[${it.displayName}]")
-                    indexSink.occurrence(StubKeys.CLASS_MEMBER, "$className[]".hashCode())
+                    indexMemberStub(indexSink, nonSelfClassName, "[${it.displayName}]")
+                    indexSink.occurrence(StubKeys.CLASS_MEMBER, "$nonSelfClassName[]".hashCode())
                 }
             }
         }

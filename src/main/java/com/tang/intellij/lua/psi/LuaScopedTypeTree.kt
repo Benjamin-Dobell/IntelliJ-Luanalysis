@@ -19,15 +19,13 @@ import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
+import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.comment.psi.api.LuaComment
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.index.LuaClassIndex
-import com.tang.intellij.lua.ty.ITyClass
-import com.tang.intellij.lua.ty.TyPsiDocClass
-import com.tang.intellij.lua.ty.TySerializedClass
-import com.tang.intellij.lua.ty.isAnonymous
+import com.tang.intellij.lua.ty.*
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -61,7 +59,7 @@ interface LuaScopedTypeTree {
         }
     }
 
-    fun findOwner(context: SearchContext, pin: PsiElement): LuaScopedType?
+    fun findOwner(context: SearchContext, pin: PsiElement): ITy?
     fun findName(context: SearchContext, pin: PsiElement, name: String): LuaScopedType?
 }
 
@@ -116,28 +114,54 @@ private class ScopedTypeTreeScope(val psi: PsiElement, val treeBuilder: ScopedTy
         return null
     }
 
-    fun find(context: SearchContext, name: String? = null, beforeIndex: Int? = null): LuaScopedType? {
-        if (name != null) {
-            val type = if (beforeIndex != null) {
-                get(name, beforeIndex)
-            } else {
-                get(name)
-            }
-
-            if (type != null) {
-                return type
-            }
-        } else if (psi is LuaDocTagClass) {
-            return psi
+    private fun getOwner(context: SearchContext): ITy? {
+        if (psi is LuaClassMethodDefStat) {
+            return psi.guessParentType(context)
         }
 
-        val cls: ITyClass? = if (psi is LuaClassMethodDefStat) {
-            psi.guessParentType(context) as? ITyClass
-        } else if (psi is LuaAssignStat) {
-            (psi.varExprList.expressionList.first() as? LuaIndexExpr)?.guessParentType(context) as? ITyClass
+        if (psi is LuaAssignStat) {
+            return (psi.varExprList.expressionList.first() as? LuaIndexExpr)?.guessParentType(context)
+        }
+
+        // We attempt to detect metatable literals, and within the table treat the owner (self) as return value of __call
+        if (psi is LuaTableField) {
+            return ((PsiTreeUtil.getParentOfType(psi, LuaStatement::class.java) as? LuaExprStat)?.expression as? LuaCallExpr)?.let { callExpr ->
+                val argList = callExpr.argList
+
+                // Note: We're not resolving the call expression because we want this to work in "dumb mode" (i.e. during indexing). If the user
+                //       has a "setmetatable" in scope that isn't functionally equivalent to Lua's setmetatable... too bad.
+                if (argList.size == 2 && argList[1] == psi.parent && callExpr.nameExpr?.text == Constants.FUNCTION_SETMETATABLE) {
+                    val callMetamethod = (psi.parent as LuaTableExpr).findField(Constants.METAMETHOD_CALL)?.valueExpr as? LuaFuncBodyOwner<*>
+                    (callMetamethod?.guessReturnType(context) as? ITyClass)?.let { TyClass.createSelfType(it) }
+                } else {
+                    null
+                }
+            }
+        }
+
+        return null
+    }
+
+    fun findOwner(context: SearchContext): ITy? {
+        if (psi is LuaDocTagClass) {
+            return psi.type
+        }
+
+        return getOwner(context) ?: parent?.findOwner(context)
+    }
+
+    fun findName(context: SearchContext, name: String, beforeIndex: Int? = null): LuaScopedType? {
+        val type = if (beforeIndex != null) {
+            get(name, beforeIndex)
         } else {
-            null
+            get(name)
         }
+
+        if (type != null) {
+            return type
+        }
+
+        val cls: ITy? = getOwner(context)
 
         if (cls?.isAnonymous == false) {
             val classTag = if (cls is TySerializedClass) {
@@ -146,20 +170,19 @@ private class ScopedTypeTreeScope(val psi: PsiElement, val treeBuilder: ScopedTy
                 cls.tagClass
             } else null
 
-            if (name == null) {
-                return classTag
-            }
+            // Need to ensure we don't check the same scope *without* beforeIndex
+            if (classTag != psi) {
+                val genericDef = PsiTreeUtil.getStubChildrenOfTypeAsList(classTag, LuaDocGenericDef::class.java).firstOrNull {
+                    it.name == name
+                }
 
-            val genericDef = PsiTreeUtil.getStubChildrenOfTypeAsList(classTag, LuaDocGenericDef::class.java).firstOrNull {
-                it.name == name
-            }
-
-            if (genericDef != null) {
-                return genericDef
+                if (genericDef != null) {
+                    return genericDef
+                }
             }
         }
 
-        return parent?.find(context, name)
+        return parent?.findName(context, name)
     }
 }
 
@@ -252,13 +275,13 @@ private abstract class ScopedTypeTree(val file: PsiFile) : LuaRecursiveVisitor()
 
     abstract fun findScope(element: PsiElement): FoundScope?
 
-    override fun findOwner(context: SearchContext, pin: PsiElement): LuaScopedType? {
-        return findScope(pin)?.scope?.find(context)
+    override fun findOwner(context: SearchContext, pin: PsiElement): ITy? {
+        return findScope(pin)?.scope?.findOwner(context)
     }
 
     override fun findName(context: SearchContext, pin: PsiElement, name: String): LuaScopedType? {
         return findScope(pin)?.let {
-            it.scope.find(context, name, it.psiScopedTypeIndex)
+            it.scope.findName(context, name, it.psiScopedTypeIndex)
         }
     }
 

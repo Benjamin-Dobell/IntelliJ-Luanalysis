@@ -334,7 +334,7 @@ class TySelfSubstitutor(context: SearchContext, val call: LuaCallExpr?, val self
     }
 
     override fun substitute(clazz: ITyClass): ITy {
-        if (clazz.className.endsWith("#${Constants.WORD_SELF}")) {
+        if (clazz.className.endsWith(Constants.SUFFIX_CLASS_SELF)) {
             return selfType
         }
         return super.substitute(clazz)

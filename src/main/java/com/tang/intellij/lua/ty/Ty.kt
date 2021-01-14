@@ -385,9 +385,9 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
         if (parameterCount < concreteArgTypes.size) {
             if (varargParamTy != null) {
                 for (i in parameterCount until args.size) {
-                    val argType = concreteArgTypes.get(i).ty.let {
+                    val argType = concreteArgTypes.getOrNull(i)?.ty?.let {
                         if (it is TyMultipleResults) it.list.first() else it
-                    }
+                    } ?: variadicArg!!.ty
                     val argExpr = args.get(i)
                     val varianceFlags = if (argExpr is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
 

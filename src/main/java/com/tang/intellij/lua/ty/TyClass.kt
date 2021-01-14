@@ -29,7 +29,6 @@ import com.tang.intellij.lua.comment.psi.LuaDocGeneralTy
 import com.tang.intellij.lua.comment.psi.LuaDocGenericDef
 import com.tang.intellij.lua.comment.psi.LuaDocTableDef
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass
-import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.search.LuaClassInheritorsSearch
 import com.tang.intellij.lua.psi.search.LuaShortNamesManager
@@ -392,7 +391,7 @@ abstract class TyClass(override val className: String,
         }
 
         fun createSelfType(classTy: ITyClass): TyClass {
-            val tyName = getSelfType(classTy)
+            val tyName = getSelfTypeName(classTy)
             return createSerializedClass(tyName, null, Constants.WORD_SELF, classTy, null, null, TyFlags.ANONYMOUS)
         }
     }
@@ -564,8 +563,30 @@ fun getAnonymousTypeName(variableDef: LuaPsiElement): String {
     return "${variableDef.node.startOffset}@${variableDef.containingFile.name}"
 }
 
-fun getSelfType(classTy: ITyClass): String {
-    return "${classTy.className}#${Constants.WORD_SELF}"
+fun getSelfTypeName(classTy: ITyClass): String {
+    val className = classTy.className
+    return if (className.endsWith(Constants.SUFFIX_CLASS_SELF)) {
+        className
+    } else {
+        className + Constants.SUFFIX_CLASS_SELF
+    }
+}
+
+fun getNonSelfTypeName(className: String): String {
+    return if (className.endsWith(Constants.SUFFIX_CLASS_SELF)) {
+        className.dropLast(Constants.SUFFIX_CLASS_SELF.length)
+    } else {
+        className
+    }
+}
+
+fun getNonSelfTypeName(classTy: ITyClass): String {
+    val className = classTy.className
+    return if (className.endsWith(Constants.SUFFIX_CLASS_SELF)) {
+        className.dropLast(Constants.SUFFIX_CLASS_SELF.length)
+    } else {
+        className
+    }
 }
 
 fun getGlobalTypeName(text: String): String {
