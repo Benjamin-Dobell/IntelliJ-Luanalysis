@@ -255,8 +255,6 @@ private abstract class ScopedTypeTree(val file: PsiFile) : LuaRecursiveVisitor()
             scope.addAll(it)
         }
 
-        psi.putUserData(scopeKey, scope)
-
         return scope
     }
 
@@ -266,6 +264,7 @@ private abstract class ScopedTypeTree(val file: PsiFile) : LuaRecursiveVisitor()
     }
 
     private fun pop() {
+        currentScope.psi.putUserData(scopeKey, currentScope)
         currentScope = currentScope.parent ?: rootScope
     }
 
@@ -290,7 +289,9 @@ private abstract class ScopedTypeTree(val file: PsiFile) : LuaRecursiveVisitor()
     }
 
     override fun visitElement(element: PsiElement) {
-        if (isValidTypeScope(element) && currentScope.psi !== element) {
+        // WARNING: (element !is LuaDocTagClass || currentScope.psi !is LuaDocTagClass) is used instead of (element != currentScope.psi)
+        //          because IDEA gives us back PSI representing the same content that are *not* equal.
+        if (isValidTypeScope(element) && (element !is LuaDocTagClass || currentScope.psi !is LuaDocTagClass)) {
             push(create(element))
             traverseChildren(element)
             pop()
