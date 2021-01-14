@@ -555,12 +555,12 @@ fun getTableTypeName(table: LuaTableExpr): String {
     if (stub != null)
         return stub.tableTypeName
 
-    val fileName = table.containingFile.name
-    return "$fileName@(${table.node.startOffset})table"
+    val id = table.containingFile.getFileIdentifier()
+    return "$id@(${table.node.startOffset})table"
 }
 
 fun getAnonymousTypeName(variableDef: LuaPsiElement): String {
-    return "${variableDef.node.startOffset}@${variableDef.containingFile.name}"
+    return "${variableDef.node.startOffset}@${variableDef.containingFile.getFileIdentifier()}"
 }
 
 fun getSelfTypeName(classTy: ITyClass): String {
@@ -616,8 +616,8 @@ fun getDocTableTypeName(table: LuaDocTableDef): String {
     if (stub != null)
         return stub.className
 
-    val fileName = table.containingFile.name
-    return "10|$fileName|${table.node.startOffset}"
+    val id = table.containingFile.getFileIdentifier()
+    return "10|$id|${table.node.startOffset}"
 }
 
 private fun getDocTableImplicitParams(table: LuaDocTableDef): Array<TyGenericParameter>? {

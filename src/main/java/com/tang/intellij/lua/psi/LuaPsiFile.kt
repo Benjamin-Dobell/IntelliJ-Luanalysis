@@ -22,9 +22,11 @@ import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.psi.FileViewProvider
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
+import com.intellij.testFramework.LightVirtualFile
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.psi.api.LuaComment
 import com.tang.intellij.lua.lang.LuaFileType
@@ -38,6 +40,12 @@ import com.tang.intellij.lua.stubs.LuaFileStub
  * Email:love.tangzx@qq.com
  */
 open class LuaPsiFile(fileViewProvider: FileViewProvider) : PsiFileBase(fileViewProvider, LuaLanguage.INSTANCE), LuaTypeGuessable, LuaDeclarationScope {
+
+    val identifier: String by lazy {
+        val virtualFile = viewProvider.virtualFile
+        val originalFile = (virtualFile as? LightVirtualFile)?.originalFile ?: virtualFile
+        originalFile.url
+    }
 
     override fun getFileType(): FileType {
         return LuaFileType.INSTANCE
@@ -106,4 +114,8 @@ open class LuaPsiFile(fileViewProvider: FileViewProvider) : PsiFileBase(fileView
     companion object {
         private val KEY_CACHED_MODULE_NAME = Key.create<CachedValue<String?>>("lua.file.module.name")
     }
+}
+
+fun PsiFile.getFileIdentifier(): String {
+    return (this as? LuaPsiFile)?.identifier ?: this.name
 }

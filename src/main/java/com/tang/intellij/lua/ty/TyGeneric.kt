@@ -22,12 +22,13 @@ import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.comment.psi.LuaDocGenericDef
 import com.tang.intellij.lua.comment.psi.LuaDocGenericTableTy
 import com.tang.intellij.lua.psi.LuaClassMember
+import com.tang.intellij.lua.psi.getFileIdentifier
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.readTyNullable
 import com.tang.intellij.lua.stubs.writeTyNullable
 
 fun genericParameterName(def: LuaDocGenericDef): String {
-    return "${def.id.text}@${def.node.startOffset}@${def.containingFile.name}"
+    return "${def.id.text}@${def.node.startOffset}@${def.containingFile.getFileIdentifier()}"
 }
 
 class TyGenericParameter(val name: String, varName: String, superClass: ITy? = null) : TySerializedClass(name, emptyArray(), varName, superClass, null) {
