@@ -43,18 +43,16 @@ function assert(v, message) end
 --- **true** if the step finished a collection cycle.
 --- **"setpause"**: sets `arg` as the new value for the *pause* of the collector
 --- (see §2.5). Returns the previous value for *pause`.
---- **"incremental"**: Change the collector mode to incremental. This option can
---- be followed by three numbers: the garbage-collector pause, the step
---- multiplier, and the step size.
---- **"generational"**: Change the collector mode to generational. This option
---- can be followed by two numbers: the garbage-collector minor multiplier and
---- the major multiplier.
 --- **"isrunning"**: returns a boolean that tells whether the collector is
 --- running (i.e., not stopped).
----@overload fun():any
----@param opt string
----@param arg string
----@return any
+---@overload fun(): number
+---@overload fun(opt: "count"): number, number
+---@overload fun(opt: "step", size: number): boolean
+---@overload fun(opt: "setpause", pause: number): number
+---@overload fun(opt: "setstepmul", multiplier: number): number
+---@overload fun(opt: "isrunning"): boolean
+---@param opt "collect" | "stop" | "restart"
+---@return number
 function collectgarbage(opt, arg) end
 
 ---

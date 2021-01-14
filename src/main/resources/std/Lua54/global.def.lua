@@ -51,10 +51,14 @@ function assert(v, message) end
 --- the major multiplier.
 --- **"isrunning"**: returns a boolean that tells whether the collector is
 --- running (i.e., not stopped).
----@overload fun():any
----@param opt string
----@param arg string
----@return any
+---@overload fun(): number
+---@overload fun(opt: "count"): number, number
+---@overload fun(opt: "step", size: number): boolean
+---@overload fun(opt: "isrunning"): boolean
+---@overload fun(opt: "generational"): "generational" | "incremental"
+---@overload fun(opt: "incremental"): "generational" | "incremental"
+---@param opt "collect" | "stop" | "restart"
+---@return number
 function collectgarbage(opt, arg) end
 
 ---
