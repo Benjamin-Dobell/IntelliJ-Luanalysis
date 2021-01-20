@@ -42,3 +42,7 @@ genericAlias = <error descr="Type mismatch. Missing member: 'aKnownStringLiteral
 
 ---@type GenericAlias<"different">
 local aDifferentGenericAlias = <error>genericAlias</error>
+
+-- Defining multiple types in the one block is far from recommended, but we want our doc handling to be forgiving where possible.
+---@alias AliasInSharedComment<T> string
+---@alias AliasInSharedComment2<T> AliasInSharedComment<T>

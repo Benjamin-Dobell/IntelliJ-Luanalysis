@@ -239,6 +239,8 @@ private abstract class ScopedTypeTree(val file: PsiFile) : LuaRecursiveVisitor()
     private fun create(psi: LuaTypeScope): ScopedTypeTreeScope {
         val genericDefs = if (psi is LuaDocFunctionTy) {
             psi.genericDefList
+        } else if (psi is LuaDocTagAlias) {
+            psi.genericDefList
         } else {
             val comment = if (psi is LuaCommentOwner) {
                 LuaCommentUtil.findComment(psi)
