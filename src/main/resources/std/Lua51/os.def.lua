@@ -20,6 +20,17 @@ os = {}
 ---@return number
 function os.clock() end
 
+---@shape std__Date
+---@field year number
+---@field month number
+---@field day number
+---@field hour number
+---@field min number
+---@field sec number
+---@field wday number
+---@field yday number
+---@field isdst boolean
+
 ---
 --- Returns a string or a table containing date and time, formatted according
 --- to the given string `format`.
@@ -52,10 +63,15 @@ function os.clock() end
 ---
 --- On non-POSIX systems, this function may be not thread safe because of its
 --- reliance on C function `gmtime` and C function `localtime`.
----@overload fun():string|table
+---@overload fun(): string
+---@overload fun(format: "%c"): string
+---@overload fun(format: "!*t" | "*t"): std__Date
+---@overload fun(format: string): string | std__Date
+---@overload fun(format: "%c", time: number): string
+---@overload fun(format: "!*t" | "*t", time: number): std__Date
 ---@param format string
 ---@param time number
----@return string|table
+---@return string | std__Date
 function os.date(format, time) end
 
 ---
