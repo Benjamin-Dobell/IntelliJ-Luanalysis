@@ -17,13 +17,13 @@ reallyIndirectAlias = someClass
 someClass = reallyIndirectAlias
 
 
----@class SomeGenericClass<T>
+---@class SomeGenericClass<T: string>
 
----@alias DirectGenericAlias<T> SomeGenericClass<T>
+---@alias DirectGenericAlias<T: string> SomeGenericClass<T>
 
----@alias IndirectGenericAlias<T> DirectGenericAlias<T>
+---@alias IndirectGenericAlias<T: string> DirectGenericAlias<T>
 
----@alias ReallyIndirectGenericAlias<T> IndirectGenericAlias<T>
+---@alias ReallyIndirectGenericAlias<T: string> IndirectGenericAlias<T>
 
 ---@type SomeGenericClass<string>
 local someGenericClass

@@ -247,11 +247,32 @@ BOOLEAN=true|false
     "|"                        { _typeReq = true; return OR; }
     ":"                        { _typeReq = true; return EXTENDS;}
     "<"                        { _typeLevel++; return LT; }
-    ">"                        { _typeLevel--; _typeReq = false; return GT; }
+    ">"                        {
+        if (--_typeLevel < 0) {
+            yybegin(_nextState); yypushback(yylength());
+        } else {
+            _typeReq = false;
+            return GT;
+        }
+    }
     "("                        { _typeLevel++; return LPAREN; }
-    ")"                        { _typeLevel--; _typeReq = false; return RPAREN; }
+    ")"                        {
+        if (--_typeLevel < 0) {
+            yybegin(_nextState); yypushback(yylength());
+        } else {
+            _typeReq = false;
+            return RPAREN;
+        }
+    }
     "{"                        { _typeLevel++; return LCURLY; }
-    "}"                        { _typeLevel--; _typeReq = false; return RCURLY; }
+    "}"                        {
+        if (--_typeLevel < 0) {
+            yybegin(_nextState); yypushback(yylength());
+        } else {
+            _typeReq = false;
+            return RCURLY;
+        }
+    }
     "["                        {
         int closePos = checkAhead(']');
         if (closePos != -1) {
@@ -263,7 +284,14 @@ BOOLEAN=true|false
             return LBRACK;
         }
     }
-    "]"                        { _typeLevel--; _typeReq = false; return RBRACK; }
+    "]"                        {
+        if (--_typeLevel < 0) {
+            yybegin(_nextState); yypushback(yylength());
+        } else {
+            _typeReq = false;
+            return RBRACK;
+        }
+    }
     "\""                       { yybegin(xDOUBLE_QUOTED_STRING); yypushback(yylength()); }
     "'"                        { yybegin(xSINGLE_QUOTED_STRING); yypushback(yylength()); }
     "`"                        { yybegin(xBACKTICK_QUOTED_STRING); return BACKTICK; }

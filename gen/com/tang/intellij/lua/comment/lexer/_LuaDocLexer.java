@@ -1079,7 +1079,12 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
             // fall through
           case 93: break;
           case 17: 
-            { _typeLevel--; _typeReq = false; return RBRACK;
+            { if (--_typeLevel < 0) {
+            yybegin(_nextState); yypushback(yylength());
+        } else {
+            _typeReq = false;
+            return RBRACK;
+        }
             } 
             // fall through
           case 94: break;
@@ -1119,7 +1124,12 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
             // fall through
           case 101: break;
           case 25: 
-            { _typeLevel--; _typeReq = false; return GT;
+            { if (--_typeLevel < 0) {
+            yybegin(_nextState); yypushback(yylength());
+        } else {
+            _typeReq = false;
+            return GT;
+        }
             } 
             // fall through
           case 102: break;
@@ -1134,7 +1144,12 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
             // fall through
           case 104: break;
           case 28: 
-            { _typeLevel--; _typeReq = false; return RPAREN;
+            { if (--_typeLevel < 0) {
+            yybegin(_nextState); yypushback(yylength());
+        } else {
+            _typeReq = false;
+            return RPAREN;
+        }
             } 
             // fall through
           case 105: break;
@@ -1144,7 +1159,12 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
             // fall through
           case 106: break;
           case 30: 
-            { _typeLevel--; _typeReq = false; return RCURLY;
+            { if (--_typeLevel < 0) {
+            yybegin(_nextState); yypushback(yylength());
+        } else {
+            _typeReq = false;
+            return RCURLY;
+        }
             } 
             // fall through
           case 107: break;
