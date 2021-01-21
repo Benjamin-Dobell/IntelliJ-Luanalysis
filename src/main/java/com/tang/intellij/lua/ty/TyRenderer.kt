@@ -64,7 +64,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
             }
 
             override fun visitAlias(alias: ITyAlias) {
-                sb.append(alias.name)
+                sb.append(renderAlias(alias))
             }
 
             override fun visitClass(clazz: ITyClass) {
@@ -165,6 +165,8 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
     open fun renderParamsList(params: Collection<String>?): String {
         return if (params != null && params.isNotEmpty()) "<${params.joinToString(", ")}>" else ""
     }
+
+    open fun renderAlias(alias: ITyAlias): String = "${alias.name}${renderParamsList(alias.params?.map { it.toString() })}"
 
     open fun renderClass(clazz: ITyClass): String {
         return when {

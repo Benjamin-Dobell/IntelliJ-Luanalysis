@@ -12,6 +12,9 @@ import com.tang.intellij.lua.ty.TyAlias;
 
 public interface LuaDocTagAlias extends LuaTypeAlias, LuaDocPsiElement, PsiNameIdentifierOwner, LuaDocTag, StubBasedPsiElement<LuaDocTagAliasStub> {
 
+  @Nullable
+  LuaDocCommentString getCommentString();
+
   @NotNull
   List<LuaDocGenericDef> getGenericDefList();
 

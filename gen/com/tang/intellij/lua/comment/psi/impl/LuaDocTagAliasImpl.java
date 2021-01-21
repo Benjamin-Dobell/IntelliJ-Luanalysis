@@ -40,6 +40,12 @@ public class LuaDocTagAliasImpl extends StubBasedPsiElementBase<LuaDocTagAliasSt
   }
 
   @Override
+  @Nullable
+  public LuaDocCommentString getCommentString() {
+    return PsiTreeUtil.getChildOfType(this, LuaDocCommentString.class);
+  }
+
+  @Override
   @NotNull
   public List<LuaDocGenericDef> getGenericDefList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, LuaDocGenericDef.class);

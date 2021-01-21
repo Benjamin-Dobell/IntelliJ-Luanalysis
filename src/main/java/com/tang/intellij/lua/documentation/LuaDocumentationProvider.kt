@@ -23,6 +23,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.Constants
+import com.tang.intellij.lua.comment.psi.LuaDocTagAlias
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass
 import com.tang.intellij.lua.comment.psi.LuaDocTagField
 import com.tang.intellij.lua.editor.completion.LuaDocumentationLookupElement
@@ -75,6 +76,7 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
         val tyRenderer = renderer
         when (element) {
             is LuaParamDef -> renderParamDef(sb, element)
+            is LuaDocTagAlias -> renderAliasDef(sb, element, tyRenderer)
             is LuaDocTagClass -> renderClassDef(sb, element, tyRenderer)
             is LuaClassMember -> renderClassMember(sb, element)
             is LuaLocalDef -> { //local xx

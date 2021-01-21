@@ -90,6 +90,10 @@ fun renderComment(sb: StringBuilder, comment: LuaComment?, tyRenderer: ITyRender
                         flushDocString()
                         renderClassDef(sb, child, tyRenderer)
                     }
+                    is LuaDocTagAlias -> {
+                        flushDocString()
+                        renderAliasDef(sb, child, tyRenderer)
+                    }
                     is LuaDocTagType -> {
                         flushDocString()
                         renderTypeDef(sb, child, tyRenderer)
@@ -144,6 +148,14 @@ private fun renderReturn(sb: StringBuilder, tagReturn: LuaDocTagReturn, tyRender
         }
         renderCommentString(" - ", null, sb, tagReturn.commentString)
     }
+}
+
+fun renderAliasDef(sb: StringBuilder, tag: LuaDocTagAlias, tyRenderer: ITyRenderer) {
+    val cls = tag.type
+    sb.append("<pre>alias ")
+    sb.wrapTag("b") { tyRenderer.render(cls, sb) }
+    sb.append("</pre>")
+    renderCommentString(" - ", null, sb, tag.commentString)
 }
 
 fun renderClassDef(sb: StringBuilder, tag: LuaDocTagClass, tyRenderer: ITyRenderer) {

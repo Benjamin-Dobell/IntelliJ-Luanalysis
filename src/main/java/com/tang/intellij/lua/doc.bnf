@@ -446,7 +446,7 @@ tag_generic_list ::= TAG_NAME_GENERIC generic_def (',' generic_def)* {
     pin = 1
 }
 
-tag_alias ::= TAG_NAME_ALIAS ID ('<' generic_def_list '>')? complex_ty {
+tag_alias ::= TAG_NAME_ALIAS ID ('<' generic_def_list '>')? complex_ty comment_string? {
     pin = 2
     implements = [
         "com.tang.intellij.lua.psi.LuaTypeAlias"
