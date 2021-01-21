@@ -319,115 +319,117 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
         val substitutor = call.createSubstitutor(it, context)
         val signature = it.substitute(substitutor)
 
-        signature.processParameters(call) { i, pi ->
-            parameterCount = i + 1
-            val typeInfo = concreteArgTypes.getOrNull(i) ?: variadicArg
+        if (signature.params != null) {
+            signature.processParameters(call) { i, pi ->
+                parameterCount = i + 1
+                val typeInfo = concreteArgTypes.getOrNull(i) ?: variadicArg
 
-            if (typeInfo == null || typeInfo == variadicArg) {
-                var problemElement = call.lastChild.lastChild
+                if (typeInfo == null || typeInfo == variadicArg) {
+                    var problemElement = call.lastChild.lastChild
 
-                // Some PSI elements injected by IntelliJ (e.g. PsiErrorElementImpl) can be empty and thus cannot be targeted for our own errors.
-                while (problemElement != null && problemElement.textLength == 0) {
-                    problemElement = problemElement.prevSibling
-                }
-
-                problemElement = problemElement ?: call.lastChild
-
-                candidateFailed = true
-
-                if (!call.isMethodColonCall && i == 0 && pi.name == Constants.WORD_SELF) {
-                    signatureProblems?.add(Problem(null, problemElement, "Missing self argument.\n\nDid you mean to call the method with a colon?"))
-                } else {
-                    signatureProblems?.add(Problem(null, problemElement, "Missing argument: ${pi.name}: ${pi.ty}"))
-                }
-
-                if (typeInfo == null) {
-                    return@processParameters true
-                }
-            }
-
-            val paramType = pi.ty ?: Ty.UNKNOWN
-            val argType = typeInfo.ty
-            val argExpr = args.getOrNull(i) ?: args.last()
-            val varianceFlags = if (argExpr is LuaTableExpr) {
-                TyVarianceFlags.WIDEN_TABLES
-            } else 0
-
-            if (processProblem != null) {
-                val contravariant = ProblemUtil.contravariantOf(paramType, argType, context, varianceFlags, null, argExpr) { problem ->
-                    var contextualMessage = if (i >= args.size &&
-                        (concreteArgTypes.size > args.size || (variadicArg != null && concreteArgTypes.size >= args.size))
-                    ) {
-                        "Result ${i + 1}, ${problem.message.decapitalize()}"
-                    } else {
-                        problem.message
+                    // Some PSI elements injected by IntelliJ (e.g. PsiErrorElementImpl) can be empty and thus cannot be targeted for our own errors.
+                    while (problemElement != null && problemElement.textLength == 0) {
+                        problemElement = problemElement.prevSibling
                     }
+
+                    problemElement = problemElement ?: call.lastChild
+
+                    candidateFailed = true
 
                     if (!call.isMethodColonCall && i == 0 && pi.name == Constants.WORD_SELF) {
-                        contextualMessage += ".\n\nDid you mean to call the method with a colon?"
+                        signatureProblems?.add(Problem(null, problemElement, "Missing self argument.\n\nDid you mean to call the method with a colon?"))
+                    } else {
+                        signatureProblems?.add(Problem(null, problemElement, "Missing argument: ${pi.name}: ${pi.ty}"))
                     }
 
-                    signatureProblems?.add(Problem(null, problem.sourceElement, contextualMessage, problem.highlightType))
+                    if (typeInfo == null) {
+                        return@processParameters true
+                    }
                 }
 
-                if (!contravariant) {
-                    candidateFailed = true
-                }
-            } else if (!paramType.contravariantOf(argType, context, varianceFlags)) {
-                candidateFailed = true
-            }
+                val paramType = pi.ty ?: Ty.UNKNOWN
+                val argType = typeInfo.ty
+                val argExpr = args.getOrNull(i) ?: args.last()
+                val varianceFlags = if (argExpr is LuaTableExpr) {
+                    TyVarianceFlags.WIDEN_TABLES
+                } else 0
 
-            true
-        }
-
-        val varargParamTy = signature.variadicParamTy
-
-        if (parameterCount < concreteArgTypes.size) {
-            if (varargParamTy != null) {
-                for (i in parameterCount until args.size) {
-                    val argType = concreteArgTypes.getOrNull(i)?.ty?.let {
-                        if (it is TyMultipleResults) it.list.first() else it
-                    } ?: variadicArg!!.ty
-                    val argExpr = args.get(i)
-                    val varianceFlags = if (argExpr is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
-
-                    if (processProblem != null) {
-                        val contravariant = ProblemUtil.contravariantOf(varargParamTy, argType, context, varianceFlags, null, argExpr) { problem ->
-                            signatureProblems?.add(Problem(null, problem.sourceElement, problem.message, problem.highlightType))
+                if (processProblem != null) {
+                    val contravariant = ProblemUtil.contravariantOf(paramType, argType, context, varianceFlags, null, argExpr) { problem ->
+                        var contextualMessage = if (i >= args.size &&
+                            (concreteArgTypes.size > args.size || (variadicArg != null && concreteArgTypes.size >= args.size))
+                        ) {
+                            "Result ${i + 1}, ${problem.message.decapitalize()}"
+                        } else {
+                            problem.message
                         }
 
-                        if (!contravariant) {
+                        if (!call.isMethodColonCall && i == 0 && pi.name == Constants.WORD_SELF) {
+                            contextualMessage += ".\n\nDid you mean to call the method with a colon?"
+                        }
+
+                        signatureProblems?.add(Problem(null, problem.sourceElement, contextualMessage, problem.highlightType))
+                    }
+
+                    if (!contravariant) {
+                        candidateFailed = true
+                    }
+                } else if (!paramType.contravariantOf(argType, context, varianceFlags)) {
+                    candidateFailed = true
+                }
+
+                true
+            }
+
+            val varargParamTy = signature.variadicParamTy
+
+            if (parameterCount < concreteArgTypes.size) {
+                if (varargParamTy != null) {
+                    for (i in parameterCount until args.size) {
+                        val argType = concreteArgTypes.getOrNull(i)?.ty?.let {
+                            if (it is TyMultipleResults) it.list.first() else it
+                        } ?: variadicArg!!.ty
+                        val argExpr = args.get(i)
+                        val varianceFlags = if (argExpr is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
+
+                        if (processProblem != null) {
+                            val contravariant = ProblemUtil.contravariantOf(varargParamTy, argType, context, varianceFlags, null, argExpr) { problem ->
+                                signatureProblems?.add(Problem(null, problem.sourceElement, problem.message, problem.highlightType))
+                            }
+
+                            if (!contravariant) {
+                                candidateFailed = true
+                            }
+                        } else if (!varargParamTy.contravariantOf(argType, context, varianceFlags)) {
                             candidateFailed = true
                         }
-                    } else if (!varargParamTy.contravariantOf(argType, context, varianceFlags)) {
-                        candidateFailed = true
-                    }
-                }
-            } else {
-                if (parameterCount < args.size) {
-                    for (i in parameterCount until args.size) {
-                        candidateFailed = true
-                        signatureProblems?.add(Problem(null, args[i], "Too many arguments."))
                     }
                 } else {
-                    // Last argument is TyMultipleResults, just a weak warning.
-                    val excess = parameterCount - args.size
-                    val message = if (excess == 1) "1 result is an excess argument." else "${excess} results are excess arguments."
-                    signatureProblems?.add(Problem(null, args.last(), message, ProblemHighlightType.WEAK_WARNING))
+                    if (parameterCount < args.size) {
+                        for (i in parameterCount until args.size) {
+                            candidateFailed = true
+                            signatureProblems?.add(Problem(null, args[i], "Too many arguments."))
+                        }
+                    } else {
+                        // Last argument is TyMultipleResults, just a weak warning.
+                        val excess = parameterCount - args.size
+                        val message = if (excess == 1) "1 result is an excess argument." else "${excess} results are excess arguments."
+                        signatureProblems?.add(Problem(null, args.last(), message, ProblemHighlightType.WEAK_WARNING))
+                    }
                 }
-            }
-        } else if (varargParamTy != null && variadicArg != null) {
-            if (processProblem != null) {
-                val contravariant = ProblemUtil.contravariantOf(varargParamTy, variadicArg.ty, context, 0, null, variadicArg.param) { problem ->
-                    val contextualMessage = "Variadic result, ${problem.message.decapitalize()}"
-                    signatureProblems?.add(Problem(null, problem.sourceElement, contextualMessage, problem.highlightType))
-                }
+            } else if (varargParamTy != null && variadicArg != null) {
+                if (processProblem != null) {
+                    val contravariant = ProblemUtil.contravariantOf(varargParamTy, variadicArg.ty, context, 0, null, variadicArg.param) { problem ->
+                        val contextualMessage = "Variadic result, ${problem.message.decapitalize()}"
+                        signatureProblems?.add(Problem(null, problem.sourceElement, contextualMessage, problem.highlightType))
+                    }
 
-                if (!contravariant) {
+                    if (!contravariant) {
+                        candidateFailed = true
+                    }
+                } else if (!varargParamTy.contravariantOf(variadicArg.ty, context, 0)) {
                     candidateFailed = true
                 }
-            } else if (!varargParamTy.contravariantOf(variadicArg.ty, context, 0)) {
-                candidateFailed = true
             }
         }
 

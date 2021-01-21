@@ -3,6 +3,8 @@ local EventManager = {}
 ---@param eventName string
 ---@param handler fun: boolean
 function EventManager.addBooleanHandler(eventName, handler)
+    handler(1)
+    handler("one", "two")
 end
 
 EventManager.addBooleanHandler("noArgEvent", function()
