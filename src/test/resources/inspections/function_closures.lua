@@ -81,7 +81,18 @@ local closureInternalTypeInspections = function(param)
     end
 end
 
-local something = {
+---@type fun: true
+local inferReturnTrue = function()
+    return true
+end
+
+---@type fun: void
+local inferReturnVoid = function()
+    if (function() return true end)() then
+    end
+end
+
+local functionAnnotationOnTableField = {
     ---@param a boolean
     ---@param b string
     tableFun = function(a, b)

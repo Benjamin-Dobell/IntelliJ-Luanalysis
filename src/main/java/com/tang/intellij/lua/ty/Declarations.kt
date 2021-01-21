@@ -16,7 +16,6 @@
 
 package com.tang.intellij.lua.ty
 
-import com.intellij.openapi.util.Computable
 import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.psi.LuaDocTagField
@@ -96,6 +95,7 @@ private fun inferReturnTyInner(owner: LuaFuncBodyOwner<*>, searchContext: Search
             override fun visitFuncDefStat(o: LuaFuncDefStat) {}
             override fun visitLocalDefStat(o: LuaLocalDefStat) {}
             override fun visitLocalFuncDefStat(o: LuaLocalFuncDefStat) {}
+            override fun visitFuncBodyOwner(o: LuaFuncBodyOwner<*>) {}
         })
         type
     }
