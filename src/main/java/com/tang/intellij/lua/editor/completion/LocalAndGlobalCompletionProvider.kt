@@ -18,7 +18,6 @@ package com.tang.intellij.lua.editor.completion
 
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.tree.TokenSet
-import com.intellij.util.Processor
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.lang.LuaIcons
 import com.tang.intellij.lua.lang.LuaParserDefinition
@@ -91,15 +90,15 @@ class LocalAndGlobalCompletionProvider(private val mask: Int) : ClassMemberCompl
         val completionResultSet = session.resultSet
         val cur = completionParameters.position
         val nameExpr = cur.parent
+        val context = SearchContext.get(nameExpr.project)
 
         //module members
         if (nameExpr is LuaNameExpr) {
-            val context = SearchContext.get(nameExpr.project)
             val moduleName = nameExpr.getModuleName(context)
             if (moduleName != null) {
                 val ty = TyLazyClass(moduleName, nameExpr)
                 val contextTy = LuaPsiTreeUtil.findContextClass(nameExpr, context)
-                addClass(contextTy, ty, cur.project, MemberCompletionMode.Dot, completionResultSet, completionResultSet.prefixMatcher, null)
+                addClass(context, contextTy, ty, MemberCompletionMode.Dot, completionResultSet, completionResultSet.prefixMatcher, null)
             }
         }
 
@@ -122,9 +121,8 @@ class LocalAndGlobalCompletionProvider(private val mask: Int) : ClassMemberCompl
         }
 
         //global
-        val project = cur.project
         if (has(GLOBAL_FUN) || has(GLOBAL_VAR)) {
-            addClass(TyClass.G, TyClass.G, project, MemberCompletionMode.Dot, completionResultSet, completionResultSet.prefixMatcher, null)
+            addClass(context, TyClass.G, TyClass.G, MemberCompletionMode.Dot, completionResultSet, completionResultSet.prefixMatcher, null)
         }
         //key words
         if (has(KEY_WORDS)) {

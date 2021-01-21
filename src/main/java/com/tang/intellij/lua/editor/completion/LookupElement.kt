@@ -68,7 +68,7 @@ open class LuaTypeGuessableLookupElement(name: String, val psi: LuaPsiElement, p
     }
 }
 
-class LuaFieldLookupElement(val fieldName: String, val field: LuaClassField, val ty:ITy?, bold: Boolean)
+class LuaFieldLookupElement(val fieldName: String, val field: LuaClassField, val ty: ITy?, bold: Boolean)
     : LuaLookupElement(fieldName, bold, null), LuaDocumentationLookupElement {
 
     override fun getDocumentationElement(context: SearchContext): PsiElement? {

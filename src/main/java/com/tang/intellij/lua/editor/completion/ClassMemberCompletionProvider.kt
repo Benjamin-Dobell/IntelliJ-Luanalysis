@@ -21,9 +21,6 @@ import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.completion.PrefixMatcher
 import com.intellij.codeInsight.completion.PrioritizedLookupElement
 import com.intellij.codeInsight.lookup.LookupElement
-import com.intellij.openapi.progress.ProgressManager
-import com.intellij.openapi.project.Project
-import com.intellij.util.Processor
 import com.tang.intellij.lua.lang.LuaIcons
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
@@ -59,7 +56,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
             val contextTy = LuaPsiTreeUtil.findContextClass(indexExpr, context)
             val prefixType = indexExpr.guessParentType(context)
             if (!Ty.isInvalid(prefixType)) {
-                complete(isColon, project, contextTy, prefixType, completionResultSet, completionResultSet.prefixMatcher, null)
+                complete(context, isColon, contextTy, prefixType, completionResultSet, completionResultSet.prefixMatcher, null)
             }
             //smart
             val nameExpr = indexExpr.prefixExpression
@@ -77,7 +74,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
                         if (type != null) {
                             val prefixMatcher = completionResultSet.prefixMatcher
                             val resultSet = completionResultSet.withPrefixMatcher("$prefixName*$postfixName")
-                            complete(isColon, project, contextTy, type, resultSet, prefixMatcher, object : HandlerProcessor() {
+                            complete(context, isColon, contextTy, type, resultSet, prefixMatcher, object : HandlerProcessor() {
                                 override fun process(element: LuaLookupElement, member: LuaClassMember, memberTy: ITy?): LookupElement {
                                     element.itemText = txt + colon + element.itemText
                                     element.lookupString = txt + colon + element.lookupString
@@ -92,40 +89,91 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
         }
     }
 
-    private fun complete(isColon: Boolean,
-                         project: Project,
+    private fun complete(context: SearchContext,
+                         isColon: Boolean,
                          contextTy: ITy,
-                         prefixType: ITy,
+                         prefixTy: ITy,
                          completionResultSet: CompletionResultSet,
                          prefixMatcher: PrefixMatcher,
                          handlerProcessor: HandlerProcessor?) {
         val mode = if (isColon) MemberCompletionMode.Colon else MemberCompletionMode.Dot
-        prefixType.eachTopClass { luaType ->
-            addClass(contextTy, luaType, project, mode, completionResultSet, prefixMatcher, handlerProcessor)
+        val resolvedPrefixTy = Ty.resolve(prefixTy, context)
+
+        if (resolvedPrefixTy is TyUnion) {
+            addUnion(context, contextTy, resolvedPrefixTy, prefixTy, mode, completionResultSet, prefixMatcher, handlerProcessor)
+        } else {
+            addClass(context, contextTy, prefixTy, mode, completionResultSet, prefixMatcher, handlerProcessor)
+        }
+    }
+
+    protected fun addUnion(context: SearchContext,
+                           contextTy: ITy,
+                           unionTy: TyUnion,
+                           prefixTy: ITy,
+                           completionMode: MemberCompletionMode,
+                           completionResultSet: CompletionResultSet,
+                           prefixMatcher: PrefixMatcher,
+                           handlerProcessor: HandlerProcessor?) {
+        val firstChildTy = unionTy.getChildTypes().first()
+        val subsequentChildTys = unionTy.getChildTypes().drop(1)
+        val memberSubstitutor = firstChildTy.getMemberSubstitutor(context)
+
+        firstChildTy.processMembers(context) { curType, member ->
+            val curClass = (if (curType is ITyGeneric) curType.base else curType) as? ITyClass
+
+            if (curClass != null) {
+                member.name?.let { memberName ->
+                    if (prefixMatcher.prefixMatches(memberName) && curClass.isVisibleInScope(context.project, contextTy, member.visibility)) {
+                        var memberTy = member.guessType(context) ?: Ty.UNKNOWN
+
+                        subsequentChildTys.forEach { childTy ->
+                            val ty = childTy.guessMemberType(memberName, context)
+
+                            if (ty == null) {
+                                return@processMembers true
+                            }
+
+                            memberTy = memberTy.union(ty, context)
+                        }
+
+                        addMember(
+                            context,
+                            completionResultSet,
+                            member,
+                            memberSubstitutor,
+                            prefixTy,
+                            memberTy,
+                            completionMode,
+                            handlerProcessor
+                        )
+                    }
+                }
+            }
+
             true
         }
     }
 
-    protected fun addClass(contextTy: ITy,
-                           luaType: ITy,
-                           project: Project,
-                           completionMode:MemberCompletionMode,
+    protected fun addClass(context: SearchContext,
+                           contextTy: ITy,
+                           cls: ITy,
+                           completionMode: MemberCompletionMode,
                            completionResultSet: CompletionResultSet,
                            prefixMatcher: PrefixMatcher,
                            handlerProcessor: HandlerProcessor?) {
-        val context = SearchContext.get(project)
-        luaType.processMembers(context) { curType, member ->
+        cls.processMembers(context) { curType, member ->
             val curClass = (if (curType is ITyGeneric) curType.base else curType) as? ITyClass
             if (curClass != null) {
                 member.name?.let {
-                    if (prefixMatcher.prefixMatches(it) && curClass.isVisibleInScope(project, contextTy, member.visibility)) {
-                        addMember(completionResultSet,
-                                member,
-                                curType,
-                                luaType,
-                                completionMode,
-                                project,
-                                handlerProcessor)
+                    if (prefixMatcher.prefixMatches(it) && curClass.isVisibleInScope(context.project, contextTy, member.visibility)) {
+                        addMember(context,
+                            completionResultSet,
+                            member,
+                            curType.getMemberSubstitutor(context),
+                            curType,
+                            cls,
+                            completionMode,
+                            handlerProcessor)
                     }
                 }
             }
@@ -133,25 +181,31 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
         }
     }
 
-    protected fun addMember(completionResultSet: CompletionResultSet,
+    protected fun addMember(context: SearchContext,
+                            completionResultSet: CompletionResultSet,
                             member: LuaClassMember,
+                            memberSubstitutor: ITySubstitutor?,
                             thisType: ITy,
-                            callType: ITy,
+                            type: ITy,
                             completionMode: MemberCompletionMode,
-                            project: Project,
                             handlerProcessor: HandlerProcessor?) {
-        val context = SearchContext.get(project)
-        val type = member.guessType(context) ?: Ty.UNKNOWN
-        val bold = thisType == callType
+        val bold = thisType == type
         val className = thisType.displayName
-        if (type is ITyFunction) {
-            val fn = type.substitute(TySelfSubstitutor(context, null, callType))
-            addFunction(completionResultSet, bold, completionMode != MemberCompletionMode.Dot, className, member, fn, thisType, callType, handlerProcessor)
-        } else if (member is LuaClassField && completionMode != MemberCompletionMode.Colon) {
-            var fieldType = type
 
-            thisType.getMemberSubstitutor(context)?.let {
-                fieldType = type.substitute(it)
+        if (type is ITyFunction) {
+            val methodType = if (memberSubstitutor != null) {
+                memberSubstitutor.substitute(type)
+            } else {
+                type
+            }
+
+            val fn = type.substitute(TySelfSubstitutor(context, null, methodType))
+            addFunction(completionResultSet, bold, completionMode != MemberCompletionMode.Dot, className, member, fn, thisType, type, handlerProcessor)
+        } else if (member is LuaClassField && completionMode != MemberCompletionMode.Colon) {
+            val fieldType = if (memberSubstitutor != null) {
+                memberSubstitutor.substitute(type)
+            } else {
+                type
             }
 
             addField(completionResultSet, bold, className, member, fieldType, handlerProcessor)
@@ -162,7 +216,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
                            bold: Boolean,
                            clazzName: String,
                            field: LuaClassField,
-                           ty:ITy?,
+                           ty: ITy?,
                            handlerProcessor: HandlerProcessor?) {
         val name = field.name
         if (name != null) {

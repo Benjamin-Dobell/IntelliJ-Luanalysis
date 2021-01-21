@@ -36,27 +36,30 @@ class SuggestSelfMemberProvider : ClassMemberCompletionProvider() {
         val position = completionParameters.position
         val methodDef = PsiTreeUtil.getParentOfType(position, LuaClassMethodDefStat::class.java)
         if (methodDef != null && !methodDef.isStatic) {
-            val project = position.project
-            val searchContext = SearchContext.get(project)
-            methodDef.guessClassType(searchContext)?.let { type ->
-                val contextTy = LuaPsiTreeUtil.findContextClass(position, searchContext)
-                type.processMembers(searchContext) { curType, member ->
-                    val curClass = (if (curType is ITyGeneric) curType.base else type) as? ITyClass
-                    if (curClass != null && member.name != null && curClass.isVisibleInScope(project, contextTy, member.visibility)) {
-                        addMember(completionResultSet,
-                                member,
-                                curClass,
-                                type,
-                                MemberCompletionMode.Colon,
-                                project,
-                                object : HandlerProcessor() {
-                                    override fun process(element: LuaLookupElement, member: LuaClassMember, memberTy: ITy?): LookupElement { return element }
+            val context = SearchContext.get(position.project)
+            methodDef.guessClassType(context)?.let { type ->
+                val contextTy = LuaPsiTreeUtil.findContextClass(position, context)
 
-                                    override fun processLookupString(lookupString: String, member: LuaClassMember, memberTy: ITy?): String {
-                                        return if (memberTy is ITyFunction) "self:${member.name}" else "self.${member.name}"
-                                    }
-                                })
+                type.processMembers(context) { curType, member ->
+                    val curClass = (if (curType is ITyGeneric) curType.base else type) as? ITyClass
+
+                    if (curClass != null && member.name != null && curClass.isVisibleInScope(context.project, contextTy, member.visibility)) {
+                        addMember(context,
+                            completionResultSet,
+                            member,
+                            curClass.getMemberSubstitutor(context),
+                            curClass,
+                            type,
+                            MemberCompletionMode.Colon,
+                            object : HandlerProcessor() {
+                                override fun process(element: LuaLookupElement, member: LuaClassMember, memberTy: ITy?): LookupElement { return element }
+
+                                override fun processLookupString(lookupString: String, member: LuaClassMember, memberTy: ITy?): String {
+                                    return if (memberTy is ITyFunction) "self:${member.name}" else "self.${member.name}"
+                                }
+                            })
                     }
+
                     true
                 }
             }
