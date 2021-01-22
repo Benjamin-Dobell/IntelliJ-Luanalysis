@@ -621,3 +621,14 @@ local function illegalGenericConstraint(a, b) end
 
 -- Not valid, but shouldn't raise an exception (i.e. no stack overflow).
 illegalGenericConstraint(<error descr="Type mismatch. Required: 'A : B' Found: '1'">1</error>, <error descr="Type mismatch. Required: 'B : A' Found: '1'">1</error>) -- Expect error
+
+---@type fun<K, V, R>(tab: table<K, V>, initial: R, func: fun(memo: R, value: V, key: K): R): R
+local reduce
+
+anyString = reduce({}, anyString, function(str, _, _)
+    return str
+end)
+
+anyNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">reduce({}, anyString, function(str, _, _)
+    return str
+end)</error>

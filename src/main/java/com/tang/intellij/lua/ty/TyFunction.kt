@@ -414,21 +414,27 @@ class TyPsiFunction(private val colonCall: Boolean, val psi: LuaFuncBodyOwner<*>
         object : FunSignatureBase(colonCall, funcBodyOwner.params, funcBodyOwner.genericParams), IPsiFunSignature {
             override val psi = funcBodyOwner
 
-            override val returnTy: ITy by lazy {
-                val context = SearchContext.get(psi.project)
-                var returnTy = context.withMultipleResults { psi.guessReturnType(context) ?: Ty.UNKNOWN }
-                /**
-                 * todo optimize this bug solution
-                 * local function test()
-                 *      return test
-                 * end
-                 * -- will crash after type `test`
-                 */
-                if (returnTy is TyPsiFunction && returnTy.psi == psi) {
-                    returnTy = UNKNOWN
+            private var cachedReturnTy: ITy? = null
+
+            override val returnTy: ITy? get() {
+                if (cachedReturnTy == null) {
+                    val context = SearchContext.get(psi.project)
+                    val returnTy = context.withMultipleResults { psi.guessReturnType(context) }
+                    /**
+                     * todo optimize this bug solution
+                     * local function test()
+                     *      return test
+                     * end
+                     * -- will crash after type `test`
+                     */
+                    cachedReturnTy = if (returnTy is TyPsiFunction && returnTy.psi == psi) {
+                        null
+                    } else {
+                        returnTy
+                    }
                 }
 
-                returnTy
+                return cachedReturnTy
             }
 
             override val variadicParamTy: ITy?
