@@ -177,13 +177,15 @@ object ProblemUtil {
         source.processMembers(context, true) { _, sourceMember ->
             val indexTy = sourceMember.guessIndexType(context)
 
-            val sourceMemberTy = if (indexTy != null) {
+            val sourceMemberTy = (if (indexTy != null) {
                 source.guessIndexerType(indexTy, context, true)
             } else {
                 sourceMember.name?.let { source.guessMemberType(it, context) }
+            })?.let {
+                if (sourceSubstitutor != null) it.substitute(sourceSubstitutor) else it
             } ?: Ty.UNKNOWN
 
-            val targetMemberTy = if (indexTy != null) {
+            val targetMemberTy = (if (indexTy != null) {
                 val targetMember = target.findIndexer(indexTy, context)
 
                 if (targetMember?.guessIndexType(context)?.equals(indexTy, context) == true) {
@@ -203,6 +205,8 @@ object ProblemUtil {
 
                     targetMember?.guessType(context)
                 }
+            })?.let {
+                if (targetSubstitutor != null) it.substitute(targetSubstitutor) else it
             }
 
             if (targetMemberTy == null) {

@@ -75,6 +75,15 @@ end
 takesAShape({a = aString, b = aString})
 takesAShape({a = <error descr="Type mismatch. Required: 'string' Found: 'number'">aNumber</error>, b = <error descr="Type mismatch. Required: 'string' Found: 'number'">aNumber</error>})
 
+---@type nil | string
+local nilOrString
+
+---@type std__Packed<nil | string>
+local sparseStringArray = {
+    nilOrString,
+    n = 1,
+}
+
 ---@shape NestedShape
 ---@field shape1 Shape1
 ---@field shape2 Shape2
