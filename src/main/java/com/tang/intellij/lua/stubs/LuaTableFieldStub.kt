@@ -50,7 +50,7 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
     override fun createStub(field: LuaTableField, parentStub: StubElement<*>): LuaTableFieldStub {
         val className = findTableExprTypeName(field)
         val indexTy = field.idExpr?.let {
-            SearchContext.withDumb(it.project, Ty.UNKNOWN) { context ->
+            SearchContext.withDumb(it.project, null) { context ->
                 it.guessType(context)
             }
         }
@@ -70,7 +70,7 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
                     field.name,
                     flags,
                     valueTy)
-        } else if (indexTy != null) {
+        } else if (field.idExpr != null) {
             valueTy = if (valueTy is TyMultipleResults) valueTy.list.first() else valueTy
 
             return LuaTableFieldStubImpl(
@@ -146,7 +146,7 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
             LuaTableFieldStubImpl(stubElement,
                     this,
                     className,
-                    indexType!!,
+                    indexType,
                     isIndexExpression,
                     flags,
                     valueType)
@@ -232,7 +232,7 @@ class LuaTableFieldStubImpl : LuaStubBase<LuaTableField>, LuaTableFieldStub {
         this.valueTy = valueTy
     }
 
-    constructor(parent: StubElement<*>, elementType: LuaStubElementType<*, *>, className: String?, indexType: ITy, isIndexExpression: Boolean, flags: Int, valueTy: ITy?)
+    constructor(parent: StubElement<*>, elementType: LuaStubElementType<*, *>, className: String?, indexType: ITy?, isIndexExpression: Boolean, flags: Int, valueTy: ITy?)
             : super(parent, elementType) {
         this.className = className
         this.name = null
