@@ -61,13 +61,13 @@ open class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
                     || (flags and TyVarianceFlags.WIDEN_TABLES != 0 && resolvedBase.contravariantOf(other.base, context, flags))
         }
 
-        var indexedMemberType: ITy = Ty.VOID
+        var indexedMemberType: ITy = Primitives.VOID
         val membersContravariant = other.processMembers(context) { _, otherMember ->
             val index = otherMember.guessIndexType(context)
 
             if ((index is ITyPrimitive && index.primitiveKind == TyPrimitiveKind.Number)
                     || (index is TyPrimitiveLiteral && index.primitiveKind == TyPrimitiveKind.Number)) {
-                val otherFieldTypes = (otherMember.guessType(context) ?: Ty.UNKNOWN).let {
+                val otherFieldTypes = (otherMember.guessType(context) ?: Primitives.UNKNOWN).let {
                     if (it is TyMultipleResults) it.list else listOf(it)
                 }
 
@@ -110,7 +110,7 @@ open class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
     }
 
     override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
-        if ((!exact && Ty.NUMBER.contravariantOf(indexTy, searchContext, 0)) || Ty.NUMBER == indexTy) {
+        if ((!exact && Primitives.NUMBER.contravariantOf(indexTy, searchContext, 0)) || Primitives.NUMBER == indexTy) {
             return base
         }
 
@@ -142,7 +142,7 @@ open class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
                         return@processMembers false
                     }
 
-                    if (indexTy == Ty.NUMBER) {
+                    if (indexTy == Primitives.NUMBER) {
                         foundNumberIndexer = true
                     } else {
                         val index = indexTy.value.toIntOrNull()
@@ -187,10 +187,10 @@ object TyArraySerializer : TySerializer<ITyArray>() {
 class TyDocArray(val luaDocArrTy: LuaDocArrTy, base: ITy = luaDocArrTy.ty.getType()) : TyArray(base) {
     override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
         if (exact) {
-            if (Ty.NUMBER.equals(indexTy, context)) {
+            if (Primitives.NUMBER.equals(indexTy, context)) {
                 return process(this, luaDocArrTy)
             }
-        } else if (Ty.NUMBER.contravariantOf(indexTy, context, TyVarianceFlags.STRICT_UNKNOWN)) {
+        } else if (Primitives.NUMBER.contravariantOf(indexTy, context, TyVarianceFlags.STRICT_UNKNOWN)) {
             return process(this, luaDocArrTy)
         }
 

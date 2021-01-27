@@ -31,6 +31,7 @@ import com.tang.intellij.lua.psi.Visibility
 import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.stubs.index.StubKeys
 import com.tang.intellij.lua.ty.ITy
+import com.tang.intellij.lua.ty.Primitives
 import com.tang.intellij.lua.ty.Ty
 
 /**
@@ -66,7 +67,7 @@ class LuaDocTagFieldType : LuaStubElementType<LuaDocTagFieldStub, LuaDocTagField
             className = classDef.name
         }
 
-        val valueTy = tagField.valueType?.getType() ?: Ty.UNKNOWN
+        val valueTy = tagField.valueType?.getType() ?: Primitives.UNKNOWN
 
         var flags = BitUtil.set(0, tagField.visibility.bitMask, true)
         flags = BitUtil.set(flags, FLAG_DEPRECATED, tagField.isDeprecated)

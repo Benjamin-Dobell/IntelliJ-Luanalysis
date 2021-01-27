@@ -51,7 +51,7 @@ class LuaParamInfo(val name: String, val ty: ITy?) {
     }
 
     fun substitute(substitutor: ITySubstitutor): LuaParamInfo {
-        val ty = this.ty ?: Ty.UNKNOWN
+        val ty = this.ty ?: Primitives.UNKNOWN
         val substitutedTy = TyMultipleResults.getResult(substitutor.searchContext, ty.substitute(substitutor))
 
         if (substitutedTy === ty) {

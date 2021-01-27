@@ -102,7 +102,7 @@ private fun LuaExpression<*>.shouldBeInternal(context: SearchContext): ITy? {
             val fTy = infer(p2.expression, context)
 
             if (fTy != null) {
-                var ret: ITy = Ty.VOID
+                var ret: ITy = Primitives.VOID
                 Ty.eachResolved(fTy, context) {
                     if (it is ITyFunction) {
                         var sig = it.matchSignature(context, p2)?.signature ?: it.mainSignature
@@ -124,7 +124,7 @@ private fun LuaExpression<*>.shouldBeInternal(context: SearchContext): ITy? {
                 return null
             }
 
-            var fieldType: ITy = Ty.VOID
+            var fieldType: ITy = Primitives.VOID
 
             Ty.eachResolved(tyTbl, context) { type ->
                 val classFieldTy = p1.name?.let {
@@ -243,7 +243,7 @@ fun LuaExprList.guessType(context: SearchContext): ITy? {
         val list = mutableListOf<ITy>()
         var variadic = false
         exprList.forEachIndexed { index, luaExpr ->
-            val ty = luaExpr.guessType(context) ?: Ty.UNKNOWN
+            val ty = luaExpr.guessType(context) ?: Primitives.UNKNOWN
 
             if (ty is TyMultipleResults) {
                 if (index == exprList.size - 1) {

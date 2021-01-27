@@ -167,7 +167,7 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
 
         if (valueTy is TyMultipleResults) {
             if (valueTy.variadic) {
-                LuaClassMemberIndex.indexIndexerStub(indexSink, className, Ty.NUMBER)
+                LuaClassMemberIndex.indexIndexerStub(indexSink, className, Primitives.NUMBER)
             } else {
                 val startIndex = (indexTy as TyPrimitiveLiteral).value.toInt()
 

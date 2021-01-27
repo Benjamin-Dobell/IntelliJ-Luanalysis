@@ -83,7 +83,7 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
 
                 renderDefinition(sb) {
                     sb.append("local <b>${element.name}</b>: ")
-                    val ty = element.guessType(SearchContext.get(element.project)) ?: Ty.UNKNOWN
+                    val ty = element.guessType(SearchContext.get(element.project)) ?: Primitives.UNKNOWN
                     renderTy(sb, ty, tyRenderer)
                 }
 
@@ -118,7 +118,7 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
             return false
         }
 
-        val ty = effectiveMember.guessType(context) ?: Ty.UNKNOWN
+        val ty = effectiveMember.guessType(context) ?: Primitives.UNKNOWN
         val tyRenderer = renderer
 
         renderDefinition(sb) {
@@ -238,7 +238,7 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
         if (docParamDef != null) {
             renderDocParam(sb, docParamDef, tyRenderer, true)
         } else {
-            val ty = infer(paramDef, SearchContext.get(paramDef.project)) ?: Ty.UNKNOWN
+            val ty = infer(paramDef, SearchContext.get(paramDef.project)) ?: Primitives.UNKNOWN
             sb.append("<b>param</b> <code>${paramDef.name}</code> : ")
             renderTy(sb, ty, tyRenderer)
         }

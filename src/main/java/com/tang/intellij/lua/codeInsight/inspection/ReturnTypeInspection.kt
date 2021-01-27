@@ -47,11 +47,11 @@ class ReturnTypeInspection : StrictInspection() {
                     guessSuperReturnTypes(bodyOwner, context)
                 } else {
                     bodyOwner.tagReturn?.type
-                } ?: TyMultipleResults(listOf(Ty.UNKNOWN), true)
+                } ?: TyMultipleResults(listOf(Primitives.UNKNOWN), true)
 
                 val guessedReturnTy = context.withMultipleResults {
                     o.exprList?.guessType(context)
-                } ?: Ty.VOID
+                } ?: Primitives.VOID
 
                 val guessedReturnTyLists = if (guessedReturnTy is TyUnion && guessedReturnTy.getChildTypes().any { it is TyMultipleResults }) {
                     guessedReturnTy.getChildTypes().map { toList(it) }
@@ -72,7 +72,7 @@ class ReturnTypeInspection : StrictInspection() {
 
                     for (i in 0 until guessedReturnTyList.size) {
                         val element = o.exprList?.getExpressionAt(i) ?: o
-                        val targetType = abstractTys.getOrNull(i) ?: variadicAbstractType ?: Ty.VOID
+                        val targetType = abstractTys.getOrNull(i) ?: variadicAbstractType ?: Primitives.VOID
                         val varianceFlags = if (element is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
 
                         ProblemUtil.contravariantOf(targetType, guessedReturnTyList[i], context, varianceFlags, null, element) { problem ->
@@ -115,7 +115,7 @@ class ReturnTypeInspection : StrictInspection() {
                         } else null
 
                         for (i in 0 until abstractTys.size) {
-                            val targetType = expectedReturnTys.getOrNull(i) ?: expectedVariadicReturnTy ?: Ty.VOID
+                            val targetType = expectedReturnTys.getOrNull(i) ?: expectedVariadicReturnTy ?: Primitives.VOID
 
                             if (!targetType.contravariantOf(abstractTys[i], context, 0)) {
                                 val element = statementDocTagType.typeList?.tyList?.let { it.getOrNull(i) ?: it.last() } ?: statementDocTagType
@@ -175,7 +175,7 @@ class ReturnTypeInspection : StrictInspection() {
 
             private fun toList(type: ITy): List<ITy> {
                 return when (type) {
-                    Ty.VOID -> emptyList()
+                    Primitives.VOID -> emptyList()
                     is TyMultipleResults -> type.list
                     else -> listOf(type)
                 }
@@ -216,7 +216,7 @@ class ReturnTypeInspection : StrictInspection() {
                         returnDef?.type
                     }
 
-                    if (type != null && type != Ty.VOID && o.textLength != 0) {
+                    if (type != null && type != Primitives.VOID && o.textLength != 0) {
                         myHolder.registerProblem(o, "Return type '%s' specified but no return values found.".format(type.displayName))
                     }
                 }

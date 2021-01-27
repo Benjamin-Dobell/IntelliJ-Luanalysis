@@ -44,7 +44,7 @@ class MatchFunctionSignatureInspection : StrictInspection() {
                         // Guess parent types
                         val context = SearchContext.get(o.project)
                         o.expressionList.forEach { expr ->
-                            if (expr.guessType(context) == Ty.NIL) {
+                            if (expr.guessType(context) == Primitives.NIL) {
                                 // If parent type is nil add error
                                 myHolder.registerProblem(expr, "Trying to index a nil type.")
                             }
@@ -58,14 +58,14 @@ class MatchFunctionSignatureInspection : StrictInspection() {
 
                 val searchContext = PsiSearchContext(o)
                 val prefixExpr = o.expression
-                var resolvedTy = prefixExpr.guessType(searchContext)?.let { Ty.resolve(it, searchContext) } ?: Ty.UNKNOWN
+                var resolvedTy = prefixExpr.guessType(searchContext)?.let { Ty.resolve(it, searchContext) } ?: Primitives.UNKNOWN
 
                 if (resolvedTy is TyUnion && resolvedTy.size == 2 && resolvedTy.getChildTypes().last().isAnonymous) {
                     resolvedTy = resolvedTy.getChildTypes().first()
                 }
 
                 TyUnion.each(resolvedTy) {
-                    if (it == Ty.FUNCTION || (it.isUnknown && LuaSettings.instance.isUnknownCallable)) {
+                    if (it == Primitives.FUNCTION || (it.isUnknown && LuaSettings.instance.isUnknownCallable)) {
                         return@each
                     }
 

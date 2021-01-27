@@ -29,6 +29,7 @@ import com.tang.intellij.lua.psi.Visibility
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.LuaNameExprStub
 import com.tang.intellij.lua.ty.ITy
+import com.tang.intellij.lua.ty.Primitives
 import com.tang.intellij.lua.ty.Ty
 
 /**
@@ -49,7 +50,7 @@ abstract class LuaNameExprMixin : StubBasedPsiElementBase<LuaNameExprStub>, LuaC
 
     override fun guessParentType(context: SearchContext): ITy {
         //todo: model type
-        return Ty.UNKNOWN
+        return Primitives.UNKNOWN
     }
 
     override val visibility: Visibility

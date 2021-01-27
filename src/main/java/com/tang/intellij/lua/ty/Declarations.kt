@@ -56,7 +56,7 @@ private fun inferReturnTyInner(owner: LuaFuncBodyOwner<*>, searchContext: Search
 
     //infer from return stat
     return withRecursionGuard("inferReturnTyInner", owner) {
-        var type: ITy? = Ty.VOID
+        var type: ITy? = Primitives.VOID
 
         owner.acceptChildren(object : LuaRecursiveVisitor() {
             override fun visitReturnStat(o: LuaReturnStat) {
@@ -120,7 +120,7 @@ private fun LuaLocalDef.infer(context: SearchContext): ITy? {
         val expr = PsiTreeUtil.findChildOfType(parent, LuaExpression::class.java)
         if (expr != null) {
             // TODO: unknown vs. any - should be unknown
-            type = infer(expr, context) ?: Ty.UNKNOWN
+            type = infer(expr, context) ?: Primitives.UNKNOWN
         }
     } else {
         val docTy = this.docTy
@@ -132,7 +132,7 @@ private fun LuaLocalDef.infer(context: SearchContext): ITy? {
 
             if (docTy != null) {
                 return if (docTy is TyMultipleResults) {
-                    docTy.list.getOrNull(index) ?: Ty.NIL
+                    docTy.list.getOrNull(index) ?: Primitives.NIL
                 } else docTy
             }
 
@@ -142,7 +142,7 @@ private fun LuaLocalDef.infer(context: SearchContext): ITy? {
                 // TODO: unknown vs. any - should be unknown
                 context.withIndex(index, false) {
                     exprList.guessTypeAt(context)
-                } ?: Ty.UNKNOWN
+                } ?: Primitives.UNKNOWN
             } else {
                 val stub = this.stub
                 val tyName = stub?.anonymousType ?: getAnonymousTypeName(this)
@@ -154,7 +154,7 @@ private fun LuaLocalDef.infer(context: SearchContext): ITy? {
             }
         } else if (docTy != null) {
             if (!context.supportsMultipleResults && docTy is TyMultipleResults) {
-                return docTy.list.getOrNull(context.index) ?: Ty.NIL
+                return docTy.list.getOrNull(context.index) ?: Primitives.NIL
             } else return docTy
         }
     }
@@ -218,9 +218,9 @@ private fun inferFile(file: LuaPsiFile, context: SearchContext): ITy {
         else {
             file.returnStatement()?.let {
                 context.withIndex(0) { guessReturnType(it, context) }
-            } ?: Ty.VOID
+            } ?: Primitives.VOID
         }
-    }) ?: Ty.UNKNOWN
+    }) ?: Primitives.UNKNOWN
 }
 
 /**
@@ -320,8 +320,8 @@ private fun resolveParamType(paramDef: LuaParamDef, context: SearchContext): ITy
         }
 
         if (iterator != null) {
-            var result: ITy = Ty.VOID
-            val returnTy = iterator.mainSignature.returnTy?.not(Ty.NIL, context)?.let {
+            var result: ITy = Primitives.VOID
+            val returnTy = iterator.mainSignature.returnTy?.not(Primitives.NIL, context)?.let {
                 TyMultipleResults.flatten(context, it)
             }
 
@@ -332,7 +332,7 @@ private fun resolveParamType(paramDef: LuaParamDef, context: SearchContext): ITy
             if (returnTy is TyMultipleResults) {
                 result = returnTy.list.getOrNull(paramIndex)?.let {
                     result.union(it, context)
-                } ?: Ty.UNKNOWN
+                } ?: Primitives.UNKNOWN
             } else if (paramIndex == 0) {
                 result = result.union(returnTy, context)
             }
@@ -342,7 +342,7 @@ private fun resolveParamType(paramDef: LuaParamDef, context: SearchContext): ITy
     }
     // for param = 1, 2 do end
     if (paramOwner is LuaForAStat)
-        return Ty.NUMBER
+        return Primitives.NUMBER
     /**
      * ---@param processor fun(p1:TYPE):void
      * local function test(processor)

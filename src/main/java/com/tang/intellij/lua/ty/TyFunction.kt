@@ -103,7 +103,7 @@ fun IFunSignature.getFirstParam(thisTy: ITy?, colonStyle: Boolean): LuaParamInfo
 }
 
 fun IFunSignature.getArgTy(index: Int): ITy {
-    return params?.getOrNull(index)?.ty ?: Ty.UNKNOWN
+    return params?.getOrNull(index)?.ty ?: Primitives.UNKNOWN
 }
 
 //eg. print(...)
@@ -187,7 +187,7 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
         val namedParams = mutableListOf<Pair<String, ITy>>()
 
         params?.forEach {
-            namedParams.add(Pair(it.name, it.ty ?: Ty.UNKNOWN))
+            namedParams.add(Pair(it.name, it.ty ?: Primitives.UNKNOWN))
         }
 
         variadicParamTy?.let {
@@ -262,8 +262,8 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
 
             for (i in otherParams.indices) {
                 val param = it.getOrNull(i) ?: return false
-                val otherParamTy = otherParams[i].ty ?: Ty.UNKNOWN
-                if (!otherParamTy.contravariantOf(param.ty ?: Ty.UNKNOWN, context, flags)) {
+                val otherParamTy = otherParams[i].ty ?: Primitives.UNKNOWN
+                if (!otherParamTy.contravariantOf(param.ty ?: Primitives.UNKNOWN, context, flags)) {
                     return false
                 }
             }
@@ -364,7 +364,7 @@ abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
         var matched = false
 
         processSignatures(context) { sig ->
-            if (other == Ty.FUNCTION) {
+            if (other == Primitives.FUNCTION) {
                 val multipleResults = sig.returnTy as? TyMultipleResults
                 matched = multipleResults?.variadic == true && multipleResults.list.size == 1 && multipleResults.list.first().isUnknown
                         && (sig.params?.size ?: 0) == 0 && sig.variadicParamTy?.isUnknown == true

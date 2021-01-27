@@ -24,17 +24,14 @@ import com.tang.intellij.lua.psi.LuaIndexExpr
 import com.tang.intellij.lua.psi.LuaVisitor
 import com.tang.intellij.lua.psi.prefixExpression
 import com.tang.intellij.lua.search.PsiSearchContext
-import com.tang.intellij.lua.ty.Ty
-import com.tang.intellij.lua.ty.TySnippet
-import com.tang.intellij.lua.ty.isGlobal
-import com.tang.intellij.lua.ty.isUnknown
+import com.tang.intellij.lua.ty.*
 
 class UndeclaredMemberInspection : StrictInspection() {
     override fun buildVisitor(myHolder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor =
             object : LuaVisitor() {
                 override fun visitIndexExpr(o: LuaIndexExpr) {
                     val context = PsiSearchContext(o)
-                    val prefix = o.prefixExpression.guessType(context) ?: Ty.UNKNOWN
+                    val prefix = o.prefixExpression.guessType(context) ?: Primitives.UNKNOWN
                     val memberName = o.name
 
                     Ty.eachResolved(prefix, context) { prefixTy ->

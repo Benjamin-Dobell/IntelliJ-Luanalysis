@@ -65,12 +65,12 @@ interface LuaFuncBodyOwnerStub<T : PsiElement> : StubElement<T> {
         val docTy = returnDocTy
         if (docTy != null){
             if (docTy is TyMultipleResults && context.index != -1) {
-                return docTy.list.getOrElse(context.index) { Ty.UNKNOWN }
+                return docTy.list.getOrElse(context.index) { Primitives.UNKNOWN }
             }
             return docTy
         }
         return findChildStubByType(LuaElementTypes.FUNC_BODY)?.let {
             walkBody(it, context)
-        } ?: Ty.VOID
+        } ?: Primitives.VOID
     }
 }

@@ -28,10 +28,7 @@ import com.tang.intellij.lua.comment.psi.LuaDocVisitor
 import com.tang.intellij.lua.comment.psi.api.LuaComment
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
-import com.tang.intellij.lua.ty.ITy
-import com.tang.intellij.lua.ty.ProblemUtil
-import com.tang.intellij.lua.ty.Ty
-import com.tang.intellij.lua.ty.TyVarianceFlags
+import com.tang.intellij.lua.ty.*
 
 class IllegalOverrideInspection : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
@@ -74,7 +71,7 @@ class IllegalOverrideInspection : LocalInspectionTool() {
                             inspectMember(context, superTy, tableField, docType.getType(), docType)
                         }
                     } else {
-                        inspectMember(context, superTy, tableField, valueExpr.guessType(context) ?: Ty.UNKNOWN, valueExpr)
+                        inspectMember(context, superTy, tableField, valueExpr.guessType(context) ?: Primitives.UNKNOWN, valueExpr)
                     }
                 }
             }

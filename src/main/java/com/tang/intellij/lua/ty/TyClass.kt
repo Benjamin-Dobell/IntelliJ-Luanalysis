@@ -142,7 +142,7 @@ private fun equalToShape(target: ITy, source: ITy, context: SearchContext): Bool
             return@processMembers isEqual
         }
 
-        val sourceMemberTy = (sourceMember.guessType(context) ?: Ty.UNKNOWN).let {
+        val sourceMemberTy = (sourceMember.guessType(context) ?: Primitives.UNKNOWN).let {
             if (sourceSubstitutor != null) it.substitute(sourceSubstitutor) else it
         }
 
@@ -476,7 +476,7 @@ fun createTableGenericFromMembers(ty: ITy, context: SearchContext): ITyGeneric {
     val isEmpty = ty.processMembers(context) { _, _ -> false }
 
     if (isEmpty) {
-        return TyGeneric(arrayOf(Ty.UNKNOWN, Ty.UNKNOWN), Ty.TABLE)
+        return TyGeneric(arrayOf(Primitives.UNKNOWN, Primitives.UNKNOWN), Primitives.TABLE)
     }
 
     var keyType: ITy? = null
@@ -493,23 +493,23 @@ fun createTableGenericFromMembers(ty: ITy, context: SearchContext): ITyGeneric {
                 keyType = context.withIndex(0) {
                     exprList[0].guessType(context)?.let {
                         TyUnion.union(keyType, it, context)
-                    } ?: Ty.UNKNOWN
+                    } ?: Primitives.UNKNOWN
                 }
                 elementType = context.withIndex(0) {
                     exprList[1].guessType(context)?.let {
                         TyUnion.union(elementType, it, context)
-                    } ?: Ty.UNKNOWN
+                    } ?: Primitives.UNKNOWN
                 }
             } else if (exprList.size == 1) {
                 if (name != null) {
                     keyType = TyUnion.union(keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name), context)
                 } else {
-                    keyType = TyUnion.union(keyType, Ty.NUMBER, context)
+                    keyType = TyUnion.union(keyType, Primitives.NUMBER, context)
                 }
 
                 elementType = exprList[0].guessType(context)?.let {
                     TyUnion.union(elementType, it, context)
-                } ?: Ty.UNKNOWN
+                } ?: Primitives.UNKNOWN
             }
         } else if (classMember is LuaIndexExpr) {
             val idExpr = classMember.idExpr
@@ -518,36 +518,36 @@ fun createTableGenericFromMembers(ty: ITy, context: SearchContext): ITyGeneric {
                 keyType = TyUnion.union(keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name), context)
                 elementType = prefixTy.guessMemberType(name, context)?.let {
                     TyUnion.union(elementType, it, context)
-                } ?: Ty.UNKNOWN
+                } ?: Primitives.UNKNOWN
             } else if (idExpr != null) {
-                val indexTy = idExpr.guessType(context) ?: Ty.UNKNOWN
+                val indexTy = idExpr.guessType(context) ?: Primitives.UNKNOWN
                 keyType = TyUnion.union(keyType, indexTy, context)
                 elementType = prefixTy.guessIndexerType(indexTy, context)?.let {
                     TyUnion.union(elementType, it, context)
-                } ?: Ty.UNKNOWN
+                } ?: Primitives.UNKNOWN
             } else {
-                keyType = Ty.UNKNOWN
-                elementType = Ty.UNKNOWN
+                keyType = Primitives.UNKNOWN
+                elementType = Primitives.UNKNOWN
             }
         } else if (name != null) {
             keyType = TyUnion.union(keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name), context)
             elementType = classMember.guessType(context)?.let {
                 TyUnion.union(elementType, it, context)
-            } ?: Ty.UNKNOWN
+            } ?: Primitives.UNKNOWN
         } else if (indexType != null) {
             keyType = TyUnion.union(keyType, indexType.getType(), context)
             elementType = classMember.guessType(context)?.let {
                 TyUnion.union(elementType, it, context)
-            } ?: Ty.UNKNOWN
+            } ?: Primitives.UNKNOWN
         } else {
-            keyType = Ty.UNKNOWN
-            elementType = Ty.UNKNOWN
+            keyType = Primitives.UNKNOWN
+            elementType = Primitives.UNKNOWN
         }
 
         keyType?.isUnknown == false || elementType?.isUnknown == false
     }
 
-    return TyGeneric(arrayOf(keyType ?: Ty.UNKNOWN, elementType ?: Ty.UNKNOWN), Ty.TABLE)
+    return TyGeneric(arrayOf(keyType ?: Primitives.UNKNOWN, elementType ?: Primitives.UNKNOWN), Primitives.TABLE)
 }
 
 fun getTableTypeName(table: LuaTableExpr): String {

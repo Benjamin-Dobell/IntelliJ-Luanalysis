@@ -51,25 +51,25 @@ class TyUnion : Ty {
             var resolvedType: ITy? = null
             childSet.forEach {
                 when (it.booleanType) {
-                    Ty.TRUE -> {
-                        if (resolvedType == Ty.FALSE) return Ty.BOOLEAN
-                        resolvedType = Ty.TRUE
+                    Primitives.TRUE -> {
+                        if (resolvedType == Primitives.FALSE) return Primitives.BOOLEAN
+                        resolvedType = Primitives.TRUE
                     }
-                    Ty.FALSE -> {
-                        if (resolvedType == Ty.TRUE) return Ty.BOOLEAN
-                        resolvedType = Ty.FALSE
+                    Primitives.FALSE -> {
+                        if (resolvedType == Primitives.TRUE) return Primitives.BOOLEAN
+                        resolvedType = Primitives.FALSE
                     }
-                    else -> return Ty.BOOLEAN
+                    else -> return Primitives.BOOLEAN
                 }
             }
-            return resolvedType ?: Ty.BOOLEAN
+            return resolvedType ?: Primitives.BOOLEAN
         }
 
     override fun union(ty: ITy, context: SearchContext): ITy {
         if (ty is TyVoid) {
             return this
         } else if (ty.isUnknown && childSet.find { it is TyMultipleResults } == null) {
-            return Ty.UNKNOWN
+            return Primitives.UNKNOWN
         }
 
         val unionTys = mutableListOf<ITy>()
@@ -302,13 +302,13 @@ class TyUnion : Ty {
             tys.forEach {
                 if (it is TyUnion) {
                     expandedTys.addAll(it.childSet)
-                } else if (it != Ty.VOID) {
+                } else if (it != Primitives.VOID) {
                     expandedTys.add(it)
                 }
             }
 
             if (expandedTys.size == 0) {
-                return Ty.VOID
+                return Primitives.VOID
             }
 
             val childSet = sortedSetOf(displayNameComparator)
@@ -322,17 +322,17 @@ class TyUnion : Ty {
                 } != null
 
                 if (!covariant) {
-                    if (it == Ty.TRUE) {
-                        if (childSet.remove(Ty.FALSE)) {
-                            childSet.add(Ty.BOOLEAN)
+                    if (it == Primitives.TRUE) {
+                        if (childSet.remove(Primitives.FALSE)) {
+                            childSet.add(Primitives.BOOLEAN)
                         } else {
-                            childSet.add(Ty.TRUE)
+                            childSet.add(Primitives.TRUE)
                         }
-                    } else if (it == Ty.FALSE) {
-                        if (childSet.remove(Ty.TRUE)) {
-                            childSet.add(Ty.BOOLEAN)
+                    } else if (it == Primitives.FALSE) {
+                        if (childSet.remove(Primitives.TRUE)) {
+                            childSet.add(Primitives.BOOLEAN)
                         } else {
-                            childSet.add(Ty.FALSE)
+                            childSet.add(Primitives.FALSE)
                         }
                     } else {
                         childSet.removeIf { childTy ->

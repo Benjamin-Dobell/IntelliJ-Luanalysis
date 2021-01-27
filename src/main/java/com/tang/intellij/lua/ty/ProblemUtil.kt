@@ -122,7 +122,7 @@ object ProblemUtil {
                 return@processMembers true
             }
 
-            val sourceMemberTy = (sourceMember.guessType(context) ?: Ty.UNKNOWN).let {
+            val sourceMemberTy = (sourceMember.guessType(context) ?: Primitives.UNKNOWN).let {
                 if (sourceSubstitutor != null) it.substitute(sourceSubstitutor) else it
             }
 
@@ -183,7 +183,7 @@ object ProblemUtil {
                 sourceMember.name?.let { source.guessMemberType(it, context) }
             })?.let {
                 if (sourceSubstitutor != null) it.substitute(sourceSubstitutor) else it
-            } ?: Ty.UNKNOWN
+            } ?: Primitives.UNKNOWN
 
             val targetMemberTy = (if (indexTy != null) {
                 val targetMember = target.findIndexer(indexTy, context)
@@ -299,7 +299,7 @@ object ProblemUtil {
                             return@processMembers true
                         }
 
-                        if (indexTy == Ty.NUMBER) {
+                        if (indexTy == Primitives.NUMBER) {
                             foundNumberIndexer = true
                         } else {
                             val index = indexTy.value.toIntOrNull()
@@ -320,7 +320,7 @@ object ProblemUtil {
                             indexes.put(index, highlightElement)
                         }
 
-                        val sourceFieldTypes = (sourceMember.guessType(context) ?: Ty.UNKNOWN).let {
+                        val sourceFieldTypes = (sourceMember.guessType(context) ?: Primitives.UNKNOWN).let {
                             if (it is TyMultipleResults) it.list else listOf(it)
                         }
 
@@ -382,7 +382,7 @@ object ProblemUtil {
 
             if (sourceElement is LuaTableExpr) {
                 sourceElement.tableFieldList.forEach { sourceField ->
-                    val sourceFieldTypes = (sourceField.guessType(context) ?: Ty.UNKNOWN).let {
+                    val sourceFieldTypes = (sourceField.guessType(context) ?: Primitives.UNKNOWN).let {
                         if (it is TyMultipleResults) it.list else listOf(it)
                     }
 
@@ -470,46 +470,46 @@ object ProblemUtil {
 
             if (leftExpression != null && rightExpression != null) {
                 if (op == LuaTypes.AND) {
-                    val leftSourceTy = context.withIndex(0) { leftExpression.guessType(context) } ?: Ty.UNKNOWN
+                    val leftSourceTy = context.withIndex(0) { leftExpression.guessType(context) } ?: Primitives.UNKNOWN
                     return when (leftSourceTy.booleanType) {
-                        Ty.TRUE -> {
-                            val rightSourceTy = context.withIndex(0) { rightExpression.guessType(context) } ?: Ty.UNKNOWN
+                        Primitives.TRUE -> {
+                            val rightSourceTy = context.withIndex(0) { rightExpression.guessType(context) } ?: Primitives.UNKNOWN
                             expressionTraversingContravariantOf(targetTy, rightSourceTy, context, varianceFlags, rightExpression, processProblem)
                         }
-                        Ty.FALSE -> {
+                        Primitives.FALSE -> {
                             contravariantOfUnit(targetTy, leftSourceTy, context, varianceFlags, null, leftExpression, processProblem)
                         }
                         else -> {
-                            var leftFalseyTy: ITy = Ty.VOID
+                            var leftFalseyTy: ITy = Primitives.VOID
 
                             Ty.eachResolved(leftSourceTy, context) {
-                                if (it == Ty.BOOLEAN) {
-                                    leftFalseyTy = leftFalseyTy.union(Ty.FALSE, context)
-                                } else if (it.booleanType != Ty.TRUE) {
+                                if (it == Primitives.BOOLEAN) {
+                                    leftFalseyTy = leftFalseyTy.union(Primitives.FALSE, context)
+                                } else if (it.booleanType != Primitives.TRUE) {
                                     leftFalseyTy = leftFalseyTy.union(it, context)
                                 }
                             }
 
                             val leftContravariant = contravariantOfUnit(targetTy, leftFalseyTy, context, varianceFlags, null, leftExpression, processProblem)
-                            val rightSourceTy = context.withIndex(0) { rightExpression.guessType(context) } ?: Ty.UNKNOWN
+                            val rightSourceTy = context.withIndex(0) { rightExpression.guessType(context) } ?: Primitives.UNKNOWN
                             expressionTraversingContravariantOf(targetTy, rightSourceTy, context, varianceFlags, rightExpression, processProblem) && leftContravariant
                         }
                     }
                 } else if (op == LuaTypes.OR) {
-                    val leftSourceTy = context.withIndex(0) { leftExpression.guessType(context) } ?: Ty.UNKNOWN
+                    val leftSourceTy = context.withIndex(0) { leftExpression.guessType(context) } ?: Primitives.UNKNOWN
                     return when (leftSourceTy.booleanType) {
-                        Ty.TRUE -> {
+                        Primitives.TRUE -> {
                             expressionTraversingContravariantOf(targetTy, leftSourceTy, context, varianceFlags, leftExpression, processProblem)
                         }
-                        Ty.FALSE -> {
-                            val rightSourceTy = context.withIndex(0) { rightExpression.guessType(context) } ?: Ty.UNKNOWN
+                        Primitives.FALSE -> {
+                            val rightSourceTy = context.withIndex(0) { rightExpression.guessType(context) } ?: Primitives.UNKNOWN
                             expressionTraversingContravariantOf(targetTy, rightSourceTy, context, varianceFlags, rightExpression, processProblem)
                         }
                         else -> {
-                            val leftTargetTy = TyUnion.union(listOf(targetTy, Ty.FALSE, Ty.NIL), context)
+                            val leftTargetTy = TyUnion.union(listOf(targetTy, Primitives.FALSE, Primitives.NIL), context)
                             val leftContravariant = expressionTraversingContravariantOf(leftTargetTy, leftSourceTy, context, varianceFlags, leftExpression, processProblem)
 
-                            val rightSourceTy = context.withIndex(0) { rightExpression.guessType(context) } ?: Ty.UNKNOWN
+                            val rightSourceTy = context.withIndex(0) { rightExpression.guessType(context) } ?: Primitives.UNKNOWN
                             expressionTraversingContravariantOf(targetTy, rightSourceTy, context, varianceFlags, rightExpression, processProblem) && leftContravariant
                         }
                     }

@@ -31,7 +31,7 @@ interface ITyPrimitive : ITy {
 class TyPrimitive(override val primitiveKind: TyPrimitiveKind,
                   override val displayName: String) : Ty(TyKind.Primitive), ITyPrimitive {
 
-    override val booleanType = if (primitiveKind == TyPrimitiveKind.Boolean) Ty.BOOLEAN else Ty.TRUE
+    override val booleanType = if (primitiveKind == TyPrimitiveKind.Boolean) Primitives.BOOLEAN else Primitives.TRUE
 
     override fun equals(other: Any?): Boolean {
         return other is ITyPrimitive && other.primitiveKind == primitiveKind
@@ -69,7 +69,7 @@ class TyPrimitive(override val primitiveKind: TyPrimitiveKind,
                 val otherBase = if (other is ITyGeneric) other.base else other
                 return other.kind == TyKind.Array
                         || otherBase.kind == TyKind.Class
-                        || otherBase == Ty.TABLE
+                        || otherBase == Primitives.TABLE
             }
         }
 
@@ -78,13 +78,13 @@ class TyPrimitive(override val primitiveKind: TyPrimitiveKind,
 
     override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
         return if (primitiveKind == TyPrimitiveKind.Table) {
-            Ty.UNKNOWN
+            Primitives.UNKNOWN
         } else super<Ty>.guessMemberType(name, searchContext)
     }
 
     override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
         return if (primitiveKind == TyPrimitiveKind.Table) {
-            Ty.UNKNOWN
+            Primitives.UNKNOWN
         } else super<Ty>.guessIndexerType(indexTy, searchContext, exact)
     }
 }
@@ -138,12 +138,12 @@ object TyPrimitiveSerializer : TySerializer<ITy>() {
     override fun deserializeTy(flags: Int, stream: StubInputStream): ITy {
         val primitiveKind = stream.readByte()
         return when (primitiveKind.toInt()) {
-            TyPrimitiveKind.Boolean.ordinal -> Ty.BOOLEAN
-            TyPrimitiveKind.String.ordinal -> Ty.STRING
-            TyPrimitiveKind.Number.ordinal -> Ty.NUMBER
-            TyPrimitiveKind.Table.ordinal -> Ty.TABLE
-            TyPrimitiveKind.Function.ordinal -> Ty.FUNCTION
-            else -> Ty.UNKNOWN
+            TyPrimitiveKind.Boolean.ordinal -> Primitives.BOOLEAN
+            TyPrimitiveKind.String.ordinal -> Primitives.STRING
+            TyPrimitiveKind.Number.ordinal -> Primitives.NUMBER
+            TyPrimitiveKind.Table.ordinal -> Primitives.TABLE
+            TyPrimitiveKind.Function.ordinal -> Primitives.FUNCTION
+            else -> Primitives.UNKNOWN
         }
     }
 
@@ -173,7 +173,7 @@ class TyDocPrimitiveTable(val luaDocPrimitiveTableTy: LuaDocPrimitiveTableTy) : 
             val otherBase = if (other is ITyGeneric) other.base else other
             return other.kind == TyKind.Array
                     || otherBase.kind == TyKind.Class
-                    || otherBase == Ty.TABLE
+                    || otherBase == Primitives.TABLE
         }
 
         return false

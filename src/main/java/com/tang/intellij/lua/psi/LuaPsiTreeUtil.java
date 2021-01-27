@@ -23,18 +23,15 @@ import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.search.PsiElementProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Processor;
-import com.tang.intellij.lua.Constants;
 import com.tang.intellij.lua.comment.psi.LuaDocGenericDef;
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass;
 import com.tang.intellij.lua.psi.search.LuaShortNamesManager;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 import com.tang.intellij.lua.ty.ITyClass;
-import com.tang.intellij.lua.ty.Ty;
+import com.tang.intellij.lua.ty.Primitives;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 /**
  *
@@ -165,7 +162,7 @@ public class LuaPsiTreeUtil {
     @NotNull
     public static ITy findContextClass(PsiElement current, SearchContext context) {
         ITy ownerTy = LuaScopedTypeTree.Companion.get(current.getContainingFile()).findOwner(context, current);
-        return ownerTy != null ? ownerTy : Ty.Companion.getUNKNOWN();
+        return ownerTy != null ? ownerTy : Primitives.Companion.getUNKNOWN();
     }
 
     @Nullable

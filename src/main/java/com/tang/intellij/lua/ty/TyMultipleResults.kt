@@ -47,7 +47,7 @@ class TyMultipleResults : Ty {
 
             if (substitutedResult is TyMultipleResults) {
                 if (variadic) {
-                    var aggregateTy: ITy = Ty.VOID
+                    var aggregateTy: ITy = Primitives.VOID
                     substitutedResult.list.map {
                         aggregateTy = aggregateTy.union(it, substitutor.searchContext)
                         aggregateTy
@@ -169,13 +169,13 @@ class TyMultipleResults : Ty {
 
             override fun next(): V {
                 val ty1 = if (multipleResults1.variadic && index1 >= list1.lastIndex) {
-                    Ty.NIL.union(list1.last(), context)
+                    Primitives.NIL.union(list1.last(), context)
                 } else {
                     list1[index1]
                 }
 
                 val ty2 = if (multipleResults2.variadic && index2 >= list2.lastIndex) {
-                    Ty.NIL.union(list2.last(), context)
+                    Primitives.NIL.union(list2.last(), context)
                 } else {
                     list2.getOrNull(index2)
                 }
@@ -198,14 +198,14 @@ class TyMultipleResults : Ty {
                 } else if (flattenedTy.variadic) {
                     val lastResult = flattenedTy.list.last()
                     val variadicTy = getResult(context, lastResult).union(getResult(context, lastResult, index - flattenedTy.list.lastIndex), context)
-                    Ty.NIL.union(variadicTy, context)
+                    Primitives.NIL.union(variadicTy, context)
                 } else {
                     getResult(context, flattenedTy.list.last(), index - flattenedTy.list.lastIndex)
                 }
             } else if (index == 0) {
                 flattenedTy
             } else {
-                Ty.NIL
+                Primitives.NIL
             }
         }
 
@@ -254,7 +254,7 @@ class TyMultipleResults : Ty {
                 }
 
                 for (i in resultCount until tyList.size) {
-                    tyList[i] = TyUnion.union(tyList[i], Ty.NIL, context)
+                    tyList[i] = TyUnion.union(tyList[i], Primitives.NIL, context)
                 }
             }
 

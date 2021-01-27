@@ -118,7 +118,7 @@ fun getPresentation(classMethodDefStat: LuaClassMethodDefStat): ItemPresentation
  */
 fun guessParentType(classMethodDefStat: LuaClassMethodDefStat, context: SearchContext): ITy {
     /*val stub = classMethodDefStat.stub
-    var type: ITy = Ty.UNKNOWN
+    var type: ITy = Primitives.UNKNOWN
     if (stub != null) {
         stub.classes.forEach {
            type = type.union(it)
@@ -136,7 +136,7 @@ fun guessParentType(classMethodDefStat: LuaClassMethodDefStat, context: SearchCo
         expr.guessType(context)?.let {
             TyUnion.getPerfectClass(it)
         }
-    }) ?: Ty.UNKNOWN
+    }) ?: Primitives.UNKNOWN
 }
 
 fun guessParentType(luaClosureExpr: LuaClosureExpr, context: SearchContext): ITy {
@@ -156,11 +156,11 @@ fun guessParentType(luaClosureExpr: LuaClosureExpr, context: SearchContext): ITy
         }
     }
 
-    return Ty.UNKNOWN
+    return Primitives.UNKNOWN
 }
 
 fun guessParentType(luaLocalFuncDefStat: LuaLocalFuncDefStat, context: SearchContext): ITy {
-    return Ty.UNKNOWN
+    return Primitives.UNKNOWN
 }
 
 fun getNameIdentifier(funcDefStat: LuaFuncDefStat): PsiElement? {
@@ -272,7 +272,7 @@ fun guessTypeAt(list: LuaExprList, context: SearchContext): ITy? {
 
 fun guessParentType(indexExpr: LuaIndexExpr, context: SearchContext): ITy {
     val expr = PsiTreeUtil.getStubChildOfType(indexExpr, LuaExpression::class.java)
-    return expr?.guessType(context) ?: Ty.UNKNOWN
+    return expr?.guessType(context) ?: Primitives.UNKNOWN
 }
 
 fun getNameIdentifier(indexExpr: LuaIndexExpr): PsiElement? {
@@ -387,7 +387,7 @@ fun getTagVararg(owner: LuaFuncBodyOwner<*>): LuaDocTagVararg? {
 
 fun getVarargTy(owner: LuaFuncBodyOwner<*>): ITy? {
     return owner.stub?.varargTy ?: owner.funcBody?.ellipsis?.let {
-        return owner.tagVararg?.type ?: Ty.UNKNOWN
+        return owner.tagVararg?.type ?: Primitives.UNKNOWN
     }
 }
 
@@ -484,7 +484,7 @@ fun getNameIdentifier(tableField: LuaTableField): PsiElement? {
 }
 
 fun guessParentType(tableField: LuaTableField, context: SearchContext): ITy {
-    return PsiTreeUtil.getParentOfType(tableField, LuaTableExpr::class.java)?.guessType(context) ?: Ty.UNKNOWN
+    return PsiTreeUtil.getParentOfType(tableField, LuaTableExpr::class.java)?.guessType(context) ?: Primitives.UNKNOWN
 }
 
 fun guessIndexType(tableField: LuaTableField, context: SearchContext): ITy? {
@@ -626,7 +626,7 @@ fun guessReturnType(returnStat: LuaReturnStat, context: SearchContext): ITy? {
         }
     }
 
-    return Ty.VOID
+    return Primitives.VOID
 }
 
 fun getNameIdentifier(label: LuaLabelStat): PsiElement? {

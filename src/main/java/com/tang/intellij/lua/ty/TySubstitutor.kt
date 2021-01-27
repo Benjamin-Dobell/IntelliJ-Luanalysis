@@ -41,7 +41,7 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: Searc
     private val paramSubstitutor = TyParameterSubstitutor(paramContext, paramTyMap)
     private var context = paramContext
 
-    private var cur: ITy = Ty.VOID
+    private var cur: ITy = Primitives.VOID
 
     val analyzedParams: Map<String, ITy> = paramTyMap
 
@@ -70,7 +70,7 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: Searc
 
         cur = arg
         warp(cur) { par.accept(this) }
-        cur = Ty.VOID
+        cur = Primitives.VOID
     }
 
     override fun visitAlias(alias: ITyAlias) {
@@ -118,8 +118,8 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: Searc
                         it.findEffectiveIndexer(indexTy, context, false)
                     } ?: classMember.name?.let { name -> it.findEffectiveMember(name, context) }
 
-                    val classMemberTy = classMember.guessType(context) ?: Ty.UNKNOWN
-                    val curMemberTy = curMember?.guessType(context) ?: Ty.NIL
+                    val classMemberTy = classMember.guessType(context) ?: Primitives.UNKNOWN
+                    val curMemberTy = curMember?.guessType(context) ?: Primitives.NIL
 
                     warp(curMemberTy) {
                         Ty.resolve(classMemberTy, context).accept(this)
@@ -145,7 +145,7 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: Searc
                 }
             } else if (it is ITyClass && TyArray.isArray(it, context)) {
                 it.processMembers(context) { _, member ->
-                    warp(member.guessType(context) ?: Ty.UNKNOWN) {
+                    warp(member.guessType(context) ?: Primitives.UNKNOWN) {
                         Ty.resolve(array.base, context).accept(this)
                     }
                     true
@@ -174,17 +174,17 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: Searc
                         Ty.resolve(genericParam, context).accept(this)
                     }
                 }
-            } else if (generic.base == Ty.TABLE && generic.args.size == 2) {
-                if (it == Ty.TABLE) {
-                    warp(Ty.UNKNOWN) {
+            } else if (generic.base == Primitives.TABLE && generic.args.size == 2) {
+                if (it == Primitives.TABLE) {
+                    warp(Primitives.UNKNOWN) {
                         Ty.resolve(generic.args.first(), context).accept(this)
                     }
 
-                    warp(Ty.UNKNOWN) {
+                    warp(Primitives.UNKNOWN) {
                         Ty.resolve(generic.args.last(), context).accept(this)
                     }
                 } else if (it is ITyArray) {
-                    warp(Ty.NUMBER) {
+                    warp(Primitives.NUMBER) {
                         Ty.resolve(generic.args.first(), context).accept(this)
                     }
 
@@ -305,7 +305,7 @@ class TyAliasSubstitutor private constructor(searchContext: SearchContext) : TyS
                 val resolved = base.ty.substitute(generic.getMemberSubstitutor(searchContext)).substitute(this)
                 processedNames.remove(base.name)
                 resolved
-            } else Ty.VOID
+            } else Primitives.VOID
         }
 
         return super.substitute(generic)
@@ -330,7 +330,7 @@ class TySelfSubstitutor(context: SearchContext, val call: LuaCallExpr?, val self
 
         call?.let {
             it.prefixExpression?.guessType(searchContext) ?: it.expression.guessType(searchContext)
-        } ?: Ty.UNKNOWN
+        } ?: Primitives.UNKNOWN
     }
 
     override fun substitute(clazz: ITyClass): ITy {

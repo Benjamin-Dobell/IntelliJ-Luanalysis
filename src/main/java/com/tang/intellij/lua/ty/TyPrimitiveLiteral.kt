@@ -25,18 +25,18 @@ import java.util.concurrent.ConcurrentHashMap
 class TyPrimitiveLiteral private constructor(val primitiveKind: TyPrimitiveKind, val value: String) : Ty(TyKind.PrimitiveLiteral) {
     override val displayName: String by lazy { if (primitiveKind == TyPrimitiveKind.String) "\"${value.replace("\"", "\\\"")}\"" else value }
 
-    // Ty.TRUE/Ty.FALSE are TyPrimitiveLiteral, to avoid circular references (a null booleanType) we make this lazy.
+    // Primitives.TRUE/Primitives.FALSE are TyPrimitiveLiteral, to avoid circular references (a null booleanType) we make this lazy.
     override val booleanType by lazy {
-        if (primitiveKind != TyPrimitiveKind.Boolean || value == "true") Ty.TRUE else Ty.FALSE
+        if (primitiveKind != TyPrimitiveKind.Boolean || value == "true") Primitives.TRUE else Primitives.FALSE
     }
 
     val primitiveType by lazy {
         when (primitiveKind) {
-            TyPrimitiveKind.Boolean -> Ty.BOOLEAN
-            TyPrimitiveKind.Function -> Ty.FUNCTION
-            TyPrimitiveKind.Number -> Ty.NUMBER
-            TyPrimitiveKind.String -> Ty.STRING
-            TyPrimitiveKind.Table -> Ty.TABLE
+            TyPrimitiveKind.Boolean -> Primitives.BOOLEAN
+            TyPrimitiveKind.Function -> Primitives.FUNCTION
+            TyPrimitiveKind.Number -> Primitives.NUMBER
+            TyPrimitiveKind.String -> Primitives.STRING
+            TyPrimitiveKind.Table -> Primitives.TABLE
         }
     }
 

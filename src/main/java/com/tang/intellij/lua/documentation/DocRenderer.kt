@@ -48,7 +48,7 @@ fun renderSignature(sb: StringBuilder, signature: IFunSignature, tyRenderer: ITy
 
     if (params != null || varargTy != null) {
         params?.forEach {
-            sig.add("${it.name}: ${tyRenderer.render(it.ty ?: Ty.UNKNOWN)}")
+            sig.add("${it.name}: ${tyRenderer.render(it.ty ?: Primitives.UNKNOWN)}")
         }
         varargTy?.let {
             sig.add("...: ${tyRenderer.render(it)}")

@@ -176,7 +176,7 @@ interface ITy : Comparable<ITy> {
 
         if (member == null) {
             return if (isUnknown && LuaSettings.instance.isUnknownIndexable) {
-                Ty.UNKNOWN
+                Primitives.UNKNOWN
             } else {
                 null
             }
@@ -185,7 +185,7 @@ interface ITy : Comparable<ITy> {
         return member.guessType(searchContext)?.let {
             val substitutor = getMemberSubstitutor(searchContext)
             return if (substitutor != null) it.substitute(substitutor) else it
-        } ?: Ty.UNKNOWN
+        } ?: Primitives.UNKNOWN
     }
 
     fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean = false): ITy? {
@@ -199,7 +199,7 @@ interface ITy : Comparable<ITy> {
 
             if (member == null) {
                 if (isUnknown && LuaSettings.instance.isUnknownIndexable) {
-                    return Ty.UNKNOWN
+                    return Primitives.UNKNOWN
                 } else {
                     return@eachResolved
                 }
@@ -212,7 +212,7 @@ interface ITy : Comparable<ITy> {
             }
 
             if (memberTy == null) {
-                return Ty.UNKNOWN
+                return Primitives.UNKNOWN
             }
 
             ty = TyUnion.union(ty, memberTy, searchContext)
@@ -290,7 +290,7 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                     context.withMultipleResults { luaExpr.guessType(context) }
                 else
                     context.withIndex(0) { luaExpr.guessType(context) }
-                ) ?: Ty.UNKNOWN
+                ) ?: Primitives.UNKNOWN
 
         if (ty is TyMultipleResults && index == args.lastIndex) {
             val concreteResults = if (ty.variadic) {
@@ -347,7 +347,7 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                     }
                 }
 
-                val paramType = pi.ty ?: Ty.UNKNOWN
+                val paramType = pi.ty ?: Primitives.UNKNOWN
                 val argType = typeInfo.ty
                 val argExpr = args.getOrNull(i) ?: args.last()
                 val varianceFlags = if (argExpr is LuaTableExpr) {
@@ -438,10 +438,10 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                 signatureProblems?.forEach(processProblem)
             }
 
-            return SignatureMatchResult(it, signature, signature.returnTy ?: TyMultipleResults(listOf(Ty.UNKNOWN), true))
+            return SignatureMatchResult(it, signature, signature.returnTy ?: TyMultipleResults(listOf(Primitives.UNKNOWN), true))
         }
 
-        if (fallbackReturnTy == null && signature.returnTy != Ty.VOID) {
+        if (fallbackReturnTy == null && signature.returnTy != Primitives.VOID) {
             fallbackReturnTy = signature.returnTy
         }
 
@@ -463,10 +463,10 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
 
     if (fallbackReturnTy == null) {
         fallbackReturnTy = if (candidates.size > 0) {
-            Ty.VOID
+            Primitives.VOID
         } else if (this is ITyFunction) {
             val substitutor = call.createSubstitutor(this.mainSignature, context)
-            this.mainSignature.substitute(substitutor).returnTy ?: TyMultipleResults(listOf(Ty.UNKNOWN), true)
+            this.mainSignature.substitute(substitutor).returnTy ?: TyMultipleResults(listOf(Primitives.UNKNOWN), true)
         } else {
             var fallbackSignature: IFunSignature? = null
 
@@ -475,7 +475,7 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                 false
             }
 
-            fallbackSignature?.let { it.returnTy ?: TyMultipleResults(listOf(Ty.UNKNOWN), true) }
+            fallbackSignature?.let { it.returnTy ?: TyMultipleResults(listOf(Primitives.UNKNOWN), true) }
         }
     }
 
@@ -501,8 +501,8 @@ abstract class Ty(override val kind: TyKind) : ITy {
     override val displayName: String
         get() = TyRenderer.SIMPLE.render(this)
 
-    // Lazy initialization because Ty.TRUE is itself a Ty that needs to be instantiated and refers to itself.
-    override val booleanType: ITy by lazy { TRUE }
+    // Lazy initialization because Primitives.TRUE is itself a Ty that needs to be instantiated and refers to itself.
+    override val booleanType: ITy by lazy { Primitives.TRUE }
 
     fun addFlag(flag: Int) {
         flags = flags or flag
@@ -528,7 +528,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
         }
 
         if (ty.contravariantOf(this, context, TyVarianceFlags.STRICT_NIL or TyVarianceFlags.STRICT_UNKNOWN or TyVarianceFlags.NON_STRUCTURAL)) {
-            return Ty.VOID
+            return Primitives.VOID
         }
 
         return this
@@ -661,20 +661,6 @@ abstract class Ty(override val kind: TyKind) : ITy {
 
     companion object {
 
-        // Defined first because each Ty implements booleanType, which returns a reference to these constants.
-        val TRUE = TyPrimitiveLiteral.getTy(TyPrimitiveKind.Boolean, Constants.WORD_TRUE)
-        val FALSE = TyPrimitiveLiteral.getTy(TyPrimitiveKind.Boolean, Constants.WORD_FALSE)
-
-        val UNKNOWN = TyUnknown()
-        val VOID = TyVoid()
-        val NIL = TyNil()
-
-        val BOOLEAN = TyPrimitive(TyPrimitiveKind.Boolean, Constants.WORD_BOOLEAN)
-        val FUNCTION = TyPrimitive(TyPrimitiveKind.Function, Constants.WORD_FUNCTION)
-        val NUMBER = TyPrimitive(TyPrimitiveKind.Number, Constants.WORD_NUMBER)
-        val STRING = TyPrimitiveClass(TyPrimitiveKind.String, Constants.WORD_STRING)
-        val TABLE = TyPrimitive(TyPrimitiveKind.Table, Constants.WORD_TABLE)
-
         private val serializerMap = mapOf<TyKind, ITySerializer>(
                 TyKind.Array to TyArraySerializer,
                 TyKind.Class to TyClassSerializer,
@@ -695,16 +681,16 @@ abstract class Ty(override val kind: TyKind) : ITy {
 
         fun getBuiltin(name: String): ITy? {
             return when (name) {
-                Constants.WORD_NIL -> NIL
-                Constants.WORD_VOID -> VOID
-                Constants.WORD_ANY -> UNKNOWN
-                Constants.WORD_BOOLEAN -> BOOLEAN
-                Constants.WORD_TRUE -> TRUE
-                Constants.WORD_FALSE -> FALSE
-                Constants.WORD_STRING -> STRING
-                Constants.WORD_NUMBER -> NUMBER
-                Constants.WORD_TABLE -> TABLE
-                Constants.WORD_FUNCTION -> FUNCTION
+                Constants.WORD_NIL -> Primitives.NIL
+                Constants.WORD_VOID -> Primitives.VOID
+                Constants.WORD_ANY -> Primitives.UNKNOWN
+                Constants.WORD_BOOLEAN -> Primitives.BOOLEAN
+                Constants.WORD_TRUE -> Primitives.TRUE
+                Constants.WORD_FALSE -> Primitives.FALSE
+                Constants.WORD_STRING -> Primitives.STRING
+                Constants.WORD_NUMBER -> Primitives.NUMBER
+                Constants.WORD_TABLE -> Primitives.TABLE
+                Constants.WORD_FUNCTION -> Primitives.FUNCTION
                 else -> null
             }
         }
@@ -744,9 +730,9 @@ abstract class Ty(override val kind: TyKind) : ITy {
             val kind = getKind(stream.readByte().toInt())
             val flags = stream.readInt()
             return when (kind) {
-                TyKind.Nil -> NIL
-                TyKind.Unknown -> UNKNOWN
-                TyKind.Void -> VOID
+                TyKind.Nil -> Primitives.NIL
+                TyKind.Unknown -> Primitives.UNKNOWN
+                TyKind.Void -> Primitives.VOID
                 else -> {
                     val serializer = getSerializer(kind)
 
@@ -861,7 +847,7 @@ class TyUnknown : Ty(TyKind.Unknown) {
     }
 
     override fun equals(other: ITy, context: SearchContext): Boolean {
-        if (other === UNKNOWN) {
+        if (other === Primitives.UNKNOWN) {
             return true
         }
 
@@ -877,20 +863,20 @@ class TyUnknown : Ty(TyKind.Unknown) {
     }
 
     override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
-        return if (LuaSettings.instance.isUnknownIndexable) UNKNOWN else null
+        return if (LuaSettings.instance.isUnknownIndexable) Primitives.UNKNOWN else null
     }
 
     override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
-        return if (LuaSettings.instance.isUnknownIndexable) UNKNOWN else null
+        return if (LuaSettings.instance.isUnknownIndexable) Primitives.UNKNOWN else null
     }
 }
 
 class TyNil : Ty(TyKind.Nil) {
 
-    override val booleanType = FALSE
+    override val booleanType = Primitives.FALSE
 
     override fun equals(other: ITy, context: SearchContext): Boolean {
-        if (other === NIL) {
+        if (other === Primitives.NIL) {
             return true
         }
 
@@ -905,7 +891,7 @@ class TyNil : Ty(TyKind.Nil) {
 class TyVoid : Ty(TyKind.Void) {
 
     override fun equals(other: ITy, context: SearchContext): Boolean {
-        if (other === VOID) {
+        if (other === Primitives.VOID) {
             return true
         }
 
@@ -914,5 +900,23 @@ class TyVoid : Ty(TyKind.Void) {
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
         return other.kind == TyKind.Void || super.contravariantOf(other, context, flags)
+    }
+}
+
+class Primitives {
+    companion object {
+        // Defined first because each Ty implements booleanType, which returns a reference to these constants.
+        val TRUE = TyPrimitiveLiteral.getTy(TyPrimitiveKind.Boolean, Constants.WORD_TRUE)
+        val FALSE = TyPrimitiveLiteral.getTy(TyPrimitiveKind.Boolean, Constants.WORD_FALSE)
+
+        val UNKNOWN = TyUnknown()
+        val VOID = TyVoid()
+        val NIL = TyNil()
+
+        val BOOLEAN = TyPrimitive(TyPrimitiveKind.Boolean, Constants.WORD_BOOLEAN)
+        val FUNCTION = TyPrimitive(TyPrimitiveKind.Function, Constants.WORD_FUNCTION)
+        val NUMBER = TyPrimitive(TyPrimitiveKind.Number, Constants.WORD_NUMBER)
+        val STRING = TyPrimitiveClass(TyPrimitiveKind.String, Constants.WORD_STRING)
+        val TABLE = TyPrimitive(TyPrimitiveKind.Table, Constants.WORD_TABLE)
     }
 }

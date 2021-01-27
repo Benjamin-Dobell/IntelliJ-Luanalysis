@@ -135,7 +135,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
             if (curClass != null) {
                 member.name?.let { memberName ->
                     if (prefixMatcher.prefixMatches(memberName) && curClass.isVisibleInScope(context.project, contextTy, member.visibility)) {
-                        var memberTy = member.guessType(context) ?: Ty.UNKNOWN
+                        var memberTy = member.guessType(context) ?: Primitives.UNKNOWN
 
                         subsequentChildTys.forEach { childTy ->
                             if (!childTy.isGlobal) {
@@ -184,7 +184,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
                             member,
                             memberClass.getMemberSubstitutor(context),
                             memberClass,
-                            member.guessType(context) ?: Ty.UNKNOWN,
+                            member.guessType(context) ?: Primitives.UNKNOWN,
                             completionMode,
                             handlerProcessor)
                     }

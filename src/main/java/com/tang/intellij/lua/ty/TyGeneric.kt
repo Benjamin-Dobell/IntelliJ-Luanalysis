@@ -102,7 +102,7 @@ interface ITyGeneric : ITyResolvable {
     val base: ITy
 
     fun getArgTy(index: Int): ITy {
-        return args.elementAtOrNull(index) ?: Ty.UNKNOWN
+        return args.elementAtOrNull(index) ?: Primitives.UNKNOWN
     }
 
     override fun getMemberSubstitutor(context: SearchContext): ITySubstitutor {
@@ -212,7 +212,7 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
                     return@processMembers TyUnion.find(memberTy, TyNil::class.java) != null
                 }
 
-                val otherMemberTy = (otherMember.guessType(context) ?: Ty.UNKNOWN).let {
+                val otherMemberTy = (otherMember.guessType(context) ?: Primitives.UNKNOWN).let {
                     if (otherMemberSubstitutor != null) it.substitute(otherMemberSubstitutor) else it
                 }
 
@@ -221,11 +221,11 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
         }
 
         if (resolvedOther is ITyArray) {
-            return if (resolvedBase == Ty.TABLE && args.size == 2) {
+            return if (resolvedBase == Primitives.TABLE && args.size == 2) {
                 val keyTy = args.first()
                 val valueTy = args.last()
                 val resolvedOtherBase = Ty.resolve(resolvedOther.base, context)
-                return (keyTy == Ty.NUMBER || (keyTy.isUnknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0))
+                return (keyTy == Primitives.NUMBER || (keyTy.isUnknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0))
                         && (valueTy == resolvedOtherBase || (flags and TyVarianceFlags.WIDEN_TABLES != 0 && valueTy.contravariantOf(resolvedOtherBase, context, flags)))
             } else false
         }
@@ -237,8 +237,8 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
         if (resolvedOther is ITyGeneric) {
             otherBase = resolvedOther.base
             otherArgs = resolvedOther.args
-        } else if (resolvedBase == Ty.TABLE && args.size == 2) {
-            if (resolvedOther == Ty.TABLE) {
+        } else if (resolvedBase == Primitives.TABLE && args.size == 2) {
+            if (resolvedOther == Primitives.TABLE) {
                 return args.first().isUnknown && args.last().isUnknown
             }
 
@@ -291,7 +291,7 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
     }
 
     override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
-        if (base == Ty.TABLE && args.size == 2 && (args[0] == Ty.STRING
+        if (base == Primitives.TABLE && args.size == 2 && (args[0] == Primitives.STRING
                         || args[0].contravariantOf(TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name), searchContext, 0))) {
             return args[1]
         }
@@ -300,7 +300,7 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
     }
 
     override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
-        if (base == Ty.TABLE && args.size == 2 && ((!exact && args[0].contravariantOf(indexTy, searchContext, 0)) || indexTy == args[0])) {
+        if (base == Primitives.TABLE && args.size == 2 && ((!exact && args[0].contravariantOf(indexTy, searchContext, 0)) || indexTy == args[0])) {
             return args[1]
         }
 
@@ -343,11 +343,11 @@ object TyGenericSerializer : TySerializer<ITyGeneric>() {
 
 class TyDocTableGeneric(
         val genericTableTy: LuaDocGenericTableTy,
-        val keyType: ITy = genericTableTy.keyType?.getType() ?: Ty.UNKNOWN,
-        val valueType: ITy = genericTableTy.valueType?.getType() ?: Ty.UNKNOWN
+        val keyType: ITy = genericTableTy.keyType?.getType() ?: Primitives.UNKNOWN,
+        val valueType: ITy = genericTableTy.valueType?.getType() ?: Primitives.UNKNOWN
 ) : TyGeneric(
         arrayOf(keyType, valueType),
-        Ty.TABLE
+        Primitives.TABLE
 ) {
     override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
         Ty.eachResolved(keyType, context) {

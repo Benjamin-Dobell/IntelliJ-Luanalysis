@@ -54,8 +54,8 @@ class AssignTypeInspection : StrictInspection() {
 
                             if (assigneeMemberType != null) {
                                 // table<K, V> will always accept nil value assignment i.e. entry removal
-                                val targetTy = if (assigneeCandidateOwnerTy is ITyGeneric && assigneeCandidateOwnerTy.base == Ty.TABLE) {
-                                    assigneeMemberType.union(Ty.NIL, context)
+                                val targetTy = if (assigneeCandidateOwnerTy is ITyGeneric && assigneeCandidateOwnerTy.base == Primitives.TABLE) {
+                                    assigneeMemberType.union(Primitives.NIL, context)
                                 } else assigneeMemberType
 
                                 val processor = ProblemUtil.unionAwareProblemProcessor(assigneeOwnerType, assigneeCandidateOwnerTy, context, processProblem)
@@ -130,7 +130,7 @@ class AssignTypeInspection : StrictInspection() {
                                     } else value
 
                                     if (LuaSettings.instance.isNilStrict) {
-                                        variadicTy = Ty.NIL.union(variadicTy, context)
+                                        variadicTy = Primitives.NIL.union(variadicTy, context)
                                     }
                                 }
 

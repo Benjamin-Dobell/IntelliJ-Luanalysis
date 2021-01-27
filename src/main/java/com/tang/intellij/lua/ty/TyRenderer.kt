@@ -130,7 +130,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                 sb.append(it.name)
                 sb.append(": ")
 
-                val paramTy = it.ty ?: Ty.UNKNOWN
+                val paramTy = it.ty ?: Primitives.UNKNOWN
                 if (paramTy is TyGenericParameter && paramTy.superClass != null) {
                     sb.append("(")
                     render(paramTy, sb)
@@ -174,7 +174,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                 val context = SearchContext.get(clazz.table.project)
                 val list = mutableListOf<String>()
                 clazz.table.tableFieldList.forEach { field ->
-                    val key = field.name ?: "[${render(field.guessIndexType(context) ?: Ty.VOID)}]"
+                    val key = field.name ?: "[${render(field.guessIndexType(context) ?: Primitives.VOID)}]"
                     field.valueType?.let { fieldValue ->
                         val fieldTy = fieldValue.getType()
                         val renderedFieldTy = (fieldTy as? TyGenericParameter)?.varName ?: render(fieldTy)

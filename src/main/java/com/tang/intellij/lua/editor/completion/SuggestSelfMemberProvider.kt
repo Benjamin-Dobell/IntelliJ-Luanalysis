@@ -49,7 +49,7 @@ class SuggestSelfMemberProvider : ClassMemberCompletionProvider() {
                             member,
                             curClass.getMemberSubstitutor(context),
                             curClass,
-                            member.guessType(context) ?: Ty.UNKNOWN,
+                            member.guessType(context) ?: Primitives.UNKNOWN,
                             MemberCompletionMode.Colon,
                             object : HandlerProcessor() {
                                 override fun process(element: LuaLookupElement, member: LuaClassMember, memberTy: ITy?): LookupElement { return element }

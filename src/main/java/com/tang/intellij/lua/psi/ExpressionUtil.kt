@@ -18,6 +18,7 @@ package com.tang.intellij.lua.psi
 
 import com.intellij.psi.tree.IElementType
 import com.tang.intellij.lua.search.SearchContext
+import com.tang.intellij.lua.ty.Primitives
 import com.tang.intellij.lua.ty.Ty
 
 data class ComputeResult(val kind: ComputeKind,
@@ -68,8 +69,8 @@ class ExpressionUtil {
                     val context = SearchContext.get(expression.project)
                     val booleanTy = expression.guessType(context)?.booleanType
 
-                    if (booleanTy != null && booleanTy != Ty.BOOLEAN) {
-                        ComputeResult(ComputeKind.Other, booleanTy == Ty.TRUE, 0f, "", expression)
+                    if (booleanTy != null && booleanTy != Primitives.BOOLEAN) {
+                        ComputeResult(ComputeKind.Other, booleanTy == Primitives.TRUE, 0f, "", expression)
                     } else {
                         null
                     }

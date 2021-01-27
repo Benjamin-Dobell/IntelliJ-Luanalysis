@@ -154,17 +154,15 @@ abstract class SearchContext internal constructor() {
 
     private fun inferAndCache(psi: LuaTypeGuessable): ITy? {
         return if (index == -1) {
-            val result = ILuaTypeInfer.infer(psi, this)
+            val result = myInferCache.getOrDefault(psi, null) ?: ILuaTypeInfer.infer(psi, this)
+
             if (result != null) {
                 myInferCache[psi] = result
             }
+
             result
         } else {
             ILuaTypeInfer.infer(psi, this)
         }
-    }
-
-    fun getTypeFromCache(psi: LuaTypeGuessable): ITy? {
-        return if (index == -1) myInferCache.getOrDefault(psi, null) else null
     }
 }
