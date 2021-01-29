@@ -603,16 +603,33 @@ fun getName(nameExpr: LuaNameExpr): String {
     return nameExpr.id.text
 }
 
-fun guessReturnType(returnStat: LuaReturnStat, context: SearchContext): ITy? {
-    if (returnStat.comment != null) {
-        val returnType = PsiTreeUtil.getChildrenOfTypeAsList(returnStat.comment, LuaDocTagTypeImpl::class.java).firstOrNull()
+fun getType(returnStat: LuaReturnStat): ITy? {
+    val stub = returnStat.stub
 
-        if (returnType != null) {
-            return if (context.supportsMultipleResults) {
-                returnType.getType()
-            } else {
-                returnType.getType(context.index)
-            }
+    if (stub != null) {
+        val docTy = stub.docTy
+
+        if (docTy != null) {
+            return docTy
+        }
+    } else if (returnStat.comment != null) {
+        val returnType = PsiTreeUtil.getChildrenOfTypeAsList(returnStat.comment, LuaDocTagTypeImpl::class.java).firstOrNull()
+        return returnType?.getType()
+    }
+
+    return null
+}
+
+fun guessReturnType(returnStat: LuaReturnStat, context: SearchContext): ITy? {
+    val docTy = returnStat.type
+
+    if (docTy != null) {
+        return if (context.supportsMultipleResults) {
+            docTy
+        } else if (docTy is TyMultipleResults) {
+            docTy.list.getOrNull(context.index)
+        } else {
+            docTy
         }
     }
 

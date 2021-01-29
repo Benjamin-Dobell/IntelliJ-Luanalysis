@@ -369,10 +369,13 @@ localDefStat ::= 'local' localDefList ('=' exprList)? {
 }
 
 returnStat ::= return exprList? {
-    stubClass = "com.tang.intellij.lua.stubs.LuaPlaceholderStub"
+	stubClass = "com.tang.intellij.lua.stubs.LuaReturnStatStub"
     implements = [
         "com.tang.intellij.lua.psi.LuaStatement"
         "com.tang.intellij.lua.psi.LuaDeclaration"
+    ]
+    methods = [
+        getType
     ]
 }
 breakStat ::= break

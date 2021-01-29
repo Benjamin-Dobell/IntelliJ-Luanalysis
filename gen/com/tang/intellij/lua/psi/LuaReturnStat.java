@@ -5,11 +5,15 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.StubBasedPsiElement;
-import com.tang.intellij.lua.stubs.LuaPlaceholderStub;
+import com.tang.intellij.lua.stubs.LuaReturnStatStub;
+import com.tang.intellij.lua.ty.ITy;
 
-public interface LuaReturnStat extends LuaStatement, LuaDeclaration, StubBasedPsiElement<LuaPlaceholderStub> {
+public interface LuaReturnStat extends LuaStatement, LuaDeclaration, StubBasedPsiElement<LuaReturnStatStub> {
 
   @Nullable
   LuaExprList getExprList();
+
+  @Nullable
+  ITy getType();
 
 }

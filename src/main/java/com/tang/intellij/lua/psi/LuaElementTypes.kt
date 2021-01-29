@@ -48,7 +48,7 @@ object LuaElementTypes {
     val UNARY_EXPR = LuaUnaryExprType()
     val BINARY_EXPR = LuaBinaryExprType()
 
-    val RETURN_STAT = LuaPlaceholderStub.Type("RETURN_STAT") { stub, nodeType -> LuaReturnStatImpl(stub, nodeType) }
+    val RETURN_STAT = LuaReturnStatType()
     val DO_STAT = LuaPlaceholderStub.Type("DO_STAT") { stub, nodeType -> LuaDoStatImpl(stub, nodeType) }
     val IF_STAT = LuaPlaceholderStub.Type("IF_STAT") { stub, nodeType -> LuaIfStatImpl(stub, nodeType) }
     val EXPR_STAT = LuaPlaceholderStub.Type("EXPR_STAT") { stub, nodeType -> LuaExprStatImpl(stub, nodeType) }
