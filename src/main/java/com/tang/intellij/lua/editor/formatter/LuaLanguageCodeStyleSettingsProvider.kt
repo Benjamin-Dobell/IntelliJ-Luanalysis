@@ -59,6 +59,8 @@ class LuaLanguageCodeStyleSettingsProvider : LanguageCodeStyleSettingsProvider()
                         "METHOD_PARAMETERS_WRAP",
                         "ALIGN_MULTILINE_PARAMETERS",
 
+                        "ALIGN_MULTILINE_CHAINED_METHODS",
+
                         "CALL_PARAMETERS_WRAP",
                         "ALIGN_MULTILINE_PARAMETERS_IN_CALLS",
 
