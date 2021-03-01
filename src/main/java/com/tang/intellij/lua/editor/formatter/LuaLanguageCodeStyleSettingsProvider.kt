@@ -50,6 +50,7 @@ class LuaLanguageCodeStyleSettingsProvider : LanguageCodeStyleSettingsProvider()
         when (settingsType) {
             LanguageCodeStyleSettingsProvider.SettingsType.SPACING_SETTINGS -> {
                 consumer.showCustomOption(LuaCodeStyleSettings::class.java, "SPACE_AFTER_TABLE_FIELD_SEP", "After field sep", SPACES_OTHER)
+                consumer.showCustomOption(LuaCodeStyleSettings::class.java, "SPACE_AROUND_CONCAT_OPERATOR", "After concat sep", SPACES_OTHER)
                 consumer.showStandardOptions("SPACE_AROUND_ASSIGNMENT_OPERATORS",
                         "SPACE_BEFORE_COMMA",
                         "SPACE_AFTER_COMMA")
