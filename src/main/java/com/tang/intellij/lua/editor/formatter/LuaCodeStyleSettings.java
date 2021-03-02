@@ -28,6 +28,8 @@ public class LuaCodeStyleSettings extends CustomCodeStyleSettings {
 
     public boolean SPACE_AFTER_TABLE_FIELD_SEP = true;
 
+    public boolean SPACE_INSIDE_INLINE_TABLE = true;
+
     public boolean ALIGN_TABLE_FIELD_ASSIGN = false;
 
     LuaCodeStyleSettings(CodeStyleSettings container) {
