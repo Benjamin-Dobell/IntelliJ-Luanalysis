@@ -22,6 +22,7 @@ import com.intellij.codeInsight.hints.InlayParameterHintsProvider
 import com.intellij.codeInsight.hints.Option
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
+import com.tang.intellij.lua.LuaBundle
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.PsiSearchContext
 import com.tang.intellij.lua.search.SearchContext
@@ -116,7 +117,21 @@ class LuaParameterHintsProvider : InlayParameterHintsProvider {
         return list
     }
 
-    override fun getHintInfo(psiElement: PsiElement): HintInfo? = null
+    override fun getHintInfo(callExpression: PsiElement): HintInfo? {
+        if (callExpression !is LuaCallExpr) {
+            return null
+        } else {
+            val searchContext = SearchContext.get(callExpression.getProject());
+            val type = callExpression.guessParentType(searchContext) ?: return null
+            val ty = TyUnion.find(type, ITyFunction::class.java) ?: return null
+            val signatureParams = ty.matchSignature(searchContext, callExpression)?.signature?.params ?: return null
+            return HintInfo.MethodInfo(callExpression.expression.text, signatureParams.map { param -> param.name });
+        }
+    }
+
+    override fun getBlacklistExplanationHTML(): String {
+        return LuaBundle.message("inlay.hints.blacklist.pattern.explanation")
+    }
 
     override fun getDefaultBlackList(): Set<String> {
         return HashSet()
