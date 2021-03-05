@@ -19,12 +19,14 @@ package com.tang.intellij.lua.errorreporting
 import com.intellij.AbstractBundle
 import com.intellij.CommonBundle
 import com.intellij.diagnostic.AbstractMessage
+import com.intellij.diagnostic.DiagnosticBundle
 import com.intellij.diagnostic.IdeErrorsDialog
 import com.intellij.diagnostic.ReportMessages
 import com.intellij.ide.DataManager
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.idea.IdeaLogger
+import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationListener
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -199,10 +201,17 @@ class GitHubErrorReporter : ErrorReportSubmitter() {
 		private val project: Project?) : Consumer<SubmittedReportInfo> {
 		override fun consume(reportInfo: SubmittedReportInfo) {
 			consumer.consume(reportInfo)
-			if (reportInfo.status == SubmissionStatus.FAILED) ReportMessages.GROUP.createNotification(ReportMessages.getErrorReport(),
-				reportInfo.linkText, NotificationType.ERROR, null).setImportant(false).notify(project)
-			else ReportMessages.GROUP.createNotification(ReportMessages.getErrorReport(), reportInfo.linkText,
-				NotificationType.INFORMATION, NotificationListener.URL_OPENING_LISTENER).setImportant(false).notify(project)
+
+			val group = NotificationGroupManager.getInstance().getNotificationGroup("Error Report")
+			val title = DiagnosticBundle.message("error.report.title")
+
+			val notification = if (reportInfo.status == SubmissionStatus.FAILED) {
+				group.createNotification(title, reportInfo.linkText, NotificationType.ERROR, null)
+			} else {
+				group.createNotification(title, reportInfo.linkText, NotificationType.INFORMATION, NotificationListener.URL_OPENING_LISTENER)
+			}
+
+			notification.setImportant(false).notify(project)
 		}
 	}
 }
