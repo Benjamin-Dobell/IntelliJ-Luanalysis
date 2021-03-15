@@ -1,4 +1,4 @@
-= Luanalysis (an EmmyLua fork) for IntelliJ IDEA
+= Luanalysis (an EmmyLua fork) for IntelliJ IDEA image:https://img.shields.io/github/sponsors/Benjamin-Dobell?style=social["Sponsors", link="http://github.com/sponsors/Benjamin-Dobell"]
 :toc:
 :toc-placement!:
 ifndef::env-github[:icons: font]
@@ -431,3 +431,39 @@ EmmyLua by: https://github.com/tangzx[@tangzx 阿唐]
 Please
 https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/graphs/contributors[refer
 to Github] for a complete list of contributors.
+
+== Sponsors
+
+Thank you to Luanalysis' sponsors and supporters who help ensure the continued development of Luanalysis.
+
+=== Sponsors
+
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Sponsor)/sponsor/avatar/0[Sponsor, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Sponsor)/sponsor/profile/0"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Sponsor)/sponsor/avatar/1[Sponsor, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Sponsor)/sponsor/profile/1"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Sponsor)/sponsor/avatar/2[Sponsor, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Sponsor)/sponsor/profile/2"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Sponsor)/sponsor/avatar/3[Sponsor, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Sponsor)/sponsor/profile/3"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Sponsor)/sponsor/avatar/4[Sponsor, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Sponsor)/sponsor/profile/4"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Sponsor)/sponsor/avatar/5[Sponsor, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Sponsor)/sponsor/profile/5"]
+
+=== Supporters
+
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/0[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/0"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/1[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/1"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/2[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/2"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/3[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/3"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/4[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/4"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/5[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/5"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/6[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/6"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/7[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/7"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/8[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/8"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/9[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/9"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/10[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/10"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/11[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/11"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/12[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/12"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/13[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/13"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/14[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/14"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/15[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/15"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/16[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/16"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/17[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/17"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/18[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/18"]
+image:https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/avatar/19[Supporter, width="35", link="https://gh-sponsors.herokuapp.com/tier/Luanalysis%20(Supporter)/sponsor/profile/19"]
