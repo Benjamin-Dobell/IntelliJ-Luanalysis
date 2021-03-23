@@ -67,6 +67,9 @@ private class ScopedTypeTreeScope(val psi: PsiElement, val tree: ScopedTypeTree,
     private val types = ArrayList<LuaScopedType>(0)
     private val childScopes = LinkedList<ScopedTypeTreeScope>()
 
+    private var dumbCachedOwner: ITy? = null
+    private var isDumbOwnerCached = false
+
     private var cachedOwner: ITy? = null
     private var isOwnerCached = false
 
@@ -152,12 +155,8 @@ private class ScopedTypeTreeScope(val psi: PsiElement, val tree: ScopedTypeTree,
         return parent?.findName(context, name)
     }
 
-    fun findOwner(context: SearchContext): ITy? {
-        if (isOwnerCached) {
-            return cachedOwner
-        }
-
-        val owner = when (psi) {
+    private fun guessOwner(context: SearchContext): ITy? {
+        return when (psi) {
             is LuaDocTagClass -> psi.type
             is LuaClassMethodDefStat -> psi.guessParentType(context)
             is LuaAssignStat -> (psi.varExprList.expressionList.first() as? LuaIndexExpr)?.guessParentType(context)
@@ -178,13 +177,48 @@ private class ScopedTypeTreeScope(val psi: PsiElement, val tree: ScopedTypeTree,
             }
             else -> parent?.findOwner(context)
         }
+    }
 
-        if (!context.isDumb || cachedOwner != null) {
+    private fun findDumbOwner(context: SearchContext): ITy? {
+        if (isOwnerCached) {
+            return cachedOwner
+        }
+
+        if (isDumbOwnerCached) {
+            return dumbCachedOwner
+        }
+
+        val owner = guessOwner(context)
+
+        if (owner != null) {
+            dumbCachedOwner = owner
+            isDumbOwnerCached = true
+        }
+
+        return owner
+    }
+
+    private fun findSmartOwner(context: SearchContext): ITy? {
+        if (isOwnerCached) {
+            return cachedOwner
+        }
+
+        val owner = guessOwner(context)
+
+        if (owner != null) {
             cachedOwner = owner
             isOwnerCached = true
         }
 
         return owner
+    }
+
+    fun findOwner(context: SearchContext): ITy? {
+        return if (context.isDumb) {
+            findDumbOwner(context)
+        } else {
+            findSmartOwner(context)
+        }
     }
 }
 
