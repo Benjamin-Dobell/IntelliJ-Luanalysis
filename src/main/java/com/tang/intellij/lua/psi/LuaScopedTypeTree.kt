@@ -422,7 +422,7 @@ private class ScopedTypeStubTree(file: PsiFile) : ScopedTypeTree(file) {
             while (stub != null) {
                 val stubPsi = stub.psi
 
-                if (stubPsi is LuaScopedType) {
+                if (psiScopedType == null && stubPsi is LuaScopedType) {
                     psiScopedType = stubPsi
                 }
 
