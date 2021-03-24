@@ -152,7 +152,7 @@ BOOLEAN=true|false
 <xTAG_NAME> {
     "field"                    { yybegin(xFIELD); return TAG_NAME_FIELD; }
     "param"                    { yybegin(xPARAM); return TAG_NAME_PARAM; }
-    "vararg"                   { yybegin(xPARAM); return TAG_NAME_VARARG; }
+    "vararg"                   { beginType(); return TAG_NAME_VARARG; }
     "class"                    { yybegin(xCLASS); return TAG_NAME_CLASS; }
     "shape"                    { yybegin(xCLASS); return TAG_NAME_SHAPE; }
     "module"                   { yybegin(xCLASS); return TAG_NAME_MODULE; }

@@ -1352,7 +1352,7 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
             // fall through
           case 142: break;
           case 66: 
-            { yybegin(xPARAM); return TAG_NAME_VARARG;
+            { beginType(); return TAG_NAME_VARARG;
             } 
             // fall through
           case 143: break;
