@@ -97,7 +97,7 @@ class TyMultipleResults : Ty {
                     if (variadic) list.last() else return true
                 } else list[i]
 
-                if (!thisTy.covariantOf(otherTy, context, flags)) {
+                if (!thisTy.contravariantOf(otherTy, context, flags)) {
                     return false
                 }
             }

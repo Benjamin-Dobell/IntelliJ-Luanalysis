@@ -11,6 +11,7 @@ local one
 ---@class DocField
 ---@field value number
 ---@field method fun(): number
+---@field multipleResultsMethod fun(): number, boolean
 local DocField = {}
 
 ---@class TableExplicitField
@@ -731,3 +732,15 @@ local IllegalDeclaredImplicitMethodChildDocField = {}
 <error descr="Illegal override of \"method\". Type mismatch. Required: 'fun(): number' Found: 'fun(): string'">function IllegalDeclaredImplicitMethodChildDocField.method()
     return anyString
 end</error>
+
+
+---@class LegalMultipleResultsOverride : DocField
+local LegalMultipleResultsOverride = {}
+
+function LegalMultipleResultsOverride.multipleResultsMethod() return 1, true end
+
+
+---@class IllegalMultipleResultsOverride : DocField
+local IllegalMultipleResultsOverride = {}
+
+<error descr="Illegal override of \"multipleResultsMethod\". Type mismatch. Required: 'fun(): number, boolean' Found: 'fun(): true, 1'">function IllegalMultipleResultsOverride.multipleResultsMethod() return true, 1 end</error>
