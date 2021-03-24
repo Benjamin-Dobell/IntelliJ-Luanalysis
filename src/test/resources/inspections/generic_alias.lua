@@ -37,7 +37,7 @@ genericAlias = <error descr="Type mismatch. Missing member: 'aKnownStringLiteral
 }</error></error>
 
 genericAlias = 'a string'
-genericAlias = <error descr="Type mismatch. Required: 'OurGenericShape<AliasAsParam> | string' Found: '1'">1</error>
+genericAlias = <error descr="Type mismatch. Required: 'GenericAlias<AliasAsParam>' Found: '1'">1</error>
 genericAlias = <error descr="Type mismatch. Missing member: 'aKnownStringLiteral' of: 'OurGenericShape<AliasAsParam>', on union candidate OurGenericShape<AliasAsParam>"><error descr="Type mismatch. Missing member: 'parameterOrNumber' of: 'OurGenericShape<AliasAsParam>', on union candidate OurGenericShape<AliasAsParam>"><error descr="Type mismatch. Required: 'string' Found: 'table', on union candidate string">{}</error></error></error>
 
 ---@type GenericAlias<"different">

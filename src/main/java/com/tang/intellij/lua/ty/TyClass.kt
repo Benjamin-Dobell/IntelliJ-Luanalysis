@@ -664,7 +664,17 @@ class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table)
     }
 
     override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
-        return table.tableFieldList.firstOrNull { it.name == name }?.let {
+        return table.tableFieldList.firstOrNull {
+            val fieldName = it.name
+            if (fieldName != null) {
+                fieldName == name
+            } else {
+                it.indexType?.getType()?.let {
+                    (it is ITyPrimitive && it.primitiveKind == TyPrimitiveKind.String)
+                        || (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String && it.value == name)
+                } ?: false
+            }
+        }?.let {
             process(this, it)
         } ?: true
     }
@@ -673,13 +683,15 @@ class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table)
         var narrowestClassMember: LuaClassMember? = null
         var narrowestIndexTy: ITy? = null
 
-        table.tableFieldList.forEach {
-            val candidateIndexerTy = it.guessIndexType(context)
+        table.tableFieldList.forEach { field ->
+            val candidateIndexerTy = field.guessIndexType(context) ?: field.name?.let {
+                TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, it)
+            }
 
             if ((!exact && candidateIndexerTy?.contravariantOf(indexTy, context, TyVarianceFlags.STRICT_UNKNOWN) == true)
                 || candidateIndexerTy == indexTy) {
                 if (narrowestIndexTy?.contravariantOf(candidateIndexerTy, context, TyVarianceFlags.STRICT_UNKNOWN) != false) {
-                    narrowestClassMember = it
+                    narrowestClassMember = field
                     narrowestIndexTy = candidateIndexerTy
                 }
             }

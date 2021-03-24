@@ -365,7 +365,7 @@ class GenericParameterResolutionSubstitutor(searchContext: SearchContext) : TySu
 class TyParameterSubstitutor(searchContext: SearchContext, val map: Map<String, ITy>) : TySubstitutor(searchContext) {
     override fun substitute(clazz: ITyClass): ITy {
         val ty = (clazz as? TyGenericParameter)?.let { genericParam ->
-            map.get(clazz.className) ?: clazz
+            map.get(genericParam.className) ?: genericParam
         } ?: clazz
 
         if (ty is TyDocTable) {

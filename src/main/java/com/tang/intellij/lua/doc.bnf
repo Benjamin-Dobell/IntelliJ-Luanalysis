@@ -181,10 +181,10 @@ string_literal_ty ::= STRING_LITERAL {
 private primitive_literal_ty ::= string_literal_ty | boolean_literal_ty | number_literal_ty
 private fieldList ::= (tableField (',' tableField)* (',')?)?
 
-private tableField1 ::= '[' complex_ty ']' ':' complex_ty { pin = 2 }
-private tableField2 ::= ID ':' complex_ty { pin = 1 }
+private tableField1 ::= '[' complex_ty ']' ':' complex_ty { pin = 1 }
+private tableField2 ::= ID ':' complex_ty { pin = 2 }
 
-tableField ::= tableField1 | tableField2 {
+tableField ::= tableField1 | tableField2 | complex_ty {
     implements = [
         "com.tang.intellij.lua.comment.psi.LuaDocPsiElement"
         "com.tang.intellij.lua.psi.LuaClassField"
@@ -198,6 +198,7 @@ tableField ::= tableField1 | tableField2 {
         getNameIdentifier
         getIndexType
         getValueType
+        guessIndexType
         guessType
         isDeprecated
         isExplicitlyTyped

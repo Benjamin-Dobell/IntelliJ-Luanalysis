@@ -132,7 +132,7 @@ end
 local union
 
 local filteredUnion = --[[---@not 'a' | 'c']] union
-filteredUnion = <error descr="Type mismatch. Required: '\"b\" | 1 | 2' Found: '\"a\"'">'a'</error>
+filteredUnion = <error descr="Type mismatch. Required: '\"b\" | ANestedUnion' Found: '\"a\"'">'a'</error>
 filteredUnion = 'b'
-filteredUnion = <error descr="Type mismatch. Required: '\"b\" | 1 | 2' Found: '\"c\"'">'c'</error>
+filteredUnion = <error descr="Type mismatch. Required: '\"b\" | ANestedUnion' Found: '\"c\"'">'c'</error>
 filteredUnion = 1

@@ -445,13 +445,43 @@ fun getValueType(f: LuaDocTableField): LuaDocTy? {
     } else PsiTreeUtil.getStubChildOfType(f, LuaDocTy::class.java)
 }
 
-fun guessType(f: LuaDocTableField, context: SearchContext): ITy {
-    val stub = f.stub
-    return if (stub != null) {
-        stub.valueTy
+fun guessIndexType(f: LuaDocTableField, context: SearchContext): ITy? {
+    if (f.name != null) {
+        return null
+    }
+
+    val indexTy = f.stub?.indexTy ?: f.lbrack?.let {
+        f.indexType?.getType() ?: Primitives.UNKNOWN
+    }
+
+    if (indexTy != null) {
+        return indexTy
     } else {
-        f.valueType?.getType()
-    } ?: Primitives.UNKNOWN
+        var fieldIndex = 0
+        val siblingFields = f.parent.children
+
+        for (i in 0 until siblingFields.size) {
+            val siblingField = siblingFields[i]
+
+            if (siblingField is LuaDocTableField && siblingField.lbrack == null && siblingField.name == null) {
+                fieldIndex += 1
+            }
+
+            if (siblingField == f) {
+                break
+            }
+        }
+
+        return TyPrimitiveLiteral.getTy(TyPrimitiveKind.Number, fieldIndex.toString())
+    }
+}
+
+fun guessType(f: LuaDocTableField, context: SearchContext): ITy {
+    f.stub?.valueTy?.let {
+        return it
+    }
+
+    return f.valueType?.getType() ?: Primitives.UNKNOWN
 }
 
 fun isExplicitlyTyped(f: LuaDocTableField): Boolean {

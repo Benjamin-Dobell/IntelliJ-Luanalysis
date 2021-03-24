@@ -49,20 +49,17 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
 
     override fun createStub(field: LuaTableField, parentStub: StubElement<*>): LuaTableFieldStub {
         val className = findTableExprTypeName(field)
-        val indexTy = field.idExpr?.let {
-            SearchContext.withDumb(it.project, null) { context ->
-                it.guessType(context)
-            }
+        val indexTy = SearchContext.withDumb(field.project, Primitives.UNKNOWN) { context ->
+            field.guessIndexType(context)
+        }
+        val valueTy = SearchContext.withDumb(field.project, Primitives.UNKNOWN) { context ->
+            field.guessType(context)
         }
 
         var flags = BitUtil.set(0, FLAG_DEPRECATED, field.isDeprecated)
         flags = BitUtil.set(flags, FLAG_EXPLICITLY_TYPED, field.isExplicitlyTyped)
 
-        var valueTy = field.comment?.docTy ?: (field.valueExpr as? LuaLiteralExpr)?.infer()
-
         if (field.name != null) {
-            valueTy = if (valueTy is TyMultipleResults) valueTy.list.first() else valueTy
-
             return LuaTableFieldStubImpl(
                     parentStub,
                     this,
@@ -70,45 +67,16 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
                     field.name,
                     flags,
                     valueTy)
-        } else if (field.idExpr != null) {
-            valueTy = if (valueTy is TyMultipleResults) valueTy.list.first() else valueTy
-
-            return LuaTableFieldStubImpl(
-                    parentStub,
-                    this,
-                    className,
-                    indexTy,
-                    true,
-                    flags,
-                    valueTy)
         } else {
-            var fieldIndex = 0
-            val siblingFields = field.parent.children
-
-            for (i in 0 until siblingFields.size) {
-                val siblingField = siblingFields[i]
-
-                if (siblingField is LuaTableField && field.idExpr == null && field.name == null) {
-                    fieldIndex += 1
-                }
-
-                if (siblingField == field) {
-                    break
-                }
-            }
-
-            valueTy = if (valueTy is TyMultipleResults) {
-                if (fieldIndex + 1 == siblingFields.size) valueTy else valueTy.list.first()
-            } else valueTy
-
             return LuaTableFieldStubImpl(
-                    parentStub,
-                    this,
-                    className,
-                    TyPrimitiveLiteral.getTy(TyPrimitiveKind.Number, fieldIndex.toString()),
-                    false,
-                    flags,
-                    valueTy)
+                parentStub,
+                this,
+                className,
+                indexTy,
+                true,
+                flags,
+                valueTy
+            )
         }
     }
 

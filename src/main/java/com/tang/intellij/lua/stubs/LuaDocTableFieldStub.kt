@@ -26,9 +26,12 @@ import com.tang.intellij.lua.comment.psi.LuaDocTableField
 import com.tang.intellij.lua.comment.psi.impl.LuaDocTableFieldImpl
 import com.tang.intellij.lua.psi.LuaElementType
 import com.tang.intellij.lua.psi.Visibility
+import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.stubs.index.StubKeys
 import com.tang.intellij.lua.ty.ITy
+import com.tang.intellij.lua.ty.Primitives
+import com.tang.intellij.lua.ty.Ty
 import com.tang.intellij.lua.ty.getDocTableTypeName
 
 class LuaDocTableFieldType : LuaStubElementType<LuaDocTableFieldStub, LuaDocTableField>("DOC_TABLE_FIELD_DEF") {
@@ -64,8 +67,12 @@ class LuaDocTableFieldType : LuaStubElementType<LuaDocTableFieldStub, LuaDocTabl
 
     override fun createStub(tableDef: LuaDocTableField, parentStub: StubElement<*>): LuaDocTableFieldStub {
         val name = tableDef.name
-        val indexTy = tableDef.indexType?.getType()
-        val valueTy = tableDef.valueType?.getType()
+        val indexTy = SearchContext.withDumb(tableDef.project, Primitives.UNKNOWN) { context ->
+            tableDef.guessIndexType(context)
+        }
+        val valueTy = SearchContext.withDumb(tableDef.project, Primitives.UNKNOWN) { context ->
+            tableDef.guessType(context)
+        }
         val parent = tableDef.parent as LuaDocTableDef
         val parentTypeName = getDocTableTypeName(parent)
 
@@ -127,7 +134,7 @@ class LuaDocTableFieldStubImpl : LuaDocStubBase<LuaDocTableField>, LuaDocTableFi
         this.valueTy = valueTy
     }
 
-    constructor(parent: StubElement<*>, indexType: ITy, parentTypeName: String, valueTy: ITy?)
+    constructor(parent: StubElement<*>, indexType: ITy?, parentTypeName: String, valueTy: ITy?)
             : super(parent, LuaElementType.DOC_TABLE_FIELD_DEF) {
         this.name = null
         this.indexTy = indexType

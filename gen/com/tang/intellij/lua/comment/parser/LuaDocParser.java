@@ -822,14 +822,14 @@ public class LuaDocParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // tableField1 | tableField2
+  // tableField1 | tableField2 | complex_ty
   public static boolean tableField(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "tableField")) return false;
-    if (!nextTokenIs(b, "<table field>", ID, LBRACK)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, TABLE_FIELD, "<table field>");
     r = tableField1(b, l + 1);
     if (!r) r = tableField2(b, l + 1);
+    if (!r) r = complex_ty(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -842,9 +842,9 @@ public class LuaDocParser implements PsiParser, LightPsiParser {
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_);
     r = consumeToken(b, LBRACK);
-    r = r && complex_ty(b, l + 1);
-    p = r; // pin = 2
-    r = r && report_error_(b, consumeTokens(b, -1, RBRACK, EXTENDS));
+    p = r; // pin = 1
+    r = r && report_error_(b, complex_ty(b, l + 1));
+    r = p && report_error_(b, consumeTokens(b, -1, RBRACK, EXTENDS)) && r;
     r = p && complex_ty(b, l + 1) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
@@ -857,8 +857,8 @@ public class LuaDocParser implements PsiParser, LightPsiParser {
     if (!nextTokenIs(b, ID)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_);
-    r = consumeTokens(b, 1, ID, EXTENDS);
-    p = r; // pin = 1
+    r = consumeTokens(b, 2, ID, EXTENDS);
+    p = r; // pin = 2
     r = r && complex_ty(b, l + 1);
     exit_section_(b, l, m, r, p, null);
     return r || p;

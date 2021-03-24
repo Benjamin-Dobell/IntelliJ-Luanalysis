@@ -55,6 +55,10 @@ class TypeSafetyTest : LuaInspectionsTestBase(
         check("class.lua")
     }
 
+    fun testDocTables() {
+        check("doc_tables.lua")
+    }
+
     fun testFunctionClosures() {
         check("function_closures.lua")
     }

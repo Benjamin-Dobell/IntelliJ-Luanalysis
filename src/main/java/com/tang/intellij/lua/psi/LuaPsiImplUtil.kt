@@ -492,7 +492,9 @@ fun guessIndexType(tableField: LuaTableField, context: SearchContext): ITy? {
         return null
     }
 
-    val indexTy = tableField.stub?.indexTy ?: tableField.idExpr?.guessType(context)
+    val indexTy = tableField.stub?.indexTy ?: tableField.lbrack?.let {
+        tableField.idExpr?.guessType(context)
+    }
 
     if (indexTy != null) {
         return indexTy
@@ -503,7 +505,7 @@ fun guessIndexType(tableField: LuaTableField, context: SearchContext): ITy? {
         for (i in 0 until siblingFields.size) {
             val siblingField = siblingFields[i]
 
-            if (siblingField is LuaTableField && tableField.idExpr == null && tableField.name == null) {
+            if (siblingField is LuaTableField && siblingField.lbrack == null && siblingField.name == null) {
                 fieldIndex += 1
             }
 
@@ -517,12 +519,38 @@ fun guessIndexType(tableField: LuaTableField, context: SearchContext): ITy? {
 }
 
 fun guessType(tableField: LuaTableField, context: SearchContext): ITy? {
-    val stub = tableField.stub
-    return if (stub != null) {
-        stub.valueTy
+    tableField.stub?.valueTy?.let {
+        return it
+    }
+
+    val valueTy = tableField.comment?.docTy ?: tableField.valueExpr?.guessType(context)
+
+    return if (tableField.name != null || tableField.lbrack != null) {
+        if (valueTy is TyMultipleResults) {
+            valueTy.list.first()
+        } else {
+            valueTy
+        }
     } else {
-        tableField.comment?.docTy
-    } ?: tableField.valueExpr?.guessType(context)
+        var fieldIndex = 0
+        val siblingFields = tableField.parent.children
+
+        for (i in 0 until siblingFields.size) {
+            val siblingField = siblingFields[i]
+
+            if (siblingField is LuaTableField && siblingField.lbrack == null && siblingField.name == null) {
+                fieldIndex += 1
+            }
+
+            if (siblingField == tableField) {
+                break
+            }
+        }
+
+        if (valueTy is TyMultipleResults) {
+            if (fieldIndex + 1 == siblingFields.size) valueTy else valueTy.list.first()
+        } else valueTy
+    }
 }
 
 fun getName(tableField: LuaTableField): String? {

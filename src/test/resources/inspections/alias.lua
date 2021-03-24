@@ -13,7 +13,7 @@ classToBeAliased = myAlias
 classToBeAliased = <error descr="Type mismatch. Required: 'ClassToBeAliased' Found: '1'">1</error>
 
 myAlias = classToBeAliased
-myAlias = <error descr="Type mismatch. Required: 'ClassToBeAliased' Found: '1'">1</error>
+myAlias = <error descr="Type mismatch. Required: 'MyAlias' Found: '1'">1</error>
 
 ---@alias UnionAlias string|ClassToBeAliased
 
@@ -30,7 +30,7 @@ unionAlias = classToBeAliased
 classToBeAliased = <error descr="Type mismatch. Required: 'ClassToBeAliased' Found: 'UnionAlias'">unionAlias</error>
 
 unionAlias = myAlias
-myAlias = <error descr="Type mismatch. Required: 'ClassToBeAliased' Found: 'UnionAlias'">unionAlias</error>
+myAlias = <error descr="Type mismatch. Required: 'MyAlias' Found: 'UnionAlias'">unionAlias</error>
 
 ---@alias AliasedFunction fun(a: string): void
 
@@ -43,7 +43,7 @@ aliasedFunction("okay")
 ---@type fun(a: MyAlias, b: MyAlias): void
 local myAliasFun
 
-myAliasFun(classToBeAliased, <error descr="Type mismatch. Required: 'ClassToBeAliased' Found: '1'">1</error>)
+myAliasFun(classToBeAliased, <error descr="Type mismatch. Required: 'MyAlias' Found: '1'">1</error>)
 myAliasFun(classToBeAliased, classToBeAliased)
 
 
@@ -67,19 +67,19 @@ local NUMBER = 1
 local identifiedTuple
 
 identifiedTuple = {STRING, "a string"}
-identifiedTuple = {<error descr="Type mismatch. Required: 'IdentifierString' Found: 'IdentifierNumber', on union candidate { [1]: IdentifierString, [2]: string }">NUMBER</error>, <error descr="Type mismatch. Required: 'number' Found: '\"a string\"', on union candidate { [1]: IdentifierNumber, [2]: number }">"a string"</error>}
+identifiedTuple = {<error descr="Type mismatch. Required: 'IdentifierString' Found: 'IdentifierNumber', on union candidate StringTupleAlias">NUMBER</error>, <error descr="Type mismatch. Required: 'number' Found: '\"a string\"', on union candidate NumberTupleAlias">"a string"</error>}
 
-identifiedTuple = {<error descr="Type mismatch. Required: 'IdentifierNumber' Found: 'IdentifierString', on union candidate { [1]: IdentifierNumber, [2]: number }">STRING</error>, <error descr="Type mismatch. Required: 'string' Found: '1', on union candidate { [1]: IdentifierString, [2]: string }">1</error>}
+identifiedTuple = {<error descr="Type mismatch. Required: 'IdentifierNumber' Found: 'IdentifierString', on union candidate NumberTupleAlias">STRING</error>, <error descr="Type mismatch. Required: 'string' Found: '1', on union candidate StringTupleAlias">1</error>}
 identifiedTuple = {NUMBER, 1}
 
 ---@type Identifier
 local identifier = identifiedTuple[1]
 
-STRING = <error descr="Type mismatch. Required: '0' Found: 'IdentifierNumber | IdentifierString'">identifiedTuple[1]</error>
-NUMBER = <error descr="Type mismatch. Required: '1' Found: 'IdentifierNumber | IdentifierString'">identifiedTuple[1]</error>
+STRING = <error descr="Type mismatch. Required: 'IdentifierString' Found: 'IdentifierNumber | IdentifierString'">identifiedTuple[1]</error>
+NUMBER = <error descr="Type mismatch. Required: 'IdentifierNumber' Found: 'IdentifierNumber | IdentifierString'">identifiedTuple[1]</error>
 
-identifiedTuple[1] = <error descr="Type mismatch. Required: '1' Found: 'IdentifierString', on union candidate { [1]: IdentifierNumber, [2]: number }">STRING</error>
-identifiedTuple[1] = <error descr="Type mismatch. Required: '0' Found: 'IdentifierNumber', on union candidate { [1]: IdentifierString, [2]: string }">NUMBER</error>
+identifiedTuple[1] = <error descr="Type mismatch. Required: 'IdentifierNumber' Found: 'IdentifierString', on union candidate { [1]: IdentifierNumber, [2]: number }">STRING</error>
+identifiedTuple[1] = <error descr="Type mismatch. Required: 'IdentifierString' Found: 'IdentifierNumber', on union candidate { [1]: IdentifierString, [2]: string }">NUMBER</error>
 
 ---@alias NumberArray number[]
 ---@alias StringArray string[]
@@ -99,8 +99,8 @@ numberArray = aliasedNumberArray
 aliasedNumberArray = {1, 2, 3}
 numberArray = {1, 2, 3}
 
-aliasedNumberArray = <error descr="Type mismatch. Required: 'number[]' Found: 'StringArray'">aliasedStringArray</error>
-aliasedStringArray = <error descr="Type mismatch. Required: 'string[]' Found: 'NumberArray'">aliasedNumberArray</error>
+aliasedNumberArray = <error descr="Type mismatch. Required: 'NumberArray' Found: 'StringArray'">aliasedStringArray</error>
+aliasedStringArray = <error descr="Type mismatch. Required: 'StringArray' Found: 'NumberArray'">aliasedNumberArray</error>
 
 
 ---@generic K, V

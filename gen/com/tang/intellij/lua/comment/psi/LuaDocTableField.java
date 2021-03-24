@@ -41,6 +41,9 @@ public interface LuaDocTableField extends LuaDocPsiElement, LuaClassField, PsiNa
   @Nullable
   LuaDocTy getValueType();
 
+  @Nullable
+  ITy guessIndexType(@NotNull SearchContext context);
+
   @NotNull
   ITy guessType(@NotNull SearchContext context);
 

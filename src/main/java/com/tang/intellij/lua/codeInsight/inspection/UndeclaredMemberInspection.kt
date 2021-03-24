@@ -42,12 +42,11 @@ class UndeclaredMemberInspection : StrictInspection() {
                                 }
                             } else {
                                 o.idExpr?.guessType(context)?.let { indexTy ->
-                                    Ty.eachResolved(indexTy, context) {
-                                        if (it !is TySnippet && prefixTy.guessIndexerType(it, context) == null) {
-                                            myHolder.registerProblem(o, "No such indexer '[%s]' found on type '%s'".format(it.displayName, prefixTy))
+                                    Ty.eachUnresolved(indexTy, context) { unresolvedTy, resolvedTy ->
+                                        if (resolvedTy !is TySnippet && prefixTy.guessIndexerType(resolvedTy, context) == null) {
+                                            myHolder.registerProblem(o, "No such indexer '[%s]' found on type '%s'".format(unresolvedTy.displayName, prefixTy))
                                         }
                                     }
-
                                 }
                             }
                         }

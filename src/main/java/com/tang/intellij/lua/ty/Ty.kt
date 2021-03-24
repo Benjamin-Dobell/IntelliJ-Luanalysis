@@ -768,6 +768,59 @@ abstract class Ty(override val kind: TyKind) : ITy {
             return true
         }
 
+        data class PendingTy(val ty: ITy, val unresolvedTy: ITy)
+
+        inline fun eachUnresolved(ty: ITy, context: SearchContext, fn: (unresolvedTy: ITy, resolvedTy: ITy) -> Unit) {
+            if (!TyUnion.any(ty) { it is ITyResolvable && it.willResolve(context) }) {
+                TyUnion.each(ty) {
+                    fn(it, it)
+                }
+                return
+            }
+
+            val visitedTys = mutableSetOf<ITy>()
+
+            val pendingTys = if (ty is TyUnion) {
+                visitedTys.add(ty)
+                val childTys = ty.getChildTypes()
+                ArrayList<PendingTy>(Math.max(2 * childTys.size, 8)).apply {
+                    childTys.forEach { childTy ->
+                        this.add(PendingTy(childTy, childTy))
+                    }
+                }
+            } else {
+                ArrayList<PendingTy>().apply {
+                    this.add(PendingTy(ty, ty))
+                }
+            }
+
+            while (pendingTys.isNotEmpty()) {
+                val pendingTy = pendingTys.removeLast()
+
+                if (visitedTys.add(pendingTy.ty)) {
+                    val resolvedMemberTy = (pendingTy.ty as? ITyResolvable)?.resolve(context) ?: pendingTy.ty
+
+                    if (resolvedMemberTy !== pendingTy.ty) {
+                        if (resolvedMemberTy is TyUnion) {
+                            val childTys = resolvedMemberTy.getChildTypes()
+                            pendingTys.ensureCapacity(pendingTys.size + childTys.size)
+                            resolvedMemberTy.getChildTypes().forEach {
+                                pendingTys.add(PendingTy(it, it))
+                            }
+                        } else {
+                            pendingTys.add(PendingTy(resolvedMemberTy, pendingTy.unresolvedTy))
+                        }
+                    } else {
+                        fn(pendingTy.unresolvedTy, pendingTy.ty)
+                    }
+                }
+            }
+        }
+
+        inline fun eachUnresolved(ty: ITy, context: SearchContext, fn: (ITy) -> Unit) {
+            eachUnresolved(ty, context) { unresolvedTy, _ -> fn(unresolvedTy) }
+        }
+
         inline fun eachResolved(ty: ITy, context: SearchContext, fn: (ITy) -> Unit) {
             if (!TyUnion.any(ty) { it is ITyResolvable && it.willResolve(context) }) {
                 TyUnion.each(ty, fn)
