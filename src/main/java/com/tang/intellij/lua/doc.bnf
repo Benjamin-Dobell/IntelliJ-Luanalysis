@@ -361,10 +361,7 @@ type_ref ::= 'table' | ID {
     ]
 }
 
-class_ref ::= type_ref ('<' generic_param_list '>')? {
-}
-
-generic_def ::= ID (EXTENDS class_ref)? {
+generic_def ::= ID (EXTENDS ty)? {
     pin = 1
     implements = [
         "com.intellij.psi.PsiNameIdentifierOwner"
@@ -378,12 +375,16 @@ generic_def ::= ID (EXTENDS class_ref)? {
         setName
         getName
         getTextOffset
+
+        superClass = 'ty'
     ]
 }
 
 private generic_def_list ::= generic_def (',' generic_def)*
 
-tag_class ::= (TAG_NAME_CLASS|TAG_NAME_SHAPE|TAG_NAME_MODULE) ID ('<' generic_def_list '>')? (EXTENDS class_ref)? comment_string? {
+private tag_class_extends ::= EXTENDS ty { pin = 1 }
+
+tag_class ::= (TAG_NAME_CLASS|TAG_NAME_SHAPE|TAG_NAME_MODULE) ID ('<' generic_def_list '>')? tag_class_extends? comment_string? {
     pin = 2
     implements = [
         "com.tang.intellij.lua.comment.psi.LuaDocPsiElement"
@@ -405,7 +406,7 @@ tag_class ::= (TAG_NAME_CLASS|TAG_NAME_SHAPE|TAG_NAME_MODULE) ID ('<' generic_de
         isDeprecated
         isShape
 
-        superClassRef = 'class_ref'
+        superClass = 'ty'
         module = 'TAG_NAME_MODULE'
         shape = 'TAG_NAME_SHAPE'
     ]

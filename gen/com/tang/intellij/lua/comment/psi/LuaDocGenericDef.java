@@ -11,9 +11,6 @@ import com.tang.intellij.lua.ty.TyGenericParameter;
 
 public interface LuaDocGenericDef extends PsiNameIdentifierOwner, LuaDocPsiElement, LuaClass, LuaScopedType {
 
-  @Nullable
-  LuaDocClassRef getClassRef();
-
   @NotNull
   PsiElement getId();
 
@@ -30,5 +27,8 @@ public interface LuaDocGenericDef extends PsiNameIdentifierOwner, LuaDocPsiEleme
   String getName();
 
   int getTextOffset();
+
+  @Nullable
+  LuaDocTy getSuperClass();
 
 }

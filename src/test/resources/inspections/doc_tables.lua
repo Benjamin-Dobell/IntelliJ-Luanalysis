@@ -226,3 +226,23 @@ local CrossRecursiveField2 = {}
 
 CrossRecursiveField1.recursiveField = CrossRecursiveField2
 CrossRecursiveField2.recursiveField = CrossRecursiveField1
+
+
+---@shape ShapeExtendingDocTable : DocTable1
+
+---@type ShapeExtendingDocTable
+local shapeExtendingDocTable
+
+shapeExtendingDocTable.a = 1
+shapeExtendingDocTable.a = <error descr="Type mismatch. Required: 'number' Found: 'string'">aString</error>
+
+
+---@alias AliasedGenericDocTable<A> GenericDocTable<A>
+
+---@shape ShapeExtendingAlias : AliasedGenericDocTable<"hi">
+
+---@type ShapeExtendingAlias
+local shapeExtendingAlias
+
+shapeExtendingAlias.a = <error descr="Type mismatch. Required: '\"hi\"' Found: 'string'">aString</error>
+shapeExtendingAlias.a = "hi"

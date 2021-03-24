@@ -11,3 +11,9 @@
 ---@<error descr="Illegal inheritance from primitive type">class TableInheritance : table</error>
 
 ---@<error descr="Illegal inheritance from primitive type">class GenericTableInheritance : table<string, string></error>
+
+---@<error descr="Illegal inheritance from primitive type">class NumberInheritance : 1</error>
+
+---@alias AliasedNumber 1
+
+---@<error descr="Illegal inheritance from primitive type">class AliasedNumberInheritance : AliasedNumber</error>

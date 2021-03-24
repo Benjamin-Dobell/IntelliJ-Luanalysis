@@ -26,10 +26,6 @@ public class LuaDocVisitor extends PsiElementVisitor {
     visitTy(o);
   }
 
-  public void visitClassRef(@NotNull LuaDocClassRef o) {
-    visitPsiElement(o);
-  }
-
   public void visitCommentString(@NotNull LuaDocCommentString o) {
     visitPsiElement(o);
   }

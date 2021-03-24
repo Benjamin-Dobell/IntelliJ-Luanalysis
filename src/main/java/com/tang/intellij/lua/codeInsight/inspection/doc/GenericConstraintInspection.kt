@@ -82,10 +82,6 @@ class GenericConstraintInspection : LocalInspectionTool() {
                     validateGenericArguments(o, o.typeRef, emptyList())
                 }
             }
-
-            override fun visitClassRef(o: LuaDocClassRef) {
-                validateGenericArguments(o, o.typeRef, o.tyList)
-            }
         }
     }
 }

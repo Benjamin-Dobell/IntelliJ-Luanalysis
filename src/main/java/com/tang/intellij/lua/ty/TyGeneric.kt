@@ -32,7 +32,7 @@ fun genericParameterName(def: LuaDocGenericDef): String {
 }
 
 class TyGenericParameter(val name: String, varName: String, superClass: ITy? = null) : TySerializedClass(name, emptyArray(), varName, superClass, null) {
-    constructor(def: LuaDocGenericDef) : this(genericParameterName(def), def.id.text, def.classRef?.let { Ty.create(it) })
+    constructor(def: LuaDocGenericDef) : this(genericParameterName(def), def.id.text, def.superClass?.getType())
 
     override fun equals(other: Any?): Boolean {
         return other is TyGenericParameter

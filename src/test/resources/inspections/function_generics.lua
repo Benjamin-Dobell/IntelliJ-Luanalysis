@@ -620,7 +620,7 @@ derivedClass = <error descr="Type mismatch. Required: 'DerivedClassForGeneric' F
 local function illegalGenericConstraint(a, b) end
 
 -- Not valid, but shouldn't raise an exception (i.e. no stack overflow).
-illegalGenericConstraint(<error descr="Type mismatch. Required: 'A : B' Found: '1'">1</error>, <error descr="Type mismatch. Required: 'B : A' Found: '1'">1</error>) -- Expect error
+illegalGenericConstraint(<error descr="Type mismatch. Required: 'A : B' Found: '1'">1</error>, <error descr="Type mismatch. Required: 'B : A : B' Found: '1'">1</error>) -- Expect error
 
 ---@type fun<K, V, R>(tab: table<K, V>, initial: R, func: fun(memo: R, value: V, key: K): R): R
 local reduce

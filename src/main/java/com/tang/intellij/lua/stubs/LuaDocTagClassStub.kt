@@ -41,7 +41,7 @@ class LuaDocTagClassType : LuaStubElementType<LuaDocTagClassStub, LuaDocTagClass
 
     override fun createStub(luaDocTagClass: LuaDocTagClass, stubElement: StubElement<*>): LuaDocTagClassStub {
         val params = luaDocTagClass.genericDefList.map { TyGenericParameter(it) }.toTypedArray()
-        val superClass = luaDocTagClass.superClassRef?.let { Ty.create(it) }
+        val superClass = luaDocTagClass.superClass?.getType()
         val signatures = luaDocTagClass.overloads
         val aliasName: String? = luaDocTagClass.aliasName
         return LuaDocTagClassStubImpl(luaDocTagClass.name, params, aliasName, superClass, signatures, luaDocTagClass.isDeprecated, luaDocTagClass.isShape, stubElement)

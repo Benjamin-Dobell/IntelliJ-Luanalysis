@@ -81,14 +81,14 @@ class IllegalOverrideInspection : LocalInspectionTool() {
                     return
                 }
 
-                val superClassRef = tagClass.superClassRef
+                val superClass = tagClass.superClass
 
-                if (superClassRef == null) {
+                if (superClass == null) {
                     return
                 }
 
                 val context = SearchContext.get(tableExpr.project)
-                val superTy = superClassRef.typeRef.resolveType(context)
+                val superTy = superClass.getType()
 
                 tableExpr.tableFieldList.forEach {
                     inspectClassTableField(context, superTy, it)

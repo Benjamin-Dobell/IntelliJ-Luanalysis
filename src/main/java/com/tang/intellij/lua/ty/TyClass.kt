@@ -401,7 +401,7 @@ class TyPsiDocClass(val tagClass: LuaDocTagClass) : TyClass(
         tagClass.name,
         tagClass.genericDefList.map { TyGenericParameter(it) }.toTypedArray(),
         "",
-        tagClass.superClassRef?.let { Ty.create(it) },
+        tagClass.superClass?.getType(),
         tagClass.overloads
 ) {
     init {

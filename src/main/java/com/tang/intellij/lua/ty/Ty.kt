@@ -26,7 +26,6 @@ import com.intellij.util.Processor
 import com.intellij.util.containers.ContainerUtil
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.codeInsight.inspection.MatchFunctionSignatureInspection
-import com.tang.intellij.lua.comment.psi.LuaDocClassRef
 import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
@@ -222,7 +221,9 @@ interface ITy : Comparable<ITy> {
     }
 
     fun getMemberSubstitutor(context: SearchContext): ITySubstitutor? {
-        return getSuperClass(context)?.getMemberSubstitutor(context)
+        return getSuperClass(context)?.let {
+            Ty.resolve(it, context).getMemberSubstitutor(context)
+        }
     }
 
     fun processMember(context: SearchContext, name: String, deep: Boolean = true, process: (ITy, LuaClassMember) -> Boolean): Boolean
@@ -699,13 +700,6 @@ abstract class Ty(override val kind: TyKind) : ITy {
             return getBuiltin(name) ?: TyLazyClass(name, psiElement)
         }
 
-        fun create(classRef: LuaDocClassRef): ITy {
-            val simpleType = create(classRef.typeRef.name, classRef)
-            return if (classRef.tyList.size > 0) {
-                TyGeneric(classRef.tyList.map { it.getType() }.toTypedArray(), simpleType)
-            } else simpleType
-        }
-
         @ExperimentalContracts
         fun isInvalid(ty: ITy?): Boolean {
             contract {
@@ -745,24 +739,26 @@ abstract class Ty(override val kind: TyKind) : ITy {
             }
         }
 
-        fun processSuperClasses(start: ITy, searchContext: SearchContext, processor: (ITy) -> Boolean): Boolean {
+        fun processSuperClasses(start: ITy, context: SearchContext, processor: (ITy) -> Boolean): Boolean {
             val processedName = mutableSetOf<String>()
             var cur: ITy? = start
 
             while (cur != null) {
                 ProgressManager.checkCanceled()
 
-                val superType = cur.getSuperClass(searchContext)
+                val superTy = cur.getSuperClass(context)
 
-                if (superType != null) {
-                    if (!processedName.add(superType.displayName)) {
+                if (superTy != null) {
+                    val resolvedSuperTy = Ty.resolve(superTy, context)
+
+                    if (!processedName.add(resolvedSuperTy.displayName)) {
                         return true
                     }
-                    if (!processor(superType))
+                    if (!processor(resolvedSuperTy))
                         return false
                 }
 
-                cur = superType
+                cur = superTy
             }
 
             return true

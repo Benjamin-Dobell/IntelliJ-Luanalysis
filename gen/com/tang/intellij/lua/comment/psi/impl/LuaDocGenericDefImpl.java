@@ -29,12 +29,6 @@ public class LuaDocGenericDefImpl extends ASTWrapperPsiElement implements LuaDoc
   }
 
   @Override
-  @Nullable
-  public LuaDocClassRef getClassRef() {
-    return PsiTreeUtil.getChildOfType(this, LuaDocClassRef.class);
-  }
-
-  @Override
   @NotNull
   public PsiElement getId() {
     return notNullChild(findChildByType(ID));
@@ -67,6 +61,12 @@ public class LuaDocGenericDefImpl extends ASTWrapperPsiElement implements LuaDoc
   @Override
   public int getTextOffset() {
     return LuaDocPsiImplUtilKt.getTextOffset(this);
+  }
+
+  @Override
+  @Nullable
+  public LuaDocTy getSuperClass() {
+    return PsiTreeUtil.getChildOfType(this, LuaDocTy.class);
   }
 
 }
