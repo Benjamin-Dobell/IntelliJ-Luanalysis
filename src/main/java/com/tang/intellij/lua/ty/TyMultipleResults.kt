@@ -141,14 +141,23 @@ class TyMultipleResults : Ty {
                 && resolvedOther.list.asSequence().zip(list.asSequence()).all { (otherTy, ty) -> otherTy.equals(ty, context) }
     }
 
-    fun <R> convolve(context: SearchContext, other: TyMultipleResults, transformer: (ITy, ITy?) -> R): Sequence<R> {
-        return ConvolveSequence(context, this, other, transformer)
+    fun <R> convolve(context: SearchContext, other: TyMultipleResults, supportsMultipleResults: Boolean = false, transformer: (ITy, ITy?) -> R): Sequence<R> {
+        return ConvolveSequence(context, this, other, supportsMultipleResults, transformer)
+    }
+
+    fun forResultPairs(context: SearchContext, other: TyMultipleResults, supportsMultipleResults: Boolean = false, process: (ITy, ITy?) -> Unit) {
+        ConvolveSequence(context, this, other, supportsMultipleResults, process).iterator().let {
+            while (it.hasNext()) {
+                it.next()
+            }
+        }
     }
 
     private class ConvolveSequence<V>(
             private val context: SearchContext,
             private val multipleResults1: TyMultipleResults,
             private val multipleResults2: TyMultipleResults,
+            private val supportsMultipleResults: Boolean,
             private val transform: (ITy, ITy?) -> V
     ) : Sequence<V> {
         override fun iterator(): Iterator<V> = object : Iterator<V> {
@@ -174,7 +183,17 @@ class TyMultipleResults : Ty {
                     list1[index1]
                 }
 
-                val ty2 = if (multipleResults2.variadic && index2 >= list2.lastIndex) {
+                val ty2 = if (supportsMultipleResults && index1 == list1.lastIndex) {
+                    if (index2 >= list2.lastIndex) {
+                        if (multipleResults2.variadic) {
+                            TyMultipleResults(listOf(list2.last()), true)
+                        } else {
+                            list2.getOrNull(index2)
+                        }
+                    } else {
+                        TyMultipleResults(list2.subList(index2, list2.size), multipleResults2.variadic)
+                    }
+                } else if (multipleResults2.variadic && index2 >= list2.lastIndex) {
                     Primitives.NIL.union(list2.last(), context)
                 } else {
                     list2.getOrNull(index2)

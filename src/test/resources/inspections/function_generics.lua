@@ -632,3 +632,21 @@ end)
 anyNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">reduce({}, anyString, function(str, _, _)
     return str
 end)</error>
+
+
+---@type fun<T, RK, RV>(arr: T[], callback: fun(obj: T, i: number): RK, RV): table<RK, RV>
+local mapToTable
+
+---@type table<number, string>
+local numberStringTable
+
+---@type string[]
+local stringArray
+
+numberStringTable = mapToTable(stringArray, function(str, i)
+    return i, str
+end)
+
+stringNumberTable = <error descr="Type mismatch. Required: 'table<string, number>' Found: 'table<number, string>'">mapToTable(stringArray, function(str, i)
+    return i, str
+end)</error>

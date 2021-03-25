@@ -77,6 +77,20 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: Searc
         alias.ty.accept(this)
     }
 
+    override fun visitMultipleResults(multipleResults: TyMultipleResults) {
+        val flattenedCur = TyMultipleResults.flatten(context, cur)
+
+        if (flattenedCur is TyMultipleResults) {
+            multipleResults.forResultPairs(context, flattenedCur, true) { resultMember, curMember ->
+                warp(curMember ?: Primitives.NIL) {
+                    resultMember.accept(this)
+                }
+            }
+        } else {
+            visitTy(flattenedCur)
+        }
+    }
+
     override fun visitClass(clazz: ITyClass) {
         Ty.eachResolved(cur, context) {
             val clazzParams = clazz.params
