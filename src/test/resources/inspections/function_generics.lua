@@ -650,3 +650,14 @@ end)
 stringNumberTable = <error descr="Type mismatch. Required: 'table<string, number>' Found: 'table<number, string>'">mapToTable(stringArray, function(str, i)
     return i, str
 end)</error>
+
+
+---@type fun<A, B>(func: fun(): A, B): A, B
+local returnMultipleGenericParams
+
+local a, b = returnMultipleGenericParams(<error descr="Type mismatch. Required: 'fun(): 1, 1' Found: 'fun(): 1'">function()
+    return 1
+end</error>)
+
+anyNumber = a
+anyString = <error descr="Type mismatch. Required: 'string' Found: 'number'">a</error>

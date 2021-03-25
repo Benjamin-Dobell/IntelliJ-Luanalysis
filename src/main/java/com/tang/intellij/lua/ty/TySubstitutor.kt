@@ -87,7 +87,7 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: Searc
                 }
             }
         } else {
-            visitTy(flattenedCur)
+            visitTy(multipleResults)
         }
     }
 
