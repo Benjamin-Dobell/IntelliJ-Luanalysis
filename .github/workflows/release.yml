@@ -4,7 +4,6 @@ on: [release]
 jobs:
   jetbrains-release:
     name: Jetbrains Release
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: github-release
     runs-on: ubuntu-latest
     steps:
@@ -26,7 +25,6 @@ jobs:
 
   push-patched-changelog:
     name: Push Version-Patched Changelog
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: jetbrains-release
     runs-on: ubuntu-latest
     steps:
