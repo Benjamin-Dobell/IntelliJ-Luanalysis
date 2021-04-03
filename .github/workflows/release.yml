@@ -1,0 +1,60 @@
+name: Release
+on: [release]
+
+jobs:
+  jetbrains-release:
+    name: Jetbrains Release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: github-release
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Git Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Publish Plugin
+        env:
+          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+        run: ./gradlew publishPlugin
+
+  push-patched-changelog:
+    name: Push Version-Patched Changelog
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: jetbrains-release
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Git Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Patch Changelog with Release Version
+        run: ./gradlew patchChangelog
+
+      - name: Commit
+        shell: bash
+        env:
+          GIT_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit -m "Updated changelog for $GIT_TAG" -a
+
+      - name: Push
+        uses: ad-m/github-push-action@master
+        with:
+          branch: main
+          github_token: ${{ secrets.GITHUB_TOKEN }}

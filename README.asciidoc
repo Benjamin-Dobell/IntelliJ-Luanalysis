@@ -1,4 +1,4 @@
-= Luanalysis (an EmmyLua fork) for IntelliJ IDEA image:https://img.shields.io/github/sponsors/Benjamin-Dobell?style=social["Sponsors", link="http://github.com/sponsors/Benjamin-Dobell"]
+= Luanalysis (an EmmyLua fork) for IntelliJ IDEA image:https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/actions/workflows/build.yml/badge.svg["Build", link="https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/actions/workflows/build.yml"] image:https://img.shields.io/github/sponsors/Benjamin-Dobell?style=social["Sponsors", link="http://github.com/sponsors/Benjamin-Dobell"]
 :toc:
 :toc-placement!:
 ifndef::env-github[:icons: font]
@@ -397,7 +397,7 @@ Build the plugin with the latest Jetbrain SDK (203 at the time of writing) with:
 
 [source,shell]
 ----
-./gradlew build_203
+./gradlew build
 ----
 
 ****
