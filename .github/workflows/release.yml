@@ -1,6 +1,7 @@
 name: Release
-on: [release]
-
+on:
+  release:
+    types: [published]
 jobs:
   jetbrains-release:
     name: Jetbrains Release
