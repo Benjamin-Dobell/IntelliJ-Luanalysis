@@ -4,7 +4,6 @@ on: [release]
 jobs:
   jetbrains-release:
     name: Jetbrains Release
-    needs: github-release
     runs-on: ubuntu-latest
     steps:
 
