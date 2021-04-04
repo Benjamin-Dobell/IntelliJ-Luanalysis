@@ -153,27 +153,18 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Download Plugin Artifact
+        id: download
         uses: actions/download-artifact@v2
         with:
           name: ${{ needs.build.outputs.pluginArchive }}
 
-      - name: Create New Github Release
-        id: create-draft
-        uses: actions/create-release@v1
+      - name: Publish Github Release
+        id: publish-release
+        uses: ncipollo/release-action@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
         with:
-          release_name: v${{ needs.build.outputs.version }}
-          tag_name: v${{ needs.build.outputs.version }}
+          name: v${{ needs.build.outputs.version }}
           body: ${{ needs.build.outputs.changelog }}
-
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create-draft.outputs.upload_url }}
-          asset_name: ${{ needs.build.outputs.pluginArchive }}
-          asset_path: ./${{ needs.build.outputs.pluginArchive }}
-          asset_content_type: application/zip
+          artifact: ${{ steps.download.outputs.download-path }}
+          artifactContentType: application/zip
