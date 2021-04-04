@@ -1,5 +1,29 @@
 ## [Unreleased]
 
+- @class/@shape can now inherit from aliased types.
+- [Made doc tables behave more like shapes.](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/67)
+  As a result also improved doc table tuple support. Main outstanding differences:
+    - Doc tables cannot inherit from shapes.
+    - Doc tables cannot be callable types.
+- Added support for doc strings trailing @alias definitions, displayed in IDE mouse-over popup.
+- Added support for multiple @alias appearing in the same doc comment i.e. blank lines are no longer required between @alias.
+- Improved indexing performance.
+- Improved inference performance (IDE responsiveness), particularly in the presense of deeply nested scopes.
+- Improved illegal inheritance inspection.
+- Improved handling of table fields whose index type is unable to be inferred during indexing.
+- Corrected/refined os.date() stdlib definition.
+- [Worked around JBR/Kotlin initializer deadlock.](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/42).
+- [Fixed generic inference when param is returned in multiple results.](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/68)
+- [Fixed incorrect "Illegal override" of fun with multiple results.](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/65)
+- [Fixed @vararg not accepting complex types (fun etc.)](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/61)
+- Fixed occasional incorrect "Generic parameters cannot be shadowed".
+- Fixed variance detection of fields being assigned to a generic shape where the index of the source field is covariant of the
+  index of the target field, and the target field's type contains a generic parameter.
+- Fixed auto-completion of aliases and unions.
+- Fixed incorrect type-checking of arguments passed to `fun` (without a parameter list).
+- Fixed inference of closures containing nested closures (containing return statements).
+- Fixed lexing of aliases with constrained generics.
+
 ## [1.2.2]
 
 - New "Illegal Overrides" inspection. Reports illegal member overrides when declaring a field/method on an inherited type.&lt;br />If you're overriding a method with an incompatible type (e.g. subclass `init` function with different parameters) then you should annotate the parent `init` (and child) as `@private`.

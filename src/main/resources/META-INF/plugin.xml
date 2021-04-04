@@ -22,7 +22,6 @@
     An IDE for statically typed Lua development.<br>
     <p><a href="https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis">Source Code</a></p>
     ]]></description>
-    <idea-version since-build="203.3645.34"/>
     <xi:include href="luanalysis-core.xml" xpointer="xpointer(/idea-plugin/*)"/>
     <depends optional="true" config-file="luanalysis-project.xml">com.intellij.java</depends>
 </idea-plugin>
