@@ -29,6 +29,12 @@ dependencies {
     })
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+}
+
 intellij {
     pluginName = properties("pluginName")
     version = properties("platformVersion")
