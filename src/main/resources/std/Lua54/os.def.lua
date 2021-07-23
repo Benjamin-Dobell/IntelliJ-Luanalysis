@@ -109,10 +109,11 @@ function os.execute(command) end
 ---
 --- If the optional second argument `close` is true, closes the Lua state before
 --- exiting.
----@overload fun():number
----@param code number
+---@overload fun(): void
+---@overload fun(code: boolean | number): void
+---@param code boolean | number
 ---@param close boolean
----@return number
+---@return void @Never returns
 function os.exit(code, close) end
 
 ---
