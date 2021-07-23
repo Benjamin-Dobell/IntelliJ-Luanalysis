@@ -142,6 +142,12 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
             return true
         }
 
+        val resolved = Ty.resolve(this, context)
+
+        if (resolved !== this) {
+            return resolved.equals(other, context)
+        }
+
         val resolvedOther = Ty.resolve(other, context)
 
         if (resolvedOther is ITyGeneric && args.size == resolvedOther.args.size && base.equals(resolvedOther.base, context)) {
