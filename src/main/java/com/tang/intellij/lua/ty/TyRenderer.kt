@@ -46,10 +46,14 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                         if (base is TyDocTable) {
                             visitClass(base)
                         } else {
-                            val list = mutableListOf<String>()
-                            ty.args.forEach { list.add(it.displayName) }
-
-                            val baseName = if (base is ITyClass) base.className else base.displayName
+                            val list = ty.args.map { render(it) }
+                            val baseName = if (base is ITyClass) {
+                                base.className
+                            } else if (base is ITyAlias) {
+                                base.name
+                            } else {
+                                base.displayName
+                            }
                             sb.append("${baseName}${renderParamsList(list)}")
                         }
                     }
