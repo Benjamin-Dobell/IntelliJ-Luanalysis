@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+- **Requires IntelliJ IDEA 211 (2021.1)**
+
+## [1.2.3]
+
 - @class/@shape can now inherit from aliased types.
 - [Made doc tables behave more like shapes.](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/67)
   As a result also improved doc table tuple support. Main outstanding differences:

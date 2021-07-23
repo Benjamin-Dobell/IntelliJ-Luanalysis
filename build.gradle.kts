@@ -1,14 +1,13 @@
 import de.undercouch.gradle.tasks.download.Download
-import org.jetbrains.changelog.closure
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 fun properties(key: String) = project.findProperty(key).toString()
 
 plugins {
     id("java")
-    kotlin("jvm") version "1.4.32"
+    id("org.jetbrains.kotlin.jvm") version "1.5.10"
 
-    id("org.jetbrains.intellij") version "0.7.2"
+    id("org.jetbrains.intellij") version "1.0"
 
     id("org.jetbrains.changelog") version "1.1.2"
 
@@ -36,17 +35,16 @@ java {
 }
 
 intellij {
-    pluginName = properties("pluginName")
-    version = properties("platformVersion")
-    downloadSources = properties("platformDownloadSources").toBoolean()
-    updateSinceUntilBuild = true
+    pluginName.set(properties("pluginName"))
+    version.set(properties("platformVersion"))
+    downloadSources.set(properties("platformDownloadSources").toBoolean())
+    updateSinceUntilBuild.set(true)
 
-    setPlugins(
-        *properties("platformPlugins")
-        .split(",")
-        .map(String::trim)
-        .filter(String::isNotEmpty)
-        .toTypedArray()
+    plugins.set(
+        properties("platformPlugins")
+            .split(",")
+            .map(String::trim)
+            .filter(String::isNotEmpty)
     )
 }
 
@@ -81,12 +79,12 @@ tasks {
     }
 
     patchPluginXml {
-        version(properties("pluginVersion"))
-        sinceBuild(properties("pluginSinceBuild"))
-        untilBuild(properties("pluginUntilBuild"))
+        version.set(properties("pluginVersion"))
+        sinceBuild.set(properties("pluginSinceBuild"))
+        untilBuild.set(properties("pluginUntilBuild"))
 
-        changeNotes(
-            closure {
+        changeNotes.set(
+            provider {
                 changelog.getLatest().toHTML()
             }
         )
@@ -162,12 +160,23 @@ tasks {
     }
 
     runPluginVerifier {
-        ideVersions(properties("pluginVerifierIdeVersions"))
+        ideVersions.set(
+            properties("pluginVerifierIdeVersions")
+                .split(',')
+                .map(String::trim)
+                .filter(String::isNotEmpty)
+        )
     }
 
     publishPlugin {
         dependsOn("patchChangelog")
-        token(System.getenv("PUBLISH_TOKEN"))
-        channels(properties("pluginVersion").split("-").getOrElse(1) { "default" }.split(".").first())
+        token.set(System.getenv("PUBLISH_TOKEN"))
+        channels.set(listOf(
+            properties("pluginVersion")
+                .split("-")
+                .getOrElse(1) { "default" }
+                .split(".")
+                .first()
+        ))
     }
 }
