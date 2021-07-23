@@ -86,6 +86,13 @@ function io.output(file) end
 
 ---
 --- Equivalent to `io.input():read(···)`.
+---@overload fun(): nil | string
+---@overload fun(format: "*a"): string
+---@overload fun(...: "*n"): (nil | number), (nil | number)...
+---@overload fun(...: "*l"): (nil | string), (nil | string)...
+---@overload fun(...: number): (nil | string), (nil | string)...
+---@vararg "*a" | "*n" | "*l" | number
+---@return nil | string | number, (nil | string | number)...
 function io.read(...) end
 
 ---
@@ -160,6 +167,13 @@ function file:lines(...) end
 --- *number*: reads a string with up to this number of bytes, returning **nil**
 --- on end of file. If `number` is zero, it reads nothing and returns an
 --- empty string, or **nil** on end of file.
+---@overload fun(): nil | string
+---@overload fun(format: "*a"): string
+---@overload fun(...: "*n"): (nil | number), (nil | number)...
+---@overload fun(...: "*l"): (nil | string), (nil | string)...
+---@overload fun(...: number): (nil | string), (nil | string)...
+---@vararg "*a" | "*n" | "*l" | number
+---@return nil | string | number, (nil | string | number)...
 function file:read(...) end
 
 ---
