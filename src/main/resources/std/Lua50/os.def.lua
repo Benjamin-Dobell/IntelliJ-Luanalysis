@@ -102,18 +102,13 @@ function os.difftime(t2, t1) end
 function os.execute(command) end
 
 ---
---- Calls the ISO C function `exit` to terminate the host program. If `code` is
---- **true**, the returned status is `EXIT_SUCCESS`; if `code` is **false**, the
---- returned status is `EXIT_FAILURE`; if `code` is a number, the returned
---- status is this number. The default value for `code` is **true**.
+--- Calls the C function `exit`, with an optional `code`, to terminate the host
+--- program. The default value for `code` is the success code.
 ---
---- If the optional second argument `close` is true, closes the Lua state before
---- exiting.
----@overload fun():number
+---@overload fun(): void
 ---@param code number
----@param close boolean
----@return number
-function os.exit(code, close) end
+---@return void @Never returns
+function os.exit(code) end
 
 ---
 --- Returns the value of the process environment variable `varname`, or
