@@ -17,7 +17,7 @@
 package com.tang.intellij.test.completion
 
 class TestAlias : TestCompletionBase() {
-    fun `test alias 1`() {
+    fun `test alias`() {
         myFixture.configureByFile("class.lua")
         doTest("""
             --- test_alias.lua

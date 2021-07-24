@@ -19,6 +19,8 @@ package com.tang.intellij.test.inspections
 import com.tang.intellij.lua.codeInsight.inspection.*
 import com.tang.intellij.lua.codeInsight.inspection.doc.GenericConstraintInspection
 import com.tang.intellij.lua.codeInsight.inspection.doc.GenericParameterShadowed
+import com.tang.intellij.lua.codeInsight.inspection.doc.IllegalAliasInspection
+import com.tang.intellij.lua.codeInsight.inspection.doc.IllegalInheritanceInspection
 import com.tang.intellij.lua.lang.LuaLanguageLevel
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.project.StdLibraryProvider
@@ -27,6 +29,8 @@ class TypeSafetyTest : LuaInspectionsTestBase(
         AssignTypeInspection(),
         GenericConstraintInspection(),
         GenericParameterShadowed(),
+        IllegalAliasInspection(),
+        IllegalInheritanceInspection(),
         IllegalOverrideInspection(),
         MatchFunctionSignatureInspection(),
         ReturnTypeInspection(),

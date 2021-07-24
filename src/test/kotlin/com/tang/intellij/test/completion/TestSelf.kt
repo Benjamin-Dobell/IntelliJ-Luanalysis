@@ -17,7 +17,7 @@
 package com.tang.intellij.test.completion
 
 class TestSelf : TestCompletionBase() {
-    fun `test alias 1`() {
+    fun `test self`() {
         doTest("""
             --- test_self.lua
 

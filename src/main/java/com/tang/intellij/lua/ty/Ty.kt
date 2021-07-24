@@ -838,7 +838,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
                 if (visitedTys.add(pendingTy)) {
                     val resolvedMemberTy = (pendingTy as? ITyResolvable)?.resolve(context) ?: pendingTy
 
-                    if (resolvedMemberTy !== pendingTy) {
+                    if (resolvedMemberTy != pendingTy) {
                         if (resolvedMemberTy is TyUnion) {
                             pendingTys.addAll(resolvedMemberTy.getChildTypes())
                         } else {
