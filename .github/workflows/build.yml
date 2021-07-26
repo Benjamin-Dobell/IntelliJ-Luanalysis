@@ -164,6 +164,6 @@ jobs:
         with:
           name: v${{ needs.build.outputs.version }}
           body: ${{ needs.build.outputs.changelog }}
-          artifact: ${{ steps.download.outputs.download-path }}
+          artifacts: ${{ steps.download.outputs.download-path }}${{ steps.properties.outputs.pluginArchive }}
           artifactContentType: application/zip
           token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
