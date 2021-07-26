@@ -161,10 +161,9 @@ jobs:
       - name: Publish Github Release
         id: publish-release
         uses: ncipollo/release-action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
         with:
           name: v${{ needs.build.outputs.version }}
           body: ${{ needs.build.outputs.changelog }}
           artifact: ${{ steps.download.outputs.download-path }}
           artifactContentType: application/zip
+          token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
