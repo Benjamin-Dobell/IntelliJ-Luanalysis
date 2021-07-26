@@ -37,45 +37,39 @@ function debug.getfenv(o) end
 ---@return thread
 function debug.gethook(thread) end
 
----@class DebugInfo
----@field linedefined number
----@field lastlinedefined number
+---@shape std__DebugInfo
 ---@field currentline number
----@field func function
----@field isvararg boolean
----@field namewhat string
----@field source string
+---@field func nil | function
+---@field linedefined number
+---@field name nil | string
+---@field namewhat "global" | "local" | "field" | "method"
 ---@field nups number
----@field what string
----@field nparams number
 ---@field short_src string
+---@field source string
+---@field what "C" | "main" | "lua" | "tail"
 
 ---
---- Returns a table with information about a function. You can give the
---- function directly, or you can give a number as the value of `f`,
---- which means the function running at level `f` of the call stack
---- of the given thread: level 0 is the current function (`getinfo` itself);
---- level 1 is the function that called `getinfo` (except for tail calls, which
---- do not count on the stack); and so on. If `f` is a number larger than
---- the number of active functions, then `getinfo` returns **nil**.
+--- This function returns a table with information about a function. You can
+--- give the function directly, or you can give a number as the value of `f`,
+--- which means the function running at level `f` of the call stack: Level 0 is
+--- the current function (`getinfo` itself); level 1 is the function that called
+--- `getinfo`; and so on. If `f` is a number larger than the number of active
+--- functions, then `getinfo` returns **nil**.
 ---
---- The returned table can contain all the fields returned by `lua_getinfo`,
---- with the string `what` describing which fields to fill in. The default for
---- `what` is to get all information available, except the table of valid
---- lines. If present, the option '`f`' adds a field named `func` with the
---- function itself. If present, the option '`L`' adds a field named
---- `activelines` with the table of valid lines.
+--- The returned table contains all the fields returned by `lua_getinfo`, with
+--- the string `what` describing which fields to fill in. The default for `what`
+--- is to get all information available. If present, the option "f" adds a field
+--- named `func` with the function itself.
 ---
---- For instance, the expression `debug.getinfo(1,"n").name` returns a table
---- with a name for the current function, if a reasonable name can be found,
---- and the expression `debug.getinfo(print)` returns a table with all available
---- information about the `print` function.
----@overload fun(f:function):DebugInfo
----@param thread thread
----@param f function
+--- For instance, the expression `debug.getinfo(1,"n").name` returns the name of
+--- the current function, if a reasonable name can be found, and
+--- `debug.getinfo(print)` returns a table with all available information about
+--- the `print` function.
+---@overload fun(f: function | number): std__DebugInfo
+---@param f function | number
 ---@param what string
----@return DebugInfo
-function debug.getinfo(thread, f, what) end
+---@return std__DebugInfo
+function debug.getinfo(f, what) end
 
 ---
 --- This function returns the name and the value of the local variable with
