@@ -1,6 +1,20 @@
 ## [Unreleased]
 
 - **Requires IntelliJ IDEA 211 (2021.1)**
+- **Breaking:** The standard library `DebugInfo` class (returned from `debug.getinfo`) is now known as
+  `std__DebugInfo` and is a shape rather than a class. Fields presence and types have also been corrected.
+- New "Illegal alias in emmy doc" inspection. Reports illegal/circular alias definitions.
+- [Fixed incorrect coercion of vararg types to unit types](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/82).
+- [Fixed generic alias equality](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/85).
+- [Fixed Lua 5.1-5.4 os.exit type definition](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/78).
+- [Fixed Lua <= 5.1 os.exit documentation](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/79).
+- [Fixed string:gmatch type definition](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/86).
+- [Fixed file:read type definition](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/81).
+- Fixed some issues with types displaying incorrectly in tooltips (missing parentheses).
+- [Improved docs for string functions involving patterns in order to explain why captures are typed `string | number`](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/80).
+- _You can now [sponsor](https://github.com/sponsors/Benjamin-Dobell) the ongoing development of Luanalysis and
+  appear in the project's [README on Github](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis#sponsors). **Github
+  are 1-to-1 matching any donations** up to $5000 (total) made before February 2022._
 
 ## [1.2.3]
 
