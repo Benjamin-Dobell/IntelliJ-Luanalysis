@@ -47,22 +47,20 @@ fun inferExpr(expression: LuaExpression<*>, context: SearchContext): ITy? {
         }
     }
 
-    var ty: ITy? = null
-
-    if (expression is LuaIndexExpr || expression is LuaNameExpr) {
-        val tree = LuaDeclarationTree.get(expression.containingFile)
-        val declaration = tree.find(expression)?.firstDeclaration?.psi
-        if (declaration != expression && declaration is LuaTypeGuessable) {
-            ty = declaration.guessType(context)
+    val ty = context.withMultipleResults {
+        if (expression is LuaIndexExpr || expression is LuaNameExpr) {
+            val tree = LuaDeclarationTree.get(expression.containingFile)
+            val declaration = tree.find(expression)?.firstDeclaration?.psi
+            if (declaration != expression && declaration is LuaTypeGuessable) {
+                return@withMultipleResults declaration.guessType(context)
+            }
         }
+
+        inferExprInner(expression, context)
     }
 
     if (ty == null) {
-        ty = inferExprInner(expression, context)
-
-        if (ty == null) {
-            return null
-        }
+        return null
     }
 
     val notTypeCast = PsiTreeUtil.getChildrenOfTypeAsList(expression.comment, LuaDocTagNotImpl::class.java).firstOrNull()
@@ -91,7 +89,11 @@ fun inferExpr(expression: LuaExpression<*>, context: SearchContext): ITy? {
         return TyMultipleResults.getResult(context, ty).not(TyMultipleResults.getResult(context, notTy), context)
     }
 
-    return ty
+    return if (context.supportsMultipleResults) {
+        ty
+    } else {
+        TyMultipleResults.getResult(context, ty, context.index)
+    }
 }
 
 private fun inferExprInner(expr: LuaPsiElement, context: SearchContext): ITy? {
@@ -240,10 +242,13 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
 
     if (genericParams?.isNotEmpty() == true) {
         val list = mutableListOf<ITy>()
+
         // self type
         if (this.isMethodColonCall) {
             this.prefixExpression?.let { prefix ->
-                list.add(prefix.guessType(context) ?: Primitives.UNKNOWN)
+                context.withIndex(0) {
+                    list.add(prefix.guessType(context) ?: Primitives.UNKNOWN)
+                }
             }
         }
 
@@ -268,21 +273,28 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
         val paramContext = (sig as? IPsiFunSignature)?.psi?.let { PsiSearchContext(it) } ?: context
         val genericAnalyzer = GenericAnalyzer(genericParams, paramContext, this.args)
 
+        val lastParamIndex = list.lastIndex
         var processedIndex = -1
         sig.processParameters { index, param ->
-            val arg = list.getOrNull(index)
-            if (arg != null) {
-                genericAnalyzer.analyze(arg, param.ty ?: Primitives.UNKNOWN, context)
+            val argTy = list.getOrNull(index)
+
+            if (argTy != null) {
+                context.withListEntry(index == lastParamIndex) {
+                    genericAnalyzer.analyze(argTy, param.ty ?: Primitives.UNKNOWN, context)
+                }
             }
+
             processedIndex = index
             true
         }
+
         // vararg
         val varargTy = sig.variadicParamTy
         if (varargTy != null) {
-            for (i in processedIndex + 1 until list.size) {
-                val argTy = list[i]
-                genericAnalyzer.analyze(argTy, varargTy, context)
+            for (index in processedIndex + 1 until list.size) {
+                context.withListEntry(index == lastParamIndex) {
+                    genericAnalyzer.analyze(list[index], varargTy, context)
+                }
             }
         }
 
@@ -307,22 +319,20 @@ private fun LuaCallExpr.infer(context: SearchContext): ITy? {
     // require('module') resolution
     // TODO: Lazy module type like TyLazyClass, but with file paths for use when context.isDumb
     if (!context.isDumb && expr is LuaNameExpr && LuaSettings.isRequireLikeFunctionName(expr.name)) {
-        var filePath: String? = null
-        val string = luaCallExpr.firstStringArg
-        if (string is LuaLiteralExpr) {
-            filePath = string.stringValue
+        return (luaCallExpr.firstStringArg as? LuaLiteralExpr)?.stringValue?.let {
+            resolveRequireFile(it, luaCallExpr.project)
+        }?.let {
+            context.withMultipleResults {
+                it.guessType(context)
+            }
         }
-        var file: LuaPsiFile? = null
-        if (filePath != null)
-            file = resolveRequireFile(filePath, luaCallExpr.project)
-        if (file != null)
-            return file.guessType(context)
-
-        return null
     }
 
     var ret: ITy = Primitives.VOID
-    val ty = infer(expr, context)
+
+    val ty = context.withIndex(0) {
+        infer(expr, context)
+    }
 
     if (ty == null) {
         return null

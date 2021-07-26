@@ -184,8 +184,11 @@ private fun LuaTableField.infer(context: SearchContext): ITy? {
         return docTy
 
     //guess from value
-    val valueExpr = valueExpr
-    return if (valueExpr != null) infer(valueExpr, context) else null
+    return valueExpr?.let {
+        context.withListEntry(name == null && idExpr == null && this == parent.children.last()) {
+            infer(it, context)
+        }
+    }
 }
 
 fun LuaPsiFile.returnStatement(): LuaReturnStat? {

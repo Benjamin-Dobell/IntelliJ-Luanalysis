@@ -132,6 +132,14 @@ abstract class SearchContext internal constructor() {
         return ret
     }
 
+    fun <T> withListEntry(last: Boolean, action: () -> T): T {
+        return if (last) {
+            withMultipleResults(action)
+        } else {
+            withIndex(0, false, action)
+        }
+    }
+
     val scope get(): GlobalSearchScope {
         if (isDumb)
             return GlobalSearchScope.EMPTY_SCOPE

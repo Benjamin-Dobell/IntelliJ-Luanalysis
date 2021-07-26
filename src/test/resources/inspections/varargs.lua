@@ -182,7 +182,7 @@ overloadMergedStringStringMap['a'] = <error descr="Type mismatch. Required: 'nil
 ---@vararg T
 ---@return T[]
 local function varargsToArray(...)
-return {...}
+    return {...}
 end
 
 ---@class SomeClassWantingArrays

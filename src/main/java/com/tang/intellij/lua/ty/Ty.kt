@@ -286,12 +286,9 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
 
     args.forEachIndexed { index, luaExpr ->
         // TODO: unknown vs. any - should be unknown
-        val ty = (
-                if (index == args.lastIndex)
-                    context.withMultipleResults { luaExpr.guessType(context) }
-                else
-                    context.withIndex(0) { luaExpr.guessType(context) }
-                ) ?: Primitives.UNKNOWN
+        val ty = context.withListEntry(index == args.lastIndex) {
+            luaExpr.guessType(context)
+        }  ?: Primitives.UNKNOWN
 
         if (ty is TyMultipleResults && index == args.lastIndex) {
             val concreteResults = if (ty.variadic) {
