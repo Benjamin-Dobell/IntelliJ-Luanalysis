@@ -1,4 +1,5 @@
 ## [Unreleased]
+## [1.3.0]
 
 - **Requires IntelliJ IDEA 211 (2021.1)**
 - **Breaking:** The standard library `DebugInfo` class (returned from `debug.getinfo`) is now known as
