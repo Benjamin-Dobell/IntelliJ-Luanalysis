@@ -62,6 +62,10 @@ function string.dump(func) end
 ---
 --- If the pattern has captures, then in a successful match the captured values
 --- are also returned, after the two indices.
+---
+--- Refer to the Lua manual's [section on patterns](https://www.lua.org/manual/5.0/manual.html#pm)
+--- for more details. Take particular note of `()` empty captures which capture
+--- a number rather than a string.
 ---@overload fun(s: string, pattern: string, init: number): nil | (number, number, (number | string)...)
 ---@overload fun(s: string, pattern: string): nil | (number, number, (number | string)...)
 ---@param s string
@@ -123,6 +127,12 @@ function string.format(formatstring, ...) end
 --- >    t[k] = v
 --- > end
 ---
+--- Refer to the Lua manual's [section on patterns](https://www.lua.org/manual/5.0/manual.html#pm)
+--- for more details. Take particular note of `()` empty captures which capture
+--- a number rather than a string.
+---@param s string
+---@param pat string
+---@return fun(): (number | string)...
 function string.gfind(s, pat) end
 
 ---
@@ -147,22 +157,24 @@ function string.gfind(s, pat) end
 ---
 --- Here are some examples:
 --- `x = string.gsub("hello world", "(%w+)", "%1 %1")`
---- `-- > x="hello hello world world"`
+--- `--> x="hello hello world world"`
 --- `x = string.gsub("hello world", "%w+", "%0 %0", 1)`
---- `-- > x="hello hello world"`
+--- `--> x="hello hello world"`
 --- `x = string.gsub("hello world from Lua", "(%w+)%s*(%w+)", "%2 %1")`
---- `-- > x="world hello Lua from"`
+--- `--> x="world hello Lua from"`
 --- `x = string.gsub("home = $HOME, user = $USER", "%$(%w+)", os.getenv)`
---- `-- > x="home = /home/roberto, user = roberto"`
+--- `--> x="home = /home/roberto, user = roberto"`
 --- `x = string.gsub("4+5 = $return 4+5$", "%$(.-)%$", function (s)`
 ---  >> return loadstring(s)()
 ---  > end)
---- `-- > x="4+5 = 9"`
+--- `--> x="4+5 = 9"`
 --- `local t = {name="lua", version="5.0"}
---   x = string.gsub("$name_$version.tar.gz", "%$(%w+)", function (v)`
---   >> return t[v]
---   > end)
---   --> x="lua_5.0.tar.gz"
+--- `x = string.gsub("$name_$version.tar.gz", "%$(%w+)", function (v)`
+--- `--> x="lua_5.0.tar.gz"`
+---
+--- Refer to the Lua manual's [section on patterns](https://www.lua.org/manual/5.0/manual.html#pm)
+--- for more details. Take particular note of `()` empty captures which capture
+--- a number rather than a string.
 ---@overload fun(s: string, pattern: string, repl: string | fun: string): string, number
 ---@param s string
 ---@param pattern string
