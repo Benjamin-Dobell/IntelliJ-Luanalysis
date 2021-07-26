@@ -59,10 +59,6 @@ class TyGenericParameter(val name: String, varName: String, superClass: ITy? = n
         return true
     }
 
-    override fun toString(): String {
-        return displayName
-    }
-
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
         return if (flags and TyVarianceFlags.ABSTRACT_PARAMS != 0) {
             getSuperClass(context)?.contravariantOf(other, context, flags) ?: true

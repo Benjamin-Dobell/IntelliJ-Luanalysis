@@ -606,8 +606,6 @@ class TyTable(val table: LuaTableExpr) : TyClass(getTableTypeName(table)) {
         return false
     }
 
-    override fun toString(): String = displayName
-
     override fun doLazyInit(searchContext: SearchContext) = Unit
 }
 

@@ -535,30 +535,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
         return this
     }
 
-    override fun toString(): String {
-        val list = mutableListOf<String>()
-        TyUnion.each(this) { //尽量不使用Global
-            if (!it.isAnonymous && !(it is ITyClass && it.isGlobal)) {
-                if (it is ITyFunction || it is TyMultipleResults) {
-                    list.add("(${it.displayName})")
-                } else {
-                    list.add(it.displayName)
-                }
-            }
-        }
-        if (list.isEmpty()) { //使用Global
-            TyUnion.each(this) {
-                if (!it.isAnonymous && (it is ITyClass && it.isGlobal)) {
-                    if (it is ITyFunction || it is TyMultipleResults) {
-                        list.add("(${it.displayName})")
-                    } else {
-                        list.add(it.displayName)
-                    }
-                }
-            }
-        }
-        return list.joinToString(" | ")
-    }
+    override fun toString() = displayName
 
     override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
         if ((other.kind == TyKind.Unknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0)

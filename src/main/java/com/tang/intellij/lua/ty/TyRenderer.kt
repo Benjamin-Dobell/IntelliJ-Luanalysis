@@ -81,7 +81,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                     override fun visitTy(ty: ITy) {
                         val s = render(ty)
                         if (s.isNotEmpty()) {
-                            list.add(if (ty is ITyFunction || ty is TyMultipleResults) "(${s})" else s)
+                            list.add(if (isUnionPunctuationRequired(ty)) "(${s})" else s)
                         }
                     }
                 })
@@ -95,7 +95,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
 
             override fun visitArray(array: ITyArray) {
                 val base = array.base
-                val parenthesesRequired = base is TyUnion || (base is TyGenericParameter && base.superClass != null)
+                val parenthesesRequired = isArrayPunctuationRequired(base)
 
                 if (parenthesesRequired) {
                     sb.append("(")
@@ -111,8 +111,24 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
             }
 
             override fun visitMultipleResults(multipleResults: TyMultipleResults) {
-                val list = multipleResults.list.map { render(it) }
-                sb.append(list.joinToString(", "))
+                val results = multipleResults.list
+                val parenthesesRequired = multipleResults.variadic && isReturnPunctuationRequired(results.last())
+
+                results.asSequence().take(results.size - 1).forEach {
+                    sb.append(render(it))
+                    sb.append(", ")
+                }
+
+                if (parenthesesRequired) {
+                    sb.append("(")
+                }
+
+                sb.append(render(results.last()))
+
+                if (parenthesesRequired) {
+                    sb.append(")")
+                }
+
                 if (multipleResults.variadic) {
                     sb.append("...")
                 }
@@ -135,7 +151,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                 sb.append(": ")
 
                 val paramTy = it.ty ?: Primitives.UNKNOWN
-                if (paramTy is TyGenericParameter && paramTy.superClass != null) {
+                if (isParameterPunctuationRequired(paramTy)) {
                     sb.append("(")
                     render(paramTy, sb)
                     sb.append(")")
@@ -156,7 +172,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
 
         signature.returnTy?.let {
             sb.append(": ")
-            if (it is TyUnion || (it is TyGenericParameter && it.superClass != null)) {
+            if (isReturnPunctuationRequired(it)) {
                 sb.append("(")
                 render(it, sb)
                 sb.append(")")
@@ -199,6 +215,30 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
 
     open fun renderType(t: String): String {
         return t
+    }
+
+    private fun isUnionPunctuationRequired(ty: ITy): Boolean {
+        return ty is TyFunction
+                || ty is TyMultipleResults
+                || (ty is TyGenericParameter && ty.superClass != null)
+    }
+
+    private fun isParameterPunctuationRequired(ty: ITy): Boolean {
+        return ty is TyFunction
+                || ty is TyMultipleResults
+                || (ty is TyGenericParameter && ty.superClass != null)
+    }
+
+    private fun isReturnPunctuationRequired(ty: ITy): Boolean {
+        return ty is TyFunction
+                || ty is TyUnion
+                || (ty is TyGenericParameter && ty.superClass != null)
+    }
+
+    private fun isArrayPunctuationRequired(ty: ITy): Boolean {
+        return ty is TyFunction
+                || ty is TyUnion
+                || (ty is TyGenericParameter && ty.superClass != null)
     }
 
     companion object {

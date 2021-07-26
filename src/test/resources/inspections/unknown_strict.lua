@@ -46,18 +46,18 @@ unknown = implicitUnknown
 <error descr="No such member 'doThing' found on type 'any'">assignedUnknown.doThing</error>()
 <error descr="No such member 'doThing' found on type 'any'">assignedUnknown:doThing</error>()
 
-<error descr="No such member 'aVar' found on type ''">implicitUnknown.aVar</error> = 1
-<error descr="Unknown function 'doThing'."><error descr="No such member 'doThing' found on type ''">implicitUnknown.doThing</error>()</error>
-<error descr="Unknown function 'doThing'."><error descr="No such member 'doThing' found on type ''">implicitUnknown:doThing</error>()</error>
+<error descr="No such member 'aVar' found on type '[local implicitUnknown]'">implicitUnknown.aVar</error> = 1
+<error descr="Unknown function 'doThing'."><error descr="No such member 'doThing' found on type '[local implicitUnknown]'">implicitUnknown.doThing</error>()</error>
+<error descr="Unknown function 'doThing'."><error descr="No such member 'doThing' found on type '[local implicitUnknown]'">implicitUnknown:doThing</error>()</error>
 
 function implicitUnknown(param)
     aNumber = param
     aString = param
     unknown = param
 
-    <error descr="No such member 'aVar' found on type ''">param.aVar</error> = 1
-    <error descr="Unknown function 'doThing'."><error descr="No such member 'doThing' found on type ''">param.doThing</error>()</error>
-    <error descr="Unknown function 'doThing'."><error descr="No such member 'doThing' found on type ''">param:doThing</error>()</error>
+    <error descr="No such member 'aVar' found on type '[local param]'">param.aVar</error> = 1
+    <error descr="Unknown function 'doThing'."><error descr="No such member 'doThing' found on type '[local param]'">param.doThing</error>()</error>
+    <error descr="Unknown function 'doThing'."><error descr="No such member 'doThing' found on type '[local param]'">param:doThing</error>()</error>
 end
 
 ---@param param any
