@@ -24,6 +24,7 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.formatter.common.AbstractBlock
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.TokenSet
+import com.tang.intellij.lua.editor.formatter.LuaCodeStyleSettings
 import com.tang.intellij.lua.editor.formatter.LuaFormatContext
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.LuaTypes.*
@@ -139,7 +140,7 @@ open class LuaScriptBlock(val psi: PsiElement,
     }
 
     override fun getSpacing(child1: Block?, child2: Block): Spacing? {
-        if (!ctx.settings.KEEP_MULTIPLE_EXPRESSIONS_IN_ONE_LINE) {
+        if (!ctx.luaSettings.KEEP_MULTIPLE_STATEMENTS_IN_ONE_LINE) {
             if ((child1 is LuaScriptBlock && child1.psi is LuaStatement) &&
                     (child2 is LuaScriptBlock && child2.psi is LuaStatement)) {
                 return Spacing.createSpacing(1, 0, 1, true, 1)
