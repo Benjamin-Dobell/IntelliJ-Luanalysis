@@ -30,6 +30,8 @@ public class LuaCodeStyleSettings extends CustomCodeStyleSettings {
 
     public boolean ALIGN_TABLE_FIELD_ASSIGN = false;
 
+    public boolean KEEP_MULTIPLE_STATEMENTS_IN_ONE_LINE = false;
+
     LuaCodeStyleSettings(CodeStyleSettings container) {
         super(LuaLanguage.INSTANCE.getID(), container);
     }

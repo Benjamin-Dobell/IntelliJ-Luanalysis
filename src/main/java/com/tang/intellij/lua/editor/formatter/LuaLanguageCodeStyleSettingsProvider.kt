@@ -64,7 +64,6 @@ class LuaLanguageCodeStyleSettingsProvider : LanguageCodeStyleSettingsProvider()
 
                         // keep when reformatting
                         "KEEP_SIMPLE_BLOCKS_IN_ONE_LINE",
-                        "KEEP_MULTIPLE_EXPRESSIONS_IN_ONE_LINE",
 
                         //align group declarations
                         "ALIGN_CONSECUTIVE_VARIABLE_DECLARATIONS"
@@ -74,6 +73,11 @@ class LuaLanguageCodeStyleSettingsProvider : LanguageCodeStyleSettingsProvider()
                         "ALIGN_TABLE_FIELD_ASSIGN",
                         "Align table field assign",
                         "Table")
+
+                consumer.showCustomOption(LuaCodeStyleSettings::class.java,
+                    "KEEP_MULTIPLE_STATEMENTS_IN_ONE_LINE",
+                    "Multiple statements in one line",
+                    "Keep when reformatting")
             }
             else -> {
             }
