@@ -21,17 +21,15 @@ import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
-import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.PsiSearchContext
-import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
 
 class AssignTypeInspection : StrictInspection() {
     override fun buildVisitor(myHolder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor =
             object : LuaVisitor() {
-                private fun inspectAssignee(assignee: LuaTypeGuessable, value: ITy, resolvedValue: ITy, varianceFlags: Int, targetElement: PsiElement?, expressionElement: LuaExpression<*>, context: SearchContext, processProblem: ProcessProblem) {
+                private fun inspectAssignee(assignee: LuaTypeGuessable, value: ITy, resolvedValue: ITy, varianceFlags: Int, targetElement: PsiElement?, expressionElement: LuaExpression<*>, context: PsiSearchContext, processProblem: ProcessProblem) {
                     if (assignee is LuaIndexExpr) {
                         // Get owner class
                         val assigneeOwnerType = assignee.guessParentType(context)
@@ -59,7 +57,12 @@ class AssignTypeInspection : StrictInspection() {
                                 } else assigneeMemberType
 
                                 val processor = ProblemUtil.unionAwareProblemProcessor(assigneeOwnerType, assigneeCandidateOwnerTy, context, processProblem)
-                                val flags = if (assigneeCandidateOwnerTy is ITyArray) varianceFlags or TyVarianceFlags.STRICT_NIL else varianceFlags
+                                val flags = TyVarianceFlags.ABSTRACT_PARAMS or if (assigneeCandidateOwnerTy is ITyArray) {
+                                    varianceFlags or TyVarianceFlags.STRICT_NIL
+                                } else {
+                                    varianceFlags
+                                }
+
                                 ProblemUtil.contravariantOf(targetTy, value, context, flags, targetElement, expressionElement, processor)
                             }
                         }
@@ -79,7 +82,7 @@ class AssignTypeInspection : StrictInspection() {
                             return
                         }
 
-                        ProblemUtil.contravariantOf(variableType, value, context, varianceFlags, targetElement, expressionElement, processProblem)
+                        ProblemUtil.contravariantOf(variableType, value, context, varianceFlags or TyVarianceFlags.ABSTRACT_PARAMS, targetElement, expressionElement, processProblem)
                     }
                 }
 

@@ -23,6 +23,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.ProjectAndLibrariesScope
 import com.tang.intellij.lua.ext.ILuaTypeInfer
 import com.tang.intellij.lua.psi.LuaTypeGuessable
+import com.tang.intellij.lua.psi.ScopedTypeSubstitutor
 import com.tang.intellij.lua.ty.ITy
 import java.util.*
 
@@ -52,7 +53,11 @@ abstract class SearchContext internal constructor() {
         }
 
         fun infer(psi: LuaTypeGuessable, context: SearchContext): ITy? {
-            return with(context, null) { it.inferAndCache(psi) }
+            return with(context, null) {
+                it.inferAndCache(psi)?.let { ty ->
+                    ScopedTypeSubstitutor.substitute(context, ty)
+                }
+            }
         }
 
         private fun <T> with(ctx: SearchContext, defaultValue: T, action: (ctx: SearchContext) -> T): T {

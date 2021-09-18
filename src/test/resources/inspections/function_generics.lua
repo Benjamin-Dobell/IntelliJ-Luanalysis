@@ -48,8 +48,8 @@ local function fn2(arg)
     local var = arg
 
     anyNumber = var
-    number1 = <error descr="Type mismatch. Required: '1' Found: 'T : number'">var</error>
-    anyString = <error descr="Type mismatch. Required: 'string' Found: 'T : number'">var</error>
+    number1 = <error descr="Type mismatch. Required: '1' Found: 'T'">var</error>
+    anyString = <error descr="Type mismatch. Required: 'string' Found: 'T'">var</error>
 end
 
 -- T = number
@@ -83,8 +83,8 @@ local function fn4(arg1, arg2)
 
     anyNumber = arg1
     anyNumber = arg2
-    number1 = <error descr="Type mismatch. Required: '1' Found: 'T : number'">arg1</error>
-    number1 = <error descr="Type mismatch. Required: '1' Found: 'T : number'">arg2</error>
+    number1 = <error descr="Type mismatch. Required: '1' Found: 'T'">arg1</error>
+    number1 = <error descr="Type mismatch. Required: '1' Found: 'T'">arg2</error>
 
     ---@type T
     local t
@@ -661,3 +661,30 @@ end</error>)
 
 anyNumber = a
 anyString = <error descr="Type mismatch. Required: 'string' Found: 'number'">a</error>
+
+---@generic T
+---@param val T
+---@return void
+local function wideGenericFn(val)
+    ---@type fun(val: T): void
+    local concreteWithinScopeGenericFn
+
+    ---@type fun<CompatibleT>(val: CompatibleT): void
+    local incompatibleWithinScope = <error descr="Type mismatch. Required: 'fun(val: CompatibleT): void' Found: 'fun(val: T): void'">concreteWithinScopeGenericFn</error>
+end
+
+---@type fun<CompatibleT>(val: CompatibleT): void
+local compatibleGenericFn = wideGenericFn
+
+
+---@type fun<T: number>(val: T): void
+local constrainedGenericFn
+
+---@type fun<CompatibleT: number>(val: CompatibleT): void
+local compatibleConstrainedGenericFn = constrainedGenericFn
+
+---@type fun<IncompatibleT: string>(val: IncompatibleT): void
+local incompatibleConstrainedGenericFn = <error descr="Type mismatch. Required: 'fun(val: (IncompatibleT : string)): void' Found: 'fun(val: (T : number)): void'">constrainedGenericFn</error>
+
+wideGenericFn = <error descr="Type mismatch. Required: 'fun(val: T): void' Found: 'fun(val: (T : number)): void'">constrainedGenericFn</error>
+constrainedGenericFn = wideGenericFn

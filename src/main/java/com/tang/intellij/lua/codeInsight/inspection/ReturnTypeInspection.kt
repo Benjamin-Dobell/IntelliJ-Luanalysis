@@ -43,26 +43,29 @@ class ReturnTypeInspection : StrictInspection() {
 
                 val context = PsiSearchContext(o)
                 val bodyOwner = PsiTreeUtil.getParentOfType(o, LuaFuncBodyOwner::class.java) ?: return
-                val functionReturnDocTy = if (bodyOwner is LuaClassMethodDefStat) {
-                    guessSuperReturnTypes(bodyOwner, context)
-                } else {
-                    bodyOwner.tagReturn?.type
-                } ?: TyMultipleResults(listOf(Primitives.UNKNOWN), true)
+                val expectedReturnTy = ScopedTypeSubstitutor.substitute(
+                    context,
+                    if (bodyOwner is LuaClassMethodDefStat) {
+                        guessSuperReturnTypes(bodyOwner, context)
+                    } else {
+                        bodyOwner.tagReturn?.type
+                    } ?: TyMultipleResults(listOf(Primitives.UNKNOWN), true)
+                )
 
-                val guessedReturnTy = context.withMultipleResults {
+                val expressionTy = context.withMultipleResults {
                     o.exprList?.guessType(context)
                 } ?: Primitives.VOID
 
-                val guessedReturnTyLists = if (guessedReturnTy is TyUnion && guessedReturnTy.getChildTypes().any { it is TyMultipleResults }) {
-                    guessedReturnTy.getChildTypes().map { toList(it) }
+                val expressionTyLists = if (expressionTy is TyUnion && expressionTy.getChildTypes().any { it is TyMultipleResults }) {
+                    expressionTy.getChildTypes().map { toList(it) }
                 } else {
-                    listOf(toList(guessedReturnTy))
+                    listOf(toList(expressionTy))
                 }
 
                 val statementDocTagType = o.comment?.let { PsiTreeUtil.getChildrenOfTypeAsList(it, LuaDocTagTypeImpl::class.java).firstOrNull() }
                 val statementDocTy = statementDocTagType?.getType()
 
-                val processCandidate = fun(guessedReturnTyList: List<ITy>, candidateReturnTy: ITy): Collection<Problem> {
+                val processCandidate = fun(expressionTyLists: List<ITy>, candidateReturnTy: ITy): Collection<Problem> {
                     val problems = mutableListOf<Problem>()
 
                     val abstractTys = toList(statementDocTy ?: candidateReturnTy)
@@ -70,15 +73,15 @@ class ReturnTypeInspection : StrictInspection() {
                         candidateReturnTy.list.last()
                     } else null
 
-                    for (i in 0 until guessedReturnTyList.size) {
+                    for (i in 0 until expressionTyLists.size) {
                         val element = o.exprList?.getExpressionAt(i) ?: o
                         val targetType = abstractTys.getOrNull(i) ?: variadicAbstractType ?: Primitives.VOID
                         val varianceFlags = if (element is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
 
-                        ProblemUtil.contravariantOf(targetType, guessedReturnTyList[i], context, varianceFlags, null, element) { problem ->
+                        ProblemUtil.contravariantOf(targetType, expressionTyLists[i], context, varianceFlags, null, element) { problem ->
                             val targetMessage = problem.message
 
-                            if (guessedReturnTyList.size > 1) {
+                            if (expressionTyLists.size > 1) {
                                 problem.message = "Result ${i + 1}, ${targetMessage.decapitalize()}"
                             }
 
@@ -94,9 +97,9 @@ class ReturnTypeInspection : StrictInspection() {
                         abstractTys.size - 1
                     } else abstractTys.size
 
-                    val concreteReturnCount = if (guessedReturnTy is TyMultipleResults && guessedReturnTy.variadic) {
-                        guessedReturnTyList.size - 1
-                    } else guessedReturnTyList.size
+                    val concreteReturnCount = if (expressionTy is TyMultipleResults && expressionTy.variadic) {
+                        expressionTyLists.size - 1
+                    } else expressionTyLists.size
 
                     if (concreteReturnCount < abstractReturnCount) {
                         problems.add(
@@ -137,14 +140,15 @@ class ReturnTypeInspection : StrictInspection() {
 
                     return problems
                 }
-                val multipleCandidates = functionReturnDocTy is TyUnion && functionReturnDocTy.getChildTypes().any { it is TyMultipleResults }
 
-                for (guessedReturnTyList in guessedReturnTyLists) {
+                val multipleCandidates = expectedReturnTy is TyUnion && expectedReturnTy.getChildTypes().any { it is TyMultipleResults }
+
+                for (guessedReturnTyList in expressionTyLists) {
                     if (multipleCandidates) {
                         val candidateProblems = mutableMapOf<String, Collection<Problem>>()
                         var matchFound = false
 
-                        TyUnion.each(functionReturnDocTy) {
+                        TyUnion.each(expectedReturnTy) {
                             val problems = processCandidate(guessedReturnTyList, it)
 
                             if (problems.size == 0) {
@@ -166,7 +170,7 @@ class ReturnTypeInspection : StrictInspection() {
                             }
                         }
                     } else {
-                        processCandidate(guessedReturnTyList, functionReturnDocTy).forEach {
+                        processCandidate(guessedReturnTyList, expectedReturnTy).forEach {
                             myHolder.registerProblem(it.sourceElement, it.message, it.highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
                         }
                     }

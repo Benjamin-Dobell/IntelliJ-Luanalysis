@@ -35,9 +35,16 @@ class TyGenericParameter(val name: String, varName: String, superClass: ITy? = n
     constructor(def: LuaDocGenericDef) : this(genericParameterName(def), def.id.text, def.superClass?.getType())
 
     override fun equals(other: Any?): Boolean {
-        return other is TyGenericParameter
-                && super.equals(other)
-                && superClass?.equals(other.superClass) ?: (other.superClass == null)
+        return other is TyGenericParameter && superClass?.equals(other.superClass) ?: (other.superClass == null)
+    }
+
+    override fun equals(other: ITy, context: SearchContext): Boolean {
+        return (other is TyGenericParameter
+                && superClass?.let { superClass ->
+            other.superClass?.let { otherSuperClass ->
+                superClass.equals(otherSuperClass, context)
+            } ?: false
+        } ?: (other.superClass == null)) || super.equals(other, context)
     }
 
     override fun hashCode(): Int {

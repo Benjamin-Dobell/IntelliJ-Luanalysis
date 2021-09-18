@@ -30,6 +30,17 @@ import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
+open class FoundLuaScope(open val scope: LuaScopedTypeTreeScope, val psiScopedTypeIndex: Int? = null)
+
+interface LuaScopedTypeTreeScope {
+    val psi: PsiElement
+    val tree: LuaScopedTypeTree
+    val parent: LuaScopedTypeTreeScope?
+
+    fun findName(context: SearchContext, name: String, beforeIndex: Int? = null): LuaScopedType?
+    fun findOwner(context: SearchContext): ITy?
+}
+
 interface LuaScopedTypeTree {
     companion object {
         private val treeKey = Key.create<ScopedTypeTree>("lua.object.tree.types")
@@ -59,11 +70,12 @@ interface LuaScopedTypeTree {
         }
     }
 
-    fun findOwner(context: SearchContext, pin: PsiElement): ITy?
     fun findName(context: SearchContext, pin: PsiElement, name: String): LuaScopedType?
+    fun findOwner(context: SearchContext, pin: PsiElement): ITy?
+    fun findScope(element: PsiElement): FoundLuaScope?
 }
 
-private class ScopedTypeTreeScope(val psi: PsiElement, val tree: ScopedTypeTree, val parent: ScopedTypeTreeScope?) {
+private class ScopedTypeTreeScope(override val psi: PsiElement, override val tree: ScopedTypeTree, override val parent: ScopedTypeTreeScope?): LuaScopedTypeTreeScope {
     private val types = ArrayList<LuaScopedType>(0)
     private val childScopes = LinkedList<ScopedTypeTreeScope>()
 
@@ -120,7 +132,7 @@ private class ScopedTypeTreeScope(val psi: PsiElement, val tree: ScopedTypeTree,
         return null
     }
 
-    fun findName(context: SearchContext, name: String, beforeIndex: Int? = null): LuaScopedType? {
+    override fun findName(context: SearchContext, name: String, beforeIndex: Int?): LuaScopedType? {
         val type = if (beforeIndex != null) {
             get(name, beforeIndex)
         } else {
@@ -169,7 +181,8 @@ private class ScopedTypeTreeScope(val psi: PsiElement, val tree: ScopedTypeTree,
                     //       has a "setmetatable" in scope that isn't functionally equivalent to Lua's setmetatable... too bad.
                     if (argList.size == 2 && argList[1] == psi.parent && callExpr.nameExpr?.text == Constants.FUNCTION_SETMETATABLE) {
                         val callMetamethod = (psi.parent as LuaTableExpr).findField(Constants.METAMETHOD_CALL)?.valueExpr as? LuaFuncBodyOwner<*>
-                        (callMetamethod?.guessReturnType(context) as? ITyClass)?.let { TyClass.createSelfType(it) }
+                        val classTy = (argList[0].guessType(context) ?: callMetamethod?.guessReturnType(context)) as? ITyClass
+                        classTy?.let { TyClass.createSelfType(it) }
                     } else {
                         null
                     }
@@ -213,7 +226,7 @@ private class ScopedTypeTreeScope(val psi: PsiElement, val tree: ScopedTypeTree,
         return owner
     }
 
-    fun findOwner(context: SearchContext): ITy? {
+    override fun findOwner(context: SearchContext): ITy? {
         return if (context.isDumb) {
             findDumbOwner(context)
         } else {
@@ -256,12 +269,12 @@ private fun isValidTypeScope(element: PsiElement?): Boolean {
     }
 }
 
+private class FoundScope(override val scope: ScopedTypeTreeScope, psiScopedTypeIndex: Int? = null): FoundLuaScope(scope, psiScopedTypeIndex)
+
 private abstract class ScopedTypeTree(val file: PsiFile) : LuaRecursiveVisitor(), LuaScopedTypeTree {
     companion object {
         val scopeKey = Key.create<ScopedTypeTreeScope>("lua.object.tree.types.scope")
     }
-
-    protected class FoundScope(val scope: ScopedTypeTreeScope, val psiScopedTypeIndex: Int? = null)
 
     private val modificationStamp: Long = file.modificationStamp
 
@@ -310,7 +323,7 @@ private abstract class ScopedTypeTree(val file: PsiFile) : LuaRecursiveVisitor()
         file.accept(this)
     }
 
-    abstract fun findScope(element: PsiElement): FoundScope?
+    abstract override fun findScope(element: PsiElement): FoundScope?
 
     override fun findOwner(context: SearchContext, pin: PsiElement): ITy? {
         return findScope(pin)?.scope?.findOwner(context)
@@ -439,5 +452,34 @@ private class ScopedTypeStubTree(file: PsiFile) : ScopedTypeTree(file) {
         }
 
         return null
+    }
+}
+
+class ScopedTypeSubstitutor(context: SearchContext, val scope: LuaScopedTypeTreeScope) : TySubstitutor(context) {
+    override fun substitute(clazz: ITyClass): ITy {
+        return (clazz as? TyGenericParameter)?.let { genericParam ->
+            val scopedTy = scope.findName(searchContext, genericParam.varName)?.type
+
+            if (scopedTy == genericParam) {
+                // If we're within the scope in which a generic is defined, then that generic is to be considered a concrete type.
+                TyClass.createConcreteGenericParameter(genericParam)
+            } else {
+                genericParam
+            }
+
+        } ?: clazz
+    }
+
+    companion object {
+        fun substitute(context: SearchContext, ty: ITy): ITy {
+            context.element?.let { contextElement ->
+                val scopedTypeTree = LuaScopedTypeTree.get(contextElement.containingFile)
+                scopedTypeTree.findScope(contextElement)?.scope?.let { scope ->
+                    return ty.substitute(ScopedTypeSubstitutor(context, scope))
+                }
+            }
+
+            return ty
+        }
     }
 }

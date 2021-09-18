@@ -391,8 +391,13 @@ abstract class TyClass(override val className: String,
         }
 
         fun createSelfType(classTy: ITyClass): TyClass {
-            val tyName = getSelfTypeName(classTy)
+            val tyName = getSelfClassName(classTy)
             return createSerializedClass(tyName, null, Constants.WORD_SELF, classTy, null, null, TyFlags.ANONYMOUS)
+        }
+
+        fun createConcreteGenericParameter(genericParam: TyGenericParameter): TyClass {
+            val tyName = getConcreteGenericParameterName(genericParam)
+            return createSerializedClass(tyName, null, genericParam.varName, genericParam, null, null, TyFlags.ANONYMOUS)
         }
     }
 }
@@ -563,29 +568,47 @@ fun getAnonymousTypeName(variableDef: LuaPsiElement): String {
     return "${variableDef.node.startOffset}@${variableDef.containingFile.getFileIdentifier()}"
 }
 
-fun getSelfTypeName(classTy: ITyClass): String {
+private val SUFFIXED_CLASS_NAME_REGEX = Regex("#[a-zA-Z]+$")
+
+fun isSuffixedClassName(className: String): Boolean {
+    return SUFFIXED_CLASS_NAME_REGEX.find(className) != null
+}
+
+fun isSuffixedClass(classTy: ITyClass): Boolean {
+    return isSuffixedClassName(classTy.className)
+}
+
+fun getSuffixlessClassName(className: String): String {
+    return className.replace(SUFFIXED_CLASS_NAME_REGEX, "")
+}
+
+fun getSuffixlessClassName(classTy: ITyClass): String {
+    return getSuffixlessClassName(classTy.className)
+}
+
+private const val CLASS_NAME_SUFFIX_SELF = "#self"
+
+fun getSelfClassName(classTy: ITyClass): String {
     val className = classTy.className
-    return if (className.endsWith(Constants.SUFFIX_CLASS_SELF)) {
+    return if (className.endsWith(CLASS_NAME_SUFFIX_SELF)) {
         className
     } else {
-        className + Constants.SUFFIX_CLASS_SELF
+        className + CLASS_NAME_SUFFIX_SELF
     }
 }
 
-fun getNonSelfTypeName(className: String): String {
-    return if (className.endsWith(Constants.SUFFIX_CLASS_SELF)) {
-        className.dropLast(Constants.SUFFIX_CLASS_SELF.length)
-    } else {
-        className
-    }
+fun isSelfClass(classTy: ITyClass): Boolean {
+    return classTy.className.endsWith(CLASS_NAME_SUFFIX_SELF)
 }
 
-fun getNonSelfTypeName(classTy: ITyClass): String {
-    val className = classTy.className
-    return if (className.endsWith(Constants.SUFFIX_CLASS_SELF)) {
-        className.dropLast(Constants.SUFFIX_CLASS_SELF.length)
+private const val GENERIC_PARAMETER_NAME_SUFFIX_CONCRETE = "#concrete"
+
+fun getConcreteGenericParameterName(genericParam: TyGenericParameter): String {
+    val genericName = genericParam.varName
+    return if (genericName.endsWith(GENERIC_PARAMETER_NAME_SUFFIX_CONCRETE)) {
+        genericName
     } else {
-        className
+        genericName + GENERIC_PARAMETER_NAME_SUFFIX_CONCRETE
     }
 }
 

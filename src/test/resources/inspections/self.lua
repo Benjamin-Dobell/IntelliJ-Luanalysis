@@ -15,9 +15,9 @@ function SelfA:colonMethod()
     local someSelfA
 
     someSelfA = self
-    self = <error descr="Type mismatch. Required: 'SelfA#self' Found: 'SelfA'">someSelfA</error>
-    selfTypedVar = <error descr="Type mismatch. Required: 'SelfA#self' Found: 'SelfA'">someSelfA</error>
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'SelfA#self'">self</error>
+    self = <error descr="Type mismatch. Required: 'self' Found: 'SelfA'">someSelfA</error>
+    selfTypedVar = <error descr="Type mismatch. Required: 'self' Found: 'SelfA'">someSelfA</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'self'">self</error>
 
     aNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">self.a</error>
     aString = self.a
@@ -34,8 +34,8 @@ function SelfA.dotMethod()
     local someSelfA
 
     someSelfA = selfTypedVar
-    selfTypedVar = <error descr="Type mismatch. Required: 'SelfA#self' Found: 'SelfA'">someSelfA</error>
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'SelfA#self'">selfTypedVar</error>
+    selfTypedVar = <error descr="Type mismatch. Required: 'self' Found: 'SelfA'">someSelfA</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'self'">selfTypedVar</error>
 
     aNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">selfTypedVar.a</error>
     aString = selfTypedVar.a
@@ -52,8 +52,8 @@ SelfA.lambdaMethod = function()
     local someSelfA
 
     someSelfA = selfTypedVar
-    selfTypedVar = <error descr="Type mismatch. Required: 'SelfA#self' Found: 'SelfA'">someSelfA</error>
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'SelfA#self'">selfTypedVar</error>
+    selfTypedVar = <error descr="Type mismatch. Required: 'self' Found: 'SelfA'">someSelfA</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'self'">selfTypedVar</error>
 
     aNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">selfTypedVar.a</error>
     aString = selfTypedVar.a
@@ -130,12 +130,10 @@ classWithInstanceMethods.withParam(classWithInstanceMethods, "abc")
 local SetmetatableSelf = {}
 
 setmetatable(SetmetatableSelf,  {
-    ---@return SetmetatableSelf @In the presence of setmetatable, self is given the return type of __call
     __call = function(_)
-        ---@type self
+        ---@type self @In the presence of setmetatable, self's type is pulled from setmetatable()'s first arg or the return type of __call.
         local self
 
-        ---@return self
         function self.returnsSelf()
             return self
         end

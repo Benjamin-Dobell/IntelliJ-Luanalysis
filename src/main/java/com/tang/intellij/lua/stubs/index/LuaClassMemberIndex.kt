@@ -244,13 +244,13 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaClassMember>() {
         }
 
         fun indexMemberStub(indexSink: IndexSink, className: String, memberName: String) {
-            val nonSelfClassName = getNonSelfTypeName(className)
+            val nonSelfClassName = getSuffixlessClassName(className)
             indexSink.occurrence(StubKeys.CLASS_MEMBER, nonSelfClassName.hashCode())
             indexSink.occurrence(StubKeys.CLASS_MEMBER, "$nonSelfClassName*$memberName".hashCode())
         }
 
         fun indexIndexerStub(indexSink: IndexSink, className: String, indexTy: ITy) {
-            val nonSelfClassName = getNonSelfTypeName(className)
+            val nonSelfClassName = getSuffixlessClassName(className)
             TyUnion.each(indexTy) {
                 if (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String) {
                     indexMemberStub(indexSink, nonSelfClassName, it.value)

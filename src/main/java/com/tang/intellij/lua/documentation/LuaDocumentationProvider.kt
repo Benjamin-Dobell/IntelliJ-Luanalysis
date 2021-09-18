@@ -131,8 +131,8 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
                 if (parentTy != null) {
                     var renderedParentTy = if (parentTy is ITyArray) parentTy.base else parentTy
 
-                    if (renderedParentTy is TySerializedClass && renderedParentTy.className.endsWith(Constants.SUFFIX_CLASS_SELF)) {
-                        renderedParentTy = TySerializedClass(getNonSelfTypeName(renderedParentTy))
+                    if (renderedParentTy is TySerializedClass && isSuffixedClass(renderedParentTy)) {
+                        renderedParentTy = TySerializedClass(getSuffixlessClassName(renderedParentTy))
                     }
 
                     val parenthesesRequired = renderedParentTy is TyUnion || (renderedParentTy is TyGenericParameter && renderedParentTy.superClass != null)

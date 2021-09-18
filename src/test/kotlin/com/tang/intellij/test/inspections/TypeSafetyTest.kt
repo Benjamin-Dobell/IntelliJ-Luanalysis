@@ -244,4 +244,14 @@ class TypeSafetyTest : LuaInspectionsTestBase(
     fun testVarreturn() {
         check("varreturn.lua")
     }
+
+    fun testHmm() {
+        checkByText("""
+            ---@type fun<T>(array:T[]): void
+            local fun1
+
+            ---@type fun<T>(array:T[]): void
+            local fun2 = fun1
+        """.trimIndent())
+    }
 }

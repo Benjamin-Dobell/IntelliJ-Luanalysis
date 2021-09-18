@@ -17,7 +17,6 @@
 package com.tang.intellij.lua.ty
 
 import com.intellij.openapi.util.RecursionManager.doPreventingRecursion
-import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
 
@@ -348,7 +347,7 @@ class TySelfSubstitutor(context: SearchContext, val call: LuaCallExpr?, val self
     }
 
     override fun substitute(clazz: ITyClass): ITy {
-        if (clazz.className.endsWith(Constants.SUFFIX_CLASS_SELF)) {
+        if (isSelfClass(clazz)) {
             return selfType
         }
         return super.substitute(clazz)
