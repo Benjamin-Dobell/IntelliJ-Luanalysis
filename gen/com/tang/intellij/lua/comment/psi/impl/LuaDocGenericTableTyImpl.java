@@ -51,13 +51,13 @@ public class LuaDocGenericTableTyImpl extends LuaDocTyImpl implements LuaDocGene
   @Override
   @NotNull
   public ITy guessType(@NotNull SearchContext context) {
-    return LuaDocPsiImplUtilKt.guessType(this, context);
+    return LuaDocPsiImplUtilKt.guessType(context, this);
   }
 
   @Override
   @NotNull
   public ITy guessParentType(@NotNull SearchContext context) {
-    return LuaDocPsiImplUtilKt.guessParentType(this, context);
+    return LuaDocPsiImplUtilKt.guessParentType(context, this);
   }
 
   @Override

@@ -49,7 +49,7 @@ class LuaNameExprType : LuaStubElementType<LuaNameExprStub, LuaNameExpr>("NAME_E
             (psiFile as? LuaPsiFile)?.getModuleName(it)
         } ?: Constants.WORD_G
         val isGlobal = SearchContext.withDumb(luaNameExpr.project, null) {
-            resolveLocal(luaNameExpr, it)
+            resolveLocal(it, luaNameExpr)
         } == null
 
         val stat = luaNameExpr.assignStat

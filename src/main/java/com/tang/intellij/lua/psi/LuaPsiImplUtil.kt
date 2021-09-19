@@ -28,6 +28,7 @@ import com.intellij.psi.search.SearchScope
 import com.intellij.psi.stubs.StubElement
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
+import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.comment.psi.impl.LuaDocTagTypeImpl
@@ -108,6 +109,30 @@ fun getPresentation(classMethodDefStat: LuaClassMethodDefStat): ItemPresentation
             return LuaIcons.CLASS_METHOD
         }
     }
+}
+
+fun guessTypeAt(list: LuaExprList, context: SearchContext): ITy? {
+    val exprList = list.expressionStubList
+
+    val expr = exprList.getOrNull(context.index) ?: exprList.lastOrNull()
+    if (expr != null) {
+        //local function getValues12() return 1, 2 end
+        //local function getValues34() return 3, 4 end
+        //local a, b = getValues12() -- a = 1, b = 2
+        //local a, b, c = getValues12(), 3, 4 --a = 1, b = 3, c =  4
+        //local a, b, c = getValues12(), getValue34() --a = 1, b = 3, c =  4
+        var index = context.index
+        if (exprList.size > 1) {
+            val nameSize = context.index + 1
+            index = if (nameSize > exprList.size) {
+                nameSize - exprList.size
+            } else 0
+        }
+        return context.withIndex(index, context.supportsMultipleResults) {
+            expr.guessType(context)
+        }
+    }
+    return null
 }
 
 /**
@@ -246,30 +271,6 @@ fun isFunctionCall(callExpr: LuaCallExpr): Boolean {
     return callExpr.expression is LuaNameExpr
 }
 
-fun guessTypeAt(list: LuaExprList, context: SearchContext): ITy? {
-    val exprList = list.expressionStubList
-
-    val expr = exprList.getOrNull(context.index) ?: exprList.lastOrNull()
-    if (expr != null) {
-        //local function getValues12() return 1, 2 end
-        //local function getValues34() return 3, 4 end
-        //local a, b = getValues12() -- a = 1, b = 2
-        //local a, b, c = getValues12(), 3, 4 --a = 1, b = 3, c =  4
-        //local a, b, c = getValues12(), getValue34() --a = 1, b = 3, c =  4
-        var index = context.index
-        if (exprList.size > 1) {
-            val nameSize = context.index + 1
-            index = if (nameSize > exprList.size) {
-                nameSize - exprList.size
-            } else 0
-        }
-        return context.withIndex(index, context.supportsMultipleResults) {
-            expr.guessType(context)
-        }
-    }
-    return null
-}
-
 fun guessParentType(indexExpr: LuaIndexExpr, context: SearchContext): ITy {
     val expr = PsiTreeUtil.getStubChildOfType(indexExpr, LuaExpression::class.java)
     return expr?.guessType(context) ?: Primitives.UNKNOWN
@@ -373,8 +374,8 @@ fun getParamDefList(forAStat: LuaForAStat): List<LuaParamDef> {
     return list
 }
 
-fun guessReturnType(owner: LuaFuncBodyOwner<*>, searchContext: SearchContext): ITy? {
-    return inferReturnTy(owner, searchContext)
+fun guessReturnType(owner: LuaFuncBodyOwner<*>, context: SearchContext): ITy? {
+    return inferReturnTy(context, owner)
 }
 
 fun getTagReturn(owner: LuaFuncBodyOwner<*>): LuaDocTagReturn? {
@@ -484,7 +485,19 @@ fun getNameIdentifier(tableField: LuaTableField): PsiElement? {
 }
 
 fun guessParentType(tableField: LuaTableField, context: SearchContext): ITy {
-    return PsiTreeUtil.getParentOfType(tableField, LuaTableExpr::class.java)?.guessType(context) ?: Primitives.UNKNOWN
+    // We attempt to detect metatable literals, and within the table treat the owner (self) as return value of __call
+    return ((PsiTreeUtil.getParentOfType(tableField, LuaStatement::class.java) as? LuaExprStat)?.expression as? LuaCallExpr)?.let { callExpr ->
+        val argList = callExpr.argList
+
+        // Note: We're not resolving the call expression because we want this to work in "dumb mode" (i.e. during indexing). If the user
+        //       has a "setmetatable" in scope that isn't functionally equivalent to Lua's setmetatable... too bad.
+        if (argList.size == 2 && argList[1] == tableField.parent && callExpr.nameExpr?.text == Constants.FUNCTION_SETMETATABLE) {
+            val callMetamethod = (tableField.parent as LuaTableExpr).findField(Constants.METAMETHOD_CALL)?.valueExpr as? LuaFuncBodyOwner<*>
+            (argList[0].guessType(context) ?: callMetamethod?.guessReturnType(context)) as? ITyClass
+        } else {
+            null
+        }
+    } ?: PsiTreeUtil.getParentOfType(tableField, LuaTableExpr::class.java)?.guessType(context) ?: Primitives.UNKNOWN
 }
 
 fun guessIndexType(tableField: LuaTableField, context: SearchContext): ITy? {

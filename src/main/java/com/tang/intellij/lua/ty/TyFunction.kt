@@ -37,9 +37,9 @@ interface IFunSignature {
     val displayName: String
     val paramSignature: String
 
-    fun substitute(substitutor: ITySubstitutor): IFunSignature
-    fun equals(other: IFunSignature, context: SearchContext): Boolean
-    fun contravariantOf(other: IFunSignature, context: SearchContext, flags: Int): Boolean
+    fun substitute(context: SearchContext, substitutor: ITySubstitutor): IFunSignature
+    fun equals(context: SearchContext, other: IFunSignature): Boolean
+    fun contravariantOf(context: SearchContext, other: IFunSignature, flags: Int): Boolean
 }
 
 interface IPsiFunSignature : IFunSignature {
@@ -128,13 +128,13 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
         return false
     }
 
-    override fun equals(other: IFunSignature, context: SearchContext): Boolean {
+    override fun equals(context: SearchContext, other: IFunSignature): Boolean {
         if (colonCall != other.colonCall) {
             return false
         }
 
         val returnTyEqual = returnTy?.let {
-            other.returnTy?.equals(it, context) ?: false
+            other.returnTy?.equals(context, it) ?: false
         } ?: (other.returnTy === null)
 
         if (!returnTyEqual) {
@@ -142,7 +142,7 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
         }
 
         val varargTyEqual = variadicParamTy?.let {
-            other.variadicParamTy?.equals(it, context) ?: false
+            other.variadicParamTy?.equals(context, it) ?: false
         } ?: (other.variadicParamTy === null)
 
         if (!varargTyEqual) {
@@ -152,7 +152,7 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
         val paramsEqual = params?.let { params ->
             other.params?.let { otherParams ->
                 params.size == otherParams.size && otherParams.asSequence().zip(params.asSequence()).all { (param, otherParam) ->
-                    param.equals(otherParam, context)
+                    param.equals(context, otherParam)
                 }
             } ?: false
         } ?: (other.params == null)
@@ -164,7 +164,7 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
         return genericParams?.let { params ->
             other.genericParams?.let { otherParams ->
                 params.size == otherParams.size && otherParams.asSequence().zip(params.asSequence()).all { (param, otherParam) ->
-                    param.equals(otherParam, context)
+                    param.equals(context, otherParam)
                 }
             } ?: false
         } ?: (other.genericParams == null)
@@ -224,10 +224,10 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
         } ?: ""
     }
 
-    override fun substitute(substitutor: ITySubstitutor): IFunSignature {
+    override fun substitute(context: SearchContext, substitutor: ITySubstitutor): IFunSignature {
         var paramsSubstituted = false
         val substitutedParams = params?.map {
-            val substitutedParam = it.substitute(substitutor)
+            val substitutedParam = it.substitute(context, substitutor)
 
             if (substitutedParam !== it) {
                 paramsSubstituted = true
@@ -236,8 +236,8 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
             substitutedParam
         }
 
-        val substitutedReturnTy = returnTy?.substitute(substitutor)
-        val substitutedVarargTy = variadicParamTy?.let { TyMultipleResults.getResult(substitutor.searchContext, it.substitute(substitutor)) }
+        val substitutedReturnTy = returnTy?.substitute(context, substitutor)
+        val substitutedVarargTy = variadicParamTy?.let { TyMultipleResults.getResult(context, it.substitute(context, substitutor)) }
 
         return if (paramsSubstituted || substitutedReturnTy !== returnTy || substitutedVarargTy !== variadicParamTy) {
             FunSignature(
@@ -252,7 +252,7 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
         }
     }
 
-    override fun contravariantOf(other: IFunSignature, context: SearchContext, flags: Int): Boolean {
+    override fun contravariantOf(context: SearchContext, other: IFunSignature, flags: Int): Boolean {
         params?.let {
             val otherParams = other.params
 
@@ -263,7 +263,7 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
             for (i in otherParams.indices) {
                 val param = it.getOrNull(i) ?: return false
                 val otherParamTy = otherParams[i].ty ?: Primitives.UNKNOWN
-                if (!otherParamTy.contravariantOf(param.ty ?: Primitives.UNKNOWN, context, flags)) {
+                if (!otherParamTy.contravariantOf(context, param.ty ?: Primitives.UNKNOWN, flags)) {
                     return false
                 }
             }
@@ -272,7 +272,7 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
         val otherReturnTy = other.returnTy
 
         return if (otherReturnTy != null) {
-            returnTy?.contravariantOf(otherReturnTy, context, flags) ?: true
+            returnTy?.contravariantOf(context, otherReturnTy, flags) ?: true
         } else returnTy == null
     }
 }
@@ -330,20 +330,20 @@ abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
         return false
     }
 
-    override fun equals(other: ITy, context: SearchContext): Boolean {
+    override fun equals(context: SearchContext, other: ITy): Boolean {
         if (this === other) {
             return true
         }
 
-        val resolvedOther = Ty.resolve(other, context)
+        val resolvedOther = Ty.resolve(context, other)
 
         if (resolvedOther is ITyFunction) {
-            if (!mainSignature.equals(resolvedOther.mainSignature, context))
+            if (!mainSignature.equals(context, resolvedOther.mainSignature))
                 return false
 
             return signatures.size == resolvedOther.signatures.size
                     && signatures.asSequence().zip(resolvedOther.signatures.asSequence()).all { (signature, otherSignature) ->
-                signature.equals(otherSignature, context)
+                signature.equals(context, otherSignature)
             }
         }
 
@@ -358,8 +358,8 @@ abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
         return code
     }
 
-    override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
-        if (super.contravariantOf(other, context, flags)) return true
+    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
+        if (super.contravariantOf(context, other, flags)) return true
 
         var matched = false
 
@@ -370,7 +370,7 @@ abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
                         && (sig.params?.size ?: 0) == 0 && sig.variadicParamTy?.isUnknown == true
             } else {
                 other.processSignatures(context) { otherSig ->
-                    matched = sig.contravariantOf(otherSig, context, flags)
+                    matched = sig.contravariantOf(context, otherSig, flags)
                     !matched
                 }
             }
@@ -380,8 +380,8 @@ abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
         return matched
     }
 
-    override fun substitute(substitutor: ITySubstitutor): ITy {
-        return substitutor.substitute(this)
+    override fun substitute(context: SearchContext, substitutor: ITySubstitutor): ITy {
+        return substitutor.substitute(context, this)
     }
 
     override fun accept(visitor: ITyVisitor) {

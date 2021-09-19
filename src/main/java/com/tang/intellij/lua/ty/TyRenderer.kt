@@ -194,9 +194,16 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                 val context = SearchContext.get(clazz.table.project)
                 val list = mutableListOf<String>()
                 clazz.table.tableFieldList.forEach { field ->
-                    val key = field.name ?: "[${render(field.guessIndexType(context) ?: Primitives.VOID)}]"
+                    val name = field.name
+                    val indexTy = if (name == null) field.guessIndexType(context) else null
+                    val key = name ?: "[${render(indexTy ?: Primitives.VOID)}]"
                     field.valueType?.let { fieldValue ->
-                        val fieldTy = fieldValue.getType()
+                        val fieldTy = if (name != null) {
+                            clazz.guessMemberType(context, name)
+                        } else {
+                            clazz.guessIndexerType(context, indexTy!!)
+                        } ?: fieldValue.getType()
+
                         val renderedFieldTy = (fieldTy as? TyGenericParameter)?.varName ?: render(fieldTy)
                         list.add("${key}: ${renderedFieldTy}")
                     }

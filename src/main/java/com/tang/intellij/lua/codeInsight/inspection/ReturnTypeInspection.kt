@@ -46,7 +46,7 @@ class ReturnTypeInspection : StrictInspection() {
                 val expectedReturnTy = ScopedTypeSubstitutor.substitute(
                     context,
                     if (bodyOwner is LuaClassMethodDefStat) {
-                        guessSuperReturnTypes(bodyOwner, context)
+                        guessSuperReturnTypes(context, bodyOwner)
                     } else {
                         bodyOwner.tagReturn?.type
                     } ?: TyMultipleResults(listOf(Primitives.UNKNOWN), true)
@@ -78,7 +78,7 @@ class ReturnTypeInspection : StrictInspection() {
                         val targetType = abstractTys.getOrNull(i) ?: variadicAbstractType ?: Primitives.VOID
                         val varianceFlags = if (element is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
 
-                        ProblemUtil.contravariantOf(targetType, expressionTyLists[i], context, varianceFlags, null, element) { problem ->
+                        ProblemUtil.contravariantOf(context, targetType, expressionTyLists[i], varianceFlags, null, element) { problem ->
                             val targetMessage = problem.message
 
                             if (expressionTyLists.size > 1) {
@@ -120,7 +120,7 @@ class ReturnTypeInspection : StrictInspection() {
                         for (i in 0 until abstractTys.size) {
                             val targetType = expectedReturnTys.getOrNull(i) ?: expectedVariadicReturnTy ?: Primitives.VOID
 
-                            if (!targetType.contravariantOf(abstractTys[i], context, 0)) {
+                            if (!targetType.contravariantOf(context, abstractTys[i], 0)) {
                                 val element = statementDocTagType.typeList?.tyList?.let { it.getOrNull(i) ?: it.last() } ?: statementDocTagType
                                 val message = "Type mismatch. Required: '%s' Found: '%s'".format(targetType.displayName, abstractTys[i].displayName)
                                 problems.add(Problem(null, element, message))
@@ -185,13 +185,13 @@ class ReturnTypeInspection : StrictInspection() {
                 }
             }
 
-            private fun guessSuperReturnTypes(function: LuaClassMethodDefStat, context: SearchContext): ITy? {
+            private fun guessSuperReturnTypes(context: SearchContext, function: LuaClassMethodDefStat): ITy? {
                 val comment = function.comment
                 if (comment != null) {
                     if (comment.isOverride()) {
                         // Find super type
                         val cls = function.guessParentClass(context)
-                        val superMember = cls?.getSuperClass(context)?.findEffectiveMember(function.name ?: "", context)
+                        val superMember = cls?.getSuperType(context)?.findEffectiveMember(context, function.name ?: "")
                         if (superMember is LuaClassMethodDefStat) {
                             return superMember.guessReturnType(context)
                         }
@@ -214,7 +214,7 @@ class ReturnTypeInspection : StrictInspection() {
                     val bodyOwner = PsiTreeUtil.getParentOfType(o, LuaFuncBodyOwner::class.java)
 
                     val type = if (bodyOwner is LuaClassMethodDefStat) {
-                        guessSuperReturnTypes(bodyOwner, context)
+                        guessSuperReturnTypes(context, bodyOwner)
                     } else {
                         val returnDef = (bodyOwner as? LuaCommentOwner)?.comment?.tagReturn
                         returnDef?.type

@@ -49,7 +49,7 @@ class LuaNameReference internal constructor(element: LuaNameExpr) : PsiReference
     }
 
     override fun resolve(context: SearchContext): PsiElement? {
-        val resolve = resolve(myElement, context)
+        val resolve = resolve(context, myElement)
         return if (resolve === myElement) null else resolve
     }
 

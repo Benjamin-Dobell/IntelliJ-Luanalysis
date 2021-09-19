@@ -31,6 +31,8 @@ import com.tang.intellij.lua.ty.*
 
 typealias ProcessLuaPsiClassMember = (ownerTy: ITyClass, member: LuaPsiTypeMember) -> Boolean
 
+// TODO: Underlying processKey(...) logic is fragile/wrong. We should not be resolving/traversing classes looking for
+//       keys in the index. A type we encounter may not store its members in the index (see TySubstitutedDocTable).
 class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
     override fun getKey() = StubKeys.CLASS_MEMBER
 
@@ -79,10 +81,10 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
                     return@processAlias true
                 }
 
-                val aliasedTy = LuaClassIndex.find(aliasedName, context)?.type
+                val aliasedTy = LuaClassIndex.find(context, aliasedName)?.type
 
                 if (aliasedTy != null) {
-                    LuaClassIndex.find(aliasedName, context)?.type?.let { aliasedClass ->
+                    LuaClassIndex.find(context, aliasedName)?.type?.let { aliasedClass ->
                         processClassKeys(context, aliasedClass, aliasedName, keys, deep, process)
                     } ?: true
                 } else {
@@ -96,7 +98,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
             }
 
             if (deep) {
-                return Ty.processSuperClasses(owner, context) { superType ->
+                return Ty.processSuperClasses(context, owner) { superType ->
                     val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass
                     if (superClass != null) {
                         processClassKeys(context, superClass, superClass.className, keys, false, process)
@@ -144,8 +146,8 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
             processAllIndexers(context, cls, deep) { _, member ->
                 val candidateIndexerTy = member.guessIndexType(context)
 
-                if (candidateIndexerTy?.contravariantOf(indexTy, context, TyVarianceFlags.STRICT_UNKNOWN) == true) {
-                    if (inexactIndexerTy?.contravariantOf(candidateIndexerTy, context, TyVarianceFlags.STRICT_UNKNOWN) != false) {
+                if (candidateIndexerTy?.contravariantOf(context, indexTy, TyVarianceFlags.STRICT_UNKNOWN) == true) {
+                    if (inexactIndexerTy?.contravariantOf(context, candidateIndexerTy, TyVarianceFlags.STRICT_UNKNOWN) != false) {
                         inexactIndexerTy = candidateIndexerTy
                     }
                 }
@@ -207,8 +209,8 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
             processAllIndexers(context, type, deep) { _, member ->
                 val candidateIndexerTy = member.guessIndexType(context)
 
-                if (candidateIndexerTy?.contravariantOf(indexTy, context, TyVarianceFlags.STRICT_UNKNOWN) == true) {
-                    if (inexactIndexerTy?.contravariantOf(candidateIndexerTy, context, TyVarianceFlags.STRICT_UNKNOWN) != false) {
+                if (candidateIndexerTy?.contravariantOf(context, indexTy, TyVarianceFlags.STRICT_UNKNOWN) == true) {
+                    if (inexactIndexerTy?.contravariantOf(context, candidateIndexerTy, TyVarianceFlags.STRICT_UNKNOWN) != false) {
                         inexactIndexerTy = candidateIndexerTy
                     }
                 }
@@ -225,7 +227,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
             if (processKey(context, type, type.className, process)) {
                 type.lazyInit(context)
                 type.processAlias { aliasedName ->
-                    LuaClassIndex.find(aliasedName, context)?.type?.let { aliasedClass ->
+                    LuaClassIndex.find(context, aliasedName)?.type?.let { aliasedClass ->
                         processKey(context, aliasedClass, aliasedName, process)
                     } ?: true
                 }

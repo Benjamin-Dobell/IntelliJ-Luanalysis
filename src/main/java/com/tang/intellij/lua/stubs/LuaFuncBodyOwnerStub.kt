@@ -34,14 +34,14 @@ interface LuaFuncBodyOwnerStub<T : PsiElement> : StubElement<T> {
     val overloads: Array<IFunSignature>
     val varargTy: ITy?
 
-    private fun walkBody(stub: StubElement<*>, context: SearchContext): ITy? {
+    private fun walkBody(context: SearchContext, stub: StubElement<*>): ITy? {
         val psi = stub.psi
         var ty: ITy? = null
 
         recursionGuard(stub, {
             when (psi) {
                 is LuaReturnStat -> {
-                    ty = TyUnion.union(ty, psi.exprList?.guessTypeAt(context), context)
+                    ty = TyUnion.union(context, ty, psi.exprList?.guessTypeAt(context))
                 }
                 is LuaFuncBody,
                 is LuaDoStat,
@@ -51,7 +51,7 @@ interface LuaFuncBodyOwnerStub<T : PsiElement> : StubElement<T> {
                 is LuaForBStat,
                 is LuaRepeatStat -> {
                     for (childrenStub in stub.childrenStubs) {
-                        ty = TyUnion.union(ty, walkBody(childrenStub, context), context)
+                        ty = TyUnion.union(context, ty, walkBody(context, childrenStub))
                     }
                 }
                 else -> {}
@@ -70,7 +70,7 @@ interface LuaFuncBodyOwnerStub<T : PsiElement> : StubElement<T> {
             return docTy
         }
         return findChildStubByType(LuaElementTypes.FUNC_BODY)?.let {
-            walkBody(it, context)
+            walkBody(context, it)
         } ?: Primitives.VOID
     }
 }

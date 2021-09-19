@@ -43,7 +43,7 @@ class SmartCompletionContributor : CompletionContributor() {
                     return
                 }
 
-                Ty.eachResolved(ty, context) {
+                Ty.eachResolved(context, ty) {
                     when (it) {
                         is TySnippet -> {
                             val lookupElement = LookupElementBuilder.create(it.toString())

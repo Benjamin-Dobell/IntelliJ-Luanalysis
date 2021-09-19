@@ -40,7 +40,7 @@ class IllegalInheritanceInspection : LocalInspectionTool() {
 
                     val context = SearchContext.get(o.project)
                     val superTyBase = if (superTy is ITyGeneric) superTy.base else superTy
-                    val resolvedSuperTyBase = Ty.resolve(superTyBase, context)
+                    val resolvedSuperTyBase = Ty.resolve(context, superTyBase)
 
                     if (resolvedSuperTyBase is ITyPrimitive || resolvedSuperTyBase is TyPrimitiveLiteral) {
                         holder.registerProblem(o, "Illegal inheritance from primitive type", ProblemHighlightType.ERROR)
@@ -62,9 +62,9 @@ class IllegalInheritanceInspection : LocalInspectionTool() {
 
                     var previousAncestorName = parentClassName
 
-                    Ty.processSuperClasses(resolvedSuperTyBase, context) {
+                    Ty.processSuperClasses(context, resolvedSuperTyBase) {
                         val ancestor = if (it is ITyGeneric) it.base else it
-                        val resolvedAncestor = Ty.resolve(ancestor, context)
+                        val resolvedAncestor = Ty.resolve(context, ancestor)
 
                         val ancestorName = resolvedAncestor.displayName
 

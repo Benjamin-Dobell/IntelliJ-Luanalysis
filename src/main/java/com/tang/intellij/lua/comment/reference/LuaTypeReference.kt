@@ -49,7 +49,7 @@ class LuaTypeReference(element: LuaDocTypeRef) : PsiReferenceBase<LuaDocTypeRef>
         val project = myElement.project
 
         val context = SearchContext.get(project)
-        val scopedType = LuaScopedTypeTree.get(myElement.containingFile).findName(context, myElement, name)
+        val scopedType = LuaScopedTypeTree.get(myElement.containingFile)?.findName(context, myElement, name)
 
         if (scopedType != null) {
             return scopedType

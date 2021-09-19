@@ -69,8 +69,8 @@ class FindMethodUsagesHandler(val classMethod: LuaTypeMethod<*>) : FindUsagesHan
         val methodName = classMethod.name
         var parentType = classMethod.guessParentType(ctx) as? ITyClass
         while (methodName != null && parentType != null) {
-            val superClass = parentType.getSuperClass(ctx) as? ITyClass
-            val superMethod = superClass?.findMember(methodName, ctx)
+            val superClass = parentType.getSuperType(ctx) as? ITyClass
+            val superMethod = superClass?.findMember(ctx, methodName)
             if (superMethod != null) {
                 arr.add(superMethod.psi)
             }

@@ -62,7 +62,7 @@ class LuaLineMarkerProvider : LineMarkerProvider {
             val classMethodNameId = element.id
             if (type != null && classMethodNameId != null) {
                 val methodName = methodDef.name!!
-                var superType = type.getSuperClass(context)
+                var superType = type.getSuperType(context)
 
                 while (superType != null && superType is TyClass) {
                     ProgressManager.checkCanceled()
@@ -74,7 +74,7 @@ class LuaLineMarkerProvider : LineMarkerProvider {
                         result.add(builder.createLineMarkerInfo(classMethodNameId))
                         break
                     }
-                    superType = superType.getSuperClass(context)
+                    superType = superType.getSuperType(context)
                 }
             }
 

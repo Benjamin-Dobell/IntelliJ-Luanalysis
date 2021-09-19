@@ -18,26 +18,31 @@ package com.tang.intellij.lua.ty
 
 import com.intellij.openapi.util.RecursionManager.doPreventingRecursion
 import com.tang.intellij.lua.psi.*
+import com.tang.intellij.lua.search.PsiSearchContext
 import com.tang.intellij.lua.search.SearchContext
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 interface ITySubstitutor {
-    val searchContext: SearchContext
-
-    fun substitute(alias: ITyAlias): ITy
-    fun substitute(function: ITyFunction): ITy
-    fun substitute(clazz: ITyClass): ITy
-    fun substitute(generic: ITyGeneric): ITy
-    fun substitute(ty: ITy): ITy
+    fun substitute(context: SearchContext, alias: ITyAlias): ITy
+    fun substitute(context: SearchContext, function: ITyFunction): ITy
+    fun substitute(context: SearchContext, clazz: ITyClass): ITy
+    fun substitute(context: SearchContext, generic: ITyGeneric): ITy
+    fun substitute(context: SearchContext, ty: ITy): ITy
 }
 
-class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: SearchContext, val luaPsiElement: LuaPsiElement? = null) : TyVisitor() {
+class GenericAnalyzer(
+    params: Array<out TyGenericParameter>,
+    private val paramContext: SearchContext,
+    val luaPsiElement: LuaPsiElement? = null
+) : TyVisitor() {
     private val paramTyMap: MutableMap<String, ITy> = mutableMapOf()
     private val genericMap: Map<String, TyGenericParameter> = params.associateBy {
         it.className
     }
 
-    private val genericParamResolutionSubstitutor = GenericParameterResolutionSubstitutor(paramContext)
-    private val paramSubstitutor = TyParameterSubstitutor(paramContext, paramTyMap)
+    private val genericParamResolutionSubstitutor = GenericParameterResolutionSubstitutor()
+    private val paramSubstitutor = TyParameterSubstitutor(paramTyMap)
     private var context = paramContext
 
     private var cur: ITy = Primitives.VOID
@@ -64,7 +69,7 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: Searc
         } else TyVarianceFlags.STRICT_UNKNOWN
     }
 
-    fun analyze(arg: ITy, par: ITy, context: SearchContext) {
+    fun analyze(context: SearchContext, arg: ITy, par: ITy) {
         this.context = context
 
         cur = arg
@@ -91,13 +96,13 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: Searc
     }
 
     override fun visitClass(clazz: ITyClass) {
-        Ty.eachResolved(cur, context) {
+        Ty.eachResolved(context, cur) {
             val clazzParams = clazz.params
 
             if (clazzParams != null && it is ITyClass) {
                 it.params?.asSequence()?.zip(clazzParams.asSequence())?.forEach { (param, clazzParam) ->
                     warp(param) {
-                        Ty.resolve(clazzParam, context).accept(this)
+                        Ty.resolve(context, clazzParam).accept(this)
                     }
                 }
             }
@@ -108,18 +113,22 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: Searc
 
                 if (genericParam != null) {
                     val mappedType = paramTyMap.get(genericName)
-                    val currentType = it.substitute(paramSubstitutor)
-                    val substitutedGenericParam = genericParam.substitute(genericParamResolutionSubstitutor)
+                    val currentType = it.substitute(paramContext, paramSubstitutor)
+                    val substitutedGenericParam = genericParam.substitute(paramContext, genericParamResolutionSubstitutor)
 
-                    paramTyMap[genericName] = if (substitutedGenericParam.contravariantOf(currentType, context, TyVarianceFlags.ABSTRACT_PARAMS or TyVarianceFlags.STRICT_UNKNOWN)) {
+                    paramTyMap[genericName] = if (substitutedGenericParam.contravariantOf(
+                            context,
+                            currentType,
+                            TyVarianceFlags.ABSTRACT_PARAMS or TyVarianceFlags.STRICT_UNKNOWN
+                        )) {
                         if (mappedType == null) {
                             currentType
-                        } else if (mappedType.contravariantOf(currentType, context, varianceFlags(currentType))) {
+                        } else if (mappedType.contravariantOf(context, currentType, varianceFlags(currentType))) {
                             mappedType
-                        } else if (currentType.contravariantOf(mappedType, context, varianceFlags(mappedType))) {
+                        } else if (currentType.contravariantOf(context, mappedType, varianceFlags(mappedType))) {
                             currentType
                         } else {
-                            mappedType.union(currentType, context)
+                            mappedType.union(context, currentType)
                         }
                     } else {
                         genericParam
@@ -128,14 +137,14 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: Searc
             } else if (clazz is TyDocTable) {
                 clazz.processMembers(context, true) { _, classMember ->
                     val curMember = classMember.guessIndexType(context)?.let { indexTy ->
-                        it.findEffectiveIndexer(indexTy, context, false)
-                    } ?: classMember.name?.let { name -> it.findEffectiveMember(name, context) }
+                        it.findEffectiveIndexer(context, indexTy, false)
+                    } ?: classMember.name?.let { name -> it.findEffectiveMember(context, name) }
 
                     val classMemberTy = classMember.guessType(context) ?: Primitives.UNKNOWN
                     val curMemberTy = curMember?.guessType(context) ?: Primitives.NIL
 
                     warp(curMemberTy) {
-                        Ty.resolve(classMemberTy, context).accept(this)
+                        Ty.resolve(context, classMemberTy).accept(this)
                     }
 
                     true
@@ -145,21 +154,21 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: Searc
     }
 
     override fun visitUnion(u: TyUnion) {
-        Ty.eachResolved(u, context) {
+        Ty.eachResolved(context, u) {
             it.accept(this)
         }
     }
 
     override fun visitArray(array: ITyArray) {
-        Ty.eachResolved(cur, context) {
+        Ty.eachResolved(context, cur) {
             if (it is ITyArray) {
                 warp(it.base) {
-                    Ty.resolve(array.base, context).accept(this)
+                    Ty.resolve(context, array.base).accept(this)
                 }
-            } else if (it is ITyClass && TyArray.isArray(it, context)) {
+            } else if (it is ITyClass && TyArray.isArray(context, it)) {
                 it.processMembers(context) { _, member ->
                     warp(member.guessType(context) ?: Primitives.UNKNOWN) {
-                        Ty.resolve(array.base, context).accept(this)
+                        Ty.resolve(context, array.base).accept(this)
                     }
                     true
                 }
@@ -168,7 +177,7 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: Searc
     }
 
     override fun visitFun(f: ITyFunction) {
-        Ty.eachResolved(cur, context) {
+        Ty.eachResolved(context, cur) {
             if (it is ITyFunction) {
                 visitSig(it.mainSignature, f.mainSignature)
             }
@@ -176,40 +185,40 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: Searc
     }
 
     override fun visitGeneric(generic: ITyGeneric) {
-        Ty.eachResolved(cur, context) {
+        Ty.eachResolved(context, cur) {
             if (it is ITyGeneric) {
                 warp(it.base) {
-                    Ty.resolve(generic.base, context).accept(this)
+                    Ty.resolve(context, generic.base).accept(this)
                 }
 
                 it.args.asSequence().zip(generic.args.asSequence()).forEach { (param, genericParam) ->
                     warp(param) {
-                        Ty.resolve(genericParam, context).accept(this)
+                        Ty.resolve(context, genericParam).accept(this)
                     }
                 }
             } else if (generic.base == Primitives.TABLE && generic.args.size == 2) {
                 if (it == Primitives.TABLE) {
                     warp(Primitives.UNKNOWN) {
-                        Ty.resolve(generic.args.first(), context).accept(this)
+                        Ty.resolve(context, generic.args.first()).accept(this)
                     }
 
                     warp(Primitives.UNKNOWN) {
-                        Ty.resolve(generic.args.last(), context).accept(this)
+                        Ty.resolve(context, generic.args.last()).accept(this)
                     }
                 } else if (it is ITyArray) {
                     warp(Primitives.NUMBER) {
-                        Ty.resolve(generic.args.first(), context).accept(this)
+                        Ty.resolve(context, generic.args.first()).accept(this)
                     }
 
                     warp(it.base) {
-                        Ty.resolve(generic.args.last(), context).accept(this)
+                        Ty.resolve(context, generic.args.last()).accept(this)
                     }
                 } else if (it.isShape(context)) {
-                    val genericTable = createTableGenericFromMembers(it, context)
+                    val genericTable = createTableGenericFromMembers(context, it)
 
                     genericTable.args.asSequence().zip(generic.args.asSequence()).forEach { (param, genericParam) ->
                         warp(param) {
-                            Ty.resolve(genericParam, context).accept(this)
+                            Ty.resolve(context, genericParam).accept(this)
                         }
                     }
                 }
@@ -221,46 +230,46 @@ class GenericAnalyzer(params: Array<out TyGenericParameter>, paramContext: Searc
         arg.returnTy?.let {
             warp(it) {
                 par.returnTy?.let {
-                    Ty.resolve(it, context).accept(this)
+                    Ty.resolve(context, it).accept(this)
                 }
             }
         }
     }
 
-    private fun warp(ty:ITy, action: () -> Unit) {
+    private fun warp(ty: ITy, action: () -> Unit) {
         if (Ty.isInvalid(ty))
             return
         val arg = cur
-        cur = Ty.resolve(ty, context)
+        cur = Ty.resolve(context, ty)
         action()
         cur = arg
     }
 }
 
-open class TySubstitutor(override val searchContext: SearchContext) : ITySubstitutor {
-    override fun substitute(ty: ITy) = ty
+abstract class TySubstitutor : ITySubstitutor {
+    override fun substitute(context: SearchContext, ty: ITy) = ty
 
-    override fun substitute(alias: ITyAlias): ITy {
+    override fun substitute(context: SearchContext, alias: ITyAlias): ITy {
         return alias
     }
 
-    override fun substitute(clazz: ITyClass): ITy {
+    override fun substitute(context: SearchContext, clazz: ITyClass): ITy {
         return clazz
     }
 
-    override fun substitute(generic: ITyGeneric): ITy {
+    override fun substitute(context: SearchContext, generic: ITyGeneric): ITy {
         var paramsSubstituted = false
         val substitutedArgs = generic.args.map {
-            val substitutedParam = it.substitute(this)
+            val substitutedParam = it.substitute(context, this)
 
             if (substitutedParam !== it) {
                 paramsSubstituted = true
             }
 
-            TyMultipleResults.getResult(searchContext, substitutedParam)
+            TyMultipleResults.getResult(context, substitutedParam)
         }
 
-        val substitutedBase = generic.base.substitute(this)
+        val substitutedBase = generic.base.substitute(context, this)
 
         return if (paramsSubstituted || substitutedBase !== generic.base) {
             if (generic is TyDocTableGeneric) {
@@ -273,10 +282,10 @@ open class TySubstitutor(override val searchContext: SearchContext) : ITySubstit
         }
     }
 
-    override fun substitute(function: ITyFunction): ITy {
+    override fun substitute(context: SearchContext, function: ITyFunction): ITy {
         var signaturesSubstituted = false
         val substitutedSignatures = function.signatures.map {
-            val substitutedSignature = it.substitute(this)
+            val substitutedSignature = it.substitute(context, this)
 
             if (substitutedSignature !== it) {
                 signaturesSubstituted = true
@@ -285,7 +294,7 @@ open class TySubstitutor(override val searchContext: SearchContext) : ITySubstit
             substitutedSignature
         }
 
-        val substitutedMainSignature = function.mainSignature.substitute(this)
+        val substitutedMainSignature = function.mainSignature.substitute(context, this)
 
         return if (signaturesSubstituted || substitutedMainSignature !== function.mainSignature) {
             TySerializedFunction(substitutedMainSignature,
@@ -297,12 +306,12 @@ open class TySubstitutor(override val searchContext: SearchContext) : ITySubstit
     }
 }
 
-class TyAliasSubstitutor private constructor(searchContext: SearchContext) : TySubstitutor(searchContext) {
+class TyAliasSubstitutor() : TySubstitutor() {
     val processedNames = mutableSetOf<String>()
 
-    override fun substitute(alias: ITyAlias): ITy {
+    override fun substitute(context: SearchContext, alias: ITyAlias): ITy {
         if (alias.params?.size ?: 0 == 0 && processedNames.add(alias.name)) {
-            val resolved = alias.ty.substitute(this)
+            val resolved = alias.ty.substitute(context, this)
             processedNames.remove(alias.name)
             return resolved
         }
@@ -310,64 +319,59 @@ class TyAliasSubstitutor private constructor(searchContext: SearchContext) : TyS
         return alias
     }
 
-    override fun substitute(generic: ITyGeneric): ITy {
-        val base = generic.base.substitute(this)
+    override fun substitute(context: SearchContext, generic: ITyGeneric): ITy {
+        val base = generic.base.substitute(context, this)
 
         if (base is ITyAlias) {
             return if (processedNames.add(base.name)) {
-                val resolved = base.ty.substitute(generic.getMemberSubstitutor(searchContext)).substitute(this)
+                val resolved = base.ty.substitute(context, generic.getMemberSubstitutor(context)).substitute(context, this)
                 processedNames.remove(base.name)
                 resolved
             } else Primitives.VOID
         }
 
-        return super.substitute(generic)
+        return super.substitute(context, generic)
     }
 
-    override fun substitute(clazz: ITyClass): ITy {
-        return clazz.recoverAlias(searchContext, this)
-    }
-
-    companion object {
-        fun substitute(ty: ITy, context: SearchContext): ITy {
-            return ty.substitute(TyAliasSubstitutor(context))
-        }
+    override fun substitute(context: SearchContext, clazz: ITyClass): ITy {
+        return clazz.recoverAlias(context, this)
     }
 }
 
-class TySelfSubstitutor(context: SearchContext, val call: LuaCallExpr?, val self: ITy? = null) : TySubstitutor(context) {
+class TySelfSubstitutor(val call: LuaCallExpr?, val self: ITy? = null) : TySubstitutor() {
     private val selfType: ITy by lazy {
         if (self != null) {
             return@lazy self
         }
 
         call?.let {
-            it.prefixExpression?.guessType(searchContext) ?: it.expression.guessType(searchContext)
+            val context = PsiSearchContext(call)
+            it.prefixExpression?.guessType(context) ?: it.expression.guessType(context)
         } ?: Primitives.UNKNOWN
     }
 
-    override fun substitute(clazz: ITyClass): ITy {
+    override fun substitute(context: SearchContext, clazz: ITyClass): ITy {
         if (isSelfClass(clazz)) {
             return selfType
         }
-        return super.substitute(clazz)
+        return super.substitute(context, clazz)
     }
 }
 
-class GenericParameterResolutionSubstitutor(searchContext: SearchContext) : TySubstitutor(searchContext) {
-    override fun substitute(clazz: ITyClass): ITy {
+class GenericParameterResolutionSubstitutor : TySubstitutor() {
+    override fun substitute(context: SearchContext, clazz: ITyClass): ITy {
         if (clazz is TyGenericParameter) {
-            val superTy = clazz.getSuperClass(searchContext)
-            val substitutedSuperTy = clazz.getSuperClass(searchContext)?.substitute(this)
+            val superTy = clazz.getSuperType(context)
+            val substitutedSuperTy = clazz.getSuperType(context)?.substitute(context, this)
 
             if (superTy !== substitutedSuperTy) {
-                return TyGenericParameter(clazz.name, clazz.varName, substitutedSuperTy)
+                return TyGenericParameter(clazz.className, clazz.varName, substitutedSuperTy)
             }
         }
 
-        if (clazz.willResolve(searchContext)) {
+        if (clazz.willResolve(context)) {
             return doPreventingRecursion(clazz.className, false) {
-                Ty.resolve(clazz, searchContext).substitute(this)
+                Ty.resolve(context, clazz).substitute(context, this)
             } ?: clazz
         }
 
@@ -375,8 +379,8 @@ class GenericParameterResolutionSubstitutor(searchContext: SearchContext) : TySu
     }
 }
 
-class TyParameterSubstitutor(searchContext: SearchContext, val map: Map<String, ITy>) : TySubstitutor(searchContext) {
-    override fun substitute(clazz: ITyClass): ITy {
+class TyParameterSubstitutor(val map: Map<String, ITy>) : TySubstitutor() {
+    override fun substitute(context: SearchContext, clazz: ITyClass): ITy {
         val ty = (clazz as? TyGenericParameter)?.let { genericParam ->
             map.get(genericParam.className) ?: genericParam
         } ?: clazz
@@ -388,7 +392,7 @@ class TyParameterSubstitutor(searchContext: SearchContext, val map: Map<String, 
                 var paramsSubstituted = false
 
                 val substitutedParams = params.map {
-                    val substitutedParam = it.substitute(this)
+                    val substitutedParam = it.substitute(context, this)
 
                     if (substitutedParam != it) {
                         paramsSubstituted = true
@@ -407,7 +411,7 @@ class TyParameterSubstitutor(searchContext: SearchContext, val map: Map<String, 
     }
 
     companion object {
-        fun withArgs(context: SearchContext, params: Array<out TyGenericParameter>, args: Array<out ITy>): TyParameterSubstitutor {
+        fun withArgs(params: Array<out TyGenericParameter>, args: Array<out ITy>): TyParameterSubstitutor {
             val paramMap = mutableMapOf<String, ITy>()
             val lastIndex = minOf(params.size, args.size) - 1
 
@@ -416,64 +420,63 @@ class TyParameterSubstitutor(searchContext: SearchContext, val map: Map<String, 
                 paramMap[param.className] = args[index]
             }
 
-            return TyParameterSubstitutor(context, paramMap)
+            return TyParameterSubstitutor(paramMap)
         }
     }
 }
 
-class TyChainSubstitutor private constructor(a: ITySubstitutor, b: ITySubstitutor) : ITySubstitutor {
-    val substitutors = mutableListOf<ITySubstitutor>()
+class TyChainSubstitutor private constructor(val substitutors: MutableList<ITySubstitutor>) : ITySubstitutor {
+    override fun substitute(context: SearchContext, alias: ITyAlias): ITy {
+        return substitutors.fold(alias as ITy) { ty, subsitutor -> ty.substitute(context, subsitutor) }
+    }
 
-    override val searchContext: SearchContext
+    override fun substitute(context: SearchContext, function: ITyFunction): ITy {
+        return substitutors.fold(function as ITy) { ty, subsitutor -> ty.substitute(context, subsitutor) }
+    }
 
-    init {
-        searchContext = a.searchContext
+    override fun substitute(context: SearchContext, clazz: ITyClass): ITy {
+        return substitutors.fold(clazz as ITy) { ty, subsitutor -> ty.substitute(context, subsitutor) }
+    }
 
-        substitutors.add(a)
-        substitutors.add(b)
+    override fun substitute(context: SearchContext, generic: ITyGeneric): ITy {
+        return substitutors.fold(generic as ITy) { ty, subsitutor -> ty.substitute(context, subsitutor) }
+    }
+
+    override fun substitute(context: SearchContext, ty: ITy): ITy {
+        return substitutors.fold(ty) { substitutedTy, subsitutor -> substitutedTy.substitute(context, subsitutor) }
     }
 
     companion object {
+        @ExperimentalContracts
+        @JvmName("nullableChain")
         fun chain(a: ITySubstitutor?, b: ITySubstitutor?): ITySubstitutor? {
+            contract {
+                returns(null) implies (a == null && b == null)
+                returnsNotNull() implies (a != null || b != null)
+            }
             return if (a != null) {
-                if (a is TyChainSubstitutor) {
-                    b?.let {
-                        if (it is TyChainSubstitutor) {
-                            a.substitutors.addAll(it.substitutors)
-                        } else {
-                            a.substitutors.add(it)
-                        }
-                    }
-                    a
+                if (b != null) {
+                    chain(a, b)
                 } else {
-                    if (b != null) {
-                        if (b is TyChainSubstitutor) {
-                            b.substitutors.add(0, a)
-                            b
-                        } else TyChainSubstitutor(a, b)
-                    } else a
+                    a
                 }
             } else b
         }
-    }
 
-    override fun substitute(alias: ITyAlias): ITy {
-        return substitutors.fold(alias as ITy) { ty, subsitutor -> ty.substitute(subsitutor) }
-    }
-
-    override fun substitute(function: ITyFunction): ITy {
-        return substitutors.fold(function as ITy) { ty, subsitutor -> ty.substitute(subsitutor) }
-    }
-
-    override fun substitute(clazz: ITyClass): ITy {
-        return substitutors.fold(clazz as ITy) { ty, subsitutor -> ty.substitute(subsitutor) }
-    }
-
-    override fun substitute(generic: ITyGeneric): ITy {
-        return substitutors.fold(generic as ITy) { ty, subsitutor -> ty.substitute(subsitutor) }
-    }
-
-    override fun substitute(ty: ITy): ITy {
-        return substitutors.fold(ty) { substitutedTy, subsitutor -> substitutedTy.substitute(subsitutor) }
+        fun chain(a: ITySubstitutor, b: ITySubstitutor): ITySubstitutor {
+            return if (a is TyChainSubstitutor) {
+                if (b is TyChainSubstitutor) {
+                    a.substitutors.addAll(b.substitutors)
+                } else {
+                    a.substitutors.add(b)
+                }
+                a
+            } else if (b is TyChainSubstitutor) {
+                b.substitutors.add(0, a)
+                b
+            } else {
+                TyChainSubstitutor(mutableListOf(a, b))
+            }
+        }
     }
 }

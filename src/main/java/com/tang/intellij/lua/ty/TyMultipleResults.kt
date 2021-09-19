@@ -34,12 +34,12 @@ class TyMultipleResults : Ty {
         this.variadic = variadic
     }
 
-    override fun substitute(substitutor: ITySubstitutor): ITy {
+    override fun substitute(context: SearchContext, substitutor: ITySubstitutor): ITy {
         var resultsSubstituted = false
         var resultVariadic = variadic
 
         val substitutedResults = list.withIndex().flatMap {
-            val substitutedResult = it.value.substitute(substitutor)
+            val substitutedResult = it.value.substitute(context, substitutor)
 
             if (substitutedResult !== it) {
                 resultsSubstituted = true
@@ -49,7 +49,7 @@ class TyMultipleResults : Ty {
                 if (variadic) {
                     var aggregateTy: ITy = Primitives.VOID
                     substitutedResult.list.map {
-                        aggregateTy = aggregateTy.union(it, substitutor.searchContext)
+                        aggregateTy = aggregateTy.union(context, it)
                         aggregateTy
                     }
                 } else {
@@ -76,7 +76,7 @@ class TyMultipleResults : Ty {
         list.forEach { it.accept(visitor) }
     }
 
-    override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
+    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
         val requiredSize = if (variadic) list.size - 1 else list.size
         val flattenedOther = TyMultipleResults.flatten(context, other)
 
@@ -97,7 +97,7 @@ class TyMultipleResults : Ty {
                     if (variadic) list.last() else return true
                 } else list[i]
 
-                if (!thisTy.contravariantOf(otherTy, context, flags)) {
+                if (!thisTy.contravariantOf(context, otherTy, flags)) {
                     return false
                 }
             }
@@ -105,7 +105,7 @@ class TyMultipleResults : Ty {
             return true
         }
 
-        return requiredSize <= 1 && list.first().contravariantOf(other, context, flags)
+        return requiredSize <= 1 && list.first().contravariantOf(context, other, flags)
     }
 
     override fun hashCode(): Int {
@@ -128,17 +128,17 @@ class TyMultipleResults : Ty {
         return super.equals(other)
     }
 
-    override fun equals(other: ITy, context: SearchContext): Boolean {
+    override fun equals(context: SearchContext, other: ITy): Boolean {
         if (this === other) {
             return true
         }
 
-        val resolvedOther = Ty.resolve(other, context)
+        val resolvedOther = Ty.resolve(context, other)
 
         return resolvedOther is TyMultipleResults
                 && resolvedOther.variadic == variadic
                 && resolvedOther.list.size == list.size
-                && resolvedOther.list.asSequence().zip(list.asSequence()).all { (otherTy, ty) -> otherTy.equals(ty, context) }
+                && resolvedOther.list.asSequence().zip(list.asSequence()).all { (otherTy, ty) -> otherTy.equals(context, ty) }
     }
 
     fun <R> convolve(context: SearchContext, other: TyMultipleResults, supportsMultipleResults: Boolean = false, transformer: (ITy, ITy?) -> R): Sequence<R> {
@@ -178,7 +178,7 @@ class TyMultipleResults : Ty {
 
             override fun next(): V {
                 val ty1 = if (multipleResults1.variadic && index1 >= list1.lastIndex) {
-                    Primitives.NIL.union(list1.last(), context)
+                    Primitives.NIL.union(context, list1.last())
                 } else {
                     list1[index1]
                 }
@@ -194,7 +194,7 @@ class TyMultipleResults : Ty {
                         TyMultipleResults(list2.subList(index2, list2.size), multipleResults2.variadic)
                     }
                 } else if (multipleResults2.variadic && index2 >= list2.lastIndex) {
-                    Primitives.NIL.union(list2.last(), context)
+                    Primitives.NIL.union(context, list2.last())
                 } else {
                     list2.getOrNull(index2)
                 }
@@ -216,8 +216,8 @@ class TyMultipleResults : Ty {
                     getResult(context, flattenedTy.list.get(index))
                 } else if (flattenedTy.variadic) {
                     val lastResult = flattenedTy.list.last()
-                    val variadicTy = getResult(context, lastResult).union(getResult(context, lastResult, index - flattenedTy.list.lastIndex), context)
-                    Primitives.NIL.union(variadicTy, context)
+                    val variadicTy = getResult(context, lastResult).union(context, getResult(context, lastResult, index - flattenedTy.list.lastIndex))
+                    Primitives.NIL.union(context, variadicTy)
                 } else {
                     getResult(context, flattenedTy.list.last(), index - flattenedTy.list.lastIndex)
                 }
@@ -244,9 +244,9 @@ class TyMultipleResults : Ty {
 
                     multipleResults.list.forEachIndexed { index, resultTy ->
                         if (index < tyList.size) {
-                            tyList[index] = tyList[index].union(resultTy, context)
+                            tyList[index] = tyList[index].union(context, resultTy)
                         } else if (!multipleResults.variadic || index < multipleResults.list.lastIndex) {
-                            tyList.add(variadicTy?.union(resultTy, context) ?: resultTy)
+                            tyList.add(variadicTy?.union(context, resultTy) ?: resultTy)
                         }
                     }
 
@@ -254,10 +254,10 @@ class TyMultipleResults : Ty {
                         val multipleResultsVariadicTy = multipleResults.list.last()
 
                         for (i in multipleResults.list.size until tyList.size) {
-                            tyList[i] = tyList[i].union(multipleResultsVariadicTy, context)
+                            tyList[i] = tyList[i].union(context, multipleResultsVariadicTy)
                         }
 
-                        variadicTy = TyUnion.union(variadicTy, multipleResultsVariadicTy, context)
+                        variadicTy = TyUnion.union(context, variadicTy, multipleResultsVariadicTy)
                         resultCount = tyList.size
                     } else {
                         resultCount = multipleResults.list.size
@@ -268,12 +268,12 @@ class TyMultipleResults : Ty {
                     if (tyList.isEmpty()) {
                         tyList.add(it)
                     } else {
-                        tyList[0] = tyList[0].union(it, context)
+                        tyList[0] = tyList[0].union(context, it)
                     }
                 }
 
                 for (i in resultCount until tyList.size) {
-                    tyList[i] = TyUnion.union(tyList[i], Primitives.NIL, context)
+                    tyList[i] = TyUnion.union(context, tyList[i], Primitives.NIL)
                 }
             }
 

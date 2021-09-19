@@ -148,7 +148,7 @@ class LuaAnnotator : Annotator {
             val id = o.id
 
             val context = SearchContext.get(o.project)
-            val res = resolve(o, context)
+            val res = resolve(context, o)
 
             if (res != null) { //std api highlighting
                 val containingFile = res.containingFile
@@ -210,7 +210,7 @@ class LuaAnnotator : Annotator {
         }
 
         private fun checkUpValue(o: LuaNameExpr): Boolean {
-            val upValue = isUpValue(o, SearchContext.get(o.project))
+            val upValue = isUpValue(SearchContext.get(o.project), o)
             if (upValue) {
                 myHolder?.newAnnotation(HighlightSeverity.INFORMATION, "Up-value \"${o.name}\"")
                         ?.range(o.id.textRange)

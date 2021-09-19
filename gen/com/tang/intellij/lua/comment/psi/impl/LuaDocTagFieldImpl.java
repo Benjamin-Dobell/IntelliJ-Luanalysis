@@ -75,7 +75,7 @@ public class LuaDocTagFieldImpl extends StubBasedPsiElementBase<LuaDocTagFieldSt
   @Override
   @NotNull
   public ITy guessParentType(@NotNull SearchContext context) {
-    return LuaDocPsiImplUtilKt.guessParentType(this, context);
+    return LuaDocPsiImplUtilKt.guessParentType(context, this);
   }
 
   @Override

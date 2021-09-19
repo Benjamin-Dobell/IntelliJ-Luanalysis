@@ -29,7 +29,16 @@ import com.tang.intellij.lua.ty.*
 class AssignTypeInspection : StrictInspection() {
     override fun buildVisitor(myHolder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor =
             object : LuaVisitor() {
-                private fun inspectAssignee(assignee: LuaPsiTypeGuessable, value: ITy, resolvedValue: ITy, varianceFlags: Int, targetElement: PsiElement?, expressionElement: LuaExpression<*>, context: PsiSearchContext, processProblem: ProcessProblem) {
+                private fun inspectAssignee(
+                    context: PsiSearchContext,
+                    assignee: LuaPsiTypeGuessable,
+                    value: ITy,
+                    resolvedValue: ITy,
+                    varianceFlags: Int,
+                    targetElement: PsiElement?,
+                    expressionElement: LuaExpression<*>,
+                    processProblem: ProcessProblem
+                ) {
                     if (assignee is LuaIndexExpr) {
                         // Get owner class
                         val assigneeOwnerType = assignee.guessParentType(context)
@@ -38,32 +47,32 @@ class AssignTypeInspection : StrictInspection() {
                             return
                         }
 
-                        Ty.eachResolved(assigneeOwnerType, context) { assigneeCandidateOwnerTy ->
+                        Ty.eachResolved(context, assigneeOwnerType) { assigneeCandidateOwnerTy ->
                             val idExpr = assignee.idExpr
                             val memberName = assignee.name
 
                             val assigneeMemberType = if (memberName != null) {
-                                assigneeCandidateOwnerTy.guessMemberType(memberName, context)
+                                assigneeCandidateOwnerTy.guessMemberType(context, memberName)
                             } else {
                                 idExpr?.guessType(context)?.let {
-                                    assigneeCandidateOwnerTy.guessIndexerType(it, context)
+                                    assigneeCandidateOwnerTy.guessIndexerType(context, it)
                                 }
                             }
 
                             if (assigneeMemberType != null) {
                                 // table<K, V> will always accept nil value assignment i.e. entry removal
                                 val targetTy = if (assigneeCandidateOwnerTy is ITyGeneric && assigneeCandidateOwnerTy.base == Primitives.TABLE) {
-                                    assigneeMemberType.union(Primitives.NIL, context)
+                                    assigneeMemberType.union(context, Primitives.NIL)
                                 } else assigneeMemberType
 
-                                val processor = ProblemUtil.unionAwareProblemProcessor(assigneeOwnerType, assigneeCandidateOwnerTy, context, processProblem)
+                                val processor = ProblemUtil.unionAwareProblemProcessor(context, assigneeOwnerType, assigneeCandidateOwnerTy, processProblem)
                                 val flags = TyVarianceFlags.ABSTRACT_PARAMS or if (assigneeCandidateOwnerTy is ITyArray) {
                                     varianceFlags or TyVarianceFlags.STRICT_NIL
                                 } else {
                                     varianceFlags
                                 }
 
-                                ProblemUtil.contravariantOf(targetTy, value, context, flags, targetElement, expressionElement, processor)
+                                ProblemUtil.contravariantOf(context, targetTy, value, flags, targetElement, expressionElement, processor)
                             }
                         }
                     } else {
@@ -82,7 +91,15 @@ class AssignTypeInspection : StrictInspection() {
                             return
                         }
 
-                        ProblemUtil.contravariantOf(variableType, value, context, varianceFlags or TyVarianceFlags.ABSTRACT_PARAMS, targetElement, expressionElement, processProblem)
+                        ProblemUtil.contravariantOf(
+                            context,
+                            variableType,
+                            value,
+                            varianceFlags or TyVarianceFlags.ABSTRACT_PARAMS,
+                            targetElement,
+                            expressionElement,
+                            processProblem
+                        )
                     }
                 }
 
@@ -91,7 +108,7 @@ class AssignTypeInspection : StrictInspection() {
                         return
                     }
 
-                    val context = PsiSearchContext(expressions.first())
+                    val context = PsiSearchContext(statement ?: expressions.first())
                     var assigneeIndex = 0
                     var variadicTy: ITy? = null
                     var resolvedVariadicTy: ITy? = null
@@ -125,7 +142,7 @@ class AssignTypeInspection : StrictInspection() {
 
                         while (valueIndex < values.size) {
                             var value = values[valueIndex]
-                            var resolvedValue = Ty.resolve(value, context)
+                            var resolvedValue = Ty.resolve(context, value)
 
                             val isLastValue = valueIndex == values.lastIndex
 
@@ -140,8 +157,8 @@ class AssignTypeInspection : StrictInspection() {
                                     }
 
                                     if (LuaSettings.instance.isNilStrict) {
-                                        variadicTy = Primitives.NIL.union(variadicTy, context)
-                                        resolvedVariadicTy = Primitives.NIL.union(variadicTy, context)
+                                        variadicTy = Primitives.NIL.union(context, variadicTy)
+                                        resolvedVariadicTy = Primitives.NIL.union(context, variadicTy)
                                     }
                                 }
 
@@ -166,12 +183,12 @@ class AssignTypeInspection : StrictInspection() {
                             val assignee = assignees[assigneeIndex++]
 
                             if (variadicTy != null) {
-                                variadicTy = variadicTy.union(value, context)
+                                variadicTy = variadicTy.union(context, value)
                                 value = variadicTy
                             }
 
                             if (resolvedVariadicTy != null) {
-                                resolvedVariadicTy = resolvedVariadicTy.union(resolvedValue, context)
+                                resolvedVariadicTy = resolvedVariadicTy.union(context, resolvedValue)
                                 resolvedValue = resolvedVariadicTy
                             }
 
@@ -181,7 +198,7 @@ class AssignTypeInspection : StrictInspection() {
                                 }
                             } else {
                                 val inspectionTargetElement = if (assignees.size > 1) assignee else null
-                                inspectAssignee(assignee, value, resolvedValue, varianceFlags, inspectionTargetElement, expression, context) { problem ->
+                                inspectAssignee(context, assignee, value, resolvedValue, varianceFlags, inspectionTargetElement, expression) { problem ->
                                     val sourceElement = problem.sourceElement
                                     val targetElement = problem.targetElement
                                     val sourceMessage = if (assignees.size > 1 && values.size > 1) "Result ${valueIndex + 1}, ${problem.message.decapitalize()}" else problem.message
@@ -208,7 +225,7 @@ class AssignTypeInspection : StrictInspection() {
                             if (variadicTy != null) {
                                 val assignee = assignees[assigneeIndex]
 
-                                inspectAssignee(assignee, variadicTy, resolvedVariadicTy ?: variadicTy, 0, assignee, expressions.last(), context) { problem ->
+                                inspectAssignee(context, assignee, variadicTy, resolvedVariadicTy ?: variadicTy, 0, assignee, expressions.last()) { problem ->
                                     val sourceElement = problem.sourceElement
                                     val targetElement = problem.targetElement
                                     val sourceMessage = if (assignees.size > 1) {

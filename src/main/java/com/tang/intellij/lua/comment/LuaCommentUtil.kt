@@ -28,10 +28,36 @@ import com.tang.intellij.lua.psi.*
  * Created by TangZX on 2016/11/24.
  */
 object LuaCommentUtil {
-
     fun findOwner(element: LuaDocPsiElement): LuaCommentOwner? {
         val comment = findContainer(element)
-        return comment.parent as? LuaCommentOwner
+        val parent = comment.parent as? LuaCommentOwner
+
+        val closure = when (parent) {
+            is LuaLocalDefStat -> {
+                if (parent.localDefList.size == 1) {
+                    parent.exprList?.expressionList?.firstOrNull() as? LuaClosureExpr
+                } else {
+                    null
+                }
+            }
+            is LuaAssignStat -> {
+                if (parent.varExprList.expressionList.size == 1) {
+                    parent.valueExprList?.expressionList?.firstOrNull() as? LuaClosureExpr
+                } else {
+                    null
+                }
+            }
+            is LuaTableField -> {
+                return parent.valueExpr as? LuaClosureExpr
+            }
+            else -> parent
+        }
+
+        if (closure != null && comment.isFunctionImplementation) {
+            return closure
+        }
+
+        return parent
     }
 
     fun findContainer(psi: LuaDocPsiElement): LuaComment {
@@ -66,16 +92,16 @@ object LuaCommentUtil {
             }
 
             val grandParent = element.parent.parent
-            val assignmentComment = if (grandParent is LuaLocalDefStat) {
-                grandParent.comment
-            } else if (grandParent is LuaAssignStat) {
-                grandParent.comment
-            } else {
-                null
+            val assignmentComment = when (grandParent) {
+                is LuaLocalDefStat -> if (grandParent.localDefList.size == 1) grandParent.comment else null
+                is LuaAssignStat -> if (grandParent.varExprList.expressionList.size == 1) grandParent.comment else null
+                else -> null
             }
 
-            // If the closure is a value of a (single value) assignment statement, use that comment.
-            return assignmentComment
+            if (assignmentComment?.isFunctionImplementation == true) {
+                // If the closure is a value of a (single value) assignment statement, use that comment.
+                return assignmentComment
+            }
         }
 
         return null

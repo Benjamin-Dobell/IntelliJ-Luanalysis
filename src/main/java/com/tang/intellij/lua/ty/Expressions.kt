@@ -32,7 +32,7 @@ import com.tang.intellij.lua.search.PsiSearchContext
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.search.withSearchGuard
 
-fun inferExpr(expression: LuaExpression<*>, context: SearchContext): ITy? {
+fun inferExpr(context: SearchContext, expression: LuaExpression<*>): ITy? {
     if (expression.comment != null) {
         val typeCast = PsiTreeUtil.getChildrenOfTypeAsList(expression.comment, LuaDocTagTypeImpl::class.java).firstOrNull()
 
@@ -56,7 +56,7 @@ fun inferExpr(expression: LuaExpression<*>, context: SearchContext): ITy? {
             }
         }
 
-        inferExprInner(expression, context)
+        inferExprInner(context, expression)
     }
 
     if (ty == null) {
@@ -78,7 +78,7 @@ fun inferExpr(expression: LuaExpression<*>, context: SearchContext): ITy? {
             if (flattenedTy is TyMultipleResults) {
                 return TyMultipleResults(flattenedTy.convolve(context, notTy) { resultTy, notResultTy ->
                     if (notResultTy != null) {
-                        resultTy.not(notResultTy, context)
+                        resultTy.not(context, notResultTy)
                     } else {
                         resultTy
                     }
@@ -86,7 +86,7 @@ fun inferExpr(expression: LuaExpression<*>, context: SearchContext): ITy? {
             }
         }
 
-        return TyMultipleResults.getResult(context, ty).not(TyMultipleResults.getResult(context, notTy), context)
+        return TyMultipleResults.getResult(context, ty).not(context, TyMultipleResults.getResult(context, notTy))
     }
 
     return if (context.supportsMultipleResults) {
@@ -96,16 +96,16 @@ fun inferExpr(expression: LuaExpression<*>, context: SearchContext): ITy? {
     }
 }
 
-private fun inferExprInner(expr: LuaPsiElement, context: SearchContext): ITy? {
+private fun inferExprInner(context: SearchContext, expr: LuaPsiElement): ITy? {
     return when (expr) {
         is LuaUnaryExpr -> expr.infer(context)
         is LuaBinaryExpr -> expr.infer(context)
         is LuaCallExpr -> expr.infer(context)
-        is LuaClosureExpr -> infer(expr, context)
+        is LuaClosureExpr -> infer(context, expr)
         is LuaTableExpr -> expr.infer(context)
         is LuaParenExpr -> {
             context.withIndex(0, false) {
-                infer(expr.expression, context)
+                infer(context, expr.expression)
             }
         }
         is LuaNameExpr -> expr.infer(context)
@@ -121,7 +121,7 @@ private fun LuaUnaryExpr.infer(context: SearchContext): ITy? {
 
     return when (operator) {
         LuaTypes.MINUS -> { // Negative something
-            val ty = infer(expression, context)
+            val ty = infer(context, expression)
             return if (ty is TyPrimitiveLiteral) {
                 when (ty.primitiveKind) {
                     TyPrimitiveKind.Number -> {
@@ -143,7 +143,7 @@ private fun LuaUnaryExpr.infer(context: SearchContext): ITy? {
         }
         LuaTypes.GETN -> Primitives.NUMBER // Table length is a number
         LuaTypes.NOT -> { // Returns a boolean; inverse of a boolean literal
-            return when (infer(expression, context)?.booleanType) {
+            return when (infer(context, expression)?.booleanType) {
                 Primitives.TRUE -> Primitives.FALSE
                 Primitives.FALSE -> Primitives.TRUE
                 else -> Primitives.BOOLEAN
@@ -161,20 +161,20 @@ private fun LuaBinaryExpr.infer(context: SearchContext): ITy? {
         //<=, ==, <, ~=, >=, >
             LuaTypes.LE, LuaTypes.EQ, LuaTypes.LT, LuaTypes.NE, LuaTypes.GE, LuaTypes.GT -> Primitives.BOOLEAN
         //and, or
-            LuaTypes.AND, LuaTypes.OR -> guessAndOrType(this, it, context)
+            LuaTypes.AND, LuaTypes.OR -> guessAndOrType(context, this, it)
         //&, <<, |, >>, ~, ^,    +, -, *, /, //, %
             LuaTypes.BIT_AND, LuaTypes.BIT_LTLT, LuaTypes.BIT_OR, LuaTypes.BIT_RTRT, LuaTypes.BIT_TILDE, LuaTypes.EXP,
-            LuaTypes.PLUS, LuaTypes.MINUS, LuaTypes.MULT, LuaTypes.DIV, LuaTypes.DOUBLE_DIV, LuaTypes.MOD -> guessBinaryOpType(this, context)
+            LuaTypes.PLUS, LuaTypes.MINUS, LuaTypes.MULT, LuaTypes.DIV, LuaTypes.DOUBLE_DIV, LuaTypes.MOD -> guessBinaryOpType(context, this)
             else -> null
         }
     }
 }
 
-private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, context: SearchContext): ITy? {
+private fun guessAndOrType(context: SearchContext, binaryExpr: LuaBinaryExpr, operator: IElementType?): ITy? {
     val lhs = binaryExpr.left
     val rhs = binaryExpr.right
 
-    val lty = context.withIndex(0) { infer(lhs, context) }
+    val lty = context.withIndex(0) { infer(context, lhs) }
 
     if (lty == null) {
         return null
@@ -183,17 +183,17 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
     //and
     if (operator == LuaTypes.AND) {
         return when (lty.booleanType) {
-            Primitives.TRUE -> context.withIndex(0) { infer(rhs, context) }
+            Primitives.TRUE -> context.withIndex(0) { infer(context, rhs) }
             Primitives.FALSE -> lty
             else -> {
-                val rhsTy = context.withIndex(0) { infer(rhs, context) }
+                val rhsTy = context.withIndex(0) { infer(context, rhs) }
 
                 if (rhsTy == null) {
                     return null
                 }
 
                 val tys = mutableListOf<ITy>()
-                Ty.eachResolved(lty, context) {
+                Ty.eachResolved(context, lty) {
                     if (it == Primitives.BOOLEAN) {
                         tys.add(Primitives.FALSE)
                     } else if (it.booleanType != Primitives.TRUE) {
@@ -201,7 +201,7 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
                     }
                 }
                 tys.add(rhsTy)
-                TyUnion.union(tys, context)
+                TyUnion.union(context, tys)
             }
         }
     }
@@ -209,16 +209,16 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
     //or
     return when (lty.booleanType) {
         Primitives.TRUE -> lty
-        Primitives.FALSE -> context.withIndex(0) { infer(rhs, context) }
+        Primitives.FALSE -> context.withIndex(0) { infer(context, rhs) }
         else -> {
-            val rhsTy = context.withIndex(0) { infer(rhs, context) }
+            val rhsTy = context.withIndex(0) { infer(context, rhs) }
 
             if (rhsTy == null) {
                 return null
             }
 
             val tys = mutableListOf<ITy>()
-            Ty.eachResolved(lty, context) {
+            Ty.eachResolved(context, lty) {
                 if (it == Primitives.BOOLEAN) {
                     tys.add(Primitives.TRUE)
                 } else if (it.booleanType != Primitives.FALSE) {
@@ -226,18 +226,18 @@ private fun guessAndOrType(binaryExpr: LuaBinaryExpr, operator: IElementType?, c
                 }
             }
             tys.add(rhsTy)
-            TyUnion.union(tys, context)
+            TyUnion.union(context, tys)
         }
     }
 }
 
-private fun guessBinaryOpType(binaryExpr: LuaBinaryExpr, context: SearchContext): ITy? {
-    val type = infer(binaryExpr.left, context)
+private fun guessBinaryOpType(context: SearchContext, binaryExpr: LuaBinaryExpr): ITy? {
+    val type = infer(context, binaryExpr.left)
     return if (type is TyPrimitiveLiteral) type.primitiveType else type
 }
 
-fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): ITySubstitutor {
-    val selfSubstitutor = TySelfSubstitutor(context, this)
+fun LuaCallExpr.createSubstitutor(context: SearchContext, sig: IFunSignature): ITySubstitutor {
+    val selfSubstitutor = TySelfSubstitutor(this)
     val genericParams = sig.genericParams
 
     if (genericParams?.isNotEmpty() == true) {
@@ -280,7 +280,7 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
 
             if (argTy != null) {
                 context.withListEntry(index == lastParamIndex) {
-                    genericAnalyzer.analyze(argTy, param.ty ?: Primitives.UNKNOWN, context)
+                    genericAnalyzer.analyze(context, argTy, param.ty ?: Primitives.UNKNOWN)
                 }
             }
 
@@ -293,7 +293,7 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
         if (varargTy != null) {
             for (index in processedIndex + 1 until list.size) {
                 context.withListEntry(index == lastParamIndex) {
-                    genericAnalyzer.analyze(list[index], varargTy, context)
+                    genericAnalyzer.analyze(context, list[index], varargTy)
                 }
             }
         }
@@ -302,10 +302,12 @@ fun LuaCallExpr.createSubstitutor(sig: IFunSignature, context: SearchContext): I
 
         sig.genericParams?.forEach {
             val superCls = it.superClass
-            if (superCls != null && Ty.isInvalid(analyzedParams[it.name])) analyzedParams[it.name] = superCls
+            if (superCls != null && Ty.isInvalid(analyzedParams[it.className])) {
+                analyzedParams[it.className] = superCls
+            }
         }
 
-        return TyChainSubstitutor.chain(selfSubstitutor, TyParameterSubstitutor(paramContext, analyzedParams))!!
+        return TyChainSubstitutor.chain(selfSubstitutor, TyParameterSubstitutor(analyzedParams))
     }
 
     return selfSubstitutor
@@ -331,14 +333,14 @@ private fun LuaCallExpr.infer(context: SearchContext): ITy? {
     var ret: ITy = Primitives.VOID
 
     val ty = context.withIndex(0) {
-        infer(expr, context)
+        infer(context, expr)
     }
 
     if (ty == null) {
         return null
     }
 
-    Ty.eachResolved(ty, context) {
+    Ty.eachResolved(context, ty) {
         if (ty == Primitives.FUNCTION) {
             return TyMultipleResults(listOf(Primitives.UNKNOWN), true)
         }
@@ -355,7 +357,7 @@ private fun LuaCallExpr.infer(context: SearchContext): ITy? {
             TyMultipleResults.getResult(context, signatureReturnTy, context.index)
         }
 
-        ret = ret.union(contextualReturnTy, context)
+        ret = ret.union(context, contextualReturnTy)
     }
 
     return ret
@@ -377,7 +379,7 @@ private fun LuaNameExpr.infer(context: SearchContext): ITy? {
         }
 
         withSearchGuard(this) {
-            val multiResolve = multiResolve(this, context)
+            val multiResolve = multiResolve(context, this)
             var maxTimes = 10
 
             var type: ITy? = null
@@ -390,7 +392,7 @@ private fun LuaNameExpr.infer(context: SearchContext): ITy? {
                     break
                 }
 
-                type = TyUnion.union(type, set, context)
+                type = TyUnion.union(context, type, set)
 
                 if (--maxTimes == 0)
                     break
@@ -406,7 +408,7 @@ private fun getType(context: SearchContext, def: PsiElement): ITy? {
         is LuaNameExpr -> {
             //todo stub.module -> ty
             def.stub?.module?.let {
-                val memberType = createSerializedClass(it).guessMemberType(def.name, context)
+                val memberType = createSerializedClass(it).guessMemberType(context, def.name)
 
                 if (memberType != null) {
                     return memberType
@@ -446,7 +448,7 @@ private fun getType(context: SearchContext, def: PsiElement): ITy? {
 private fun isGlobal(nameExpr: LuaNameExpr): Boolean {
     val minx = nameExpr as LuaNameExprMixin
     val gs = minx.greenStub
-    return gs?.isGlobal ?: (resolveLocal(nameExpr, null) == null)
+    return gs?.isGlobal ?: (resolveLocal(null, nameExpr) == null)
 }
 
 fun LuaLiteralExpr.infer(): ITy {
@@ -479,8 +481,8 @@ private fun LuaIndexExpr.infer(context: SearchContext): ITy? {
         var result: ITy? = null
         val prefixType = indexExpr.guessParentType(context)
 
-        Ty.eachResolved(prefixType, context) { ty ->
-            result = TyUnion.union(result, guessFieldType(indexExpr, ty, context), context)
+        Ty.eachResolved(context, prefixType) { ty ->
+            result = TyUnion.union(context, result, guessFieldType(context, indexExpr, ty))
         }
 
         if (result?.isUnknown != false) {
@@ -496,7 +498,7 @@ private fun LuaIndexExpr.infer(context: SearchContext): ITy? {
     })
 }
 
-private fun guessFieldType(indexExpr: LuaIndexExpr, ty: ITy, context: SearchContext): ITy? {
+private fun guessFieldType(context: SearchContext, indexExpr: LuaIndexExpr, ty: ITy): ITy? {
     val fieldName = indexExpr.name
     val indexTy = indexExpr.idExpr?.guessType(context)
 
@@ -506,9 +508,9 @@ private fun guessFieldType(indexExpr: LuaIndexExpr, ty: ITy, context: SearchCont
     }
 
     return fieldName?.let {
-        ty.guessMemberType(it, context)
+        ty.guessMemberType(context, it)
     } ?: indexTy?.let {
-        ty.guessIndexerType(it, context)
+        ty.guessIndexerType(context, it)
     }
 }
 

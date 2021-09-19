@@ -44,7 +44,7 @@ class LuaClassMethodType : LuaStubElementType<LuaClassMethodDefStatStub, LuaClas
         val classNameSet = mutableListOf<ITyClass>()
 
         SearchContext.withDumb(def.project, null) {
-            SearchContext.infer(expr, it)
+            SearchContext.infer(it, expr)
         }?.let {
             TyUnion.each(it) {
                 if (it is ITyClass)

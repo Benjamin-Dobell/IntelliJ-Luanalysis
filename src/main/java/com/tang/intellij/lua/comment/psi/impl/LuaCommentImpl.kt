@@ -86,10 +86,10 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
         get() = findTags("deprecated").isNotEmpty()
 
     override val isFunctionImplementation: Boolean
-        get() = PsiTreeUtil.getChildOfType(this, LuaDocTagOverload::class.java)
+        get() = (PsiTreeUtil.getChildOfType(this, LuaDocTagOverload::class.java)
                 ?: PsiTreeUtil.getChildOfType(this, LuaDocTagParam::class.java)
                 ?: PsiTreeUtil.getChildOfType(this, LuaDocTagReturn::class.java)
-                ?: PsiTreeUtil.getChildOfType(this, LuaDocTagVararg::class.java) != null
+                ?: PsiTreeUtil.getChildOfType(this, LuaDocTagVararg::class.java)) != null
 
     override fun getParamDef(name: String): LuaDocTagParam? {
         var element: PsiElement? = firstChild
@@ -172,18 +172,19 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
     }
 
     override fun createSubstitutor(context: SearchContext): ITySubstitutor? {
-        val list = findTags(LuaDocGenericDef::class.java)
-        val map = mutableMapOf<String, LuaDocGenericDef>()
-        for (genericDef in list) {
-            map[genericDef.id.text] = genericDef
+        val list = findGenericDefs().map {
+            TyGenericParameter(it)
         }
 
-        if (map.isEmpty())
-            return null
+        return if (list.isEmpty()) {
+            null
+        } else {
+            val map = list.associateBy { it.varName }
 
-        return object : TySubstitutor(context) {
-            override fun substitute(clazz: ITyClass): ITy {
-                return map[clazz.className]?.let { TyGenericParameter(it) } ?: super.substitute(clazz)
+            object : TySubstitutor() {
+                override fun substitute(context: SearchContext, clazz: ITyClass): ITy {
+                    return map[clazz.className] ?: super.substitute(context, clazz)
+                }
             }
         }
     }

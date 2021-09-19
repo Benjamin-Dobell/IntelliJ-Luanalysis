@@ -38,7 +38,7 @@ public interface LuaFuncDefStat extends LuaTypeMethod<LuaFuncDefStatStub>, LuaDe
   int getTextOffset();
 
   @Nullable
-  ITy guessReturnType(@NotNull SearchContext searchContext);
+  ITy guessReturnType(@NotNull SearchContext context);
 
   @NotNull
   ITyClass guessParentType(@NotNull SearchContext searchContext);

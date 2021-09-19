@@ -33,11 +33,11 @@ import com.tang.intellij.lua.ty.ITyClass
 class LuaShortNamesManagerImpl : LuaShortNamesManager {
 
     override fun findAlias(context: SearchContext, name: String): LuaTypeAlias? {
-        return LuaAliasIndex.find(name, context)
+        return LuaAliasIndex.find(context, name)
     }
 
     override fun findClass(context: SearchContext, name: String): LuaClass? {
-        return LuaClassIndex.find(name, context)
+        return LuaClassIndex.find(context, name)
     }
 
     override fun processAllAliases(project: Project, processor: Processor<String>): Boolean {

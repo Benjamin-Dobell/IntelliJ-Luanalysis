@@ -26,14 +26,14 @@ import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.ty.ITyClass
 import com.tang.intellij.lua.ty.ITyGeneric
 
-fun resolveLocal(ref: LuaNameExpr, context: SearchContext? = null) = resolveLocal(ref.name, ref, context)
+fun resolveLocal(context: SearchContext?, ref: LuaNameExpr) = resolveLocal(context, ref.name, ref)
 
-fun resolveLocal(refName:String, ref: PsiElement, context: SearchContext? = null): PsiElement? {
-    val element = resolveInFile(refName, ref, context)
+fun resolveLocal(context: SearchContext?, refName: String, ref: PsiElement): PsiElement? {
+    val element = resolveInFile(context, refName, ref)
     return if (element is LuaNameExpr) null else element
 }
 
-fun resolveInFile(refName:String, pin: PsiElement, context: SearchContext?): PsiElement? {
+fun resolveInFile(context: SearchContext?, refName: String, pin: PsiElement): PsiElement? {
     var ret: PsiElement? = null
     LuaDeclarationTree.get(pin.containingFile).walkUp(pin) { decl ->
         if (decl.name == refName)
@@ -47,7 +47,7 @@ fun resolveInFile(refName:String, pin: PsiElement, context: SearchContext?): Psi
             val methodName = methodDef.classMethodName
             val expr = methodName.expression
             ret = if (expr is LuaNameExpr && context != null && expr.name != Constants.WORD_SELF)
-                resolve(expr, context)
+                resolve(context, expr)
             else
                 expr
         }
@@ -55,7 +55,7 @@ fun resolveInFile(refName:String, pin: PsiElement, context: SearchContext?): Psi
     return ret
 }
 
-fun isUpValue(ref: LuaNameExpr, context: SearchContext): Boolean {
+fun isUpValue(context: SearchContext, ref: LuaNameExpr): Boolean {
     val funcBody = PsiTreeUtil.getParentOfType(ref, LuaFuncBody::class.java) ?: return false
 
     val refName = ref.name
@@ -68,7 +68,7 @@ fun isUpValue(ref: LuaNameExpr, context: SearchContext): Boolean {
         }
     }
 
-    val resolve = resolveLocal(ref, context)
+    val resolve = resolveLocal(context, ref)
     if (resolve != null) {
         if (!funcBody.textRange.contains(resolve.textRange))
             return true
@@ -85,9 +85,9 @@ fun isUpValue(ref: LuaNameExpr, context: SearchContext): Boolean {
  * *
  * @return PsiElement
  */
-fun resolve(nameExpr: LuaNameExpr, context: SearchContext): PsiElement? {
+fun resolve(context: SearchContext, nameExpr: LuaNameExpr): PsiElement? {
     //search local
-    var resolveResult = resolveInFile(nameExpr.name, nameExpr, context)
+    var resolveResult = resolveInFile(context, nameExpr.name, nameExpr)
 
     //global
     if (resolveResult == null || resolveResult is LuaNameExpr) {
@@ -104,10 +104,10 @@ fun resolve(nameExpr: LuaNameExpr, context: SearchContext): PsiElement? {
     return resolveResult
 }
 
-fun multiResolve(ref: LuaNameExpr, context: SearchContext): Array<PsiElement> {
+fun multiResolve(context: SearchContext, ref: LuaNameExpr): Array<PsiElement> {
     val list = mutableListOf<PsiElement>()
     //search local
-    val resolveResult = resolveInFile(ref.name, ref, context)
+    val resolveResult = resolveInFile(context, ref.name, ref)
     if (resolveResult != null) {
         list.add(resolveResult)
     } else {
@@ -127,11 +127,11 @@ fun multiResolve(ref: LuaNameExpr, context: SearchContext): Array<PsiElement> {
     return list.toTypedArray()
 }
 
-fun resolve(indexExpr: LuaIndexExpr, context: SearchContext): PsiElement? {
+fun resolve(context: SearchContext, indexExpr: LuaIndexExpr): PsiElement? {
     val memberName = indexExpr.name
 
     if (memberName != null) {
-        return resolve(indexExpr, memberName, context)
+        return resolve(context, indexExpr, memberName)
     }
 
     val idExpr = indexExpr.idExpr ?: return null
@@ -147,7 +147,7 @@ fun resolve(indexExpr: LuaIndexExpr, context: SearchContext): PsiElement? {
 
     parentType.eachTopClass { ty ->
         val cls = (if (ty is ITyGeneric) ty.base else ty) as? ITyClass
-        memberPsi = cls?.findIndexer(indexTy, context)?.psi
+        memberPsi = cls?.findIndexer(context, indexTy)?.psi
         memberPsi == null
     }
 
@@ -162,13 +162,13 @@ fun resolve(indexExpr: LuaIndexExpr, context: SearchContext): PsiElement? {
     return memberPsi
 }
 
-fun resolve(indexExpr: LuaIndexExpr, memberName: String, context: SearchContext): PsiElement? {
+fun resolve(context: SearchContext, indexExpr: LuaIndexExpr, memberName: String): PsiElement? {
     val type = indexExpr.guessParentType(context)
     var ret: PsiElement? = null
 
     type.eachTopClass { ty ->
         val cls = (if (ty is ITyGeneric) ty.base else ty) as? ITyClass
-        ret = cls?.findMember(memberName, context)?.psi
+        ret = cls?.findMember(context, memberName)?.psi
         ret == null
     }
 

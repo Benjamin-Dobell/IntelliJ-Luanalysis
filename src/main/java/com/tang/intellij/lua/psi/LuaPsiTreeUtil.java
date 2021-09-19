@@ -160,39 +160,39 @@ public class LuaPsiTreeUtil {
     }
 
     @NotNull
-    public static ITy findContextClass(PsiElement current, SearchContext context) {
+    public static ITy findContextClass(SearchContext context, PsiElement current) {
         ITy ownerTy = LuaScopedTypeTree.Companion.get(current.getContainingFile()).findOwner(context, current);
         return ownerTy != null ? ownerTy : Primitives.Companion.getUNKNOWN();
     }
 
     @Nullable
-    public static LuaClass findClass(String name, SearchContext searchContext) {
-        PsiElement contextElement = searchContext.getElement();
+    public static LuaClass findClass(SearchContext context, String name) {
+        PsiElement contextElement = context.getElement();
 
         if (contextElement != null) {
-            LuaScopedType scopedType = LuaScopedTypeTree.Companion.get(contextElement.getContainingFile()).findName(searchContext, contextElement, name);
+            LuaScopedType scopedType = LuaScopedTypeTree.Companion.get(contextElement.getContainingFile()).findName(context, contextElement, name);
 
             if (scopedType instanceof LuaClass) {
                 return (LuaClass) scopedType;
             }
         }
 
-        return LuaShortNamesManager.Companion.getInstance(searchContext.getProject()).findClass(searchContext, name);
+        return LuaShortNamesManager.Companion.getInstance(context.getProject()).findClass(context, name);
     }
 
     @Nullable
-    public static LuaTypeDef findType(String name, SearchContext searchContext) {
-        PsiElement contextElement = searchContext.getElement();
+    public static LuaTypeDef findType(SearchContext context, String name) {
+        PsiElement contextElement = context.getElement();
 
         if (contextElement != null) {
-            LuaScopedType scopedType = LuaScopedTypeTree.Companion.get(contextElement.getContainingFile()).findName(searchContext, contextElement, name);
+            LuaScopedType scopedType = LuaScopedTypeTree.Companion.get(contextElement.getContainingFile()).findName(context, contextElement, name);
 
             if (scopedType != null) {
                 return scopedType;
             }
         }
 
-        return LuaShortNamesManager.Companion.getInstance(searchContext.getProject()).findType(searchContext, name);
+        return LuaShortNamesManager.Companion.getInstance(context.getProject()).findType(context, name);
     }
 
     public static void processChildren(PsiElement parent, PsiElementProcessor<PsiElement> processor) {

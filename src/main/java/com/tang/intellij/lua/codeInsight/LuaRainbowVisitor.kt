@@ -35,7 +35,7 @@ class LuaRainbowVisitor : RainbowVisitor() {
                 element is LuaDocParamNameRef)
         {
             val resolve = when (element) {
-                is LuaNameExpr -> resolveLocal(element, null)
+                is LuaNameExpr -> resolveLocal(null, element)
                 else -> element
             }
             if (resolve is LuaFuncBodyOwner<*>) return

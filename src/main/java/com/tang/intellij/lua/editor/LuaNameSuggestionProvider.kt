@@ -39,12 +39,12 @@ class LuaNameSuggestionProvider : NameSuggestionProvider {
         }
     }
 
-    private fun collectNames(type: ITy, context: SearchContext, collector: (name: String, suffix: String, preferLonger: Boolean) -> Unit) {
+    private fun collectNames(context: SearchContext, type: ITy, collector: (name: String, suffix: String, preferLonger: Boolean) -> Unit) {
         when (type) {
             is ITyClass -> {
                 if (!type.isAnonymous && type !is TyDocTable)
                     collector(fixName(type.className), "", false)
-                Ty.processSuperClasses(type, context) { superType ->
+                Ty.processSuperClasses(context, type) { superType ->
                     val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass
                     if (superClass != null && !superClass.isAnonymous) {
                         collector(fixName(superClass.className), "", false)
@@ -52,12 +52,12 @@ class LuaNameSuggestionProvider : NameSuggestionProvider {
                     true
                 }
             }
-            is ITyArray -> collectNames(type.base, context) { name, _, _ ->
+            is ITyArray -> collectNames(context, type.base) { name, _, _ ->
                 collector(name, "List", false)
             }
             is ITyGeneric -> {
                 val paramTy = type.getArgTy(1)
-                collectNames(paramTy, context) { name, _, _ ->
+                collectNames(context, paramTy) { name, _, _ ->
                     collector(name, "Map", false)
                 }
             }
@@ -117,7 +117,7 @@ class LuaNameSuggestionProvider : NameSuggestionProvider {
                 val names = HashSet<String>()
 
                 TyUnion.each(type) { ty ->
-                    collectNames(ty, context) { name, suffix, preferLonger ->
+                    collectNames(context, ty) { name, suffix, preferLonger ->
                         if (names.add(name)) {
                             val strings = NameUtil.getSuggestionsByName(name, "", suffix, false, preferLonger, false)
                             set.addAll(strings)

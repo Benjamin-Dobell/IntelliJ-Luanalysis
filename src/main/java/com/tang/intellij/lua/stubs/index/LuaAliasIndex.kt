@@ -25,7 +25,7 @@ class LuaAliasIndex : StringStubIndexExtension<LuaDocTagAlias>() {
     companion object {
         val instance = LuaAliasIndex()
 
-        fun find(name: String, context: SearchContext): LuaDocTagAlias? {
+        fun find(context: SearchContext, name: String): LuaDocTagAlias? {
             if (context.isDumb)
                 return null
 

@@ -107,7 +107,7 @@ fun StubInputStream.readNames(): Array<String> {
 fun StubOutputStream.writeGenericParamsNullable(genericParams: Array<out TyGenericParameter>?) {
     writeByte(genericParams?.size ?: 0)
     genericParams?.forEach { parameter ->
-        writeName(parameter.name)
+        writeName(parameter.className)
         writeName(parameter.varName)
         writeTyNullable(parameter.superClass)
     }
@@ -122,10 +122,10 @@ fun StubInputStream.readGenericParamsNullable(): Array<TyGenericParameter>? {
     }
 
     for (i in 0 until size) {
-        val name = StringRef.toString(readName())
+        val className = StringRef.toString(readName())
         val varName = StringRef.toString(readName())
         val superClass = readTyNullable()
-        list.add(TyGenericParameter(name, varName, superClass))
+        list.add(TyGenericParameter(className, varName, superClass))
     }
 
     return list.toTypedArray()

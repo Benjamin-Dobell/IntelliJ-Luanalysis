@@ -26,14 +26,14 @@ interface ILuaTypeInfer {
     companion object {
         private val EP_NAME = ExtensionPointName.create<ILuaTypeInfer>("au.com.glassechidna.luanalysis.luaTypeInfer")
 
-        fun infer(target: LuaPsiTypeGuessable, context: SearchContext): ITy? {
+        fun infer(context: SearchContext, target: LuaPsiTypeGuessable): ITy? {
             for (typeInfer in EP_NAME.extensionList) {
                 ProgressManager.checkCanceled()
-                return typeInfer.inferType(target, context)
+                return typeInfer.inferType(context, target)
             }
             return null
         }
     }
 
-    fun inferType(target: LuaPsiTypeGuessable, context: SearchContext): ITy?
+    fun inferType(context: SearchContext, target: LuaPsiTypeGuessable): ITy?
 }

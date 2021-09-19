@@ -58,7 +58,9 @@ class MatchFunctionSignatureInspection : StrictInspection() {
 
                 val searchContext = PsiSearchContext(o)
                 val prefixExpr = o.expression
-                var resolvedTy = prefixExpr.guessType(searchContext)?.let { Ty.resolve(it, searchContext) } ?: Primitives.UNKNOWN
+                var resolvedTy = prefixExpr.guessType(searchContext)?.let {
+                    Ty.resolve(searchContext, it)
+                } ?: Primitives.UNKNOWN
 
                 if (resolvedTy is TyUnion && resolvedTy.size == 2 && resolvedTy.getChildTypes().last().isAnonymous) {
                     resolvedTy = resolvedTy.getChildTypes().first()

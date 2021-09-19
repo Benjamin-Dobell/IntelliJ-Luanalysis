@@ -39,7 +39,7 @@ import com.tang.intellij.lua.stubs.LuaFileStub
  * Created by tangzx on 2015/11/15.
  * Email:love.tangzx@qq.com
  */
-open class LuaPsiFile(fileViewProvider: FileViewProvider) : PsiFileBase(fileViewProvider, LuaLanguage.INSTANCE), LuaPsiTypeGuessable, LuaDeclarationScope {
+open class LuaPsiFile(fileViewProvider: FileViewProvider) : PsiFileBase(fileViewProvider, LuaLanguage.INSTANCE), LuaPsiTypeGuessable, LuaDeclarationScope, LuaTypeScope {
 
     val identifier: String by lazy {
         val virtualFile = viewProvider.virtualFile

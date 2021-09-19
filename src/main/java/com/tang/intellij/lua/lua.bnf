@@ -161,7 +161,6 @@ assignStat ::= varList '=' exprList {
     implements = [
         "com.tang.intellij.lua.psi.LuaStatement"
         "com.tang.intellij.lua.psi.LuaDeclaration"
-        "com.tang.intellij.lua.psi.LuaTypeScope"
     ]
     methods = [assign = 'ASSIGN' varExprList = '/exprList[0]' valueExprList = '/exprList[1]']
     stubClass = "com.tang.intellij.lua.stubs.LuaPlaceholderStub"
@@ -363,7 +362,6 @@ localDefStat ::= 'local' localDefList ('=' exprList)? {
     implements = [
         "com.tang.intellij.lua.psi.LuaDeclaration"
         "com.tang.intellij.lua.psi.LuaDeclarationScope"
-        "com.tang.intellij.lua.psi.LuaTypeScope"
     ]
     methods = [assign = 'ASSIGN']
 }
@@ -521,6 +519,7 @@ closureExpr ::= 'function' funcBody {
     implements = [
         "com.tang.intellij.lua.psi.LuaFuncBodyOwner<com.tang.intellij.lua.stubs.LuaClosureExprStub>"
         "com.tang.intellij.lua.psi.LuaExpression<com.tang.intellij.lua.stubs.LuaClosureExprStub>"
+        "com.tang.intellij.lua.psi.LuaTypeScope"
     ]
     stubClass = "com.tang.intellij.lua.stubs.LuaClosureExprStub"
     methods = [
@@ -593,7 +592,6 @@ tableField ::= tableField1 | tableField2 | expr {
         "com.tang.intellij.lua.psi.LuaTypeField"
         "com.intellij.psi.PsiNameIdentifierOwner"
         "com.tang.intellij.lua.psi.LuaCommentOwner"
-        "com.tang.intellij.lua.psi.LuaTypeScope"
     ]
     recoverWhile = tableField_recover
 }

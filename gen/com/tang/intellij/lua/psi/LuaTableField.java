@@ -12,7 +12,7 @@ import com.tang.intellij.lua.comment.psi.LuaDocTy;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 
-public interface LuaTableField extends LuaTypeField, PsiNameIdentifierOwner, LuaCommentOwner, LuaTypeScope, StubBasedPsiElement<LuaTableFieldStub> {
+public interface LuaTableField extends LuaTypeField, PsiNameIdentifierOwner, LuaCommentOwner, StubBasedPsiElement<LuaTableFieldStub> {
 
   @Nullable
   PsiElement getId();

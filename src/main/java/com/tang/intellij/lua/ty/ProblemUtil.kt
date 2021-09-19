@@ -49,12 +49,12 @@ object ProblemUtil {
         }
     }
 
-    private fun acceptsShape(target: ITy, context: SearchContext, varianceFlags: Int): Boolean {
+    private fun acceptsShape(context: SearchContext, target: ITy, varianceFlags: Int): Boolean {
         if (varianceFlags and TyVarianceFlags.NON_STRUCTURAL != 0) {
             return false
         }
 
-        Ty.eachResolved(target, context) {
+        Ty.eachResolved(context, target) {
             if (it is ITyArray || it.isShape(context)) {
                 return true
             }
@@ -63,7 +63,15 @@ object ProblemUtil {
         return false
     }
 
-    private fun contravariantOfShape(target: ITy, source: ITy, context: SearchContext, varianceFlags: Int, targetElement: PsiElement?, sourceElement: PsiElement?, processProblem: ProcessProblem?): Boolean {
+    private fun contravariantOfShape(
+        context: SearchContext,
+        target: ITy,
+        source: ITy,
+        varianceFlags: Int,
+        targetElement: PsiElement?,
+        sourceElement: PsiElement?,
+        processProblem: ProcessProblem?
+    ): Boolean {
         if (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0 && source.isUnknown) {
             return true
         }
@@ -96,14 +104,14 @@ object ProblemUtil {
                 }
 
                 if (targetSubstitutor != null) {
-                    it.substitute(targetSubstitutor)
+                    it.substitute(context, targetSubstitutor)
                 } else it
             }
 
             val sourceMember = if (indexTy != null) {
-                source.findIndexer(indexTy, context, true)
+                source.findIndexer(context, indexTy, true)
             } else {
-                targetMember.name?.let { source.findMember(it, context) }
+                targetMember.name?.let { source.findMember(context, it) }
             }
 
             if (sourceMember == null) {
@@ -123,7 +131,7 @@ object ProblemUtil {
             }
 
             val sourceMemberTy = (sourceMember.guessType(context) ?: Primitives.UNKNOWN).let {
-                if (sourceSubstitutor != null) it.substitute(sourceSubstitutor) else it
+                if (sourceSubstitutor != null) it.substitute(context, sourceSubstitutor) else it
             }
 
             if (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN != 0 || !sourceMemberTy.isUnknown) {
@@ -150,8 +158,16 @@ object ProblemUtil {
                     val memberElement = if (processProblem != null && sourceElement != null) findHighlightElement(sourceMember.psi.node.psi) else null
 
                     if (memberElement is LuaTableExpr) {
-                        isContravariant = contravariantOf(targetMemberTy, sourceMemberTy, context, varianceFlags, targetElement, memberElement, processProblem!!) && isContravariant
-                    } else if (!targetMemberTy.contravariantOf(sourceMemberTy, context, varianceFlags)) {
+                        isContravariant = contravariantOf(
+                            context,
+                            targetMemberTy,
+                            sourceMemberTy,
+                            varianceFlags,
+                            targetElement,
+                            memberElement,
+                            processProblem!!
+                        ) && isContravariant
+                    } else if (!targetMemberTy.contravariantOf(context, sourceMemberTy, varianceFlags)) {
                         isContravariant = false
 
                         if (processProblem != null && sourceElement != null) {
@@ -178,17 +194,17 @@ object ProblemUtil {
             val indexTy = sourceMember.guessIndexType(context)
 
             val sourceMemberTy = (if (indexTy != null) {
-                source.guessIndexerType(indexTy, context, true)
+                source.guessIndexerType(context, indexTy, true)
             } else {
-                sourceMember.name?.let { source.guessMemberType(it, context) }
+                sourceMember.name?.let { source.guessMemberType(context, it) }
             })?.let {
-                if (sourceSubstitutor != null) it.substitute(sourceSubstitutor) else it
+                if (sourceSubstitutor != null) it.substitute(context, sourceSubstitutor) else it
             } ?: Primitives.UNKNOWN
 
             val targetMemberTy = (if (indexTy != null) {
-                val targetMember = target.findIndexer(indexTy, context)
+                val targetMember = target.findIndexer(context, indexTy)
 
-                if (targetMember?.guessIndexType(context)?.equals(indexTy, context) == true) {
+                if (targetMember?.guessIndexType(context)?.equals(context, indexTy) == true) {
                     // If the target index type == source index type, then we have already checked compatibility of this member above.
                     return@processMembers true
                 }
@@ -196,7 +212,7 @@ object ProblemUtil {
                 targetMember?.guessType(context)
             } else {
                 sourceMember.name?.let {
-                    val targetMember = target.findMember(it, context)
+                    val targetMember = target.findMember(context, it)
 
                     if (targetMember?.name == it) {
                         // If the target index type == source member name, then we have already checked compatibility of this member above.
@@ -206,7 +222,7 @@ object ProblemUtil {
                     targetMember?.guessType(context)
                 }
             })?.let {
-                if (targetSubstitutor != null) it.substitute(targetSubstitutor) else it
+                if (targetSubstitutor != null) it.substitute(context, targetSubstitutor) else it
             }
 
             if (targetMemberTy == null) {
@@ -216,7 +232,7 @@ object ProblemUtil {
             // TODO: DRY
             if (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN != 0 || !sourceMemberTy.isUnknown) {
                 if (varianceFlags and TyVarianceFlags.WIDEN_TABLES == 0) {
-                    if (!targetMemberTy.equals(sourceMemberTy, context)) {
+                    if (!targetMemberTy.equals(context, sourceMemberTy)) {
                         isContravariant = false
 
                         if (processProblem != null && sourceElement != null) {
@@ -235,8 +251,16 @@ object ProblemUtil {
                     val memberElement = if (processProblem != null && sourceElement != null) findHighlightElement(sourceMember.psi.node.psi) else null
 
                     if (memberElement is LuaTableExpr) {
-                        isContravariant = contravariantOf(targetMemberTy, sourceMemberTy, context, varianceFlags, targetElement, memberElement, processProblem!!) && isContravariant
-                    } else if (!targetMemberTy.contravariantOf(sourceMemberTy, context, varianceFlags)) {
+                        isContravariant = contravariantOf(
+                            context,
+                            targetMemberTy,
+                            sourceMemberTy,
+                            varianceFlags,
+                            targetElement,
+                            memberElement,
+                            processProblem!!
+                        ) && isContravariant
+                    } else if (!targetMemberTy.contravariantOf(context, sourceMemberTy, varianceFlags)) {
                         isContravariant = false
 
                         if (processProblem != null && sourceElement != null) {
@@ -258,18 +282,26 @@ object ProblemUtil {
         return isContravariant
     }
 
-    private fun contravariantOfUnit(targetTy: ITy, sourceUnitTy: ITy, context: SearchContext, varianceFlags: Int, targetElement: PsiElement?, sourceElement: PsiElement, processProblem: ProcessProblem): Boolean {
-        val resolvedSourceTy = Ty.resolve(sourceUnitTy, context)
+    private fun contravariantOfUnit(
+        context: SearchContext,
+        targetTy: ITy,
+        sourceUnitTy: ITy,
+        varianceFlags: Int,
+        targetElement: PsiElement?,
+        sourceElement: PsiElement,
+        processProblem: ProcessProblem
+    ): Boolean {
+        val resolvedSourceTy = Ty.resolve(context, sourceUnitTy)
 
         if (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0 && resolvedSourceTy.isUnknown) {
             return true
         }
 
-        val resolvedTargetTy = Ty.resolve(targetTy, context)
+        val resolvedTargetTy = Ty.resolve(context, targetTy)
         var isContravariant = true
 
         if (resolvedTargetTy is ITyArray) {
-            val base = Ty.resolve(resolvedTargetTy.base, context)
+            val base = Ty.resolve(context, resolvedTargetTy.base)
 
             if (base is TyClass) {
                 base.lazyInit(context)
@@ -334,7 +366,7 @@ object ProblemUtil {
                         } else sourceElement
 
                         sourceFieldTypes.forEach { sourceFieldTy ->
-                            contravariantOf(resolvedTargetTy.base, sourceFieldTy, context, varianceFlags, targetElement, valueHighlightElement) { problem ->
+                            contravariantOf(context, resolvedTargetTy.base, sourceFieldTy, varianceFlags, targetElement, valueHighlightElement) { problem ->
                                 isContravariant = false
                                 processProblem(problem)
                             }
@@ -369,7 +401,7 @@ object ProblemUtil {
                 }
             }
 
-            if (resolvedSourceTy !is ITyArray && (resolvedSourceTy !is ITyClass || !TyArray.isArray(resolvedSourceTy, context))) {
+            if (resolvedSourceTy !is ITyArray && (resolvedSourceTy !is ITyClass || !TyArray.isArray(context, resolvedSourceTy))) {
                 processProblem(
                     Problem(
                         targetElement,
@@ -393,11 +425,11 @@ object ProblemUtil {
                         val sourceFieldElement = sourceField.valueExpr
 
                         if (baseAcceptsShape && sourceFieldElement is LuaTableExpr) {
-                            contravariantOf(resolvedTargetTy.base, sourceFieldTy, context, varianceFlags, targetElement, sourceFieldElement) { problem ->
+                            contravariantOf(context, resolvedTargetTy.base, sourceFieldTy, varianceFlags, targetElement, sourceFieldElement) { problem ->
                                 isContravariant = false
                                 processProblem(problem)
                             }
-                        } else if (!base.contravariantOf(sourceFieldTy, context, varianceFlags)) {
+                        } else if (!base.contravariantOf(context, sourceFieldTy, varianceFlags)) {
                             isContravariant = false
                             processProblem(
                                 Problem(
@@ -423,15 +455,15 @@ object ProblemUtil {
 
         if (varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 && resolvedSourceTy is TyTable && resolvedSourceTy.table == sourceElement && base.isShape(context)) {
             isContravariant = contravariantOfShape(
+                context,
                 resolvedTargetTy,
                 resolvedSourceTy,
-                context,
                 varianceFlags or TyVarianceFlags.WIDEN_TABLES,
                 targetElement,
                 sourceElement,
                 processProblem
             )
-        } else if (!resolvedTargetTy.contravariantOf(resolvedSourceTy, context, varianceFlags)) {
+        } else if (!resolvedTargetTy.contravariantOf(context, resolvedSourceTy, varianceFlags)) {
             isContravariant = false
             processProblem(
                 Problem(
@@ -480,20 +512,20 @@ object ProblemUtil {
                             expressionTraversingContravariantOf(targetTy, rightSourceTy, context, varianceFlags, rightExpression, processProblem)
                         }
                         Primitives.FALSE -> {
-                            contravariantOfUnit(targetTy, leftSourceTy, context, varianceFlags, null, leftExpression, processProblem)
+                            contravariantOfUnit(context, targetTy, leftSourceTy, varianceFlags, null, leftExpression, processProblem)
                         }
                         else -> {
                             var leftFalseyTy: ITy = Primitives.VOID
 
-                            Ty.eachUnresolved(leftSourceTy, context) { unresolvedTy, resolvedTy ->
+                            Ty.eachUnresolved(context, leftSourceTy) { unresolvedTy, resolvedTy ->
                                 if (resolvedTy == Primitives.BOOLEAN) {
-                                    leftFalseyTy = leftFalseyTy.union(Primitives.FALSE, context)
+                                    leftFalseyTy = leftFalseyTy.union(context, Primitives.FALSE)
                                 } else if (resolvedTy.booleanType != Primitives.TRUE) {
-                                    leftFalseyTy = leftFalseyTy.union(unresolvedTy, context)
+                                    leftFalseyTy = leftFalseyTy.union(context, unresolvedTy)
                                 }
                             }
 
-                            val leftContravariant = contravariantOfUnit(targetTy, leftFalseyTy, context, varianceFlags, null, leftExpression, processProblem)
+                            val leftContravariant = contravariantOfUnit(context, targetTy, leftFalseyTy, varianceFlags, null, leftExpression, processProblem)
                             val rightSourceTy = context.withIndex(0) { rightExpression.guessType(context) } ?: Primitives.UNKNOWN
                             expressionTraversingContravariantOf(targetTy, rightSourceTy, context, varianceFlags, rightExpression, processProblem) && leftContravariant
                         }
@@ -509,7 +541,7 @@ object ProblemUtil {
                             expressionTraversingContravariantOf(targetTy, rightSourceTy, context, varianceFlags, rightExpression, processProblem)
                         }
                         else -> {
-                            val leftTargetTy = TyUnion.union(listOf(targetTy, Primitives.FALSE, Primitives.NIL), context)
+                            val leftTargetTy = TyUnion.union(context, listOf(targetTy, Primitives.FALSE, Primitives.NIL))
                             val leftContravariant = expressionTraversingContravariantOf(leftTargetTy, leftSourceTy, context, varianceFlags, leftExpression, processProblem)
 
                             val rightSourceTy = context.withIndex(0) { rightExpression.guessType(context) } ?: Primitives.UNKNOWN
@@ -521,16 +553,16 @@ object ProblemUtil {
         }
 
         if (sourceExpression !is LuaTableExpr) {
-            return contravariantOfUnit(targetTy, sourceTy, context, varianceFlags, null, sourceExpression, processProblem)
+            return contravariantOfUnit(context, targetTy, sourceTy, varianceFlags, null, sourceExpression, processProblem)
         }
 
         val targetCandidateProblems = mutableMapOf<String, Collection<Problem>>()
 
-        Ty.eachUnresolved(targetTy, context) { it ->
+        Ty.eachUnresolved(context, targetTy) { it ->
             val candidateProblems = mutableListOf<Problem>()
             targetCandidateProblems[it.displayName] = candidateProblems
 
-            if (contravariantOfUnit(it, sourceTy, context, varianceFlags, null, sourceExpression) { candidateProblems.add(it) }) {
+            if (contravariantOfUnit(context, it, sourceTy, varianceFlags, null, sourceExpression) { candidateProblems.add(it) }) {
                 return true
             }
         }
@@ -584,16 +616,24 @@ object ProblemUtil {
         return false
     }
 
-    fun contravariantOf(target: ITy, source: ITy, context: SearchContext, varianceFlags: Int, targetElement: PsiElement?, sourceElement: PsiElement, processProblem: ProcessProblem): Boolean {
+    fun contravariantOf(
+        context: SearchContext,
+        target: ITy,
+        source: ITy,
+        varianceFlags: Int,
+        targetElement: PsiElement?,
+        sourceElement: PsiElement,
+        processProblem: ProcessProblem
+    ): Boolean {
         if (target === source) {
             return true
         }
 
         if (isTraversableExpression(sourceElement)) {
-            val resolvedTarget = Ty.resolve(target, context)
+            val resolvedTarget = Ty.resolve(context, target)
 
-            if (acceptsShape(resolvedTarget, context, varianceFlags)) {
-                if (TyUnion.isUnion(resolvedTarget, context) && resolvedTarget.contravariantOf(source, context, varianceFlags)) {
+            if (acceptsShape(context, resolvedTarget, varianceFlags)) {
+                if (TyUnion.isUnion(context, resolvedTarget) && resolvedTarget.contravariantOf(context, source, varianceFlags)) {
                     return true
                 }
 
@@ -601,15 +641,15 @@ object ProblemUtil {
             }
         }
 
-        return contravariantOfUnit(target, source, context, varianceFlags, targetElement, sourceElement, processProblem)
+        return contravariantOfUnit(context, target, source, varianceFlags, targetElement, sourceElement, processProblem)
     }
 
-    fun contravariantOfShape(target: ITy, source: ITy, context: SearchContext, varianceFlags: Int): Boolean {
-        return contravariantOfShape(target, source, context, varianceFlags, null, null, null)
+    fun contravariantOfShape(context: SearchContext, target: ITy, source: ITy, varianceFlags: Int): Boolean {
+        return contravariantOfShape(context, target, source, varianceFlags, null, null, null)
     }
 
-    fun unionAwareProblemProcessor(ownerTy: ITy, targetTy: ITy, context: SearchContext, processProblem: ProcessProblem): ProcessProblem {
-        if (!TyUnion.isUnion(ownerTy, context)) {
+    fun unionAwareProblemProcessor(context: SearchContext, ownerTy: ITy, targetTy: ITy, processProblem: ProcessProblem): ProcessProblem {
+        if (!TyUnion.isUnion(context, ownerTy)) {
             return processProblem
         }
 

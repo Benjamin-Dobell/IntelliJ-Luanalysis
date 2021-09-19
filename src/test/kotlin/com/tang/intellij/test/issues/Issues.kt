@@ -73,24 +73,24 @@ class Issues : LuaInspectionsTestBase(
     fun test84() {
         check(
             """
-                ---@type fun<T>(array:T[], index:number)
-                local fun1
-                ---@type fun<T>(array:T[], index:number)
-                local fun2
-                
-                --- @generic T
-                --- @param array T[]
-                --- @param index number
-                fun1 = function(array, index)
-                    -- Needs to call fun2
-                end
-                
-                --- @generic T
-                --- @param array T[]
-                --- @param index number
-                fun2 = function(array, index)
-                    -- Needs to call fun1
-                end
+            ---@type fun<T>(array: T[], index: number)
+            local fun1
+            ---@type fun<T>(array: T[], index: number)
+            local fun2
+            
+            --- @generic T
+            --- @param array T[]
+            --- @param index number
+            fun1 = function(array, index)
+                -- Needs to call fun2
+            end
+            
+            --- @generic T
+            --- @param array T[]
+            --- @param index number
+            fun2 = function(array, index)
+                -- Needs to call fun1
+            end
         """.trimIndent()
         )
     }
@@ -106,6 +106,17 @@ class Issues : LuaInspectionsTestBase(
 
             aSet = aSet
         """.trimIndent()
+        )
+    }
+
+    // https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/87
+    fun test87() {
+        check(
+            """
+            ---@class MyClass
+            ---@overload fun(arg: {number, number})
+            MyClass = {}
+            """.trimIndent()
         )
     }
 }

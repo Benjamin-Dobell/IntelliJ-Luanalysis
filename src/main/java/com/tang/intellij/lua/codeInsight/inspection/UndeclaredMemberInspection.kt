@@ -34,16 +34,16 @@ class UndeclaredMemberInspection : StrictInspection() {
                     val prefix = o.prefixExpression.guessType(context) ?: Primitives.UNKNOWN
                     val memberName = o.name
 
-                    Ty.eachResolved(prefix, context) { prefixTy ->
+                    Ty.eachResolved(context, prefix) { prefixTy ->
                         if (!prefixTy.isGlobal && !(prefixTy.isUnknown && LuaSettings.instance.isUnknownIndexable)) {
                             if (memberName != null) {
-                                if (prefixTy.guessMemberType(memberName, context) == null) {
+                                if (prefixTy.guessMemberType(context, memberName) == null) {
                                     myHolder.registerProblem(o, "No such member '%s' found on type '%s'".format(memberName, prefixTy))
                                 }
                             } else {
                                 o.idExpr?.guessType(context)?.let { indexTy ->
-                                    Ty.eachUnresolved(indexTy, context) { unresolvedTy, resolvedTy ->
-                                        if (resolvedTy !is TySnippet && prefixTy.guessIndexerType(resolvedTy, context) == null) {
+                                    Ty.eachUnresolved(context, indexTy) { unresolvedTy, resolvedTy ->
+                                        if (resolvedTy !is TySnippet && prefixTy.guessIndexerType(context, resolvedTy) == null) {
                                             myHolder.registerProblem(o, "No such indexer '[%s]' found on type '%s'".format(unresolvedTy.displayName, prefixTy))
                                         }
                                     }

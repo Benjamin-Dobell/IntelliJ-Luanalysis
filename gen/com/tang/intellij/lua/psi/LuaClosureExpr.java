@@ -9,7 +9,7 @@ import com.intellij.psi.StubBasedPsiElement;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 
-public interface LuaClosureExpr extends LuaFuncBodyOwner<LuaClosureExprStub>, LuaExpression<LuaClosureExprStub>, StubBasedPsiElement<LuaClosureExprStub> {
+public interface LuaClosureExpr extends LuaFuncBodyOwner<LuaClosureExprStub>, LuaExpression<LuaClosureExprStub>, LuaTypeScope, StubBasedPsiElement<LuaClosureExprStub> {
 
   @NotNull
   LuaFuncBody getFuncBody();
@@ -18,7 +18,7 @@ public interface LuaClosureExpr extends LuaFuncBodyOwner<LuaClosureExprStub>, Lu
   List<LuaParamDef> getParamDefList();
 
   @Nullable
-  ITy guessReturnType(@NotNull SearchContext searchContext);
+  ITy guessReturnType(@NotNull SearchContext context);
 
   @NotNull
   ITy guessParentType(@NotNull SearchContext context);

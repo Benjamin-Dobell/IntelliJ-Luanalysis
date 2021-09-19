@@ -53,7 +53,7 @@ class LuaIndexReference internal constructor(element: LuaIndexExpr, private val 
     }
 
     override fun resolve(context: SearchContext): PsiElement? {
-        val ref = resolve(myElement, context)
+        val ref = resolve(context, myElement)
         if (ref != null) {
             if (ref.containingFile == myElement.containingFile) { //优化，不要去解析 Node Tree
                 if (ref.node.textRange == myElement.node.textRange) {

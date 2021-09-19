@@ -40,25 +40,25 @@ class TyPrimitiveLiteral private constructor(val primitiveKind: TyPrimitiveKind,
         }
     }
 
-    override fun getSuperClass(context: SearchContext): ITy? {
+    override fun getSuperType(context: SearchContext): ITy? {
         return primitiveType
     }
 
-    override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
+    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
         // Even when !LuaSettings.instance.isNilStrict, nil is never assignable to a primitive literal.
-        return this == other || (other.isUnknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0) || super.contravariantOf(other, context, flags)
+        return this == other || (other.isUnknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0) || super.contravariantOf(context, other, flags)
     }
 
     override fun equals(other: Any?): Boolean {
         return other is TyPrimitiveLiteral && primitiveKind == other.primitiveKind && value.equals(other.value)
     }
 
-    override fun equals(other: ITy, context: SearchContext): Boolean {
+    override fun equals(context: SearchContext, other: ITy): Boolean {
         if (this === other) {
             return true
         }
 
-        val resolvedOther = Ty.resolve(other, context)
+        val resolvedOther = Ty.resolve(context, other)
         return resolvedOther is TyPrimitiveLiteral && primitiveKind == resolvedOther.primitiveKind && value.equals(resolvedOther.value)
     }
 
@@ -66,12 +66,12 @@ class TyPrimitiveLiteral private constructor(val primitiveKind: TyPrimitiveKind,
         return primitiveKind.hashCode() * 31 * value.hashCode()
     }
 
-    override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
-        return primitiveType.guessMemberType(name, searchContext)
+    override fun guessMemberType(context: SearchContext, name: String): ITy? {
+        return primitiveType.guessMemberType(context, name)
     }
 
-    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
-        return primitiveType.guessIndexerType(indexTy, searchContext, exact)
+    override fun guessIndexerType(context: SearchContext, indexTy: ITy, exact: Boolean): ITy? {
+        return primitiveType.guessIndexerType(context, indexTy, exact)
     }
 
     companion object {

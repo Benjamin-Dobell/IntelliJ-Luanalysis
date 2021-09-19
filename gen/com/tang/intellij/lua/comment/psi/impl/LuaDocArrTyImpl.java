@@ -51,19 +51,19 @@ public class LuaDocArrTyImpl extends LuaDocTyImpl implements LuaDocArrTy {
   @Override
   @NotNull
   public ITy guessIndexType(@NotNull SearchContext context) {
-    return LuaDocPsiImplUtilKt.guessIndexType(this, context);
+    return LuaDocPsiImplUtilKt.guessIndexType(context, this);
   }
 
   @Override
   @NotNull
   public ITy guessType(@NotNull SearchContext context) {
-    return LuaDocPsiImplUtilKt.guessType(this, context);
+    return LuaDocPsiImplUtilKt.guessType(context, this);
   }
 
   @Override
   @NotNull
   public ITy guessParentType(@NotNull SearchContext context) {
-    return LuaDocPsiImplUtilKt.guessParentType(this, context);
+    return LuaDocPsiImplUtilKt.guessParentType(context, this);
   }
 
   @Override

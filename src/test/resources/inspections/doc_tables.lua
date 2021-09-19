@@ -246,3 +246,34 @@ local shapeExtendingAlias
 
 shapeExtendingAlias.a = <error descr="Type mismatch. Required: '\"hi\"' Found: 'string'">aString</error>
 shapeExtendingAlias.a = "hi"
+
+
+---@type fun<T>(array: T[]): {result: T}}
+local returnsTableWithSubstitutedGenericField
+
+local genericResult123 = returnsTableWithSubstitutedGenericField({1, 2, 3})
+local genericResultABC = returnsTableWithSubstitutedGenericField({'A', 'B', 'C'})
+
+aNumber = genericResult123.result
+genericResult123.result = <error descr="Type mismatch. Required: '1 | 2 | 3' Found: 'number'">aNumber</error>
+
+aString = genericResultABC.result
+genericResultABC.result = <error descr="Type mismatch. Required: '\"A\" | \"B\" | \"C\"' Found: 'string'">aString</error>
+
+genericResult123 = <error descr="Type mismatch. Required: '{ result: 1 | 2 | 3 }' Found: '{ result: \"A\" | \"B\" | \"C\" }'">genericResultABC</error>
+
+
+---@type fun<T>(a: T, b: T): T
+local unionType
+
+local genericResult123ABCUnion = unionType(genericResult123, genericResultABC)
+
+genericResult123ABCUnion = genericResult123
+genericResult123ABCUnion = genericResultABC
+
+genericResult123 = <error descr="Type mismatch. Required: '{ result: 1 | 2 | 3 }' Found: '{ result: \"A\" | \"B\" | \"C\" } | { result: 1 | 2 | 3 }'">genericResult123ABCUnion</error>
+genericResultABC = <error descr="Type mismatch. Required: '{ result: \"A\" | \"B\" | \"C\" }' Found: '{ result: \"A\" | \"B\" | \"C\" } | { result: 1 | 2 | 3 }'">genericResult123ABCUnion</error>
+
+local genericResult456 = returnsTableWithSubstitutedGenericField({4, 5, 6})
+
+genericResult123ABCUnion = <error descr="Type mismatch. Required: '{ result: \"A\" | \"B\" | \"C\" } | { result: 1 | 2 | 3 }' Found: '{ result: 4 | 5 | 6 }'">genericResult456</error>

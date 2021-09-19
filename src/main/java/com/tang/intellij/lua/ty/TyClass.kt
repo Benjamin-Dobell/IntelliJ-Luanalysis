@@ -25,8 +25,6 @@ import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.Processor
 import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.Constants
-import com.tang.intellij.lua.comment.psi.LuaDocGeneralTy
-import com.tang.intellij.lua.comment.psi.LuaDocGenericDef
 import com.tang.intellij.lua.comment.psi.LuaDocTableDef
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass
 import com.tang.intellij.lua.psi.*
@@ -61,7 +59,7 @@ interface ITyClass : ITyResolvable {
     override fun resolve(context: SearchContext, genericArgs: Array<out ITy>?): ITy {
         return if (willResolve(context)) {
             val scopedType = context.element?.let {
-                LuaScopedTypeTree.get(it.containingFile).findName(context, it, className)?.type
+                LuaScopedTypeTree.get(it.containingFile)?.findName(context, it, className)?.type
             }
 
             if (scopedType != null) {
@@ -105,7 +103,7 @@ fun ITyClass.isVisibleInScope(project: Project, contextTy: ITy, visibility: Visi
     return false
 }
 
-private fun equalToShape(target: ITy, source: ITy, context: SearchContext): Boolean {
+private fun equalToShape(context: SearchContext, target: ITy, source: ITy): Boolean {
     if (source !is ITyClass || source is ITyPrimitive) {
         return false
     }
@@ -127,14 +125,14 @@ private fun equalToShape(target: ITy, source: ITy, context: SearchContext): Bool
             }
 
             if (targetSubstitutor != null) {
-                it.substitute(targetSubstitutor)
+                it.substitute(context, targetSubstitutor)
             } else it
         }
 
         val sourceMember = if (indexTy != null) {
-            source.findIndexer(indexTy, context, true)
+            source.findIndexer(context, indexTy, true)
         } else {
-            targetMember.name?.let { source.findMember(it, context) }
+            targetMember.name?.let { source.findMember(context, it) }
         }
 
         if (sourceMember == null) {
@@ -143,10 +141,10 @@ private fun equalToShape(target: ITy, source: ITy, context: SearchContext): Bool
         }
 
         val sourceMemberTy = (sourceMember.guessType(context) ?: Primitives.UNKNOWN).let {
-            if (sourceSubstitutor != null) it.substitute(sourceSubstitutor) else it
+            if (sourceSubstitutor != null) it.substitute(context, sourceSubstitutor) else it
         }
 
-        if (!targetMemberTy.equals(sourceMemberTy, context)) {
+        if (!targetMemberTy.equals(context, sourceMemberTy)) {
             isEqual = false
             return@processMembers false
         }
@@ -182,18 +180,18 @@ abstract class TyClass(override val className: String,
         return other is ITyClass && other.className == className && other.flags == flags
     }
 
-    override fun equals(other: ITy, context: SearchContext): Boolean {
+    override fun equals(context: SearchContext, other: ITy): Boolean {
         if (this === other) {
             return true
         }
 
-        Ty.resolve(this, context).let {
+        Ty.resolve(context, this).let {
             if (it !== this) {
-                return it.equals(other, context)
+                return it.equals(context, other)
             }
         }
 
-        val resolvedOther = Ty.resolve(other, context)
+        val resolvedOther = Ty.resolve(context, other)
 
         if (this === resolvedOther) {
             return true
@@ -209,7 +207,7 @@ abstract class TyClass(override val className: String,
         }
 
         if (flags and TyVarianceFlags.NON_STRUCTURAL == 0 && isShape(context) && resolvedOther.isShape(context)) {
-            return equalToShape(this, resolvedOther, context)
+            return equalToShape(context, this, resolvedOther)
         }
 
         return false
@@ -219,15 +217,15 @@ abstract class TyClass(override val className: String,
         return className.hashCode()
     }
 
-    override fun isShape(searchContext: SearchContext): Boolean {
-        val resolved = Ty.resolve(this, searchContext)
+    override fun isShape(context: SearchContext): Boolean {
+        val resolved = Ty.resolve(context, this)
 
         if (resolved !== this) {
-            return resolved.isShape(searchContext)
+            return resolved.isShape(context)
         }
 
-        lazyInit(searchContext)
-        return super<Ty>.isShape(searchContext)
+        lazyInit(context)
+        return super<Ty>.isShape(context)
     }
 
     override fun processAlias(processor: Processor<String>): Boolean {
@@ -279,7 +277,7 @@ abstract class TyClass(override val className: String,
                 }
             }
 
-            return processSuperClasses(this, context) {
+            return processSuperClasses(context, this) {
                 it.processMembers(context, false) { _, superMember ->
                     val superMemberName = superMember.name
 
@@ -288,7 +286,7 @@ abstract class TyClass(override val className: String,
                     } else {
                         superMember.guessIndexType(context)?.let { superMemberIndexTy ->
                             memberIndexTys.find { memberIndexTy ->
-                                memberIndexTy === superMemberIndexTy || memberIndexTy.contravariantOf(superMemberIndexTy, context, 0)
+                                memberIndexTy === superMemberIndexTy || memberIndexTy.contravariantOf(context, superMemberIndexTy, 0)
                             } != null
                         } ?: false
                     }
@@ -340,7 +338,7 @@ abstract class TyClass(override val className: String,
 
     open fun doLazyInit(searchContext: SearchContext) {
         if (aliasName == null) {
-            val classDef = LuaPsiTreeUtil.findClass(className, searchContext)
+            val classDef = LuaPsiTreeUtil.findClass(searchContext, className)
             if (classDef != null) {
                 val tyClass = classDef.type
                 aliasName = tyClass.aliasName
@@ -352,7 +350,7 @@ abstract class TyClass(override val className: String,
         }
     }
 
-    override fun getSuperClass(context: SearchContext): ITy? {
+    override fun getSuperType(context: SearchContext): ITy? {
         lazyInit(context)
         return superClass
     }
@@ -362,19 +360,19 @@ abstract class TyClass(override val className: String,
         return params
     }
 
-    override fun substitute(substitutor: ITySubstitutor): ITy {
-        return substitutor.substitute(this)
+    override fun substitute(context: SearchContext, substitutor: ITySubstitutor): ITy {
+        return substitutor.substitute(context, this)
     }
 
-    override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
+    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
         lazyInit(context)
 
-        val resolved = Ty.resolve(this, context)
+        val resolved = Ty.resolve(context, this)
 
         if (resolved !== this) {
-            return resolved.contravariantOf(other, context, flags)
+            return resolved.contravariantOf(context, other, flags)
         } else {
-            return super.contravariantOf(other, context, flags)
+            return super.contravariantOf(context, other, flags)
         }
     }
 
@@ -414,6 +412,10 @@ class TyPsiDocClass(val tagClass: LuaDocTagClass) : TyClass(
         this.flags = if (tagClass.isShape) TyFlags.SHAPE else 0
     }
 
+    override fun willResolve(context: SearchContext): Boolean {
+        return false // Nothing to resolve
+    }
+
     override fun doLazyInit(searchContext: SearchContext) {}
 }
 
@@ -434,16 +436,16 @@ open class TySerializedClass(name: String,
         if (this.isAnonymous || this.isGlobal)
             return this
         val alias = LuaShortNamesManager.getInstance(context.project).findAlias(context, className)
-        return alias?.type?.substitute(aliasSubstitutor) ?: this
+        return alias?.type?.substitute(context, aliasSubstitutor) ?: this
     }
 
-    override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
+    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
         if (isUnknown) {
             // Same behaviour as TyUnknown
             return other !is TyMultipleResults
         }
 
-        return super.contravariantOf(other, context, flags)
+        return super.contravariantOf(context, other, flags)
     }
 }
 
@@ -477,7 +479,7 @@ fun createSerializedClass(name: String,
     return TySerializedClass(name, params, varName, superClass, signatures, alias, flags)
 }
 
-fun createTableGenericFromMembers(ty: ITy, context: SearchContext): ITyGeneric {
+fun createTableGenericFromMembers(context: SearchContext, ty: ITy): ITyGeneric {
     val isEmpty = ty.processMembers(context) { _, _ -> false }
 
     if (isEmpty) {
@@ -497,52 +499,52 @@ fun createTableGenericFromMembers(ty: ITy, context: SearchContext): ITyGeneric {
             if (exprList.size == 2) {
                 keyType = context.withIndex(0) {
                     exprList[0].guessType(context)?.let {
-                        TyUnion.union(keyType, it, context)
+                        TyUnion.union(context, keyType, it)
                     } ?: Primitives.UNKNOWN
                 }
                 elementType = context.withIndex(0) {
                     exprList[1].guessType(context)?.let {
-                        TyUnion.union(elementType, it, context)
+                        TyUnion.union(context, elementType, it)
                     } ?: Primitives.UNKNOWN
                 }
             } else if (exprList.size == 1) {
                 if (name != null) {
-                    keyType = TyUnion.union(keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name), context)
+                    keyType = TyUnion.union(context, keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name))
                 } else {
-                    keyType = TyUnion.union(keyType, Primitives.NUMBER, context)
+                    keyType = TyUnion.union(context, keyType, Primitives.NUMBER)
                 }
 
                 elementType = exprList[0].guessType(context)?.let {
-                    TyUnion.union(elementType, it, context)
+                    TyUnion.union(context, elementType, it)
                 } ?: Primitives.UNKNOWN
             }
         } else if (classMember is LuaIndexExpr) {
             val idExpr = classMember.idExpr
 
             if (name != null) {
-                keyType = TyUnion.union(keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name), context)
-                elementType = prefixTy.guessMemberType(name, context)?.let {
-                    TyUnion.union(elementType, it, context)
+                keyType = TyUnion.union(context, keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name))
+                elementType = prefixTy.guessMemberType(context, name)?.let {
+                    TyUnion.union(context, elementType, it)
                 } ?: Primitives.UNKNOWN
             } else if (idExpr != null) {
                 val indexTy = idExpr.guessType(context) ?: Primitives.UNKNOWN
-                keyType = TyUnion.union(keyType, indexTy, context)
-                elementType = prefixTy.guessIndexerType(indexTy, context)?.let {
-                    TyUnion.union(elementType, it, context)
+                keyType = TyUnion.union(context, keyType, indexTy)
+                elementType = prefixTy.guessIndexerType(context, indexTy)?.let {
+                    TyUnion.union(context, elementType, it)
                 } ?: Primitives.UNKNOWN
             } else {
                 keyType = Primitives.UNKNOWN
                 elementType = Primitives.UNKNOWN
             }
         } else if (name != null) {
-            keyType = TyUnion.union(keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name), context)
+            keyType = TyUnion.union(context, keyType, TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, name))
             elementType = classMember.guessType(context)?.let {
-                TyUnion.union(elementType, it, context)
+                TyUnion.union(context, elementType, it)
             } ?: Primitives.UNKNOWN
         } else if (indexType != null) {
-            keyType = TyUnion.union(keyType, indexType.getType(), context)
+            keyType = TyUnion.union(context, keyType, indexType.getType())
             elementType = classMember.guessType(context)?.let {
-                TyUnion.union(elementType, it, context)
+                TyUnion.union(context, elementType, it)
             } ?: Primitives.UNKNOWN
         } else {
             keyType = Primitives.UNKNOWN
@@ -641,30 +643,13 @@ fun getDocTableTypeName(table: LuaDocTableDef): String {
     return "10|$id|${table.node.startOffset}"
 }
 
-private fun getDocTableImplicitParams(table: LuaDocTableDef): Array<TyGenericParameter>? {
-    val params = mutableListOf<TyGenericParameter>()
-
-    table.tableFieldList.forEach { field ->
-        val value = field.valueType
-
-        if (value is LuaDocGeneralTy) {
-            val name = value.typeRef.name
-            val scopedType = SearchContext.withDumb(value.project, null) {
-                (LuaScopedTypeTree.get(value.containingFile).findName(it, value, name) as? LuaDocGenericDef)?.type
-            }
-
-            if (scopedType != null && !params.contains(scopedType)) {
-                params.add(scopedType)
-            }
-        }
-    }
-
-    return if (params.isNotEmpty()) {
-        params.toTypedArray()
-    } else null
+fun getSubstitutedDocTableTypeName(table: LuaDocTableDef): String {
+    // TODO: This is very bad... and useless.
+    return "${getDocTableTypeName(table)}${Math.random()}"
 }
 
-class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table), getDocTableImplicitParams(table)) {
+
+open class TyDocTable(val table: LuaDocTableDef, name: String = getDocTableTypeName(table)) : TyClass(name) {
     init {
         this.flags = TyFlags.SHAPE
     }
@@ -709,9 +694,9 @@ class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table)
                 TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, it)
             }
 
-            if ((!exact && candidateIndexerTy?.contravariantOf(indexTy, context, TyVarianceFlags.STRICT_UNKNOWN) == true)
+            if ((!exact && candidateIndexerTy?.contravariantOf(context, indexTy, TyVarianceFlags.STRICT_UNKNOWN) == true)
                 || candidateIndexerTy == indexTy) {
-                if (narrowestIndexTy?.contravariantOf(candidateIndexerTy, context, TyVarianceFlags.STRICT_UNKNOWN) != false) {
+                if (narrowestIndexTy?.contravariantOf(context, candidateIndexerTy, TyVarianceFlags.STRICT_UNKNOWN) != false) {
                     narrowestTypeMember = field
                     narrowestIndexTy = candidateIndexerTy
                 }
@@ -721,10 +706,24 @@ class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table)
         return narrowestTypeMember?.let { process(this, it) } ?: true
     }
 
-    // TODO: TyDocTable should implement this. However, there's no sensible way
-    //       to do so at present because LuaClassMember inherits from PsiElement.
-    /*override fun substitute(substitutor: ITySubstitutor): ITy {
-    }*/
+    override fun substitute(context: SearchContext, substitutor: ITySubstitutor): ITy {
+        return TySubstitutedDocTable(this, substitutor)
+    }
+}
+
+class TySubstitutedDocTable(docTable: TyDocTable, val substitutor: ITySubstitutor): TyDocTable(docTable.table, getSubstitutedDocTableTypeName(docTable.table)) {
+    init {
+        // TODO: This is a hack. This just convinces the LuaClassMemberIndex to look for members using the parent doc
+        //       table's name. Instead we should implement processMember/Indexer and call LuaClassMemberIndex with the
+        //       parent doc table's name. However, "sub-classes" of substituted doc tables would call into
+        //       LuaClassMemberIndex, and it presently doesn't call back out to processMember/Indexer on parent types.
+        //       See notes on LuaClassMemberIndex.
+        superClass = docTable
+    }
+
+    override fun getMemberSubstitutor(context: SearchContext): ITySubstitutor? {
+        return TyChainSubstitutor.chain(super.getMemberSubstitutor(context), substitutor)
+    }
 }
 
 class TySerializedDocTable(name: String) : TySerializedClass(name) {

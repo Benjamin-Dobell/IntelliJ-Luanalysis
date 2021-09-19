@@ -53,8 +53,8 @@ public class LuaClosureExprImpl extends LuaExprMixin<LuaClosureExprStub> impleme
 
   @Override
   @Nullable
-  public ITy guessReturnType(@NotNull SearchContext searchContext) {
-    return LuaPsiImplUtilKt.guessReturnType(this, searchContext);
+  public ITy guessReturnType(@NotNull SearchContext context) {
+    return LuaPsiImplUtilKt.guessReturnType(this, context);
   }
 
   @Override

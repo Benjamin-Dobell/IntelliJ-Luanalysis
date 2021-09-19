@@ -31,77 +31,7 @@ import java.util.*
 
  * Created by tangzx on 2017/1/14.
  */
-abstract class SearchContext internal constructor() {
-    companion object {
-        private val threadLocal = object : ThreadLocal<Stack<SearchContext>>() {
-            override fun initialValue(): Stack<SearchContext> {
-                return Stack()
-            }
-        }
-
-        fun get(project: Project): SearchContext {
-            val stack = threadLocal.get()
-            return if (stack.isEmpty()) {
-                ProjectSearchContext(project)
-            } else {
-                stack.peek()
-            }
-        }
-
-        fun infer(psi: LuaPsiTypeGuessable): ITy? {
-            return with(psi.project) { it.inferAndCache(psi) }
-        }
-
-        fun infer(psi: LuaPsiTypeGuessable, context: SearchContext): ITy? {
-            return with(context, null) {
-                it.inferAndCache(psi)?.let { ty ->
-                    ScopedTypeSubstitutor.substitute(context, ty)
-                }
-            }
-        }
-
-        private fun <T> with(ctx: SearchContext, defaultValue: T, action: (ctx: SearchContext) -> T): T {
-            return if (ctx.myInStack) {
-                val result = action(ctx)
-                result
-            } else {
-                val stack = threadLocal.get()
-                val size = stack.size
-                stack.push(ctx)
-                ctx.myInStack = true
-                val result = try {
-                    action(ctx)
-                } catch (e: Exception) {
-                    defaultValue
-                }
-                ctx.myInStack = false
-                stack.pop()
-                assert(size == stack.size)
-                result
-            }
-        }
-
-        private fun <T> with(project: Project, action: (ctx: SearchContext) -> T): T {
-            val ctx = get(project)
-            return with(ctx, action)
-        }
-
-        fun <T> withDumb(project: Project, defaultValue: T, action: (ctx: SearchContext) -> T): T {
-            val context = ProjectSearchContext(project)
-            return withDumb(context, defaultValue, action)
-        }
-
-        fun <T> withDumb(ctx: SearchContext, defaultValue: T, action: (ctx: SearchContext) -> T): T {
-            return with(ctx, defaultValue) {
-                val dumb = it.myDumb
-                it.myDumb = true
-                val ret = action(it)
-                it.myDumb = dumb
-                ret
-            }
-        }
-    }
-
+abstract class SearchContext {
     abstract val project: Project
     abstract val element: PsiElement?
 
@@ -112,8 +42,9 @@ abstract class SearchContext internal constructor() {
     private var myIndex = 0
     private var myMultipleResults = false
     private var myInStack = false
-    private val myInferCache = mutableMapOf<LuaPsiTypeGuessable, ITy>()
     private var myScope: GlobalSearchScope? = null
+
+    private val myInferCache = mutableMapOf<LuaPsiTypeGuessable, ITy>()
 
     fun <T> withIndex(index: Int, supportMultipleResults: Boolean = false, action: () -> T): T {
         val savedIndex = this.index
@@ -167,7 +98,7 @@ abstract class SearchContext internal constructor() {
 
     private fun inferAndCache(psi: LuaPsiTypeGuessable): ITy? {
         return if (index == -1) {
-            val result = myInferCache.getOrDefault(psi, null) ?: ILuaTypeInfer.infer(psi, this)
+            val result = myInferCache.getOrDefault(psi, null) ?: ILuaTypeInfer.infer(this, psi)
 
             if (result != null) {
                 myInferCache[psi] = result
@@ -175,7 +106,77 @@ abstract class SearchContext internal constructor() {
 
             result
         } else {
-            ILuaTypeInfer.infer(psi, this)
+            ILuaTypeInfer.infer(this, psi)
+        }
+    }
+
+    companion object {
+        private val threadLocal = object : ThreadLocal<Stack<SearchContext>>() {
+            override fun initialValue(): Stack<SearchContext> {
+                return Stack()
+            }
+        }
+
+        fun get(project: Project): SearchContext {
+            val stack = threadLocal.get()
+            return if (stack.isEmpty()) {
+                ProjectSearchContext(project)
+            } else {
+                stack.peek()
+            }
+        }
+
+        fun infer(psi: LuaPsiTypeGuessable): ITy? {
+            return with(psi.project) { it.inferAndCache(psi) }
+        }
+
+        fun infer(context: SearchContext, psi: LuaPsiTypeGuessable): ITy? {
+            return with(context, null) {
+                it.inferAndCache(psi)?.let { ty ->
+                    ScopedTypeSubstitutor.substitute(context, ty)
+                }
+            }
+        }
+
+        private fun <T> with(ctx: SearchContext, defaultValue: T, action: (ctx: SearchContext) -> T): T {
+            return if (ctx.myInStack) {
+                val result = action(ctx)
+                result
+            } else {
+                val stack = threadLocal.get()
+                val size = stack.size
+                stack.push(ctx)
+                ctx.myInStack = true
+                val result = try {
+                    action(ctx)
+                } catch (e: Exception) {
+                    defaultValue
+                }
+                ctx.myInStack = false
+                stack.pop()
+                assert(size == stack.size)
+                result
+            }
+        }
+
+        private fun <T> with(project: Project, action: (ctx: SearchContext) -> T): T {
+            val ctx = get(project)
+            return with(ctx, action)
+        }
+
+        fun <T> withDumb(project: Project, defaultValue: T, action: (ctx: SearchContext) -> T): T {
+            val context = ProjectSearchContext(project)
+            return withDumb(context, defaultValue, action)
+        }
+
+        fun <T> withDumb(ctx: SearchContext, defaultValue: T, action: (ctx: SearchContext) -> T): T {
+            return with(ctx, defaultValue) {
+                val dumb = it.myDumb
+                it.myDumb = true
+                val ret = action(it)
+                it.myDumb = dumb
+                ret
+            }
         }
     }
 }

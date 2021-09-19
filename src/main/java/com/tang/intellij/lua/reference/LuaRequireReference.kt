@@ -76,7 +76,7 @@ class LuaRequireReference internal constructor(callExpr: LuaCallExpr) : PsiRefer
                 val resolvedNameExpr = returnStatement.exprList!!.expressionList.first() as? LuaNameExpr
 
                 return if (resolvedNameExpr != null) {
-                    resolveInFile(resolvedNameExpr.name, resolvedNameExpr, SearchContext.get(myElement.project))
+                    resolveInFile(SearchContext.get(myElement.project), resolvedNameExpr.name, resolvedNameExpr)
                 } else returnStatement
             }
 

@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.StubBasedPsiElement;
 import com.tang.intellij.lua.stubs.LuaPlaceholderStub;
 
-public interface LuaLocalDefStat extends LuaDeclaration, LuaDeclarationScope, LuaTypeScope, LuaStatement, StubBasedPsiElement<LuaPlaceholderStub> {
+public interface LuaLocalDefStat extends LuaDeclaration, LuaDeclarationScope, LuaStatement, StubBasedPsiElement<LuaPlaceholderStub> {
 
   @Nullable
   LuaExprList getExprList();

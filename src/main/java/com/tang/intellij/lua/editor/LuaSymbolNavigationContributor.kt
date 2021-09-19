@@ -37,7 +37,7 @@ class LuaSymbolNavigationContributor : ChooseByNameContributor {
     }
 
     override fun getItemsByName(s: String, s1: String, project: Project, b: Boolean): Array<NavigationItem> {
-        val elements = LuaShortNameIndex.find(s, SearchContext.get(project))
+        val elements = LuaShortNameIndex.find(SearchContext.get(project), s)
         return elements.toTypedArray()
     }
 }

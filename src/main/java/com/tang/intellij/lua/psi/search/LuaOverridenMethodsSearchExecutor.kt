@@ -35,7 +35,7 @@ class LuaOverridenMethodsSearchExecutor : QueryExecutor<LuaTypeMethod<*>, LuaOve
         val type = method.guessParentClass(context)
         val methodName = method.name
         if (type != null && methodName != null) {
-            Ty.processSuperClasses(type, context) { superType->
+            Ty.processSuperClasses(context, type) { superType->
                 ProgressManager.checkCanceled()
                 val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass
                 if (superClass != null) {

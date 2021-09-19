@@ -36,23 +36,23 @@ class LuaParamInfo(val name: String, val ty: ITy?) {
         return other is LuaParamInfo && other.ty == ty
     }
 
-    fun equals(other: LuaParamInfo, context: SearchContext): Boolean {
+    fun equals(context: SearchContext, other: LuaParamInfo): Boolean {
         if (ty == null) {
             return other.ty == null
         } else if (other.ty == null) {
             return false
         }
 
-        return ty.equals(other.ty, context)
+        return ty.equals(context, other.ty)
     }
 
     override fun hashCode(): Int {
         return ty.hashCode()
     }
 
-    fun substitute(substitutor: ITySubstitutor): LuaParamInfo {
+    fun substitute(context: SearchContext, substitutor: ITySubstitutor): LuaParamInfo {
         val ty = this.ty ?: Primitives.UNKNOWN
-        val substitutedTy = TyMultipleResults.getResult(substitutor.searchContext, ty.substitute(substitutor))
+        val substitutedTy = TyMultipleResults.getResult(context, ty.substitute(context, substitutor))
 
         if (substitutedTy === ty) {
             return this

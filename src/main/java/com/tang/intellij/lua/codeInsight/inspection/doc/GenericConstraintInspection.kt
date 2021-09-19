@@ -37,7 +37,7 @@ class GenericConstraintInspection : LocalInspectionTool() {
         return object : LuaDocVisitor() {
             private fun validateGenericArguments(typeElement: LuaDocPsiElement, typeRef: LuaDocTypeRef, args: List<LuaDocTy>) {
                 val context = PsiSearchContext(typeRef)
-                val params = LuaPsiTreeUtil.findType(typeRef.text, context)?.type?.getParams(context)
+                val params = LuaPsiTreeUtil.findType(context, typeRef.text)?.type?.getParams(context)
 
                 if (params != null && params.size > 0) {
                     val genericAnalyzer = GenericAnalyzer(params, context)
@@ -48,7 +48,7 @@ class GenericConstraintInspection : LocalInspectionTool() {
 
                     params.forEachIndexed { index, param ->
                         if (index < args.size) {
-                            genericAnalyzer.analyze(args[index].getType(), param, context)
+                            genericAnalyzer.analyze(context, args[index].getType(), param)
                         }
                     }
 
@@ -60,7 +60,7 @@ class GenericConstraintInspection : LocalInspectionTool() {
 
                             if (analyzedParamType != null) {
                                 val varianceFlags = TyVarianceFlags.STRICT_UNKNOWN or TyVarianceFlags.ABSTRACT_PARAMS
-                                ProblemUtil.contravariantOf(analyzedParamType, arg, context, varianceFlags, null, argElement) { problem ->
+                                ProblemUtil.contravariantOf(context, analyzedParamType, arg, varianceFlags, null, argElement) { problem ->
                                     holder.registerProblem(problem.sourceElement, problem.message, ProblemHighlightType.ERROR)
                                 }
                             }

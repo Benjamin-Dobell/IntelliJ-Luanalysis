@@ -36,12 +36,12 @@ class TyPrimitive(override val primitiveKind: TyPrimitiveKind,
         return other is ITyPrimitive && other.primitiveKind == primitiveKind
     }
 
-    override fun equals(other: ITy, context: SearchContext): Boolean {
+    override fun equals(context: SearchContext, other: ITy): Boolean {
         if (this === other) {
             return true
         }
 
-        val resolvedOther = Ty.resolve(other, context)
+        val resolvedOther = Ty.resolve(context, other)
         return resolvedOther is ITyPrimitive && resolvedOther.primitiveKind == primitiveKind
     }
 
@@ -49,8 +49,8 @@ class TyPrimitive(override val primitiveKind: TyPrimitiveKind,
         return primitiveKind.hashCode()
     }
 
-    override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
-        if (super.contravariantOf(other, context, flags)
+    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
+        if (super.contravariantOf(context, other, flags)
                 || (other is ITyPrimitive && other.primitiveKind == primitiveKind)) {
             return true
         }
@@ -71,16 +71,16 @@ class TyPrimitive(override val primitiveKind: TyPrimitiveKind,
         return false
     }
 
-    override fun guessMemberType(name: String, searchContext: SearchContext): ITy? {
+    override fun guessMemberType(context: SearchContext, name: String): ITy? {
         return if (primitiveKind == TyPrimitiveKind.Table) {
             Primitives.UNKNOWN
-        } else super<Ty>.guessMemberType(name, searchContext)
+        } else super<Ty>.guessMemberType(context, name)
     }
 
-    override fun guessIndexerType(indexTy: ITy, searchContext: SearchContext, exact: Boolean): ITy? {
+    override fun guessIndexerType(context: SearchContext, indexTy: ITy, exact: Boolean): ITy? {
         return if (primitiveKind == TyPrimitiveKind.Table) {
             Primitives.UNKNOWN
-        } else super<Ty>.guessIndexerType(indexTy, searchContext, exact)
+        } else super<Ty>.guessIndexerType(context, indexTy, exact)
     }
 }
 
@@ -90,7 +90,7 @@ open class TyPrimitiveClass(override val primitiveKind: TyPrimitiveKind,
 
     override val kind = TyKind.Primitive
 
-    override fun getSuperClass(context: SearchContext): ITy? = null
+    override fun getSuperType(context: SearchContext): ITy? = null
 
     override fun doLazyInit(searchContext: SearchContext) { }
 
@@ -102,12 +102,12 @@ open class TyPrimitiveClass(override val primitiveKind: TyPrimitiveKind,
         return other is ITyPrimitive && other.primitiveKind == primitiveKind
     }
 
-    override fun equals(other: ITy, context: SearchContext): Boolean {
+    override fun equals(context: SearchContext, other: ITy): Boolean {
         if (this === other) {
             return true
         }
 
-        val resolvedOther = Ty.resolve(other, context)
+        val resolvedOther = Ty.resolve(context, other)
         return resolvedOther is ITyPrimitive && resolvedOther.primitiveKind == primitiveKind
     }
 
@@ -115,9 +115,9 @@ open class TyPrimitiveClass(override val primitiveKind: TyPrimitiveKind,
         return primitiveKind.hashCode()
     }
 
-    override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
+    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
         return (other is ITyPrimitive && other.primitiveKind == primitiveKind) ||
-                super.contravariantOf(other, context, flags)
+                super.contravariantOf(context, other, flags)
     }
 
     override fun willResolve(context: SearchContext): Boolean {
@@ -159,8 +159,8 @@ class TyDocPrimitiveTable(val luaDocPrimitiveTableTy: LuaDocPrimitiveTableTy) : 
         return process(this, luaDocPrimitiveTableTy)
     }
 
-    override fun contravariantOf(other: ITy, context: SearchContext, flags: Int): Boolean {
-        if (super.contravariantOf(other, context, flags)) {
+    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
+        if (super.contravariantOf(context, other, flags)) {
             return true
         }
 

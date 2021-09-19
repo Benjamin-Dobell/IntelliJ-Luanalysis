@@ -22,9 +22,9 @@ import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.search.withRecursionGuard
 
 class LuaTypeInfer : ILuaTypeInfer {
-    override fun inferType(target: LuaPsiTypeGuessable, context: SearchContext): ITy? {
+    override fun inferType(context: SearchContext, target: LuaPsiTypeGuessable): ITy? {
         return withRecursionGuard("inferType", target.psi) {
-            inferInner(target, context)
+            inferInner(context, target)
         }
     }
 }

@@ -72,7 +72,7 @@ class LuaFieldLookupElement(val fieldName: String, val field: LuaTypeField, val 
             return field
         else {
             val clazz = TyUnion.getPerfectClass(type)
-            return clazz?.findMember(fieldName, context)?.psi
+            return clazz?.findMember(context, fieldName)?.psi
         }
     }
 

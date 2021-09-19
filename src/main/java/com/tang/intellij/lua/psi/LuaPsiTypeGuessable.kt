@@ -25,6 +25,6 @@ interface LuaPsiTypeGuessable : LuaPsiElement, TypeGuessable {
         get() = this
 
     override fun guessType(context: SearchContext): ITy? {
-        return SearchContext.infer(this, context)
+        return SearchContext.infer(context, this)
     }
 }

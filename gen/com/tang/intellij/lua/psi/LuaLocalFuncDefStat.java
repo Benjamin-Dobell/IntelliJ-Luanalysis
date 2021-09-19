@@ -37,7 +37,7 @@ public interface LuaLocalFuncDefStat extends LuaFuncBodyOwner<LuaLocalFuncDefStu
   SearchScope getUseScope();
 
   @Nullable
-  ITy guessReturnType(@NotNull SearchContext searchContext);
+  ITy guessReturnType(@NotNull SearchContext context);
 
   @NotNull
   ITy guessParentType(@NotNull SearchContext context);

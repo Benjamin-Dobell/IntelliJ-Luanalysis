@@ -67,7 +67,7 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
     }
 
     override fun getDocumentationElementForLink(psiManager: PsiManager, link: String, context: PsiElement?): PsiElement? {
-        return LuaClassIndex.find(link, SearchContext.get(psiManager.project))
+        return LuaClassIndex.find(SearchContext.get(psiManager.project), link)
     }
 
     override fun generateDoc(element: PsiElement, originalElement: PsiElement?): String? {
@@ -102,12 +102,12 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
         return super<AbstractDocumentationProvider>.generateDoc(element, originalElement)
     }
 
-    private fun renderClassMember(sb: StringBuilder, parentTy: ITy?, classMember: LuaPsiTypeMember, context: SearchContext): Boolean {
+    private fun renderClassMember(context: SearchContext, sb: StringBuilder, parentTy: ITy?, classMember: LuaPsiTypeMember): Boolean {
         val effectiveMember = if (parentTy != null) {
             classMember.name?.let {
-                parentTy.findEffectiveMember(it, context)
+                parentTy.findEffectiveMember(context, it)
             } ?: classMember.guessIndexType(context)?.let {
-                parentTy.findEffectiveIndexer(it, context)
+                parentTy.findEffectiveIndexer(context, it)
             }
         } else {
             classMember
@@ -220,13 +220,13 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
         var memberRendered = false
 
         if (parentType != null) {
-            Ty.eachResolved(parentType, context) {
-                memberRendered = renderClassMember(sb, it, classMember, context) || memberRendered
+            Ty.eachResolved(context, parentType) {
+                memberRendered = renderClassMember(context, sb, it, classMember) || memberRendered
             }
         }
 
         if (!memberRendered) {
-            renderClassMember(sb, null, classMember, context)
+            renderClassMember(context, sb, null, classMember)
         }
     }
 
@@ -237,7 +237,7 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
         if (docParamDef != null) {
             renderDocParam(sb, docParamDef, tyRenderer, true)
         } else {
-            val ty = infer(paramDef, SearchContext.get(paramDef.project)) ?: Primitives.UNKNOWN
+            val ty = infer(SearchContext.get(paramDef.project), paramDef) ?: Primitives.UNKNOWN
             sb.append("<b>param</b> <code>${paramDef.name}</code> : ")
             renderTy(sb, ty, tyRenderer)
         }
