@@ -688,3 +688,18 @@ local incompatibleConstrainedGenericFn = <error descr="Type mismatch. Required: 
 
 wideGenericFn = <error descr="Type mismatch. Required: 'fun(val: T): void' Found: 'fun(val: (T : number)): void'">constrainedGenericFn</error>
 constrainedGenericFn = wideGenericFn
+
+
+---@type fun<T>(array: T[]): {result: T}}
+local returnsTableWithSubtitutedGenericField
+
+local genericResult123 = returnsTableWithSubtitutedGenericField({1, 2, 3})
+local genericResultABC = returnsTableWithSubtitutedGenericField({'A', 'B', 'C'})
+
+anyNumber = genericResult123.result
+genericResult123.result = <error descr="Type mismatch. Required: '1 | 2 | 3' Found: 'number'">anyNumber</error>
+
+anyString = genericResultABC.result
+genericResultABC.result = <error descr="Type mismatch. Required: '\"A\" | \"B\" | \"C\"' Found: 'string'">anyString</error>
+
+genericResult123 = <error descr="Type mismatch. Required: '{ result: T }' Found: '{ result: T }'">genericResultABC</error>
