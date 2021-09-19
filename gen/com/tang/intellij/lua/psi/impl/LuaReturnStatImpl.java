@@ -17,8 +17,8 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaReturnStatImpl extends StubBasedPsiElementBase<LuaReturnStatStub> implements LuaReturnStat {
 
-  public LuaReturnStatImpl(@NotNull LuaReturnStatStub stub, @NotNull IStubElementType type) {
-    super(stub, type);
+  public LuaReturnStatImpl(@NotNull LuaReturnStatStub stub, @NotNull IStubElementType<?, ?> nodeType) {
+    super(stub, nodeType);
   }
 
   public LuaReturnStatImpl(@NotNull ASTNode node) {

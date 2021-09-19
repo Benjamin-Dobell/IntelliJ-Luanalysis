@@ -190,7 +190,7 @@ class ReturnTypeInspection : StrictInspection() {
                 if (comment != null) {
                     if (comment.isOverride()) {
                         // Find super type
-                        val cls = function.guessClassType(context)
+                        val cls = function.guessParentClass(context)
                         val superMember = cls?.getSuperClass(context)?.findEffectiveMember(function.name ?: "", context)
                         if (superMember is LuaClassMethodDefStat) {
                             return superMember.guessReturnType(context)

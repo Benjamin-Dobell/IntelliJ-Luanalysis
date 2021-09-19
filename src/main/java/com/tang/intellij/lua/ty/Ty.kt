@@ -79,6 +79,8 @@ class TyVarianceFlags {
 
 data class SignatureMatchResult(val signature: IFunSignature?, val substitutedSignature: IFunSignature?, val returnTy: ITy)
 
+typealias ProcessTypeMember = (ownerTy: ITy, member: TypeMember) -> Boolean
+
 interface ITy : Comparable<ITy> {
     val kind: TyKind
 
@@ -112,8 +114,8 @@ interface ITy : Comparable<ITy> {
 
     fun acceptChildren(visitor: ITyVisitor)
 
-    fun findMember(name: String, context: SearchContext): LuaClassMember? {
-        var foundMember: LuaClassMember? = null
+    fun findMember(name: String, context: SearchContext): TypeMember? {
+        var foundMember: TypeMember? = null
 
         processMember(context, name) { _, member ->
             foundMember = member
@@ -123,8 +125,8 @@ interface ITy : Comparable<ITy> {
         return foundMember
     }
 
-    fun findIndexer(indexTy: ITy, context: SearchContext, exact: Boolean = false): LuaClassMember?{
-        var foundMember: LuaClassMember? = null
+    fun findIndexer(indexTy: ITy, context: SearchContext, exact: Boolean = false): TypeMember?{
+        var foundMember: TypeMember? = null
 
         processIndexer(context, indexTy, exact) { _, member ->
             foundMember = member
@@ -134,8 +136,8 @@ interface ITy : Comparable<ITy> {
         return foundMember
     }
 
-    fun findEffectiveMember(name: String, context: SearchContext): LuaClassMember? {
-        var foundMember: LuaClassMember? = null
+    fun findEffectiveMember(name: String, context: SearchContext): TypeMember? {
+        var foundMember: TypeMember? = null
 
         processMember(context, name) { _, member ->
             if (member.isExplicitlyTyped) {
@@ -150,8 +152,8 @@ interface ITy : Comparable<ITy> {
         return foundMember
     }
 
-    fun findEffectiveIndexer(indexTy: ITy, context: SearchContext, exact: Boolean = false): LuaClassMember? {
-        var foundMember: LuaClassMember? = null
+    fun findEffectiveIndexer(indexTy: ITy, context: SearchContext, exact: Boolean = false): TypeMember? {
+        var foundMember: TypeMember? = null
 
         processIndexer(context, indexTy, exact) { _, member ->
             if (member.isExplicitlyTyped) {
@@ -226,11 +228,11 @@ interface ITy : Comparable<ITy> {
         }
     }
 
-    fun processMember(context: SearchContext, name: String, deep: Boolean = true, process: (ITy, LuaClassMember) -> Boolean): Boolean
+    fun processMember(context: SearchContext, name: String, deep: Boolean = true, process: ProcessTypeMember): Boolean
 
-    fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean = false, deep: Boolean = true, process: (ITy, LuaClassMember) -> Boolean): Boolean
+    fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean = false, deep: Boolean = true, process: ProcessTypeMember): Boolean
 
-    fun processMembers(context: SearchContext, deep: Boolean = true, process: (ITy, LuaClassMember) -> Boolean): Boolean
+    fun processMembers(context: SearchContext, deep: Boolean = true, process: ProcessTypeMember): Boolean
 
     fun processSignatures(context: SearchContext, processor: Processor<IFunSignature>): Boolean
 }
@@ -618,15 +620,15 @@ abstract class Ty(override val kind: TyKind) : ITy {
         }
     }
 
-    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: ProcessTypeMember): Boolean {
         return true
     }
 
-    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: ProcessTypeMember): Boolean {
         return true
     }
 
-    override fun processMembers(context: SearchContext, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processMembers(context: SearchContext, deep: Boolean, process: ProcessTypeMember): Boolean {
         return true
     }
 

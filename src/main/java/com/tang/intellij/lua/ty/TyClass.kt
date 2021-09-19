@@ -239,14 +239,14 @@ abstract class TyClass(override val className: String,
         return true
     }
 
-    override fun processMembers(context: SearchContext, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processMembers(context: SearchContext, deep: Boolean, process: ProcessTypeMember): Boolean {
         lazyInit(context)
 
         val clazzName = className
         val project = context.project
 
         val manager = LuaShortNamesManager.getInstance(project)
-        val members = mutableListOf<LuaClassMember>()
+        val members = mutableListOf<LuaPsiTypeMember>()
         members.addAll(manager.getClassMembers(context, clazzName))
 
         processAlias { alias ->
@@ -319,11 +319,11 @@ abstract class TyClass(override val className: String,
         return true
     }
 
-    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: ProcessTypeMember): Boolean {
         return LuaShortNamesManager.getInstance(context.project).processMember(context, this, name, true, deep, process)
     }
 
-    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: ProcessTypeMember): Boolean {
         return LuaShortNamesManager.getInstance(context.project).processIndexer(context, this, indexTy, exact, true, deep, process)
     }
 
@@ -675,7 +675,7 @@ class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table)
 
     override fun doLazyInit(searchContext: SearchContext) = Unit
 
-    override fun processMembers(context: SearchContext, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processMembers(context: SearchContext, deep: Boolean, process: ProcessTypeMember): Boolean {
         table.tableFieldList.forEach {
             if (!process(this, it)) {
                 return false
@@ -684,7 +684,7 @@ class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table)
         return true
     }
 
-    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: ProcessTypeMember): Boolean {
         return table.tableFieldList.firstOrNull {
             val fieldName = it.name
             if (fieldName != null) {
@@ -700,8 +700,8 @@ class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table)
         } ?: true
     }
 
-    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
-        var narrowestClassMember: LuaClassMember? = null
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: ProcessTypeMember): Boolean {
+        var narrowestTypeMember: TypeMember? = null
         var narrowestIndexTy: ITy? = null
 
         table.tableFieldList.forEach { field ->
@@ -712,13 +712,13 @@ class TyDocTable(val table: LuaDocTableDef) : TyClass(getDocTableTypeName(table)
             if ((!exact && candidateIndexerTy?.contravariantOf(indexTy, context, TyVarianceFlags.STRICT_UNKNOWN) == true)
                 || candidateIndexerTy == indexTy) {
                 if (narrowestIndexTy?.contravariantOf(candidateIndexerTy, context, TyVarianceFlags.STRICT_UNKNOWN) != false) {
-                    narrowestClassMember = field
+                    narrowestTypeMember = field
                     narrowestIndexTy = candidateIndexerTy
                 }
             }
         }
 
-        return narrowestClassMember?.let { process(this, it) } ?: true
+        return narrowestTypeMember?.let { process(this, it) } ?: true
     }
 
     // TODO: TyDocTable should implement this. However, there's no sensible way

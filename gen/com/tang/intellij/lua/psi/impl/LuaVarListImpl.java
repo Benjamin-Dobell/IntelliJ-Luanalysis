@@ -15,8 +15,8 @@ import com.tang.intellij.lua.stubs.LuaPlaceholderStub;
 
 public class LuaVarListImpl extends LuaExprListImpl implements LuaVarList {
 
-  public LuaVarListImpl(@NotNull LuaPlaceholderStub stub, @NotNull IStubElementType type) {
-    super(stub, type);
+  public LuaVarListImpl(@NotNull LuaPlaceholderStub stub, @NotNull IStubElementType<?, ?> nodeType) {
+    super(stub, nodeType);
   }
 
   public LuaVarListImpl(@NotNull ASTNode node) {

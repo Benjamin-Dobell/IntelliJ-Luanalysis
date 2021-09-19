@@ -24,13 +24,13 @@ import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.search.withRecursionGuard
 
-fun infer(element: LuaTypeGuessable?, context: SearchContext): ITy? {
+fun infer(element: LuaPsiTypeGuessable?, context: SearchContext): ITy? {
     if (element == null)
         return null
     return SearchContext.infer(element, context)
 }
 
-internal fun inferInner(element: LuaTypeGuessable, context: SearchContext): ITy? {
+internal fun inferInner(element: LuaPsiTypeGuessable, context: SearchContext): ITy? {
     return when (element) {
         is LuaFuncBodyOwner<*> -> element.infer(context)
         is LuaExpression<*> -> inferExpr(element, context)
@@ -267,14 +267,14 @@ private fun resolveParamType(paramDef: LuaParamDef, context: SearchContext): ITy
 
     // 如果是个类方法，则有可能在父类里
     if (paramOwner is LuaClassMethodDefStat) {
-        val classType = paramOwner.guessClassType(context)
+        val classType = paramOwner.guessParentClass(context)
         val methodName = paramOwner.name
         var set: ITy? = null
         if (classType != null && methodName != null) {
             Ty.processSuperClasses(classType, context) { superType ->
                 val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass
                 val superMethod = superClass?.findMember(methodName, context)
-                if (superMethod is LuaClassMethod<*>) {
+                if (superMethod is LuaTypeMethod<*>) {
                     val params = superMethod.params//todo : 优化
                     for (param in params) {
                         if (paramName == param.name) {
@@ -319,7 +319,7 @@ private fun resolveParamType(paramDef: LuaParamDef, context: SearchContext): ITy
                 TyMultipleResults.getResult(context, it, 0) as? ITyFunction
             }
         } else {
-            iterator = (exprList?.expressionList?.firstOrNull() as? LuaTypeGuessable)?.guessType(context) as? ITyFunction
+            iterator = (exprList?.expressionList?.firstOrNull() as? LuaPsiTypeGuessable)?.guessType(context) as? ITyFunction
         }
 
         if (iterator != null) {

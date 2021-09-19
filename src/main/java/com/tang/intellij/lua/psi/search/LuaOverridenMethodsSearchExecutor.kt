@@ -19,20 +19,20 @@ package com.tang.intellij.lua.psi.search
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.util.Processor
 import com.intellij.util.QueryExecutor
-import com.tang.intellij.lua.psi.LuaClassMethod
-import com.tang.intellij.lua.psi.guessClassType
+import com.tang.intellij.lua.psi.LuaTypeMethod
+import com.tang.intellij.lua.ty.guessParentClass
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.ty.ITyClass
 import com.tang.intellij.lua.ty.ITyGeneric
 import com.tang.intellij.lua.ty.Ty
 
-class LuaOverridenMethodsSearchExecutor : QueryExecutor<LuaClassMethod<*>, LuaOverridenMethodsSearch.SearchParameters> {
-    override fun execute(searchParameters: LuaOverridenMethodsSearch.SearchParameters, processor: Processor<in LuaClassMethod<*>>): Boolean {
+class LuaOverridenMethodsSearchExecutor : QueryExecutor<LuaTypeMethod<*>, LuaOverridenMethodsSearch.SearchParameters> {
+    override fun execute(searchParameters: LuaOverridenMethodsSearch.SearchParameters, processor: Processor<in LuaTypeMethod<*>>): Boolean {
         val method = searchParameters.method
         val project = method.project
         val context = SearchContext.get(project)
-        val type = method.guessClassType(context)
+        val type = method.guessParentClass(context)
         val methodName = method.name
         if (type != null && methodName != null) {
             Ty.processSuperClasses(type, context) { superType->

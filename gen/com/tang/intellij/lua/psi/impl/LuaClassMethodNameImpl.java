@@ -16,8 +16,8 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaClassMethodNameImpl extends StubBasedPsiElementBase<LuaPlaceholderStub> implements LuaClassMethodName {
 
-  public LuaClassMethodNameImpl(@NotNull LuaPlaceholderStub stub, @NotNull IStubElementType type) {
-    super(stub, type);
+  public LuaClassMethodNameImpl(@NotNull LuaPlaceholderStub stub, @NotNull IStubElementType<?, ?> nodeType) {
+    super(stub, nodeType);
   }
 
   public LuaClassMethodNameImpl(@NotNull ASTNode node) {

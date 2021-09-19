@@ -17,8 +17,8 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaLocalDefImpl extends StubBasedPsiElementBase<LuaLocalDefStub> implements LuaLocalDef {
 
-  public LuaLocalDefImpl(@NotNull LuaLocalDefStub stub, @NotNull IStubElementType type) {
-    super(stub, type);
+  public LuaLocalDefImpl(@NotNull LuaLocalDefStub stub, @NotNull IStubElementType<?, ?> nodeType) {
+    super(stub, nodeType);
   }
 
   public LuaLocalDefImpl(@NotNull ASTNode node) {

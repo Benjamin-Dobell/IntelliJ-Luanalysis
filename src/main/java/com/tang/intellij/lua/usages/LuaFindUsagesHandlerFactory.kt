@@ -27,7 +27,7 @@ import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.usageView.UsageInfo
 import com.intellij.util.MergeQuery
 import com.intellij.util.Processor
-import com.tang.intellij.lua.psi.LuaClassMethod
+import com.tang.intellij.lua.psi.LuaTypeMethod
 import com.tang.intellij.lua.psi.search.LuaOverridenMethodsSearch
 import com.tang.intellij.lua.psi.search.LuaOverridingMethodsSearch
 import com.tang.intellij.lua.reference.LuaOverridingMethodReference
@@ -36,20 +36,20 @@ import com.tang.intellij.lua.ty.ITyClass
 
 class LuaFindUsagesHandlerFactory : FindUsagesHandlerFactory() {
     override fun createFindUsagesHandler(element: PsiElement, forHighlightUsages: Boolean): FindUsagesHandler? {
-        if (element is LuaClassMethod<*>)
+        if (element is LuaTypeMethod<*>)
             return FindMethodUsagesHandler(element)
         return null
     }
 
     override fun canFindUsages(element: PsiElement): Boolean {
-        return element is LuaClassMethod<*>
+        return element is LuaTypeMethod<*>
     }
 }
 
 /**
  * 查找方法的引用-》同时查找重写的子类方法
  */
-class FindMethodUsagesHandler(val classMethod: LuaClassMethod<*>) : FindUsagesHandler(classMethod) {
+class FindMethodUsagesHandler(val classMethod: LuaTypeMethod<*>) : FindUsagesHandler(classMethod) {
     override fun findReferencesToHighlight(target: PsiElement, searchScope: SearchScope): MutableCollection<PsiReference> {
         val collection = super.findReferencesToHighlight(target, searchScope)
         val query = MergeQuery(LuaOverridingMethodsSearch.search(classMethod), LuaOverridenMethodsSearch.search(classMethod))
@@ -71,7 +71,9 @@ class FindMethodUsagesHandler(val classMethod: LuaClassMethod<*>) : FindUsagesHa
         while (methodName != null && parentType != null) {
             val superClass = parentType.getSuperClass(ctx) as? ITyClass
             val superMethod = superClass?.findMember(methodName, ctx)
-            if (superMethod != null) arr.add(superMethod)
+            if (superMethod != null) {
+                arr.add(superMethod.psi)
+            }
             parentType = superClass
         }
         return arr.toTypedArray()

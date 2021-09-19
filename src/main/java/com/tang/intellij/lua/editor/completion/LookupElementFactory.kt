@@ -21,9 +21,9 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.tree.IElementType
 import com.tang.intellij.lua.Constants
-import com.tang.intellij.lua.psi.LuaClassField
-import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.psi.LuaPsiElement
+import com.tang.intellij.lua.psi.LuaTypeField
+import com.tang.intellij.lua.ty.TypeMember
 import com.tang.intellij.lua.refactoring.LuaRefactoringUtil
 import com.tang.intellij.lua.ty.IFunSignature
 import com.tang.intellij.lua.ty.ITy
@@ -53,14 +53,14 @@ class LookupElementFactory {
 
         fun createMethodLookupElement(clazzName: String,
                                       lookupString: String,
-                                      classMember: LuaClassMember,
+                                      classMember: TypeMember,
                                       signature: IFunSignature,
                                       bold: Boolean,
                                       isColonStyle: Boolean,
                                       ty: ITy,
                                       icon: Icon): LuaLookupElement {
             val element = TyFunctionLookupElement(lookupString,
-                    classMember,
+                    classMember.psi,
                     signature,
                     bold,
                     isColonStyle,
@@ -82,7 +82,7 @@ class LookupElementFactory {
 
         fun createFieldLookupElement(clazzName: String,
                                      name: String,
-                                     field: LuaClassField,
+                                     field: LuaTypeField,
                                      type: ITy?,
                                      bold: Boolean): LuaLookupElement {
             val element = LuaFieldLookupElement(name, field, type, bold)

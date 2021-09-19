@@ -12,7 +12,7 @@ import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 import com.tang.intellij.lua.ty.ITyClass;
 
-public interface LuaFuncDefStat extends LuaClassMethod<LuaFuncDefStatStub>, LuaDeclaration, LuaTypeScope, LuaStatement, StubBasedPsiElement<LuaFuncDefStatStub> {
+public interface LuaFuncDefStat extends LuaTypeMethod<LuaFuncDefStatStub>, LuaDeclaration, LuaTypeScope, LuaStatement, StubBasedPsiElement<LuaFuncDefStatStub> {
 
   @Nullable
   LuaFuncBody getFuncBody();

@@ -11,7 +11,7 @@ import com.intellij.navigation.ItemPresentation;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 
-public interface LuaIndexExpr extends LuaClassMember, LuaExpression<LuaIndexExprStub>, PsiNameIdentifierOwner, StubBasedPsiElement<LuaIndexExprStub> {
+public interface LuaIndexExpr extends LuaPsiTypeMember, LuaExpression<LuaIndexExprStub>, PsiNameIdentifierOwner, StubBasedPsiElement<LuaIndexExprStub> {
 
   @Nullable
   LuaCallExpr getCallExpr();

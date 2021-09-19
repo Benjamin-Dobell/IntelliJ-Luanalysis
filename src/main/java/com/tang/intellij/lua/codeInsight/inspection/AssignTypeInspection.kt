@@ -29,7 +29,7 @@ import com.tang.intellij.lua.ty.*
 class AssignTypeInspection : StrictInspection() {
     override fun buildVisitor(myHolder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor =
             object : LuaVisitor() {
-                private fun inspectAssignee(assignee: LuaTypeGuessable, value: ITy, resolvedValue: ITy, varianceFlags: Int, targetElement: PsiElement?, expressionElement: LuaExpression<*>, context: PsiSearchContext, processProblem: ProcessProblem) {
+                private fun inspectAssignee(assignee: LuaPsiTypeGuessable, value: ITy, resolvedValue: ITy, varianceFlags: Int, targetElement: PsiElement?, expressionElement: LuaExpression<*>, context: PsiSearchContext, processProblem: ProcessProblem) {
                     if (assignee is LuaIndexExpr) {
                         // Get owner class
                         val assigneeOwnerType = assignee.guessParentType(context)
@@ -86,7 +86,7 @@ class AssignTypeInspection : StrictInspection() {
                     }
                 }
 
-                fun inspectAssignment(statement: LuaStatement?, assignees: List<LuaTypeGuessable>, expressions: List<LuaExpression<*>>?) {
+                fun inspectAssignment(statement: LuaStatement?, assignees: List<LuaPsiTypeGuessable>, expressions: List<LuaExpression<*>>?) {
                     if (expressions == null || expressions.size == 0) {
                         return
                     }

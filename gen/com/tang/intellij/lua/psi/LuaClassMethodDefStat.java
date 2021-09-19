@@ -10,7 +10,7 @@ import com.intellij.navigation.ItemPresentation;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 
-public interface LuaClassMethodDefStat extends LuaClassMethod<LuaClassMethodDefStatStub>, LuaDeclaration, LuaTypeScope, LuaStatement, StubBasedPsiElement<LuaClassMethodDefStatStub> {
+public interface LuaClassMethodDefStat extends LuaTypeMethod<LuaClassMethodDefStatStub>, LuaDeclaration, LuaTypeScope, LuaStatement, StubBasedPsiElement<LuaClassMethodDefStatStub> {
 
   @NotNull
   LuaClassMethodName getClassMethodName();

@@ -30,7 +30,8 @@ import com.tang.intellij.lua.stubs.LuaIndexExprStub
 
  * Created by TangZX on 2017/4/12.
  */
-abstract class LuaIndexExprMixin : LuaExprMixin<LuaIndexExprStub>, LuaClassField, PsiNamedElement {
+@Suppress("CONFLICTING_INHERITED_JVM_DECLARATIONS") // Refer to TypeMember `val name`
+abstract class LuaIndexExprMixin : LuaExprMixin<LuaIndexExprStub>, LuaTypeField, PsiNamedElement {
 
     internal constructor(stub: LuaIndexExprStub, nodeType: IStubElementType<*, *>) : super(stub, nodeType)
 

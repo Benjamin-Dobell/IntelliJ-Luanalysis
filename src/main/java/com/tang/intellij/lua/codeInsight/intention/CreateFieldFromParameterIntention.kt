@@ -33,6 +33,7 @@ import com.tang.intellij.lua.codeInsight.template.macro.SuggestTypeMacro
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.search.LuaShortNamesManager
 import com.tang.intellij.lua.search.SearchContext
+import com.tang.intellij.lua.ty.guessParentClass
 import org.jetbrains.annotations.Nls
 
 /**
@@ -80,7 +81,7 @@ class CreateFieldFromParameterIntention : BaseIntentionAction() {
                     val createDoc = dialog.isCreateDoc
                     if (createDoc) {
                         val context = SearchContext.get(project)
-                        val classType = methodDef.guessClassType(context)
+                        val classType = methodDef.guessParentClass(context)
                         if (classType != null) {
                             val def = LuaShortNamesManager.getInstance(project).findClass(context, classType.className)
                             if (def != null) {

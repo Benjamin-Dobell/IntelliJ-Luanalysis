@@ -21,7 +21,7 @@ import com.tang.intellij.lua.comment.psi.LuaDocTy;
 import com.tang.intellij.lua.stubs.LuaFuncBodyOwnerStub;
 import org.jetbrains.annotations.Nullable;
 
-public interface LuaClassMethod<Stub extends LuaFuncBodyOwnerStub> extends LuaFuncBodyOwner<Stub>, LuaClassMember, PsiNameIdentifierOwner {
+public interface LuaTypeMethod<Stub extends LuaFuncBodyOwnerStub> extends LuaFuncBodyOwner<Stub>, LuaPsiTypeMember, PsiNameIdentifierOwner {
     @Nullable
     @Override
     default LuaDocTy getIndexType() {

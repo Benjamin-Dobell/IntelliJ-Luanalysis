@@ -25,6 +25,7 @@ import com.intellij.codeInsight.lookup.LookupElementPresentation;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.tang.intellij.lua.lang.LuaIcons;
+import com.tang.intellij.lua.psi.LuaPsiElement;
 import com.tang.intellij.lua.psi.search.LuaShortNamesManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,7 +37,7 @@ import java.util.Collection;
  * LuaLookupElement
  * Created by TangZX on 2016/12/16.
  */
-public class LuaLookupElement extends LookupElement implements Comparable<LookupElement> {
+public abstract class LuaLookupElement extends LookupElement implements Comparable<LookupElement> {
     private boolean itemTextUnderlined;
 
     public static void fillTypes(Project project, Collection<LookupElement> results) {
@@ -175,4 +176,7 @@ public class LuaLookupElement extends LookupElement implements Comparable<Lookup
     public int hashCode() {
         return getItemText().hashCode();
     }
+
+    @Override
+    public abstract @NotNull LuaPsiElement getObject();
 }

@@ -20,7 +20,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.util.Processor
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
@@ -144,15 +143,15 @@ fun resolve(indexExpr: LuaIndexExpr, context: SearchContext): PsiElement? {
         return null
     }
 
-    var member: PsiElement? = null
+    var memberPsi: PsiElement? = null
 
     parentType.eachTopClass { ty ->
         val cls = (if (ty is ITyGeneric) ty.base else ty) as? ITyClass
-        member = cls?.findIndexer(indexTy, context)
-        member == null
+        memberPsi = cls?.findIndexer(indexTy, context)?.psi
+        memberPsi == null
     }
 
-    if (member == null) {
+    if (memberPsi == null) {
         val tree = LuaDeclarationTree.get(indexExpr.containingFile)
         val declaration = tree.find(indexExpr)
         if (declaration != null) {
@@ -160,7 +159,7 @@ fun resolve(indexExpr: LuaIndexExpr, context: SearchContext): PsiElement? {
         }
     }
 
-    return member
+    return memberPsi
 }
 
 fun resolve(indexExpr: LuaIndexExpr, memberName: String, context: SearchContext): PsiElement? {
@@ -169,7 +168,7 @@ fun resolve(indexExpr: LuaIndexExpr, memberName: String, context: SearchContext)
 
     type.eachTopClass { ty ->
         val cls = (if (ty is ITyGeneric) ty.base else ty) as? ITyClass
-        ret = cls?.findMember(memberName, context)
+        ret = cls?.findMember(memberName, context)?.psi
         ret == null
     }
 

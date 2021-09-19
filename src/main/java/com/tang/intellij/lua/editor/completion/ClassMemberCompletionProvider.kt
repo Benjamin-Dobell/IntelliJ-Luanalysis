@@ -38,8 +38,8 @@ enum class MemberCompletionMode {
  */
 open class ClassMemberCompletionProvider : LuaCompletionProvider() {
     protected abstract class HandlerProcessor {
-        open fun processLookupString(lookupString: String, member: LuaClassMember, memberTy: ITy?): String = lookupString
-        abstract fun process(element: LuaLookupElement, member: LuaClassMember, memberTy: ITy?): LookupElement
+        open fun processLookupString(lookupString: String, member: TypeMember, memberTy: ITy?): String = lookupString
+        abstract fun process(element: LuaLookupElement, member: TypeMember, memberTy: ITy?): LookupElement
     }
 
     override fun addCompletions(session: CompletionSession) {
@@ -69,13 +69,13 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
                 LuaDeclarationTree.get(indexExpr.containingFile).walkUpLocal(indexExpr) { d ->
                     val it = d.firstDeclaration.psi
                     val txt = it.name
-                    if (it is LuaTypeGuessable && txt != null && prefixName != txt && matcher.prefixMatches(txt)) {
+                    if (it is LuaPsiTypeGuessable && txt != null && prefixName != txt && matcher.prefixMatches(txt)) {
                         val type = it.guessType(context)
                         if (type != null) {
                             val prefixMatcher = completionResultSet.prefixMatcher
                             val resultSet = completionResultSet.withPrefixMatcher("$prefixName*$postfixName")
                             complete(context, isColon, contextTy, type, resultSet, prefixMatcher, object : HandlerProcessor() {
-                                override fun process(element: LuaLookupElement, member: LuaClassMember, memberTy: ITy?): LookupElement {
+                                override fun process(element: LuaLookupElement, member: TypeMember, memberTy: ITy?): LookupElement {
                                     element.itemText = txt + colon + element.itemText
                                     element.lookupString = txt + colon + element.lookupString
                                     return PrioritizedLookupElement.withPriority(element, -2.0)
@@ -196,7 +196,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
 
     protected fun addMember(context: SearchContext,
                             completionResultSet: CompletionResultSet,
-                            member: LuaClassMember,
+                            member: TypeMember,
                             memberSubstitutor: ITySubstitutor?,
                             thisType: ITy,
                             memberTy: ITy,
@@ -214,7 +214,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
 
             val fn = memberTy.substitute(TySelfSubstitutor(context, null, methodType))
             addFunction(completionResultSet, bold, completionMode != MemberCompletionMode.Dot, className, member, fn, thisType, thisType, handlerProcessor)
-        } else if (member is LuaClassField && completionMode != MemberCompletionMode.Colon) {
+        } else if (member is LuaTypeField && completionMode != MemberCompletionMode.Colon) {
             val fieldType = if (memberSubstitutor != null) {
                 memberSubstitutor.substitute(memberTy)
             } else {
@@ -228,7 +228,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
     protected fun addField(completionResultSet: CompletionResultSet,
                            bold: Boolean,
                            clazzName: String,
-                           field: LuaClassField,
+                           field: LuaTypeField,
                            ty: ITy?,
                            handlerProcessor: HandlerProcessor?) {
         val name = field.name
@@ -243,14 +243,14 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
                             bold: Boolean,
                             isColonStyle: Boolean,
                             clazzName: String,
-                            classMember: LuaClassMember,
+                            classMember: TypeMember,
                             ty: ITy,
                             thisType: ITy,
                             callType: ITy,
                             handlerProcessor: HandlerProcessor?) {
         val name = classMember.name
         if (name != null) {
-            val context = SearchContext.get(classMember.project)
+            val context = SearchContext.get(classMember.psi.project)
 
             ty.processSignatures(context) {
                 if (isColonStyle) {

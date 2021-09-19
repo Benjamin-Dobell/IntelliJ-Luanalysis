@@ -113,7 +113,7 @@ object ProblemUtil {
                     if (processProblem != null) {
                         processProblem(Problem(
                                 targetElement,
-                                sourceElement ?: targetMember,
+                                sourceElement ?: targetMember.psi,
                                 "Type mismatch. Missing member: '%s' of: '%s'".format(memberName, target.displayName)
                         ))
                     }
@@ -147,7 +147,7 @@ object ProblemUtil {
                         }
                     }
                 } else {*/
-                    val memberElement = if (processProblem != null && sourceElement != null) findHighlightElement(sourceMember.node.psi) else null
+                    val memberElement = if (processProblem != null && sourceElement != null) findHighlightElement(sourceMember.psi.node.psi) else null
 
                     if (memberElement is LuaTableExpr) {
                         isContravariant = contravariantOf(targetMemberTy, sourceMemberTy, context, varianceFlags, targetElement, memberElement, processProblem!!) && isContravariant
@@ -198,7 +198,7 @@ object ProblemUtil {
                 sourceMember.name?.let {
                     val targetMember = target.findMember(it, context)
 
-                    if (targetMember?.getName() == it) {
+                    if (targetMember?.name == it) {
                         // If the target index type == source member name, then we have already checked compatibility of this member above.
                         return@processMembers true
                     }
@@ -220,7 +220,7 @@ object ProblemUtil {
                         isContravariant = false
 
                         if (processProblem != null && sourceElement != null) {
-                            val memberElement = findHighlightElement(sourceMember.node.psi)
+                            val memberElement = findHighlightElement(sourceMember.psi.node.psi)
 
                             processProblem(Problem(
                                     targetElement,
@@ -232,7 +232,7 @@ object ProblemUtil {
                         }
                     }
                 } else {
-                    val memberElement = if (processProblem != null && sourceElement != null) findHighlightElement(sourceMember.node.psi) else null
+                    val memberElement = if (processProblem != null && sourceElement != null) findHighlightElement(sourceMember.psi.node.psi) else null
 
                     if (memberElement is LuaTableExpr) {
                         isContravariant = contravariantOf(targetMemberTy, sourceMemberTy, context, varianceFlags, targetElement, memberElement, processProblem!!) && isContravariant
@@ -286,8 +286,10 @@ object ProblemUtil {
                     resolvedSourceTy.processMembers(context) { _, sourceMember ->
                         val indexTy = sourceMember.guessIndexType(context)
                         val highlightElement = if (sourceIsInline) {
-                            sourceMember
-                        } else sourceElement
+                            sourceMember.psi
+                        } else {
+                            sourceElement
+                        }
 
                         if (indexTy == null || indexTy !is TyPrimitiveLiteral || indexTy.primitiveKind != TyPrimitiveKind.Number) {
                             isContravariant = false
@@ -328,9 +330,7 @@ object ProblemUtil {
                         }
 
                         val valueHighlightElement = if (sourceIsInline) {
-                            if (sourceMember is LuaTableField) {
-                                sourceMember.valueExpr ?: sourceMember
-                            } else sourceMember
+                            (sourceMember as? LuaTableField)?.valueExpr ?: sourceMember.psi
                         } else sourceElement
 
                         sourceFieldTypes.forEach { sourceFieldTy ->

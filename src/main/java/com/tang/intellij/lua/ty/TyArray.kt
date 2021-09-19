@@ -19,7 +19,6 @@ package com.tang.intellij.lua.ty
 import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.tang.intellij.lua.comment.psi.LuaDocArrTy
-import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.search.SearchContext
 
 interface ITyArray : ITy {
@@ -187,7 +186,7 @@ object TyArraySerializer : TySerializer<ITyArray>() {
 }
 
 class TyDocArray(val luaDocArrTy: LuaDocArrTy, base: ITy = luaDocArrTy.ty.getType()) : TyArray(base) {
-    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: ProcessTypeMember): Boolean {
         if (exact) {
             if (Primitives.NUMBER.equals(indexTy, context)) {
                 return process(this, luaDocArrTy)

@@ -59,7 +59,7 @@ class LocalAndGlobalCompletionProvider(private val mask: Int) : ClassMemberCompl
                     }
                 }
             }
-            is LuaTypeGuessable -> {
+            is LuaPsiTypeGuessable -> {
                 val type = psi.guessType(ctx)
 
                 if (type == null) {

@@ -4,11 +4,7 @@ package com.tang.intellij.lua.comment.psi;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiNameIdentifierOwner;
-import com.tang.intellij.lua.psi.LuaClass;
-import com.tang.intellij.lua.psi.LuaScopedType;
-import com.tang.intellij.lua.psi.LuaClassField;
-import com.tang.intellij.lua.psi.LuaClassMember;
-import com.tang.intellij.lua.psi.LuaTypeScope;
+import com.tang.intellij.lua.psi.LuaTypeField;
 import com.tang.intellij.lua.psi.LuaTypeAlias;
 
 public class LuaDocVisitor extends PsiElementVisitor {
@@ -210,7 +206,7 @@ public class LuaDocVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
-  public void visitLuaClassField(@NotNull LuaClassField o) {
+  public void visitLuaClassField(@NotNull LuaTypeField o) {
     visitElement(o);
   }
 

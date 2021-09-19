@@ -51,7 +51,7 @@ fun inferExpr(expression: LuaExpression<*>, context: SearchContext): ITy? {
         if (expression is LuaIndexExpr || expression is LuaNameExpr) {
             val tree = LuaDeclarationTree.get(expression.containingFile)
             val declaration = tree.find(expression)?.firstDeclaration?.psi
-            if (declaration != expression && declaration is LuaTypeGuessable) {
+            if (declaration != expression && declaration is LuaPsiTypeGuessable) {
                 return@withMultipleResults declaration.guessType(context)
             }
         }
@@ -438,7 +438,7 @@ private fun getType(context: SearchContext, def: PsiElement): ITy? {
 
             type
         }
-        is LuaTypeGuessable -> def.guessType(context)
+        is LuaPsiTypeGuessable -> def.guessType(context)
         else -> null
     }
 }

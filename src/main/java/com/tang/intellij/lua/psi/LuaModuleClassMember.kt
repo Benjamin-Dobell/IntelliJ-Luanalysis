@@ -20,6 +20,6 @@ package com.tang.intellij.lua.psi
  * ---@module ClassA
  * module("ClassA")
  *
- * fieldA = 123 --> LuaModuleClassField
+ * fieldA = 123 --> LuaModuleField
  */
-interface LuaModuleClassField : LuaClassField
+interface LuaModuleField : LuaTypeField

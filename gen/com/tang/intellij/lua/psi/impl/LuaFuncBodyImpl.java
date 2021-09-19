@@ -16,8 +16,8 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaFuncBodyImpl extends StubBasedPsiElementBase<LuaFuncBodyStub> implements LuaFuncBody {
 
-  public LuaFuncBodyImpl(@NotNull LuaFuncBodyStub stub, @NotNull IStubElementType type) {
-    super(stub, type);
+  public LuaFuncBodyImpl(@NotNull LuaFuncBodyStub stub, @NotNull IStubElementType<?, ?> nodeType) {
+    super(stub, nodeType);
   }
 
   public LuaFuncBodyImpl(@NotNull ASTNode node) {

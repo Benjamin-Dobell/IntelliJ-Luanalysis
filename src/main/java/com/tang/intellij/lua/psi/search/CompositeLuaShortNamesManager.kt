@@ -20,10 +20,10 @@ import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.openapi.project.Project
 import com.intellij.util.Processor
 import com.tang.intellij.lua.psi.LuaClass
-import com.tang.intellij.lua.psi.LuaClassMember
+import com.tang.intellij.lua.psi.LuaPsiTypeMember
 import com.tang.intellij.lua.psi.LuaTypeAlias
 import com.tang.intellij.lua.search.SearchContext
-import com.tang.intellij.lua.stubs.index.ProcessClassMember
+import com.tang.intellij.lua.stubs.index.ProcessLuaPsiClassMember
 import com.tang.intellij.lua.ty.ITy
 import com.tang.intellij.lua.ty.ITyClass
 
@@ -78,8 +78,8 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager {
         return true
     }
 
-    override fun getClassMembers(context: SearchContext, clazzName: String): Collection<LuaClassMember> {
-        val collection = mutableListOf<LuaClassMember>()
+    override fun getClassMembers(context: SearchContext, clazzName: String): Collection<LuaPsiTypeMember> {
+        val collection = mutableListOf<LuaPsiTypeMember>()
         for (manager in EP_NAME.extensionList) {
             val col = manager.getClassMembers(context, clazzName)
             collection.addAll(col)
@@ -87,7 +87,7 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager {
         return collection
     }
 
-    override fun processMember(context: SearchContext, type: ITyClass, fieldName: String, searchIndexers: Boolean, deep: Boolean, process: ProcessClassMember): Boolean {
+    override fun processMember(context: SearchContext, type: ITyClass, fieldName: String, searchIndexers: Boolean, deep: Boolean, process: ProcessLuaPsiClassMember): Boolean {
         for (manager in EP_NAME.extensionList) {
             if (!manager.processMember(context, type, fieldName, searchIndexers, deep, process))
                 return false
@@ -102,7 +102,7 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager {
         exact: Boolean,
         searchMembers: Boolean,
         deep: Boolean,
-        process: ProcessClassMember
+        process: ProcessLuaPsiClassMember
     ): Boolean {
         for (manager in EP_NAME.extensionList) {
             if (!manager.processIndexer(context, type, indexTy, exact, searchMembers, deep, process))

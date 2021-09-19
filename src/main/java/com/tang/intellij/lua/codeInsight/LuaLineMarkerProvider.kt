@@ -40,6 +40,7 @@ import com.tang.intellij.lua.psi.search.LuaOverridingMethodsSearch
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.ty.TyClass
+import com.tang.intellij.lua.ty.guessParentClass
 
 /**
  * line marker
@@ -52,10 +53,10 @@ class LuaLineMarkerProvider : LineMarkerProvider {
 
     private fun collectNavigationMarkers(element: PsiElement, result: MutableCollection<in LineMarkerInfo<*>>) {
         if (element is LuaClassMethodName) {
-            val methodDef = PsiTreeUtil.getParentOfType(element, LuaClassMethod::class.java)!!
+            val methodDef = PsiTreeUtil.getParentOfType(element, LuaTypeMethod::class.java)!!
             val project = methodDef.project
             val context = SearchContext.get(project)
-            val type = methodDef.guessClassType(context)
+            val type = methodDef.guessParentClass(context)
 
             //OverridingMethod
             val classMethodNameId = element.id
@@ -85,7 +86,7 @@ class LuaLineMarkerProvider : LineMarkerProvider {
                         classMethodNameId.textRange,
                         AllIcons.Gutter.OverridenMethod,
                         null,
-                        object : LuaLineMarkerNavigator<PsiElement, LuaClassMethod<*>>() {
+                        object : LuaLineMarkerNavigator<PsiElement, LuaTypeMethod<*>>() {
 
                             override fun getTitle(elt: PsiElement)
                                     = "Choose Overriding Method of ${methodDef.name}"

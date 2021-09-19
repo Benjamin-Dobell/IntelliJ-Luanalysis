@@ -92,7 +92,7 @@ fun isStatic(classMethodDefStat: LuaClassMethodDefStat): Boolean {
 fun getPresentation(classMethodDefStat: LuaClassMethodDefStat): ItemPresentation {
     return object : ItemPresentation {
         override fun getPresentableText(): String? {
-            val type = classMethodDefStat.guessClassType(SearchContext.get(classMethodDefStat.project))
+            val type = classMethodDefStat.guessParentClass(SearchContext.get(classMethodDefStat.project))
             if (type != null) {
                 val c = if (classMethodDefStat.isStatic) "." else ":"
                 return type.displayName + c + classMethodDefStat.name + classMethodDefStat.paramSignature
@@ -678,7 +678,7 @@ fun getNameIdentifier(label: LuaLabelStat): PsiElement? {
     return label.id
 }
 
-fun getVisibility(member: LuaClassMember): Visibility {
+fun getVisibility(member: LuaPsiTypeMember): Visibility {
     if (member is StubBasedPsiElement<*>) {
         val stub = member.stub
         if (stub is LuaClassMemberStub) {
@@ -695,7 +695,7 @@ fun getVisibility(member: LuaClassMember): Visibility {
 }
 
 fun getVisibility(classMethodDefStat: LuaClassMethodDefStat): Visibility {
-    return getVisibility(classMethodDefStat as LuaClassMember)
+    return getVisibility(classMethodDefStat as LuaPsiTypeMember)
 }
 
 fun getExpression(element: StubBasedPsiElement<*>): LuaExpression<*>? {
@@ -726,7 +726,7 @@ fun getOperationType(element: LuaBinaryExpr): IElementType {
     return element.stub?.opType ?: element.binaryOp.firstChild.node.elementType
 }
 
-fun isDeprecated(member: LuaClassMember): Boolean {
+fun isDeprecated(member: LuaPsiTypeMember): Boolean {
     if (member is StubBasedPsiElement<*>) {
         val stub = member.stub
 
@@ -738,7 +738,7 @@ fun isDeprecated(member: LuaClassMember): Boolean {
     return (member as? LuaCommentOwner)?.comment?.isDeprecated == true
 }
 
-fun isExplicitlyTyped(member: LuaClassMember): Boolean {
+fun isExplicitlyTyped(member: LuaPsiTypeMember): Boolean {
     if (member is StubBasedPsiElement<*>) {
         val stub = member.stub
 
@@ -769,7 +769,7 @@ fun isExplicitlyTyped(member: LuaClassMember): Boolean {
     }
 }
 
-fun isExplicitlyTyped(luaClassMethod: LuaClassMethod<*>): Boolean {
+fun isExplicitlyTyped(luaClassMethod: LuaTypeMethod<*>): Boolean {
     val stub = luaClassMethod.stub
 
     if (stub is LuaClassMemberStub<*>) {

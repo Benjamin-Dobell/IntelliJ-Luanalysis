@@ -22,7 +22,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.ProjectAndLibrariesScope
 import com.tang.intellij.lua.ext.ILuaTypeInfer
-import com.tang.intellij.lua.psi.LuaTypeGuessable
+import com.tang.intellij.lua.psi.LuaPsiTypeGuessable
 import com.tang.intellij.lua.psi.ScopedTypeSubstitutor
 import com.tang.intellij.lua.ty.ITy
 import java.util.*
@@ -48,11 +48,11 @@ abstract class SearchContext internal constructor() {
             }
         }
 
-        fun infer(psi: LuaTypeGuessable): ITy? {
+        fun infer(psi: LuaPsiTypeGuessable): ITy? {
             return with(psi.project) { it.inferAndCache(psi) }
         }
 
-        fun infer(psi: LuaTypeGuessable, context: SearchContext): ITy? {
+        fun infer(psi: LuaPsiTypeGuessable, context: SearchContext): ITy? {
             return with(context, null) {
                 it.inferAndCache(psi)?.let { ty ->
                     ScopedTypeSubstitutor.substitute(context, ty)
@@ -112,7 +112,7 @@ abstract class SearchContext internal constructor() {
     private var myIndex = 0
     private var myMultipleResults = false
     private var myInStack = false
-    private val myInferCache = mutableMapOf<LuaTypeGuessable, ITy>()
+    private val myInferCache = mutableMapOf<LuaPsiTypeGuessable, ITy>()
     private var myScope: GlobalSearchScope? = null
 
     fun <T> withIndex(index: Int, supportMultipleResults: Boolean = false, action: () -> T): T {
@@ -165,7 +165,7 @@ abstract class SearchContext internal constructor() {
         return ret
     }
 
-    private fun inferAndCache(psi: LuaTypeGuessable): ITy? {
+    private fun inferAndCache(psi: LuaPsiTypeGuessable): ITy? {
         return if (index == -1) {
             val result = myInferCache.getOrDefault(psi, null) ?: ILuaTypeInfer.infer(psi, this)
 

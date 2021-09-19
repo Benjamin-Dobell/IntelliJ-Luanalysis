@@ -255,7 +255,7 @@ exprStat ::= expr {
 funcDefStat ::= 'function' ID funcBody {
     pin = 1
     implements = [
-        "com.tang.intellij.lua.psi.LuaClassMethod<com.tang.intellij.lua.stubs.LuaFuncDefStatStub>"
+        "com.tang.intellij.lua.psi.LuaTypeMethod<com.tang.intellij.lua.stubs.LuaFuncDefStatStub>"
         "com.tang.intellij.lua.psi.LuaDeclaration"
         "com.tang.intellij.lua.psi.LuaTypeScope"
     ]
@@ -293,7 +293,7 @@ classMethodName ::=  nameExpr (funcPrefixRef)* (('.' ID) | (':' ID)) {
 classMethodDefStat ::= 'function' classMethodName funcBody {
     pin = 2
     implements = [
-        "com.tang.intellij.lua.psi.LuaClassMethod<com.tang.intellij.lua.stubs.LuaClassMethodDefStatStub>"
+        "com.tang.intellij.lua.psi.LuaTypeMethod<com.tang.intellij.lua.stubs.LuaClassMethodDefStatStub>"
         "com.tang.intellij.lua.psi.LuaDeclaration"
         "com.tang.intellij.lua.psi.LuaTypeScope"
     ]
@@ -343,7 +343,7 @@ private attribute ::= '<' (closeAttribute | constAttribute) '>'
 localDef ::= ID attribute? {
     implements = [
         "com.tang.intellij.lua.psi.LuaNamedElement"
-        "com.tang.intellij.lua.psi.LuaTypeGuessable"
+        "com.tang.intellij.lua.psi.LuaPsiTypeGuessable"
         "com.intellij.psi.PsiNameIdentifierOwner"
     ]
     methods = [
@@ -468,7 +468,7 @@ left indexExpr ::= '[' expr ']' | '.' ID | ':' ID {
     ]
     mixin = "com.tang.intellij.lua.psi.impl.LuaIndexExprMixin"
     implements = [
-        "com.tang.intellij.lua.psi.LuaClassMember"
+        "com.tang.intellij.lua.psi.LuaPsiTypeMember"
         "com.tang.intellij.lua.psi.LuaExpression<com.tang.intellij.lua.stubs.LuaIndexExprStub>"
         "com.intellij.psi.PsiNameIdentifierOwner"
     ]
@@ -590,7 +590,7 @@ tableField ::= tableField1 | tableField2 | expr {
     ]
     stubClass = "com.tang.intellij.lua.stubs.LuaTableFieldStub"
     implements = [
-        "com.tang.intellij.lua.psi.LuaClassField"
+        "com.tang.intellij.lua.psi.LuaTypeField"
         "com.intellij.psi.PsiNameIdentifierOwner"
         "com.tang.intellij.lua.psi.LuaCommentOwner"
         "com.tang.intellij.lua.psi.LuaTypeScope"
@@ -615,7 +615,7 @@ unaryOp ::= '-' | 'not' | '#'
 nameExpr ::= ID {
     mixin = "com.tang.intellij.lua.psi.impl.LuaNameExprMixin"
     implements = [
-        "com.tang.intellij.lua.psi.LuaModuleClassField"
+        "com.tang.intellij.lua.psi.LuaModuleField"
         "com.tang.intellij.lua.psi.LuaExpression<com.tang.intellij.lua.stubs.LuaNameExprStub>"
         "com.intellij.psi.PsiNameIdentifierOwner"
     ]
@@ -635,7 +635,7 @@ nameExpr ::= ID {
 paramDef ::= ID {
     implements = [
         "com.tang.intellij.lua.psi.LuaNamedElement"
-        "com.tang.intellij.lua.psi.LuaTypeGuessable"
+        "com.tang.intellij.lua.psi.LuaPsiTypeGuessable"
         "com.intellij.psi.PsiNameIdentifierOwner"
     ]
     methods = [

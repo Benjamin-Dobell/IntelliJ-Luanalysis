@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017. tangzx(love.tangzx@qq.com)
+ * Copyright (c) 2021
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package com.tang.intellij.lua.psi
+package com.tang.intellij.lua.ty
 
 import com.tang.intellij.lua.comment.psi.LuaDocTy
+import com.tang.intellij.lua.psi.Visibility
 import com.tang.intellij.lua.search.SearchContext
-import com.tang.intellij.lua.ty.ITy
-import com.tang.intellij.lua.ty.ITyClass
-import com.tang.intellij.lua.ty.TyUnion
 
-/**
- * Class 成员
- * Created by tangzx on 2016/12/12.
- */
-interface LuaClassMember : LuaTypeGuessable {
+interface TypeMember : TypeGuessable {
     fun guessParentType(context: SearchContext): ITy
 
     fun guessIndexType(context: SearchContext): ITy? {
         return indexType?.getType()
     }
+
+    // LuaPsiElement/NavigatablePsiElement have getName() and we want implementors to be able to implement these
+    // interfaces as well as TypeMember, so our getter is explicitly given the JVM name "getName". Unfortunately,
+    // Kotlin tooling is unfortunately unaware of our fix and reports CONFLICTING_INHERITED_JVM_DECLARATIONS.
+    val name: String?
+        @get:JvmName("getName") get
 
     val visibility: Visibility
     val isDeprecated: Boolean
@@ -41,7 +41,7 @@ interface LuaClassMember : LuaTypeGuessable {
         get() = null
 }
 
-fun LuaClassMember.guessClassType(context: SearchContext): ITyClass? {
+fun TypeMember.guessParentClass(context: SearchContext): ITyClass? {
     val ty = guessParentType(context)
     return TyUnion.getPerfectClass(ty)
 }

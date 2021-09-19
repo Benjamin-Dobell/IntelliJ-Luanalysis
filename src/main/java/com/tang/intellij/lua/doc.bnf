@@ -131,7 +131,7 @@ private complex_ty ::= union_ty | ty
 
 arr_ty ::= ty '[]' {
 	implements = [
-        "com.tang.intellij.lua.psi.LuaClassMember"
+        "com.tang.intellij.lua.psi.LuaPsiTypeMember"
     ]
     methods = [
         getType
@@ -145,7 +145,7 @@ arr_ty ::= ty '[]' {
 }
 primitive_table_ty ::= 'table' {
 	implements = [
-        "com.tang.intellij.lua.psi.LuaClassMember"
+        "com.tang.intellij.lua.psi.LuaPsiTypeMember"
     ]
     methods = [
         getType
@@ -187,7 +187,7 @@ private tableField2 ::= ID ':' complex_ty { pin = 2 }
 tableField ::= tableField1 | tableField2 | complex_ty {
     implements = [
         "com.tang.intellij.lua.comment.psi.LuaDocPsiElement"
-        "com.tang.intellij.lua.psi.LuaClassField"
+        "com.tang.intellij.lua.psi.LuaTypeField"
         "com.intellij.psi.PsiNameIdentifierOwner"
     ]
     methods = [
@@ -221,7 +221,7 @@ generic_table_index_ty ::= complex_ty
 generic_table_ty ::= 'table' '<' generic_table_index_ty ',' complex_ty '>' {
     pin = 2
 	implements = [
-        "com.tang.intellij.lua.psi.LuaClassMember"
+        "com.tang.intellij.lua.psi.LuaPsiTypeMember"
     ]
     methods = [
         getType
@@ -296,7 +296,7 @@ private tagFieldIndex ::= '[' complex_ty ']' { pin = 2 }
 tag_field ::= TAG_NAME_FIELD access_modifier? ('<' type_ref '>')? (ID | tagFieldIndex) complex_ty comment_string? {
     pin = 1
     implements = [
-        "com.tang.intellij.lua.psi.LuaClassField"
+        "com.tang.intellij.lua.psi.LuaTypeField"
         "com.tang.intellij.lua.comment.psi.LuaDocPsiElement"
         "com.intellij.psi.PsiNameIdentifierOwner"
     ]

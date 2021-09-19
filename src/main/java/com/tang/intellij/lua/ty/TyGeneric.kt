@@ -21,7 +21,6 @@ import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.comment.psi.LuaDocGenericDef
 import com.tang.intellij.lua.comment.psi.LuaDocGenericTableTy
-import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.psi.getFileIdentifier
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.readTyNullable
@@ -54,7 +53,7 @@ class TyGenericParameter(val name: String, varName: String, superClass: ITy? = n
     override val kind: TyKind
         get() = TyKind.GenericParam
 
-    override fun processMembers(context: SearchContext, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processMembers(context: SearchContext, deep: Boolean, process: ProcessTypeMember): Boolean {
         val superType = getSuperClass(context)
 
         if (superType is ITyClass) {
@@ -292,11 +291,11 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
         return substitutor.substitute(this)
     }
 
-    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: ProcessTypeMember): Boolean {
         return base.processMember(context, name, deep, process)
     }
 
-    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: ProcessTypeMember): Boolean {
         return base.processIndexer(context, indexTy, exact, deep, process)
     }
 
@@ -321,7 +320,7 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
         return super<Ty>.guessIndexerType(indexTy, searchContext, exact)
     }
 
-    override fun processMembers(context: SearchContext, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processMembers(context: SearchContext, deep: Boolean, process: ProcessTypeMember): Boolean {
         if (!base.processMembers(context, false, { _, classMember -> process(this, classMember) })) {
             return false
         }
@@ -363,7 +362,7 @@ class TyDocTableGeneric(
         arrayOf(keyType, valueType),
         Primitives.TABLE
 ) {
-    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: ProcessTypeMember): Boolean {
         Ty.eachResolved(keyType, context) {
             if ((it is ITyPrimitive && it.primitiveKind == TyPrimitiveKind.String)
                 || (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String && it.value == name)) {
@@ -374,7 +373,7 @@ class TyDocTableGeneric(
         return true
     }
 
-    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: ProcessTypeMember): Boolean {
         if (exact) {
             Ty.eachResolved(keyType, context) {
                 if (it.equals(indexTy, context)) {

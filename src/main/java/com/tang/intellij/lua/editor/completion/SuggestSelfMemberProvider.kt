@@ -18,10 +18,10 @@ package com.tang.intellij.lua.editor.completion
 
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.psi.util.PsiTreeUtil
-import com.tang.intellij.lua.psi.LuaClassMember
-import com.tang.intellij.lua.psi.LuaClassMethodDefStat
 import com.tang.intellij.lua.psi.LuaPsiTreeUtil
-import com.tang.intellij.lua.psi.guessClassType
+import com.tang.intellij.lua.psi.LuaClassMethodDefStat
+import com.tang.intellij.lua.ty.TypeMember
+import com.tang.intellij.lua.ty.guessParentClass
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
 
@@ -37,7 +37,7 @@ class SuggestSelfMemberProvider : ClassMemberCompletionProvider() {
         val methodDef = PsiTreeUtil.getParentOfType(position, LuaClassMethodDefStat::class.java)
         if (methodDef != null && !methodDef.isStatic) {
             val context = SearchContext.get(position.project)
-            methodDef.guessClassType(context)?.let { type ->
+            methodDef.guessParentClass(context)?.let { type ->
                 val contextTy = LuaPsiTreeUtil.findContextClass(position, context)
 
                 type.processMembers(context) { curType, member ->
@@ -52,9 +52,9 @@ class SuggestSelfMemberProvider : ClassMemberCompletionProvider() {
                             member.guessType(context) ?: Primitives.UNKNOWN,
                             MemberCompletionMode.Colon,
                             object : HandlerProcessor() {
-                                override fun process(element: LuaLookupElement, member: LuaClassMember, memberTy: ITy?): LookupElement { return element }
+                                override fun process(element: LuaLookupElement, member: TypeMember, memberTy: ITy?): LookupElement { return element }
 
-                                override fun processLookupString(lookupString: String, member: LuaClassMember, memberTy: ITy?): String {
+                                override fun processLookupString(lookupString: String, member: TypeMember, memberTy: ITy?): String {
                                     return if (memberTy is ITyFunction) "self:${member.name}" else "self.${member.name}"
                                 }
                             })

@@ -9,7 +9,7 @@ import com.intellij.psi.StubBasedPsiElement;
 import com.tang.intellij.lua.stubs.LuaLocalDefStub;
 import com.intellij.psi.search.SearchScope;
 
-public interface LuaLocalDef extends LuaNamedElement, LuaTypeGuessable, PsiNameIdentifierOwner, StubBasedPsiElement<LuaLocalDefStub> {
+public interface LuaLocalDef extends LuaNamedElement, LuaPsiTypeGuessable, PsiNameIdentifierOwner, StubBasedPsiElement<LuaLocalDefStub> {
 
   @NotNull
   PsiElement getId();

@@ -51,7 +51,7 @@ public class LuaVisitor extends PsiElementVisitor {
   }
 
   public void visitClassMethodDefStat(@NotNull LuaClassMethodDefStat o) {
-    visitClassMethod(o);
+    visitTypeMethod(o);
     // visitDeclaration(o);
     // visitTypeScope(o);
     // visitStatement(o);
@@ -116,7 +116,7 @@ public class LuaVisitor extends PsiElementVisitor {
   }
 
   public void visitFuncDefStat(@NotNull LuaFuncDefStat o) {
-    visitClassMethod(o);
+    visitTypeMethod(o);
     // visitDeclaration(o);
     // visitTypeScope(o);
     // visitStatement(o);
@@ -133,7 +133,7 @@ public class LuaVisitor extends PsiElementVisitor {
   }
 
   public void visitIndexExpr(@NotNull LuaIndexExpr o) {
-    visitClassMember(o);
+    visitPsiTypeMember(o);
     // visitExpression(o);
     // visitPsiNameIdentifierOwner(o);
   }
@@ -154,7 +154,7 @@ public class LuaVisitor extends PsiElementVisitor {
 
   public void visitLocalDef(@NotNull LuaLocalDef o) {
     visitNamedElement(o);
-    // visitTypeGuessable(o);
+    // visitPsiTypeGuessable(o);
     // visitPsiNameIdentifierOwner(o);
   }
 
@@ -174,14 +174,14 @@ public class LuaVisitor extends PsiElementVisitor {
   }
 
   public void visitNameExpr(@NotNull LuaNameExpr o) {
-    visitModuleClassField(o);
+    visitModuleField(o);
     // visitExpression(o);
     // visitPsiNameIdentifierOwner(o);
   }
 
   public void visitParamDef(@NotNull LuaParamDef o) {
     visitNamedElement(o);
-    // visitTypeGuessable(o);
+    // visitPsiTypeGuessable(o);
     // visitPsiNameIdentifierOwner(o);
   }
 
@@ -217,7 +217,7 @@ public class LuaVisitor extends PsiElementVisitor {
   }
 
   public void visitTableField(@NotNull LuaTableField o) {
-    visitClassField(o);
+    visitTypeField(o);
     // visitPsiNameIdentifierOwner(o);
     // visitCommentOwner(o);
     // visitTypeScope(o);
@@ -250,18 +250,6 @@ public class LuaVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
-  public void visitClassField(@NotNull LuaClassField o) {
-    visitPsiElement(o);
-  }
-
-  public void visitClassMember(@NotNull LuaClassMember o) {
-    visitPsiElement(o);
-  }
-
-  public void visitClassMethod(@NotNull LuaClassMethod o) {
-    visitPsiElement(o);
-  }
-
   public void visitDeclaration(@NotNull LuaDeclaration o) {
     visitPsiElement(o);
   }
@@ -282,7 +270,7 @@ public class LuaVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
-  public void visitModuleClassField(@NotNull LuaModuleClassField o) {
+  public void visitModuleField(@NotNull LuaModuleField o) {
     visitPsiElement(o);
   }
 
@@ -290,7 +278,19 @@ public class LuaVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitPsiTypeMember(@NotNull LuaPsiTypeMember o) {
+    visitPsiElement(o);
+  }
+
   public void visitStatement(@NotNull LuaStatement o) {
+    visitPsiElement(o);
+  }
+
+  public void visitTypeField(@NotNull LuaTypeField o) {
+    visitPsiElement(o);
+  }
+
+  public void visitTypeMethod(@NotNull LuaTypeMethod o) {
     visitPsiElement(o);
   }
 

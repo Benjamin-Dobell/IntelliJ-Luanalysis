@@ -19,7 +19,6 @@ package com.tang.intellij.lua.ty
 import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.tang.intellij.lua.ext.recursionGuard
-import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.search.SearchContext
 import java.util.*
 import kotlin.collections.ArrayList
@@ -133,7 +132,7 @@ class TyUnion : Ty {
         } else this
     }
 
-    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: ProcessTypeMember): Boolean {
         childSet.forEach {
             if (!it.processMember(context, name, deep, process)) {
                 return false
@@ -143,7 +142,7 @@ class TyUnion : Ty {
         return true
     }
 
-    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: (ITy, LuaClassMember) -> Boolean): Boolean {
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: ProcessTypeMember): Boolean {
         childSet.forEach {
             if (!it.processIndexer(context, indexTy, exact, deep, process)) {
                 return false

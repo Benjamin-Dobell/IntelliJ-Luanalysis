@@ -492,7 +492,7 @@ fun getNameIdentifier(g: LuaDocGenericDef): PsiElement? {
     return g.id
 }
 
-fun isDeprecated(member: LuaClassMember): Boolean {
+fun isDeprecated(member: LuaPsiTypeMember): Boolean {
     return false
 }
 

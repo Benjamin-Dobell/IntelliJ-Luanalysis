@@ -33,7 +33,7 @@ import com.tang.intellij.lua.ty.*
 class IllegalOverrideInspection : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
         return object : LuaVisitor() {
-            private fun inspectMember(context: SearchContext, superTy: ITy, member: LuaClassMember, sourceTy: ITy, source: LuaPsiElement) {
+            private fun inspectMember(context: SearchContext, superTy: ITy, member: LuaPsiTypeMember, sourceTy: ITy, source: LuaPsiElement) {
                 val indexTy = member.guessIndexType(context)
                 val superMember = if (indexTy != null) {
                     superTy.findEffectiveIndexer(indexTy, context, true)

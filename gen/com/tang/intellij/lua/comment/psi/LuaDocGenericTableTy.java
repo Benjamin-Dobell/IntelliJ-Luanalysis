@@ -3,13 +3,13 @@ package com.tang.intellij.lua.comment.psi;
 
 import java.util.List;
 import org.jetbrains.annotations.*;
-import com.intellij.psi.PsiElement;
-import com.tang.intellij.lua.psi.LuaClassMember;
+import com.tang.intellij.lua.psi.LuaPsiTypeMember;
 import com.tang.intellij.lua.psi.Visibility;
 import com.tang.intellij.lua.search.SearchContext;
 import com.tang.intellij.lua.ty.ITy;
 
-public interface LuaDocGenericTableTy extends LuaDocTy, LuaClassMember {
+public interface LuaDocGenericTableTy extends LuaDocTy, LuaPsiTypeMember
+{
 
   @NotNull
   List<LuaDocTy> getTyList();

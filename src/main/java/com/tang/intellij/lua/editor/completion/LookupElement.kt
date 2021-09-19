@@ -22,7 +22,7 @@ import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.lang.LuaIcons
-import com.tang.intellij.lua.psi.LuaClassField
+import com.tang.intellij.lua.psi.LuaTypeField
 import com.tang.intellij.lua.psi.LuaPsiElement
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
@@ -55,11 +55,7 @@ open class LuaTypeGuessableLookupElement(name: String, val psi: LuaPsiElement, p
         return typeString
     }
 
-    /**
-     * https://github.com/tangzx/IntelliJ-EmmyLua/issues/54
-     * @see [com.tang.intellij.lua.documentation.LuaDocumentationProvider]
-     */
-    override fun getObject(): Any {
+    override fun getObject(): LuaPsiElement {
         return psi
     }
 
@@ -68,7 +64,7 @@ open class LuaTypeGuessableLookupElement(name: String, val psi: LuaPsiElement, p
     }
 }
 
-class LuaFieldLookupElement(val fieldName: String, val field: LuaClassField, val ty: ITy?, bold: Boolean)
+class LuaFieldLookupElement(val fieldName: String, val field: LuaTypeField, val ty: ITy?, bold: Boolean)
     : LuaLookupElement(fieldName, bold, null), LuaDocumentationLookupElement {
 
     override fun getDocumentationElement(context: SearchContext): PsiElement? {
@@ -76,7 +72,7 @@ class LuaFieldLookupElement(val fieldName: String, val field: LuaClassField, val
             return field
         else {
             val clazz = TyUnion.getPerfectClass(type)
-            return clazz?.findMember(fieldName, context)
+            return clazz?.findMember(fieldName, context)?.psi
         }
     }
 
@@ -93,6 +89,10 @@ class LuaFieldLookupElement(val fieldName: String, val field: LuaClassField, val
         if (icon == null)
             lazyInit()
         super.renderElement(presentation)
+    }
+
+    override fun getObject(): LuaPsiElement {
+        return field
     }
 }
 
@@ -135,10 +135,7 @@ class TyFunctionLookupElement(name: String,
         return super.hashCode() * 31 * ((signature.params?.size ?: 0) + 1)
     }
 
-    /**
-     * https://github.com/tangzx/IntelliJ-EmmyLua/issues/54
-     */
-    override fun getObject(): Any {
+    override fun getObject(): LuaPsiElement {
         return psi
     }
 }

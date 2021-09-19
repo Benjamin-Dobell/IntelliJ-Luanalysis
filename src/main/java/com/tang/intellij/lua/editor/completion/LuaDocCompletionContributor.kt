@@ -22,13 +22,12 @@ import com.intellij.lang.Language
 import com.intellij.patterns.PlatformPatterns.psiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
-import com.intellij.util.Processor
 import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.comment.psi.api.LuaComment
 import com.tang.intellij.lua.lang.LuaIcons
 import com.tang.intellij.lua.lang.LuaParserDefinition
-import com.tang.intellij.lua.psi.LuaClassField
+import com.tang.intellij.lua.psi.LuaTypeField
 import com.tang.intellij.lua.psi.LuaFuncBodyOwner
 import com.tang.intellij.lua.psi.search.LuaShortNamesManager
 import com.tang.intellij.lua.search.SearchContext
@@ -119,7 +118,7 @@ class LuaDocCompletionContributor : CompletionContributor() {
                     val ctx = SearchContext.get(classDef.project)
                     classType.processMembers(ctx) { _, member ->
                         val name = member.name
-                        if (name != null && member is LuaClassField) {
+                        if (name != null && member is LuaTypeField) {
                             completionResultSet.addElement(LookupElementBuilder.create(name).withIcon(LuaIcons.CLASS_FIELD))
                         }
                         true

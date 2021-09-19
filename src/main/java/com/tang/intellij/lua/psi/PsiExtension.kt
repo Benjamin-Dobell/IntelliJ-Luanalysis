@@ -22,7 +22,6 @@ import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.util.Processor
 import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass
 import com.tang.intellij.lua.comment.psi.LuaDocTagGenericList
@@ -482,10 +481,10 @@ val LuaBinaryExpr.right: LuaExpression<*>? get() {
     return list.getOrNull(1)
 }
 
-fun LuaClassMethod<*>.findOverridingMethod(context: SearchContext): LuaClassMethod<*>? {
+fun LuaTypeMethod<*>.findOverridingMethod(context: SearchContext): LuaTypeMethod<*>? {
     val methodName = name ?: return null
-    val type = guessClassType(context) ?: return null
-    var superMethod: LuaClassMethod<*>? = null
+    val type = guessParentClass(context) ?: return null
+    var superMethod: LuaTypeMethod<*>? = null
     Ty.processSuperClasses(type, context) { superType ->
         ProgressManager.checkCanceled()
         val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass

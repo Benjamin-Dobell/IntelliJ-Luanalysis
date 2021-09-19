@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020
+ * Copyright (c) 2017. tangzx(love.tangzx@qq.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
-package com.tang.intellij.lua.psi
+package com.tang.intellij.lua.psi;
 
-import com.intellij.psi.StubBasedPsiElement
-import com.intellij.psi.stubs.StubElement
+import com.intellij.navigation.NavigationItem;
 
-interface LuaExpression<Stub: StubElement<*>> : LuaCommentOwner, LuaPsiTypeGuessable, StubBasedPsiElement<Stub>
+/**
+ * 类的属性字段
+ * Created by tangzx on 2016/12/21.
+ */
+public interface LuaTypeField extends LuaPsiTypeMember, NavigationItem {
+}

@@ -22,7 +22,6 @@ import com.intellij.psi.codeStyle.NameUtil
 import com.intellij.psi.codeStyle.SuggestedNameInfo
 import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.refactoring.rename.NameSuggestionProvider
-import com.intellij.util.Processor
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
@@ -111,7 +110,7 @@ class LuaNameSuggestionProvider : NameSuggestionProvider {
         val search = ReferencesSearch.search(psi, psi.useScope)
         search.forEach { getNames(it, set) }
 
-        if (psi is LuaTypeGuessable) {
+        if (psi is LuaPsiTypeGuessable) {
             val context = SearchContext.get(psi.getProject())
             val type = psi.guessType(context)
             if (type != null) {

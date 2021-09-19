@@ -18,7 +18,7 @@ package com.tang.intellij.lua.ext
 
 import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.openapi.progress.ProgressManager
-import com.tang.intellij.lua.psi.LuaTypeGuessable
+import com.tang.intellij.lua.psi.LuaPsiTypeGuessable
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.ITy
 
@@ -26,7 +26,7 @@ interface ILuaTypeInfer {
     companion object {
         private val EP_NAME = ExtensionPointName.create<ILuaTypeInfer>("au.com.glassechidna.luanalysis.luaTypeInfer")
 
-        fun infer(target: LuaTypeGuessable, context: SearchContext): ITy? {
+        fun infer(target: LuaPsiTypeGuessable, context: SearchContext): ITy? {
             for (typeInfer in EP_NAME.extensionList) {
                 ProgressManager.checkCanceled()
                 return typeInfer.inferType(target, context)
@@ -35,5 +35,5 @@ interface ILuaTypeInfer {
         }
     }
 
-    fun inferType(target: LuaTypeGuessable, context: SearchContext): ITy?
+    fun inferType(target: LuaPsiTypeGuessable, context: SearchContext): ITy?
 }
