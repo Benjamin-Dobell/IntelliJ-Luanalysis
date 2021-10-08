@@ -16,6 +16,15 @@
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
+pluginManagement {
+    repositories {
+        maven {
+            url 'https://oss.sonatype.org/content/repositories/snapshots/'
+        }
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = 'Luanalysis'
 
 if (Os.isFamily(Os.FAMILY_WINDOWS)) include "debugger:attach:windows"

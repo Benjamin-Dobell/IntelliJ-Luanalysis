@@ -107,7 +107,7 @@ class LuaIntroduceVarHandler : RefactoringActionHandler {
         var commonParent = PsiTreeUtil.findCommonParent(operation.occurrences)
         if (commonParent != null) {
             var element = operation.element
-            var localDefStat = LuaElementFactory.createWith(operation.project, "local var = " + element.text)
+            var localDefStat: PsiElement = LuaElementFactory.createWith(operation.project, "local var = " + element.text)
             val inline = isInline(commonParent, operation)
             if (inline) {
                 if (element is LuaCallExpr && element.parent is LuaExprStat)
@@ -128,8 +128,10 @@ class LuaIntroduceVarHandler : RefactoringActionHandler {
                 }
             }
 
-            localDefStat = CodeInsightUtilCore.forcePsiPostprocessAndRestoreElement(localDefStat)
-            val localDef = PsiTreeUtil.findChildOfType(localDefStat, LuaLocalDef::class.java)
+            val localDef = CodeInsightUtilCore.forcePsiPostprocessAndRestoreElement(localDefStat)?.let {
+                PsiTreeUtil.findChildOfType(it, LuaLocalDef::class.java)
+            }
+
             if (localDef != null)
                 operation.editor.caretModel.moveToOffset(localDef.textOffset)
             operation.newNameElement = localDef

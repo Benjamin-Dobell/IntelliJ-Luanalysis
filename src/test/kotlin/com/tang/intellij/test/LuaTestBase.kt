@@ -18,7 +18,6 @@ package com.tang.intellij.test
 
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase
 import org.intellij.lang.annotations.Language
 
 /*

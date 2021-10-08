@@ -5,11 +5,11 @@ fun properties(key: String) = project.findProperty(key).toString()
 
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version "1.5.10"
+    id("org.jetbrains.kotlin.jvm") version "1.5.31"
 
-    id("org.jetbrains.intellij") version "1.0"
+    id("org.jetbrains.intellij") version "1.2.0"
 
-    id("org.jetbrains.changelog") version "1.1.2"
+    id("org.jetbrains.changelog") version "1.3.0"
 
     id("de.undercouch.download") version "3.4.3"
 }
@@ -49,8 +49,8 @@ intellij {
 }
 
 changelog {
-    version = properties("pluginVersion")
-    groups = emptyList()
+    version.set(properties("pluginVersion"))
+    groups.set(emptyList<String>())
 }
 
 sourceSets {
