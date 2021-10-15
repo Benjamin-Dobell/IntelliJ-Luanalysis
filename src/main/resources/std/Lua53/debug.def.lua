@@ -215,6 +215,9 @@ function debug.setuservalue(udata, value, n) end
 --- `tells` at which level to start the traceback (default is 1, the function
 --- c alling `traceback`).
 ---@overload fun():string
+---@overload fun(thread:thread, message:string):string
+---@overload fun(message:string):string
+---@overload fun(message:string, level:number):string
 ---@param thread thread
 ---@param message string
 ---@param level number
