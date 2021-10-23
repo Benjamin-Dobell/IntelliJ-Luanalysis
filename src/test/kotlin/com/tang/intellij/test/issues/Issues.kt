@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import com.intellij.openapi.actionSystem.IdeActions
+import com.intellij.testFramework.PlatformTestUtil
+import com.intellij.util.ui.tree.TreeUtil
 import com.tang.intellij.lua.codeInsight.inspection.*
 import com.tang.intellij.lua.codeInsight.inspection.doc.GenericConstraintInspection
 import com.tang.intellij.lua.codeInsight.inspection.doc.GenericParameterShadowed
@@ -39,6 +42,35 @@ class Issues : LuaInspectionsTestBase(
         LuaSettings.instance.isNilStrict = false
         LuaSettings.instance.isUnknownCallable = true
         LuaSettings.instance.isUnknownIndexable = true
+    }
+
+    // https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/pull/54
+    fun test54() {
+        val code = """
+            function foo()
+                local test = {
+                    fun = function()
+                        if true then<caret>
+                    end
+                }
+            end
+        """.trimIndent()
+
+        val expected = """
+            function foo()
+                local test = {
+                    fun = function()
+                        if true then
+                            
+                        end
+                    end
+                }
+            end
+        """.trimIndent()
+
+        myFixture.configureByText("main.lua", code)
+        myFixture.performEditorAction(IdeActions.ACTION_EDITOR_ENTER)
+        myFixture.checkResult(expected)
     }
 
     // https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/81
