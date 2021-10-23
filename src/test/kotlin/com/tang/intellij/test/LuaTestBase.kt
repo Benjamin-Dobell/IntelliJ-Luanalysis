@@ -19,6 +19,8 @@ package com.tang.intellij.test
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import org.intellij.lang.annotations.Language
+import org.junit.internal.runners.JUnit38ClassRunner
+import org.junit.runner.RunWith
 
 /*
  * Copyright (c) 2017. tangzx(love.tangzx@qq.com)
@@ -35,7 +37,7 @@ import org.intellij.lang.annotations.Language
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+@RunWith(JUnit38ClassRunner::class) // TODO: Remove. See: https://github.com/gradle/gradle/issues/18486
 abstract class LuaTestBase : BasePlatformTestCase() {
     protected fun checkByDirectory(@Language("Lua") before: String, @Language("Lua") after: String, action: () -> Unit) {
         fileTreeFromText(before).create()

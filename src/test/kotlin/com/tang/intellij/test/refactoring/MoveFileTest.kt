@@ -20,7 +20,10 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.refactoring.MultiFileTestCase
 import com.intellij.refactoring.move.moveFilesOrDirectories.MoveFilesOrDirectoriesProcessor
+import org.junit.internal.runners.JUnit38ClassRunner
+import org.junit.runner.RunWith
 
+@RunWith(JUnit38ClassRunner::class) // TODO: Remove. See: https://github.com/gradle/gradle/issues/18486
 class MoveFileTest : MultiFileTestCase() {
     override fun getTestRoot() = "/refactoring/"
 
