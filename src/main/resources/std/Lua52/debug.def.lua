@@ -210,10 +210,14 @@ function debug.setuservalue(udata, value, n) end
 --- If `message` is present but is neither a string nor **nil**, this function
 --- returns `message` without further processing. Otherwise, it returns a string
 --- with a traceback of the call stack. The optional `message` string is
---- appended at the beginning of the traceback. An optional level number
---- `tells` at which level to start the traceback (default is 1, the function
---- c alling `traceback`).
----@overload fun():string
+--- appended at the beginning of the traceback. An optional `level` number
+--- tells at which level to start the traceback (default is 1, the function
+--- calling `traceback`).
+---@overload fun(thread: thread, message: string): string
+---@overload fun(message: string, level: number): string
+---@overload fun(thread: thread): string
+---@overload fun(message: string): string
+---@overload fun(): string
 ---@param thread thread
 ---@param message string
 ---@param level number

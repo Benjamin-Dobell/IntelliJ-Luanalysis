@@ -163,15 +163,10 @@ function debug.setlocal(thread, level, var, value) end
 ---@return string
 function debug.setupvalue(f, up, value) end
 
---- If `message` is present but is neither a string nor **nil**, this function
---- returns `message` without further processing. Otherwise, it returns a string
---- with a traceback of the call stack. The optional `message` string is
---- appended at the beginning of the traceback. An optional level number
---- `tells` at which level to start the traceback (default is 1, the function
---- c alling `traceback`).
----@overload fun():string
----@param thread thread
+--- Returns a string with a traceback of the call stack. An optional `message`
+--- string is appended at the beginning of the traceback. This function is
+--- typically used with `xpcall` to produce better error messages.
+---@overload fun(): string
 ---@param message string
----@param level number
 ---@return string
-function debug.traceback(thread, message, level) end
+function debug.traceback(message) end
