@@ -21,6 +21,7 @@ package = {}
 --- the Lua path `package.path`, using the environment variable `LUA_CPATH_5_4`
 --- or the environment variable `LUA_CPATH`, or a default path defined in
 --- `luaconf.h`.
+---@type string
 package.cpath = ""
 
 
@@ -65,6 +66,7 @@ function package.loadlib(libname, funcname) end
 --- default path defined in `luaconf.h`, if those environment variables are not
 --- defined. Any ";;" in the value of the environment variable is replaced by
 --- the default path.
+---@type string
 package.path = ""
 
 ---
