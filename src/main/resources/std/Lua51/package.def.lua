@@ -66,6 +66,7 @@ function package.loadlib(libname, funcname) end
 --- default path defined in `luaconf.h`, if those environment variables are not
 --- defined. Any ";;" in the value of the environment variable is replaced by
 --- the default path.
+---@type string
 package.path = ""
 
 ---
