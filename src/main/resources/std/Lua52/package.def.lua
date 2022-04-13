@@ -37,6 +37,7 @@ package.config = ""
 --- the Lua path `package.path`, using the environment variable `LUA_CPATH_5_4`
 --- or the environment variable `LUA_CPATH`, or a default path defined in
 --- `luaconf.h`.
+---@type string
 package.cpath = ""
 
 
