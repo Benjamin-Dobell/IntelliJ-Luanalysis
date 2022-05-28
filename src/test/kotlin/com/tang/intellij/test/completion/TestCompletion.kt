@@ -172,9 +172,9 @@ class TestCompletion : TestCompletionBase() {
         FileDocumentManager.getInstance().saveAllDocuments()
         myFixture.completeBasic()
 
-        val exactLookups = myFixture.lookupElements.filter { it.lookupString == "dontComplete" }
-        assertEquals(1, exactLookups.size)
-        assertFalse(exactLookups.first() is LuaLookupElement)
+        val exactLookups = myFixture.lookupElements?.filter { it.lookupString == "dontComplete" }
+        assertEquals(1, exactLookups?.size ?: 0)
+        assertFalse(exactLookups?.first() is LuaLookupElement)
     }
 
     fun `test attribute completion`() {

@@ -15,8 +15,6 @@
  */
 
 import com.intellij.openapi.actionSystem.IdeActions
-import com.intellij.testFramework.PlatformTestUtil
-import com.intellij.util.ui.tree.TreeUtil
 import com.tang.intellij.lua.codeInsight.inspection.*
 import com.tang.intellij.lua.codeInsight.inspection.doc.GenericConstraintInspection
 import com.tang.intellij.lua.codeInsight.inspection.doc.GenericParameterShadowed

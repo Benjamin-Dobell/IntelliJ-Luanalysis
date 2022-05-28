@@ -59,7 +59,7 @@ class CodeStyleTest : LuaTestBase() {
     }
 
     fun `test keep multiple statements in one line`() {
-        doUnformatted("local a = 1 local b = 2") { common, lua, format ->
+        doUnformatted("local a = 1 local b = 2") { _, lua, format ->
             val previous = lua.KEEP_MULTIPLE_STATEMENTS_IN_ONE_LINE
             lua.KEEP_MULTIPLE_STATEMENTS_IN_ONE_LINE = true
 

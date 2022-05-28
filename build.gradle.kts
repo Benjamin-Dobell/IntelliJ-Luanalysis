@@ -5,11 +5,11 @@ fun properties(key: String) = project.findProperty(key).toString()
 
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version "1.5.31"
+    id("org.jetbrains.kotlin.jvm") version "1.6.20"
 
-    id("org.jetbrains.intellij") version "1.2.0"
+    id("org.jetbrains.intellij") version "1.6.0"
 
-    id("org.jetbrains.changelog") version "1.3.0"
+    id("org.jetbrains.changelog") version "1.3.1"
 
     id("de.undercouch.download") version "3.4.3"
 }
@@ -37,6 +37,7 @@ java {
 intellij {
     pluginName.set(properties("pluginName"))
     version.set(properties("platformVersion"))
+
     downloadSources.set(properties("platformDownloadSources").toBoolean())
     updateSinceUntilBuild.set(true)
 
