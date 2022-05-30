@@ -68,13 +68,13 @@ class StdLibraryProvider: AdditionalLibraryRootsProvider() {
 
     companion object {
         fun reload() {
+            StubIndex.getInstance().forceRebuild(Throwable("Lua language level changed."))
+
             WriteAction.run<RuntimeException> {
                 val projects = ProjectManagerEx.getInstanceEx().openProjects
                 for (project in projects) {
                     ProjectRootManagerEx.getInstanceEx(project).makeRootsChange(EmptyRunnable.getInstance(), false, true)
                 }
-
-                StubIndex.getInstance().forceRebuild(Throwable("Lua language level changed."))
             }
         }
     }

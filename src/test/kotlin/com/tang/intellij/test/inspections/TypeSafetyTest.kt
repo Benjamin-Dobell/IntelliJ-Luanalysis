@@ -41,10 +41,13 @@ class TypeSafetyTest : LuaInspectionsTestBase(
         LuaSettings.instance.isNilStrict = true
         LuaSettings.instance.isUnknownCallable = false
         LuaSettings.instance.isUnknownIndexable = false
-        checkByFile(filename, checkWarn, checkInfo, checkWeakWarn)
-        LuaSettings.instance.isNilStrict = false
-        LuaSettings.instance.isUnknownCallable = true
-        LuaSettings.instance.isUnknownIndexable = true
+        try {
+            checkByFile(filename, checkWarn, checkInfo, checkWeakWarn)
+        } finally {
+            LuaSettings.instance.isNilStrict = false
+            LuaSettings.instance.isUnknownCallable = true
+            LuaSettings.instance.isUnknownIndexable = true
+        }
     }
 
     fun testAlias() {
@@ -149,13 +152,37 @@ class TypeSafetyTest : LuaInspectionsTestBase(
 
         myFixture.configureByFiles("moduleA.lua", "moduleA_reference.lua")
         enableInspection()
-        myFixture.checkHighlighting(true, false, false)
 
-        LuaSettings.instance.languageLevel = defaultLanguageLevel
+        try {
+            myFixture.checkHighlighting(true, false, false)
+        } finally {
+            LuaSettings.instance.languageLevel = defaultLanguageLevel
+            StdLibraryProvider.reload()
+            LuaSettings.instance.isNilStrict = false
+            LuaSettings.instance.isUnknownCallable = true
+            LuaSettings.instance.isUnknownIndexable = true
+        }
+    }
+
+    fun testModuleSupportUnavailableLua53() {
+        val defaultLanguageLevel = LuaSettings.instance.languageLevel
+        LuaSettings.instance.languageLevel = LuaLanguageLevel.LUA53
+        LuaSettings.instance.isNilStrict = true
+        LuaSettings.instance.isUnknownCallable = false
+        LuaSettings.instance.isUnknownIndexable = false
         StdLibraryProvider.reload()
-        LuaSettings.instance.isNilStrict = false
-        LuaSettings.instance.isUnknownCallable = true
-        LuaSettings.instance.isUnknownIndexable = true
+
+        myFixture.configureByFile("module_unavailable.lua")
+        enableInspection()
+        try {
+            myFixture.checkHighlighting(true, false, false)
+        } finally {
+            LuaSettings.instance.languageLevel = defaultLanguageLevel
+            LuaSettings.instance.isNilStrict = false
+            LuaSettings.instance.isUnknownCallable = true
+            LuaSettings.instance.isUnknownIndexable = true
+            StdLibraryProvider.reload()
+        }
     }
 
     fun testNumbers() {

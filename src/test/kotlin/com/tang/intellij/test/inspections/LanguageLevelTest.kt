@@ -28,7 +28,8 @@ class LanguageLevelTest : LuaInspectionsTestBase(LanguageLevelInspection()) {
         LuaSettings.instance.languageLevel = LuaLanguageLevel.LUA52
         StdLibraryProvider.reload()
 
-        checkByText("""
+        try {
+            checkByText("""
             local a = 1
             a = a <error descr="The binary operator '&' only available in Lua 5.3 and above">&</error> a
             a = a <error descr="The binary operator '|' only available in Lua 5.3 and above">|</error> a
@@ -37,9 +38,10 @@ class LanguageLevelTest : LuaInspectionsTestBase(LanguageLevelInspection()) {
             a = a <error descr="The binary operator '<<' only available in Lua 5.3 and above"><<</error> a
             a = <error descr="The unary operator '~' only available in Lua 5.3 and above">~</error>a
         """.trimIndent())
-
-        LuaSettings.instance.languageLevel = defaultLanguageLevel
-        StdLibraryProvider.reload()
+        } finally {
+            LuaSettings.instance.languageLevel = defaultLanguageLevel
+            StdLibraryProvider.reload()
+        }
     }
 
     fun testAllowLua53Features() {
@@ -47,7 +49,8 @@ class LanguageLevelTest : LuaInspectionsTestBase(LanguageLevelInspection()) {
         LuaSettings.instance.languageLevel = LuaLanguageLevel.LUA53
         StdLibraryProvider.reload()
 
-        checkByText("""
+        try {
+            checkByText("""
             local a = 1
             a = a & a
             a = a | a
@@ -56,9 +59,10 @@ class LanguageLevelTest : LuaInspectionsTestBase(LanguageLevelInspection()) {
             a = a << a
             a = ~a
         """.trimIndent())
-
-        LuaSettings.instance.languageLevel = defaultLanguageLevel
-        StdLibraryProvider.reload()
+        } finally {
+            LuaSettings.instance.languageLevel = defaultLanguageLevel
+            StdLibraryProvider.reload()
+        }
     }
 
     fun testDisallowLua54Features() {
@@ -66,13 +70,15 @@ class LanguageLevelTest : LuaInspectionsTestBase(LanguageLevelInspection()) {
         LuaSettings.instance.languageLevel = LuaLanguageLevel.LUA53
         StdLibraryProvider.reload()
 
-        checkByText("""
+        try {
+            checkByText("""
             local constVal <error><const></error> = 1
             local closedValue <error><close></error> = 1
         """.trimIndent())
-
-        LuaSettings.instance.languageLevel = defaultLanguageLevel
-        StdLibraryProvider.reload()
+        } finally {
+            LuaSettings.instance.languageLevel = defaultLanguageLevel
+            StdLibraryProvider.reload()
+        }
     }
 
     fun testAllowLua54Features() {
@@ -80,12 +86,14 @@ class LanguageLevelTest : LuaInspectionsTestBase(LanguageLevelInspection()) {
         LuaSettings.instance.languageLevel = LuaLanguageLevel.LUA54
         StdLibraryProvider.reload()
 
-        checkByText("""
+        try {
+            checkByText("""
             local constVal <const> = 1
             local closedValue <close> = 1
         """.trimIndent())
-
-        LuaSettings.instance.languageLevel = defaultLanguageLevel
-        StdLibraryProvider.reload()
+        } finally {
+            LuaSettings.instance.languageLevel = defaultLanguageLevel
+            StdLibraryProvider.reload()
+        }
     }
 }

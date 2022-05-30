@@ -36,10 +36,13 @@ class Issues : LuaInspectionsTestBase(
         LuaSettings.instance.isNilStrict = true
         LuaSettings.instance.isUnknownCallable = false
         LuaSettings.instance.isUnknownIndexable = false
-        checkByText(text, checkWarn, checkInfo, checkWeakWarn)
-        LuaSettings.instance.isNilStrict = false
-        LuaSettings.instance.isUnknownCallable = true
-        LuaSettings.instance.isUnknownIndexable = true
+        try {
+            checkByText(text, checkWarn, checkInfo, checkWeakWarn)
+        } finally {
+            LuaSettings.instance.isNilStrict = false
+            LuaSettings.instance.isUnknownCallable = true
+            LuaSettings.instance.isUnknownIndexable = true
+        }
     }
 
     // https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/pull/54
