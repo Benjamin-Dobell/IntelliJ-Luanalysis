@@ -62,6 +62,14 @@ aNumber, aString = --[[---@not string, number]] multiReturn2(true)
 aNumber = <error descr="Type mismatch. Required: 'number' Found: 'number | string'">multiReturn2(true)</error>
 aNumber = --[[---@not string]] multiReturn2(true)
 
+
+---@type fun(): nil | string, nil | number
+local multiReturn3
+
+local inferredString, inferredNumber = --[[---@not nil, nil]] multiReturn3()
+aString = inferredString
+aNumber = inferredNumber
+
 ---@type number[]
 local numberArray
 

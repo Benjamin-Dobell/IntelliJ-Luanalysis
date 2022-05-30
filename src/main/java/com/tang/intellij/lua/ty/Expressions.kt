@@ -86,7 +86,7 @@ fun inferExpr(context: SearchContext, expression: LuaExpression<*>): ITy? {
             }
         }
 
-        return TyMultipleResults.getResult(context, ty).not(context, TyMultipleResults.getResult(context, notTy))
+        return TyMultipleResults.getResult(context, ty, Math.max(context.index, 0)).not(context, TyMultipleResults.getResult(context, notTy))
     }
 
     return if (context.supportsMultipleResults) {
