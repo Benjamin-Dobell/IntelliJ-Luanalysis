@@ -192,4 +192,13 @@ class TestCompletion : TestCompletionBase() {
         assertNotNull(strings)
         assertTrue(strings!!.containsAll(Arrays.asList("const", "close")))
     }
+
+    fun testFieldCompletion() {
+        myFixture.configureByFiles("testFields.lua")
+        myFixture.complete(CompletionType.BASIC, 1)
+        val strings = myFixture.lookupElementStrings
+
+        assertNotNull(strings)
+        assertTrue(strings!!.containsAll(Arrays.asList("a", "b")))
+    }
 }

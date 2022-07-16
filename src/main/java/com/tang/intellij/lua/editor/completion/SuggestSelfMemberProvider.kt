@@ -42,13 +42,15 @@ class SuggestSelfMemberProvider : ClassMemberCompletionProvider() {
 
                 type.processMembers(context) { curType, member ->
                     val curClass = (if (curType is ITyGeneric) curType.base else type) as? ITyClass
+                    val name = member.name
 
-                    if (curClass != null && member.name != null && curClass.isVisibleInScope(context.project, contextTy, member.visibility)) {
+                    if (curClass != null && name != null && curClass.isVisibleInScope(context.project, contextTy, member.visibility)) {
                         addMember(context,
                             completionResultSet,
                             member,
                             curClass.getMemberSubstitutor(context),
                             curClass,
+                            name,
                             member.guessType(context) ?: Primitives.UNKNOWN,
                             MemberCompletionMode.Colon,
                             object : HandlerProcessor() {

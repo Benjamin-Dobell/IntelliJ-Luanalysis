@@ -155,6 +155,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
                             member,
                             memberSubstitutor,
                             prefixTy,
+                            memberName,
                             memberTy,
                             completionMode,
                             handlerProcessor
@@ -177,13 +178,22 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
         cls.processMembers(context) { memberClass, member ->
             val curClass = (if (memberClass is ITyGeneric) memberClass.base else memberClass) as? ITyClass
             if (curClass != null) {
-                member.name?.let {
-                    if (prefixMatcher.prefixMatches(it) && curClass.isVisibleInScope(context.project, contextTy, member.visibility)) {
+                val name = member.name ?: member.guessIndexType(context)?.let {
+                    if (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String) {
+                        it.value
+                    } else {
+                        null
+                    }
+                }
+
+                name?.let { memberName ->
+                    if (prefixMatcher.prefixMatches(memberName) && curClass.isVisibleInScope(context.project, contextTy, member.visibility)) {
                         addMember(context,
                             completionResultSet,
                             member,
                             memberClass.getMemberSubstitutor(context),
                             memberClass,
+                            memberName,
                             member.guessType(context) ?: Primitives.UNKNOWN,
                             completionMode,
                             handlerProcessor)
@@ -199,6 +209,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
                             member: TypeMember,
                             memberSubstitutor: ITySubstitutor?,
                             thisType: ITy,
+                            memberName: String,
                             memberTy: ITy,
                             completionMode: MemberCompletionMode,
                             handlerProcessor: HandlerProcessor?) {
@@ -221,22 +232,20 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
                 memberTy
             }
 
-            addField(completionResultSet, bold, className, member, fieldType, handlerProcessor)
+            addField(completionResultSet, bold, className, memberName, member, fieldType, handlerProcessor)
         }
     }
 
     protected fun addField(completionResultSet: CompletionResultSet,
                            bold: Boolean,
                            clazzName: String,
+                           fieldName: String,
                            field: LuaTypeField,
                            ty: ITy?,
                            handlerProcessor: HandlerProcessor?) {
-        val name = field.name
-        if (name != null) {
-            val element = LookupElementFactory.createFieldLookupElement(clazzName, name, field, ty, bold)
-            val ele = handlerProcessor?.process(element, field, null) ?: element
-            completionResultSet.addElement(ele)
-        }
+        val element = LookupElementFactory.createFieldLookupElement(clazzName, fieldName, field, ty, bold)
+        val ele = handlerProcessor?.process(element, field, null) ?: element
+        completionResultSet.addElement(ele)
     }
 
     private fun addFunction(completionResultSet: CompletionResultSet,

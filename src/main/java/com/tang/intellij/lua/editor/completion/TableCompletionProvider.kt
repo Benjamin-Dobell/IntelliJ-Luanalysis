@@ -76,7 +76,7 @@ class TableCompletionProvider : ClassMemberCompletionProvider() {
                         if (prefixMatcher.prefixMatches(it)) {
                             val className = curType.displayName
                             if (member is LuaTypeField) {
-                                addField(completionResultSet, curType === luaType, className, member, null, object : HandlerProcessor() {
+                                addField(completionResultSet, curType === luaType, className, it, member, null, object : HandlerProcessor() {
                                     override fun process(element: LuaLookupElement, member: TypeMember, memberTy: ITy?): LookupElement {
                                         element.itemText = element.itemText + " = "
                                         element.lookupString = element.lookupString + " = "
