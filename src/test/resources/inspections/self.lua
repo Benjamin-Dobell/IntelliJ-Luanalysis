@@ -131,7 +131,7 @@ local SetmetatableSelf = {}
 
 setmetatable(SetmetatableSelf,  {
     __call = function(_)
-        ---@type self @In the presence of setmetatable, self's type is pulled from setmetatable()'s first arg or the return type of __call.
+        ---@type self @In the presence of setmetatable, self's type is pulled from the return type of __call or setmetatable()'s first arg.
         local self
 
         function self.returnsSelf()

@@ -355,6 +355,7 @@ localDef ::= ID attribute? {
     ]
     stubClass = "com.tang.intellij.lua.stubs.LuaLocalDefStub"
 }
+
 private localDefList ::= localDef (',' localDef)*
 localDefStat ::= 'local' localDefList ('=' exprList)? {
     pin = 1

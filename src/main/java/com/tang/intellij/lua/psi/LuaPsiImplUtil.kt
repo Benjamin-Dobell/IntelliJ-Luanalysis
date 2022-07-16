@@ -493,7 +493,12 @@ fun guessParentType(tableField: LuaTableField, context: SearchContext): ITy {
         //       has a "setmetatable" in scope that isn't functionally equivalent to Lua's setmetatable... too bad.
         if (argList.size == 2 && argList[1] == tableField.parent && callExpr.nameExpr?.text == Constants.FUNCTION_SETMETATABLE) {
             val callMetamethod = (tableField.parent as LuaTableExpr).findField(Constants.METAMETHOD_CALL)?.valueExpr as? LuaFuncBodyOwner<*>
-            (argList[0].guessType(context) ?: callMetamethod?.guessReturnType(context)) as? ITyClass
+            val returnClass = callMetamethod?.guessReturnType(context) as? ITyClass
+            if (returnClass != null && returnClass.className != Constants.WORD_SELF && !isSelfClass(returnClass)) {
+                returnClass
+            } else {
+                argList[0].guessType(context) as? ITyClass
+            }
         } else {
             null
         }
@@ -509,7 +514,7 @@ fun guessIndexType(tableField: LuaTableField, context: SearchContext): ITy? {
         tableField.idExpr?.guessType(context)
     }
 
-    if (indexTy != null) {
+    if (indexTy != null || tableField.lbrack != null) {
         return indexTy
     } else {
         var fieldIndex = 0

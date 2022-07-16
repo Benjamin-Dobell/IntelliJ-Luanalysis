@@ -632,6 +632,65 @@ class TyTable(val table: LuaTableExpr) : TyClass(getTableTypeName(table)) {
     }
 
     override fun doLazyInit(searchContext: SearchContext) = Unit
+
+    override fun processMembers(context: SearchContext, deep: Boolean, process: ProcessTypeMember): Boolean {
+        if (!context.isDumb) {
+            return super.processMembers(context, deep, process)
+        }
+
+        table.tableFieldList.forEach {
+            if (!process(this, it)) {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: ProcessTypeMember): Boolean {
+        if (!context.isDumb) {
+            return super.processMember(context, name, deep, process)
+        }
+
+        return table.tableFieldList.firstOrNull {
+            val fieldName = it.name
+            if (fieldName != null) {
+                fieldName == name
+            } else {
+                it.indexType?.getType()?.let {
+                    (it is ITyPrimitive && it.primitiveKind == TyPrimitiveKind.String)
+                            || (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String && it.value == name)
+                } ?: false
+            }
+        }?.let {
+            process(this, it)
+        } ?: true
+    }
+
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: ProcessTypeMember): Boolean {
+        if (!context.isDumb) {
+            return super.processIndexer(context, indexTy, exact, deep, process)
+        }
+
+        var narrowestTypeMember: TypeMember? = null
+        var narrowestIndexTy: ITy? = null
+
+        table.tableFieldList.forEach { field ->
+            val candidateIndexerTy = field.guessIndexType(context) ?: field.name?.let {
+                TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, it)
+            }
+
+            if ((!exact && candidateIndexerTy?.contravariantOf(context, indexTy, TyVarianceFlags.STRICT_UNKNOWN) == true)
+                    || candidateIndexerTy == indexTy) {
+                if (narrowestIndexTy?.contravariantOf(context, candidateIndexerTy, TyVarianceFlags.STRICT_UNKNOWN) != false) {
+                    narrowestTypeMember = field
+                    narrowestIndexTy = candidateIndexerTy
+                }
+            }
+        }
+
+        return narrowestTypeMember?.let { process(this, it) } ?: true
+    }
 }
 
 fun getDocTableTypeName(table: LuaDocTableDef): String {
