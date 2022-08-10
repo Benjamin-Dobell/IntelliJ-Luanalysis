@@ -65,3 +65,13 @@ local tableWithGenericFunction = {
         local alsoT = t
     end
 }
+
+---@generic T
+---@param value T
+---@return fun(): T
+local function scopedGenericAnnotatedReturnStatement(value)
+    ---@type fun(): T
+    return function()
+        return value
+    end
+end

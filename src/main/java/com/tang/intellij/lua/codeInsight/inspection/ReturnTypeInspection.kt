@@ -76,9 +76,10 @@ class ReturnTypeInspection : StrictInspection() {
                     for (i in 0 until expressionTyLists.size) {
                         val element = o.exprList?.getExpressionAt(i) ?: o
                         val targetType = abstractTys.getOrNull(i) ?: variadicAbstractType ?: Primitives.VOID
+                        val scopedExpressionTy = ScopedTypeSubstitutor.substitute(context, expressionTyLists[i])
                         val varianceFlags = if (element is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
 
-                        ProblemUtil.contravariantOf(context, targetType, expressionTyLists[i], varianceFlags, null, element) { problem ->
+                        ProblemUtil.contravariantOf(context, targetType, scopedExpressionTy, varianceFlags, null, element) { problem ->
                             val targetMessage = problem.message
 
                             if (expressionTyLists.size > 1) {
@@ -119,10 +120,11 @@ class ReturnTypeInspection : StrictInspection() {
 
                         for (i in 0 until abstractTys.size) {
                             val targetType = expectedReturnTys.getOrNull(i) ?: expectedVariadicReturnTy ?: Primitives.VOID
+                            val scopedAbstractTy = ScopedTypeSubstitutor.substitute(context, abstractTys[i])
 
-                            if (!targetType.contravariantOf(context, abstractTys[i], 0)) {
+                            if (!targetType.contravariantOf(context, scopedAbstractTy, 0)) {
                                 val element = statementDocTagType.typeList?.tyList?.let { it.getOrNull(i) ?: it.last() } ?: statementDocTagType
-                                val message = "Type mismatch. Required: '%s' Found: '%s'".format(targetType.displayName, abstractTys[i].displayName)
+                                val message = "Type mismatch. Required: '%s' Found: '%s'".format(targetType.displayName, scopedAbstractTy.displayName)
                                 problems.add(Problem(null, element, message))
                             }
                         }
