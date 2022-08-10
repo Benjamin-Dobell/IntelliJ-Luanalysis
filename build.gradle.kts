@@ -26,6 +26,8 @@ dependencies {
     implementation(fileTree("libs") {
         include("*.jar")
     })
+
+    implementation("org.jetbrains:markdown:0.3.1")
 }
 
 java {
