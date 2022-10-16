@@ -110,7 +110,7 @@ interface ITyGeneric : ITyResolvable {
     override fun getMemberSubstitutor(context: SearchContext): ITySubstitutor {
         val resolvedBase = TyAliasSubstitutor().substitute(context, base)
         val baseParams = resolvedBase.getParams(context) ?: arrayOf()
-        var parameterSubstitutor = TyParameterSubstitutor.withArgs(baseParams, args)
+        val parameterSubstitutor = TyParameterSubstitutor.withArgs(baseParams, args)
         return super.getMemberSubstitutor(context)?.let {
             TyChainSubstitutor.chain(it, parameterSubstitutor)
         } ?: parameterSubstitutor

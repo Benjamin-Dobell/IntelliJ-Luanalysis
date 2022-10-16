@@ -20,6 +20,18 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 
 
-class ProjectSearchContext(override val project: Project) : SearchContext() {
+class ProjectSearchContext : SearchContext {
+    override var project: Project
+
+    constructor(project: Project): super() {
+        this.project = project
+    }
+
+    constructor(sourceContext: SearchContext): super(sourceContext) {
+        this.project = sourceContext.project
+    }
+
     override val element: PsiElement? = null
+
+    override fun getProjectContext() = this
 }

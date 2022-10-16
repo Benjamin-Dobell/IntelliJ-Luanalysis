@@ -75,3 +75,34 @@ local function scopedGenericAnnotatedReturnStatement(value)
         return value
     end
 end
+
+---@generic V
+---@param value V
+---@return V
+function recursiveConcreteness(value)
+    ---@type V
+    local v
+
+    value = v
+    v = value
+
+    local resultantVFromRecursiveCall = recursiveConcreteness(v)
+
+    v = resultantVFromRecursiveCall
+    resultantVFromRecursiveCall = v
+
+    ---@type boolean
+    local differentVForRecursiveCall
+    local resultantVFromDifferentVRecursiveCall = recursiveConcreteness(differentVForRecursiveCall)
+
+    differentVForRecursiveCall = resultantVFromDifferentVRecursiveCall
+    resultantVFromDifferentVRecursiveCall = differentVForRecursiveCall
+
+    v = <error descr="Type mismatch. Required: 'V' Found: 'boolean'">differentVForRecursiveCall</error>
+    v = <error descr="Type mismatch. Required: 'V' Found: 'boolean'">resultantVFromDifferentVRecursiveCall</error>
+
+    differentVForRecursiveCall = <error descr="Type mismatch. Required: 'boolean' Found: 'V'">v</error>
+    resultantVFromDifferentVRecursiveCall = <error descr="Type mismatch. Required: 'boolean' Found: 'V'">v</error>
+
+    return value
+end

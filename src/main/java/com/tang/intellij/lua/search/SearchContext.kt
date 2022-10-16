@@ -22,18 +22,26 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.ProjectAndLibrariesScope
 import com.tang.intellij.lua.ext.ILuaTypeInfer
+import com.tang.intellij.lua.psi.LuaIndexExpr
 import com.tang.intellij.lua.psi.LuaPsiTypeGuessable
 import com.tang.intellij.lua.psi.ScopedTypeSubstitutor
 import com.tang.intellij.lua.ty.ITy
+import com.tang.intellij.lua.ty.ITyClass
+import com.tang.intellij.lua.ty.isAnonymous
+import com.tang.intellij.lua.ty.isSelfClass
 import java.util.*
 
 /**
 
  * Created by tangzx on 2017/1/14.
  */
-abstract class SearchContext {
+abstract class SearchContext() {
     abstract val project: Project
     abstract val element: PsiElement?
+
+    open fun getProjectContext(): ProjectSearchContext {
+        return ProjectSearchContext(this)
+    }
 
     val index: Int get() = myIndex // Multiple results index
     val supportsMultipleResults: Boolean get() = myMultipleResults
@@ -45,6 +53,14 @@ abstract class SearchContext {
     private var myScope: GlobalSearchScope? = null
 
     private val myInferCache = mutableMapOf<LuaPsiTypeGuessable, ITy>()
+
+    protected constructor(sourceContext: SearchContext) : this() {
+        myDumb = sourceContext.myDumb
+        myIndex = sourceContext.myIndex
+        myMultipleResults = sourceContext.myMultipleResults
+        myInStack = sourceContext.myInStack
+        myScope = sourceContext.myScope
+    }
 
     fun <T> withIndex(index: Int, supportMultipleResults: Boolean = false, action: () -> T): T {
         val savedIndex = this.index

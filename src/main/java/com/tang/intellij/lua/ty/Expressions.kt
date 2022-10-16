@@ -313,7 +313,8 @@ fun LuaCallExpr.createSubstitutor(context: SearchContext, sig: IFunSignature): I
     return selfSubstitutor
 }
 
-private fun LuaCallExpr.infer(context: SearchContext): ITy? {
+private fun LuaCallExpr.infer(searchContext: SearchContext): ITy? {
+    val context = searchContext.getProjectContext()
     val luaCallExpr = this
     // xxx()
     val expr = luaCallExpr.expression

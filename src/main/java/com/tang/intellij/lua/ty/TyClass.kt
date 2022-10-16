@@ -600,7 +600,7 @@ fun getSelfClassName(classTy: ITyClass): String {
 }
 
 fun isSelfClass(classTy: ITyClass): Boolean {
-    return classTy.className.endsWith(CLASS_NAME_SUFFIX_SELF)
+    return classTy.isAnonymous && classTy.className.endsWith(CLASS_NAME_SUFFIX_SELF)
 }
 
 private const val GENERIC_PARAMETER_NAME_SUFFIX_CONCRETE = "#concrete"

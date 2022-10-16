@@ -104,7 +104,7 @@ private fun LuaExpression<*>.shouldBeInternal(context: SearchContext): ITy? {
                 var ret: ITy = Primitives.VOID
                 Ty.eachResolved(context, fTy) {
                     if (it is ITyFunction) {
-                        var sig = it.matchSignature(context, p2)?.signature ?: it.mainSignature
+                        var sig = it.matchSignature(context, p2)?.substitutedSignature ?: it.mainSignature
                         val substitutor = p2.createSubstitutor(context, sig)
                         sig = sig.substitute(context, substitutor)
                         ret = ret.union(context, sig.getArgTy(idx))

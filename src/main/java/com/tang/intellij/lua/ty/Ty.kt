@@ -172,7 +172,8 @@ interface ITy : Comparable<ITy> {
         return flags and TyFlags.SHAPE != 0
     }
 
-    fun guessMemberType(context: SearchContext, name: String): ITy? {
+    fun guessMemberType(searchContext: SearchContext, name: String): ITy? {
+        val context = if (isAnonymous) searchContext else searchContext.getProjectContext()
         val member = findEffectiveMember(context, name)
 
         if (member == null) {
@@ -189,7 +190,8 @@ interface ITy : Comparable<ITy> {
         } ?: Primitives.UNKNOWN
     }
 
-    fun guessIndexerType(context: SearchContext, indexTy: ITy, exact: Boolean = false): ITy? {
+    fun guessIndexerType(searchContext: SearchContext, indexTy: ITy, exact: Boolean = false): ITy? {
+        val context = searchContext.getProjectContext()
         var ty: ITy? = null
         val substitutor: Lazy<ITySubstitutor?> = lazy {
             getMemberSubstitutor(context)

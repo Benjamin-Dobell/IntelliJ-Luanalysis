@@ -23,6 +23,7 @@ import com.intellij.psi.PsiElementVisitor
 import com.tang.intellij.lua.lang.LuaFileType
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
+import com.tang.intellij.lua.search.ProjectSearchContext
 import com.tang.intellij.lua.search.PsiSearchContext
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
@@ -56,7 +57,7 @@ class MatchFunctionSignatureInspection : StrictInspection() {
             override fun visitCallExpr(o: LuaCallExpr) {
                 super.visitCallExpr(o)
 
-                val searchContext = PsiSearchContext(o)
+                val searchContext = ProjectSearchContext(o.project)
                 val prefixExpr = o.expression
                 var resolvedTy = prefixExpr.guessType(searchContext)?.let {
                     Ty.resolve(searchContext, it)

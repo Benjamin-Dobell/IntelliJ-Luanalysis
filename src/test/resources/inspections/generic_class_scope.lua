@@ -42,3 +42,42 @@ end
 ---@param arg T
 GenericInMethod.lambdaMethodShadow = function(arg)
 end
+
+---@class Concreteness<T>
+---@field myT T
+local Concreteness = {}
+
+---@return T
+function Concreteness:getT()
+    ---@type T
+    local t
+    return t
+end
+
+---@param t T
+function Concreteness:setT(t)
+end
+
+function Concreteness:testConcreteClassGenericWithinImplementationScope(t)
+    ---@type T
+    local t
+
+    t = self:getT()
+    self:setT(t)
+
+    self.myT = self:getT()
+    self:setT(self.myT)
+
+    ---@type Concreteness<number>
+    local numberConcreteness
+    numberConcreteness:setT(<error descr="Type mismatch. Required: 'number' Found: 'T'">self:getT()</error>)
+    self:setT(<error descr="Type mismatch. Required: 'T' Found: 'number'">numberConcreteness:getT()</error>)
+    self.myT = <error descr="Type mismatch. Required: 'T' Found: 'number'">numberConcreteness:getT()</error>
+    numberConcreteness:setT(<error descr="Type mismatch. Required: 'number' Found: 'T'">self.myT</error>)
+
+    t = <error descr="Type mismatch. Required: 'T' Found: 'number'">numberConcreteness:getT()</error>
+    numberConcreteness:setT(<error descr="Type mismatch. Required: 'number' Found: 'T'">t</error>)
+
+    t = <error descr="Type mismatch. Required: 'T' Found: 'number'">numberConcreteness.myT</error>
+    numberConcreteness.myT = <error descr="Type mismatch. Required: 'number' Found: 'T'">t</error>
+end
