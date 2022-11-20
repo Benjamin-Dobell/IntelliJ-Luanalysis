@@ -44,8 +44,8 @@ open class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
         return displayName.hashCode()
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
-        if (super.contravariantOf(context, other, flags)) {
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
+        if (super.contravariantOf(context, other, varianceFlags)) {
             return true
         }
 
@@ -57,7 +57,7 @@ open class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
 
         if (other is ITyArray) {
             return resolvedBase.equals(context, other.base)
-                    || (flags and TyVarianceFlags.WIDEN_TABLES != 0 && resolvedBase.contravariantOf(context, other.base, flags))
+                    || (varianceFlags and TyVarianceFlags.WIDEN_TABLES != 0 && resolvedBase.contravariantOf(context, other.base, varianceFlags))
         }
 
         var indexedMemberType: ITy = Primitives.VOID
@@ -73,7 +73,7 @@ open class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
                 }
 
                 otherFieldTypes.forEach { otherFieldTy ->
-                    if (!resolvedBase.contravariantOf(context, otherFieldTy, flags)) {
+                    if (!resolvedBase.contravariantOf(context, otherFieldTy, varianceFlags)) {
                         return@processMembers false
                     }
 
@@ -87,9 +87,9 @@ open class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
             return false
         }
 
-        return flags and TyVarianceFlags.WIDEN_TABLES != 0
+        return varianceFlags and TyVarianceFlags.WIDEN_TABLES != 0
                 || Ty.resolve(context, resolvedBase).equals(context, indexedMemberType)
-                || (resolvedBase.isUnknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0)
+                || (resolvedBase.isUnknown && varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0)
     }
 
     override fun substitute(context: SearchContext, substitutor: ITySubstitutor): ITy {

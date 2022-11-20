@@ -76,7 +76,7 @@ class TyMultipleResults : Ty {
         list.forEach { it.accept(visitor) }
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
         val requiredSize = if (variadic) list.size - 1 else list.size
         val flattenedOther = TyMultipleResults.flatten(context, other)
 
@@ -97,7 +97,7 @@ class TyMultipleResults : Ty {
                     if (variadic) list.last() else return true
                 } else list[i]
 
-                if (!thisTy.contravariantOf(context, otherTy, flags)) {
+                if (!thisTy.contravariantOf(context, otherTy, varianceFlags)) {
                     return false
                 }
             }
@@ -105,7 +105,7 @@ class TyMultipleResults : Ty {
             return true
         }
 
-        return requiredSize <= 1 && list.first().contravariantOf(context, other, flags)
+        return requiredSize <= 1 && list.first().contravariantOf(context, other, varianceFlags)
     }
 
     override fun hashCode(): Int {

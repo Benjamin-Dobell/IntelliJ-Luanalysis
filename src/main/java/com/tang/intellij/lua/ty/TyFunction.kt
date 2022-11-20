@@ -358,8 +358,8 @@ abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
         return code
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
-        if (super.contravariantOf(context, other, flags)) return true
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
+        if (super.contravariantOf(context, other, varianceFlags)) return true
 
         var matched = false
 
@@ -370,7 +370,7 @@ abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
                         && (sig.params?.size ?: 0) == 0 && sig.variadicParamTy?.isUnknown == true
             } else {
                 other.processSignatures(context) { otherSig ->
-                    matched = sig.contravariantOf(context, otherSig, flags)
+                    matched = sig.contravariantOf(context, otherSig, varianceFlags)
                     !matched
                 }
             }

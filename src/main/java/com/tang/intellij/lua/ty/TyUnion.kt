@@ -110,9 +110,9 @@ class TyUnion : Ty {
         return TyUnion.union(context, resultantChildTys)
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
-        return super.contravariantOf(context, other, flags)
-                || childSet.any { type -> type.contravariantOf(context, other, flags) }
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
+        return super.contravariantOf(context, other, varianceFlags)
+                || childSet.any { type -> type.contravariantOf(context, other, varianceFlags) }
     }
 
     override fun substitute(context: SearchContext, substitutor: ITySubstitutor): ITy {

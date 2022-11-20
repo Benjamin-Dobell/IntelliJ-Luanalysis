@@ -89,8 +89,8 @@ class TyAlias(override val name: String,
         return substitutor.substitute(context, this)
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
-        return ty.contravariantOf(context, other, flags) || super.contravariantOf(context, other, flags)
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
+        return ty.contravariantOf(context, other, varianceFlags) || super.contravariantOf(context, other, varianceFlags)
     }
 }
 

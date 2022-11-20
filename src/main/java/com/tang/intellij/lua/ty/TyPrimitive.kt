@@ -49,13 +49,13 @@ class TyPrimitive(override val primitiveKind: TyPrimitiveKind,
         return primitiveKind.hashCode()
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
-        if (super.contravariantOf(context, other, flags)
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
+        if (super.contravariantOf(context, other, varianceFlags)
                 || (other is ITyPrimitive && other.primitiveKind == primitiveKind)) {
             return true
         }
 
-        if (flags and TyVarianceFlags.STRICT_UNKNOWN == 0) {
+        if (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0) {
             if (primitiveKind == TyPrimitiveKind.Function && other.kind == TyKind.Function) {
                 return true
             }
@@ -115,9 +115,9 @@ open class TyPrimitiveClass(override val primitiveKind: TyPrimitiveKind,
         return primitiveKind.hashCode()
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
         return (other is ITyPrimitive && other.primitiveKind == primitiveKind) ||
-                super.contravariantOf(context, other, flags)
+                super.contravariantOf(context, other, varianceFlags)
     }
 
     override fun willResolve(context: SearchContext): Boolean {
@@ -159,12 +159,12 @@ class TyDocPrimitiveTable(val luaDocPrimitiveTableTy: LuaDocPrimitiveTableTy) : 
         return process(this, luaDocPrimitiveTableTy)
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
-        if (super.contravariantOf(context, other, flags)) {
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
+        if (super.contravariantOf(context, other, varianceFlags)) {
             return true
         }
 
-        if (flags and TyVarianceFlags.STRICT_UNKNOWN == 0) {
+        if (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0) {
             val otherBase = if (other is ITyGeneric) other.base else other
             return other.kind == TyKind.Array
                     || otherBase.kind == TyKind.Class

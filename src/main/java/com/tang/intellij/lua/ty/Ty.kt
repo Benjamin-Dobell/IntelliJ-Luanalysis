@@ -538,9 +538,9 @@ abstract class Ty(override val kind: TyKind) : ITy {
 
     override fun toString() = displayName
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
-        if ((other.kind == TyKind.Unknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0)
-            || (other.kind == TyKind.Nil && flags and TyVarianceFlags.STRICT_NIL == 0 && !LuaSettings.instance.isNilStrict)
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
+        if ((other.kind == TyKind.Unknown && varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0)
+            || (other.kind == TyKind.Nil && varianceFlags and TyVarianceFlags.STRICT_NIL == 0 && !LuaSettings.instance.isNilStrict)
         ) {
             return true
         }
@@ -552,12 +552,12 @@ abstract class Ty(override val kind: TyKind) : ITy {
         }
 
         if (resolvedOther != other) {
-            return contravariantOf(context, resolvedOther, flags)
+            return contravariantOf(context, resolvedOther, varianceFlags)
         }
 
         if (resolvedOther is TyUnion) {
             TyUnion.each(resolvedOther) {
-                if (it !is TySnippet && !contravariantOf(context, it, flags)) {
+                if (it !is TySnippet && !contravariantOf(context, it, varianceFlags)) {
                     return false
                 }
             }
@@ -565,9 +565,9 @@ abstract class Ty(override val kind: TyKind) : ITy {
             return true
         }
 
-        if ((flags and TyVarianceFlags.NON_STRUCTURAL == 0 || other.isAnonymousTable) && isShape(context)) {
+        if ((varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 || other.isAnonymousTable) && isShape(context)) {
             val isCovariant: Boolean? = recursionGuard(resolvedOther, {
-                ProblemUtil.contravariantOfShape(context, this, resolvedOther, flags)
+                ProblemUtil.contravariantOfShape(context, this, resolvedOther, varianceFlags)
             })
 
             if (isCovariant != null) {
@@ -576,7 +576,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
         }
 
         val otherSuper = other.getSuperType(context)
-        return otherSuper != null && contravariantOf(context, otherSuper, flags)
+        return otherSuper != null && contravariantOf(context, otherSuper, varianceFlags)
     }
 
     override fun covariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
@@ -886,7 +886,7 @@ class TyUnknown : Ty(TyKind.Unknown) {
         return Constants.WORD_ANY.hashCode()
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
         return other !is TyMultipleResults
     }
 
@@ -911,8 +911,8 @@ class TyNil : Ty(TyKind.Nil) {
         return resolve(context, other) is TyNil
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
-        return other.kind == TyKind.Nil || super.contravariantOf(context, other, flags)
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
+        return other.kind == TyKind.Nil || super.contravariantOf(context, other, varianceFlags)
     }
 }
 
@@ -926,8 +926,8 @@ class TyVoid : Ty(TyKind.Void) {
         return resolve(context, other) is TyVoid
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
-        return other.kind == TyKind.Void || super.contravariantOf(context, other, flags)
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
+        return other.kind == TyKind.Void || super.contravariantOf(context, other, varianceFlags)
     }
 }
 

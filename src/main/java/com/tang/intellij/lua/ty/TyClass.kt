@@ -206,7 +206,7 @@ abstract class TyClass(override val className: String,
             }
         }
 
-        if (flags and TyVarianceFlags.NON_STRUCTURAL == 0 && isShape(context) && resolvedOther.isShape(context)) {
+        if (isShape(context) && resolvedOther.isShape(context)) {
             return equalToShape(context, this, resolvedOther)
         }
 
@@ -364,15 +364,15 @@ abstract class TyClass(override val className: String,
         return substitutor.substitute(context, this)
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
         lazyInit(context)
 
         val resolved = Ty.resolve(context, this)
 
         if (resolved !== this) {
-            return resolved.contravariantOf(context, other, flags)
+            return resolved.contravariantOf(context, other, varianceFlags)
         } else {
-            return super.contravariantOf(context, other, flags)
+            return super.contravariantOf(context, other, varianceFlags)
         }
     }
 
@@ -439,13 +439,13 @@ open class TySerializedClass(name: String,
         return alias?.type?.substitute(context, aliasSubstitutor) ?: this
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
         if (isUnknown) {
             // Same behaviour as TyUnknown
             return other !is TyMultipleResults
         }
 
-        return super.contravariantOf(context, other, flags)
+        return super.contravariantOf(context, other, varianceFlags)
     }
 }
 

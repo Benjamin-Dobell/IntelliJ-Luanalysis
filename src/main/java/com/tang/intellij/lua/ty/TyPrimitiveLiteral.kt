@@ -44,9 +44,9 @@ class TyPrimitiveLiteral private constructor(val primitiveKind: TyPrimitiveKind,
         return primitiveType
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
         // Even when !LuaSettings.instance.isNilStrict, nil is never assignable to a primitive literal.
-        return this == other || (other.isUnknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0) || super.contravariantOf(context, other, flags)
+        return this == other || (other.isUnknown && varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0) || super.contravariantOf(context, other, varianceFlags)
     }
 
     override fun equals(other: Any?): Boolean {

@@ -65,11 +65,11 @@ class TyGenericParameter(name: String, varName: String, superClass: ITy? = null)
         return true
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
-        return if (flags and TyVarianceFlags.ABSTRACT_PARAMS != 0) {
-            getSuperType(context)?.contravariantOf(context, other, flags) ?: true
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
+        return if (varianceFlags and TyVarianceFlags.ABSTRACT_PARAMS != 0) {
+            getSuperType(context)?.contravariantOf(context, other, varianceFlags) ?: true
         } else {
-            super.contravariantOf(context, other, flags)
+            super.contravariantOf(context, other, varianceFlags)
         }
     }
 
@@ -191,13 +191,13 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
         return superClass
     }
 
-    override fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
+    override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
         val resolvedBase = Ty.resolve(context, base)
         val resolvedOther = Ty.resolve(context, other)
 
         if (resolvedBase is ITyAlias) {
             TyUnion.each(resolvedBase.ty.substitute(context, getMemberSubstitutor(context))) {
-                if (it.contravariantOf(context, resolvedOther, flags)) {
+                if (it.contravariantOf(context, resolvedOther, varianceFlags)) {
                     return true
                 }
             }
@@ -231,7 +231,7 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
                     if (otherMemberSubstitutor != null) it.substitute(context, otherMemberSubstitutor) else it
                 }
 
-                memberTy.contravariantOf(context, otherMemberTy, flags)
+                memberTy.contravariantOf(context, otherMemberTy, varianceFlags)
             }
         }
 
@@ -240,11 +240,11 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
                 val keyTy = args.first()
                 val valueTy = args.last()
                 val resolvedOtherBase = Ty.resolve(context, resolvedOther.base)
-                return (keyTy == Primitives.NUMBER || (keyTy.isUnknown && flags and TyVarianceFlags.STRICT_UNKNOWN == 0))
-                        && (valueTy == resolvedOtherBase || (flags and TyVarianceFlags.WIDEN_TABLES != 0 && valueTy.contravariantOf(
+                return (keyTy == Primitives.NUMBER || (keyTy.isUnknown && varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0))
+                        && (valueTy == resolvedOtherBase || (varianceFlags and TyVarianceFlags.WIDEN_TABLES != 0 && valueTy.contravariantOf(
                     context,
                     resolvedOtherBase,
-                    flags
+                    varianceFlags
                 )))
             } else false
         }
@@ -265,7 +265,7 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
                 val genericTable = createTableGenericFromMembers(context, resolvedOther)
                 otherBase = genericTable.base
                 otherArgs = genericTable.args
-                contravariantParams = flags and TyVarianceFlags.WIDEN_TABLES != 0
+                contravariantParams = varianceFlags and TyVarianceFlags.WIDEN_TABLES != 0
             }
         } else if (resolvedOther is ITyClass) {
             otherBase = resolvedOther
@@ -278,16 +278,16 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
                 return baseArgCount == 0 || args.size == otherArgs?.size && args.asSequence().zip(otherArgs.asSequence()).all { (arg, otherArg) ->
                     // Args are always invariant as we don't support use-site variance nor immutable/read-only annotations
                     arg.equals(context, otherArg)
-                            || (flags and TyVarianceFlags.STRICT_UNKNOWN == 0 && otherArg.isUnknown)
+                            || (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0 && otherArg.isUnknown)
                             || (
-                                (contravariantParams || (flags and TyVarianceFlags.ABSTRACT_PARAMS != 0 && arg is TyGenericParameter))
-                                && arg.contravariantOf(context, otherArg, flags)
+                                (contravariantParams || (varianceFlags and TyVarianceFlags.ABSTRACT_PARAMS != 0 && arg is TyGenericParameter))
+                                && arg.contravariantOf(context, otherArg, varianceFlags)
                             )
                 }
             }
         }
 
-        return super.contravariantOf(context, resolvedOther, flags)
+        return super.contravariantOf(context, resolvedOther, varianceFlags)
     }
 
     override fun accept(visitor: ITyVisitor) {

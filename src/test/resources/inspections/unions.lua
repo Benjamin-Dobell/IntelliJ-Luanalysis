@@ -37,7 +37,7 @@ aOrB = <error>aOrC</error>
 ---@shape Engine
 ---@field run function
 
----@shape Horse
+---@class Horse
 ---@field run function
 
 ---@shape Shed
@@ -50,7 +50,7 @@ shed = {
     occupant = <error descr="Type mismatch. Required: 'Engine | Horse' Found: '\"invalid\"'">"invalid"</error>
 }
 
----@shape Foal : Horse
+---@class Foal : Horse
 
 ---@shape Nursery
 ---@field occupant Foal

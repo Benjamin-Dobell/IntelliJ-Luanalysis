@@ -117,3 +117,14 @@ local aliasedArrayOfAliasedType
 acceptArrayAsGenericTable({1, 2, 3})
 acceptArrayAsGenericTable(aliasedArrayOfAliasedType)
 acceptArrayAsGenericTable(<error descr="Type mismatch. Required: 'table<K, V>' Found: '1'">1</error>)
+
+---@alias EmptyShapeAlias {}
+
+---@type EmptyShapeAlias[]
+local arrayOfAliasedEmptyShape
+
+---@type {}[]
+local arrayOfEmptyShape
+
+arrayOfEmptyShape = arrayOfAliasedEmptyShape
+arrayOfAliasedEmptyShape = arrayOfEmptyShape
