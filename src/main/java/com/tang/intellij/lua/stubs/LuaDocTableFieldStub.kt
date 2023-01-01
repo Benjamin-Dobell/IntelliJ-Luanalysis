@@ -31,7 +31,6 @@ import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.stubs.index.StubKeys
 import com.tang.intellij.lua.ty.ITy
 import com.tang.intellij.lua.ty.Primitives
-import com.tang.intellij.lua.ty.Ty
 import com.tang.intellij.lua.ty.getDocTableTypeName
 
 class LuaDocTableFieldType : LuaStubElementType<LuaDocTableFieldStub, LuaDocTableField>("DOC_TABLE_FIELD_DEF") {

@@ -17,13 +17,10 @@
 package com.tang.intellij.lua.errorreporting
 
 import com.intellij.AbstractBundle
-import com.intellij.CommonBundle
 import com.intellij.diagnostic.AbstractMessage
 import com.intellij.diagnostic.DiagnosticBundle
 import com.intellij.diagnostic.IdeErrorsDialog
-import com.intellij.diagnostic.ReportMessages
 import com.intellij.ide.DataManager
-import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.idea.IdeaLogger
 import com.intellij.notification.NotificationGroupManager

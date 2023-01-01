@@ -37,8 +37,8 @@ import com.tang.intellij.lua.ty.*
  */
 class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationProvider {
 
-    private val renderer: ITyRenderer = object: TyRenderer() {
-        override fun renderType(t: String): String {
+    private val renderer = object: TyRenderer() {
+        override fun renderTypeName(t: String): String {
             return if (t.isNotEmpty()) buildString { DocumentationManagerUtil.createHyperlink(this, t, t, true) } else t
         }
 
@@ -81,9 +81,15 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
             is LuaLocalDef -> { //local xx
 
                 renderDefinition(sb) {
-                    sb.append("local <b>${element.name}</b>: ")
                     val ty = element.guessType(SearchContext.get(element.project)) ?: Primitives.UNKNOWN
-                    renderTy(sb, ty, tyRenderer)
+
+                    sb.append("local <b>${element.name}</b>: ")
+
+                    if (renderer.isMemberPunctuationRequired(ty)) {
+                        "(${renderTy(sb, ty, tyRenderer)})"
+                    } else {
+                        renderTy(sb, ty, tyRenderer)
+                    }
                 }
 
                 val owner = PsiTreeUtil.getParentOfType(element, LuaCommentOwner::class.java)

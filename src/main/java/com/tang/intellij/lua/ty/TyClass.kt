@@ -35,6 +35,7 @@ import com.tang.intellij.lua.search.PsiSearchContext
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.*
 
+
 interface ITyClass : ITyResolvable {
     val className: String
     val varName: String
@@ -563,7 +564,7 @@ fun getTableTypeName(table: LuaTableExpr): String {
         return stub.tableTypeName
 
     val id = table.containingFile.getFileIdentifier()
-    return "$id@(${table.node.startOffset})table"
+    return "table@$id:${table.node.startOffset}"
 }
 
 fun getAnonymousTypeName(variableDef: LuaPsiElement): String {
@@ -622,7 +623,7 @@ fun getGlobalTypeName(nameExpr: LuaNameExpr): String {
     return getGlobalTypeName(nameExpr.name)
 }
 
-class TyTable(val table: LuaTableExpr) : TyClass(getTableTypeName(table)) {
+open class TyTable(val table: LuaTableExpr, name: String = getTableTypeName(table)) : TyClass(name) {
     init {
         this.flags = TyFlags.ANONYMOUS_TABLE or TyFlags.SHAPE
     }
@@ -691,6 +692,10 @@ class TyTable(val table: LuaTableExpr) : TyClass(getTableTypeName(table)) {
 
         return narrowestTypeMember?.let { process(this, it) } ?: true
     }
+
+    override fun substitute(context: SearchContext, substitutor: ITySubstitutor): ITy {
+        return TyLazySubstitutedTable(context, this, substitutor)
+    }
 }
 
 fun getDocTableTypeName(table: LuaDocTableDef): String {
@@ -705,6 +710,10 @@ fun getDocTableTypeName(table: LuaDocTableDef): String {
 fun getSubstitutedDocTableTypeName(table: LuaDocTableDef): String {
     // TODO: This is very bad... and useless.
     return "${getDocTableTypeName(table)}${Math.random()}"
+}
+
+fun getSubstitutedTableTypeName(context: SearchContext, table: LuaTableExpr, substitutor: ITySubstitutor): String {
+    return "${getTableTypeName(table)}:${context.identifier}:${substitutor.name}"
 }
 
 
@@ -782,6 +791,42 @@ class TySubstitutedDocTable(docTable: TyDocTable, val substitutor: ITySubstituto
 
     override fun getMemberSubstitutor(context: SearchContext): ITySubstitutor? {
         return TyChainSubstitutor.chain(super.getMemberSubstitutor(context), substitutor)
+    }
+}
+
+class TyLazySubstitutedTable(context: SearchContext, table: TyTable, val substitutor: ITySubstitutor): TyTable(table.table, getSubstitutedTableTypeName(context, table.table, substitutor)) {
+    init {
+        // TODO: This is a hack. This just convinces the LuaClassMemberIndex to look for members using the parent
+        //       table's name. Instead we should implement processMember/Indexer and call LuaClassMemberIndex with the
+        //       parent doc table's name. However, "sub-classes" of substituted doc tables would call into
+        //       LuaClassMemberIndex, and it presently doesn't call back out to processMember/Indexer on parent types.
+        //       See notes on LuaClassMemberIndex.
+        superClass = table
+    }
+
+    override fun getMemberSubstitutor(context: SearchContext): ITySubstitutor? {
+        return TyChainSubstitutor.chain(super.getMemberSubstitutor(context), substitutor)
+    }
+
+    override fun substitute(context: SearchContext, substitutor: ITySubstitutor): ITy {
+        var alreadySubstituted = this.substitutor.name == substitutor.name;
+
+        if (!alreadySubstituted) {
+            Ty.processSuperClasses(context, this) { superTy ->
+                if (superTy is TyLazySubstitutedTable) {
+                    alreadySubstituted = superTy.substitutor.name == substitutor.name
+                    !alreadySubstituted
+                } else {
+                    false
+                }
+            }
+        }
+
+        return if (alreadySubstituted) {
+            this
+        } else {
+            TyLazySubstitutedTable(context, this, substitutor)
+        }
     }
 }
 

@@ -28,9 +28,10 @@ import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.codeInsight.inspection.MatchFunctionSignatureInspection
 import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.project.LuaSettings
-import com.tang.intellij.lua.psi.*
+import com.tang.intellij.lua.psi.LuaCallExpr
+import com.tang.intellij.lua.psi.LuaTableExpr
+import com.tang.intellij.lua.psi.argList
 import com.tang.intellij.lua.search.SearchContext
-import java.lang.IllegalStateException
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -48,7 +49,7 @@ enum class TyKind {
     MultipleResults,
     GenericParam,
     PrimitiveLiteral,
-    Snippet
+    Snippet // TODO: Remove
 }
 enum class TyPrimitiveKind {
     String,
@@ -96,9 +97,9 @@ interface ITy : Comparable<ITy> {
 
     fun not(context: SearchContext, ty: ITy): ITy
 
-    fun contravariantOf(context: SearchContext, other: ITy, flags: Int): Boolean
+    fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean
 
-    fun covariantOf(context: SearchContext, other: ITy, flags: Int): Boolean
+    fun covariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean
 
     fun getSuperType(context: SearchContext): ITy?
 
@@ -566,12 +567,12 @@ abstract class Ty(override val kind: TyKind) : ITy {
         }
 
         if ((varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 || other.isAnonymousTable) && isShape(context)) {
-            val isCovariant: Boolean? = recursionGuard(resolvedOther, {
+            val isContravariant: Boolean? = recursionGuard(resolvedOther, {
                 ProblemUtil.contravariantOfShape(context, this, resolvedOther, varianceFlags)
             })
 
-            if (isCovariant != null) {
-                return isCovariant
+            if (isContravariant != null) {
+                return isContravariant
             }
         }
 
@@ -579,8 +580,8 @@ abstract class Ty(override val kind: TyKind) : ITy {
         return otherSuper != null && contravariantOf(context, otherSuper, varianceFlags)
     }
 
-    override fun covariantOf(context: SearchContext, other: ITy, flags: Int): Boolean {
-        return other.contravariantOf(context, this, flags)
+    override fun covariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
+        return other.contravariantOf(context, this, varianceFlags)
     }
 
     override fun getSuperType(context: SearchContext): ITy? {
@@ -718,13 +719,13 @@ abstract class Ty(override val kind: TyKind) : ITy {
         }
 
         fun processSuperClasses(context: SearchContext, start: ITy, processor: (ITy) -> Boolean): Boolean {
-            val processedName = mutableSetOf<String>()
+            val processedTys = mutableSetOf<ITy>()
             var cur: ITy? = start
 
             while (cur != null) {
                 ProgressManager.checkCanceled()
 
-                if (!processedName.add(cur.displayName)) {
+                if (!processedTys.add(cur)) {
                     return true
                 }
 
@@ -870,16 +871,16 @@ class TyUnknown : Ty(TyKind.Unknown) {
         this.flags = this.flags or TyFlags.UNKNOWN
     }
 
-    override fun equals(other: Any?): Boolean {
-        return other is TyUnknown
-    }
-
     override fun equals(context: SearchContext, other: ITy): Boolean {
         if (other === Primitives.UNKNOWN) {
             return true
         }
 
         return resolve(context, other) is TyUnknown
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return other is TyUnknown
     }
 
     override fun hashCode(): Int {
@@ -911,6 +912,18 @@ class TyNil : Ty(TyKind.Nil) {
         return resolve(context, other) is TyNil
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (other === Primitives.NIL) {
+            return true
+        }
+
+        return other is TyNil
+    }
+
+    override fun hashCode(): Int {
+        return Constants.WORD_NIL.hashCode()
+    }
+
     override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
         return other.kind == TyKind.Nil || super.contravariantOf(context, other, varianceFlags)
     }
@@ -924,6 +937,18 @@ class TyVoid : Ty(TyKind.Void) {
         }
 
         return resolve(context, other) is TyVoid
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other === Primitives.VOID) {
+            return true
+        }
+
+        return other is TyVoid
+    }
+
+    override fun hashCode(): Int {
+        return Constants.WORD_VOID.hashCode()
     }
 
     override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {

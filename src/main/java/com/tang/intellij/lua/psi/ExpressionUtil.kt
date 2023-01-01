@@ -19,7 +19,6 @@ package com.tang.intellij.lua.psi
 import com.intellij.psi.tree.IElementType
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.Primitives
-import com.tang.intellij.lua.ty.Ty
 
 data class ComputeResult(val kind: ComputeKind,
                          var bValue: Boolean = false,

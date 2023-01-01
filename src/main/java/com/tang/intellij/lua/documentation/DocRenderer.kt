@@ -41,7 +41,7 @@ fun renderTy(sb: StringBuilder, ty: ITy, tyRenderer: ITyRenderer) {
     tyRenderer.render(ty, sb)
 }
 
-fun renderSignature(sb: StringBuilder, signature: IFunSignature, tyRenderer: ITyRenderer) {
+fun renderSignature(sb: StringBuilder, signature: IFunSignature, tyRenderer: TyRenderer) {
     val sig = mutableListOf<String>()
     val params = signature.params
     val varargTy = signature.variadicParamTy
@@ -56,8 +56,19 @@ fun renderSignature(sb: StringBuilder, signature: IFunSignature, tyRenderer: ITy
         sb.append("(${sig.joinToString(", <br>        ")})")
     }
     signature.returnTy?.let {
+        val parenthesisRequired = tyRenderer.isReturnPunctuationRequired(it)
+
         sb.append(": ")
+
+        if (parenthesisRequired) {
+            sb.append("(")
+        }
+
         tyRenderer.render(it, sb)
+
+        if (parenthesisRequired) {
+            sb.append(")")
+        }
     }
 }
 

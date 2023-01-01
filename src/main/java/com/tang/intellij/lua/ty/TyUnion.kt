@@ -209,7 +209,7 @@ class TyUnion : Ty {
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is TyUnion && other.hashCode() == hashCode()
+        return other is TyUnion && childSet.equals(other.childSet)
     }
 
     override fun hashCode(): Int {

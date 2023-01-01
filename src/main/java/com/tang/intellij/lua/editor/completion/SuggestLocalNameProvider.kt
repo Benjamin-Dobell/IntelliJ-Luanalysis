@@ -19,7 +19,6 @@ package com.tang.intellij.lua.editor.completion
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.icons.AllIcons
 import com.intellij.psi.codeStyle.NameUtil
-import com.intellij.util.Processor
 import com.tang.intellij.lua.editor.LuaNameSuggestionProvider
 import com.tang.intellij.lua.psi.search.LuaShortNamesManager
 

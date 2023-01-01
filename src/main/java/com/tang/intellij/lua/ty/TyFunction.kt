@@ -321,15 +321,6 @@ interface ITyFunction : ITy {
 
 abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
 
-    override fun equals(other: Any?): Boolean {
-        if (other is ITyFunction) {
-            if (mainSignature != other.mainSignature)
-                return false
-           return signatures.indices.none { signatures[it] != other.signatures.getOrNull(it) }
-        }
-        return false
-    }
-
     override fun equals(context: SearchContext, other: ITy): Boolean {
         if (this === other) {
             return true
@@ -347,6 +338,15 @@ abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
             }
         }
 
+        return false
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other is ITyFunction) {
+            if (mainSignature != other.mainSignature)
+                return false
+            return signatures.indices.none { signatures[it] != other.signatures.getOrNull(it) }
+        }
         return false
     }
 

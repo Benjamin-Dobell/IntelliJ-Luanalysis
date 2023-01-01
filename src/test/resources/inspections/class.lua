@@ -24,7 +24,7 @@ classWithFields.b = 1
 classWithFields.a = "someOtherString"
 classWithFields.b = 2
 
-classWithFields = <error descr="Type mismatch. Required: 'ClassWithFields' Found: 'table'">{
+classWithFields = <error descr="Type mismatch. Required: 'ClassWithFields' Found: '{ a: \"someString\", b: 1 }'">{
     a = "someString",
     b = 1
 }</error>

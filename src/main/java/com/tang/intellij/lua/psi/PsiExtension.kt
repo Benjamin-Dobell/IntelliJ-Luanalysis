@@ -145,7 +145,7 @@ private fun LuaExpression<*>.shouldBeInternal(context: SearchContext): ITy? {
 
 fun LuaExpression<*>.shouldBe(context: SearchContext): ITy? {
     return shouldBeInternal(context)?.let {
-        TyAliasSubstitutor().substitute(context, it)
+        TyAliasSubstitutor.substitute(context, it)
     }
 }
 

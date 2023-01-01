@@ -21,9 +21,7 @@ import com.intellij.xdebugger.evaluation.XDebuggerEvaluator
 import com.intellij.xdebugger.frame.*
 import com.intellij.xdebugger.impl.XDebugSessionImpl
 import com.tang.intellij.lua.debugger.remote.LuaMobDebugProcess
-import org.luaj.vm2.LuaTable
 import org.luaj.vm2.LuaValue
-import java.util.*
 
 /**
  *

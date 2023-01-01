@@ -335,10 +335,10 @@ local strictAnonymousShape = {a = 'specific string'}
 
 looseAnonymousShape = merge(looseAnonymousShape, strictAnonymousShape)
 looseAnonymousShape = merge(strictAnonymousShape, looseAnonymousShape)
-strictAnonymousShape = <error descr="Type mismatch. Required: 'table' Found: '{ a: string }'">merge(looseAnonymousShape, strictAnonymousShape)</error>
+strictAnonymousShape = <error descr="Type mismatch. Required: '{ a: \"specific string\" }' Found: '{ a: string }'">merge(looseAnonymousShape, strictAnonymousShape)</error>
 
 stringStringTable = merge(stringStringTable, {a = 'specific string'})
-stringStringTable = <error descr="Type mismatch. Required: 'table<string, string>' Found: 'table | table<string, string>'">merge(stringStringTable, strictAnonymousShape)</error>
+stringStringTable = <error descr="Type mismatch. Required: 'table<string, string>' Found: 'table<string, string> | { a: \"specific string\" }'">merge(stringStringTable, strictAnonymousShape)</error>
 
 ---@generic K, V
 ---@param a table<K, V>
@@ -453,7 +453,7 @@ function build(builder)
     return builder()
 end
 
-stringNumberTable = <error descr="Type mismatch. Required: 'table<string, number>' Found: 'table'">build(function()
+stringNumberTable = <error descr="Type mismatch. Required: 'table<string, number>' Found: '{ a: 1 }'">build(function()
     return {a = 1}
 end)</error>
 
@@ -542,7 +542,7 @@ local function simpleInlineWidening(thing, thing2)
 end
 
 looseFieldAShape = simpleInlineWidening({a = anyString}, {a = string1})
-strictfieldAShape = <error descr="Type mismatch. Required: 'StrictFieldAShape' Found: 'table'">simpleInlineWidening({a = anyString}, {a = string1})</error>
+strictfieldAShape = <error descr="Type mismatch. Required: 'StrictFieldAShape' Found: '{ a: string }'">simpleInlineWidening({a = anyString}, {a = string1})</error>
 strictfieldAShape = simpleInlineWidening({a = string1}, {a = string1})
 
 ---@generic T : string
@@ -556,7 +556,7 @@ end
 ---@type 'hi' | 'bye'
 local hiOrBye = implicitGenericSubstitution({a = 'hi'}, {a = 'bye'})
 string1 = <error descr="Type mismatch. Required: '\"string1\"' Found: '\"bye\" | \"hi\"'">implicitGenericSubstitution({a = 'hi'}, {a = 'bye'})</error>
-anyString = implicitGenericSubstitution({a = <error descr="Type mismatch. Required: 'T : string' Found: '\"hi\"'">'hi'</error>}, <error descr="Type mismatch. Missing member: 'a' of: '{ a: T }'">{b = 'nope'}</error>)
+anyString = implicitGenericSubstitution({a = <error descr="Type mismatch. Required: 'T : string' Found: '\"hi\"'">'hi'</error>}, <error descr="Type mismatch. Missing member: 'a' of: '{ a: (T : string) }'">{b = 'nope'}</error>)
 
 ---@generic T
 ---@param a T

@@ -24,8 +24,11 @@ import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.BitUtil
 import com.intellij.util.io.StringRef
-import com.tang.intellij.lua.psi.*
+import com.tang.intellij.lua.psi.LuaTableExpr
+import com.tang.intellij.lua.psi.LuaTableField
+import com.tang.intellij.lua.psi.Visibility
 import com.tang.intellij.lua.psi.impl.LuaTableFieldImpl
+import com.tang.intellij.lua.psi.shouldCreateStub
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.index.LuaClassMemberIndex
 import com.tang.intellij.lua.stubs.index.StubKeys
@@ -81,16 +84,20 @@ class LuaTableFieldType : LuaStubElementType<LuaTableFieldStub, LuaTableField>("
     }
 
     override fun serialize(stub: LuaTableFieldStub, stubOutputStream: StubOutputStream) {
-        stubOutputStream.writeName(stub.className)
-        stubOutputStream.writeName(stub.name)
-        stubOutputStream.writeTyNullable(stub.indexTy)
+        // This shouldn't be necessary, but as usual IntelliJ is calling into our code and incorrectly indicating
+        // we're not in dumb mode whilst indexing is in progress. Quality.
+        SearchContext.withDumb(stub.psi.project, null) {
+            stubOutputStream.writeName(stub.className)
+            stubOutputStream.writeName(stub.name)
+            stubOutputStream.writeTyNullable(stub.indexTy)
 
-        if (stub.indexTy != null) {
-            stubOutputStream.writeBoolean(stub.isIndexExpression)
+            if (stub.indexTy != null) {
+                stubOutputStream.writeBoolean(stub.isIndexExpression)
+            }
+
+            stubOutputStream.writeShort(stub.flags)
+            stubOutputStream.writeTyNullable(stub.valueTy)
         }
-
-        stubOutputStream.writeShort(stub.flags)
-        stubOutputStream.writeTyNullable(stub.valueTy)
     }
 
     override fun deserialize(stubInputStream: StubInputStream, stubElement: StubElement<*>): LuaTableFieldStub {

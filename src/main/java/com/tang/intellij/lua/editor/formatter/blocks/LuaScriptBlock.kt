@@ -24,11 +24,9 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.formatter.common.AbstractBlock
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.TokenSet
-import com.tang.intellij.lua.editor.formatter.LuaCodeStyleSettings
 import com.tang.intellij.lua.editor.formatter.LuaFormatContext
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.LuaTypes.*
-import java.util.*
 
 /**
 

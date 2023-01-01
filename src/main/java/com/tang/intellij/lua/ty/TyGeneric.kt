@@ -108,7 +108,7 @@ interface ITyGeneric : ITyResolvable {
     }
 
     override fun getMemberSubstitutor(context: SearchContext): ITySubstitutor {
-        val resolvedBase = TyAliasSubstitutor().substitute(context, base)
+        val resolvedBase = TyAliasSubstitutor.substitute(context, base)
         val baseParams = resolvedBase.getParams(context) ?: arrayOf()
         val parameterSubstitutor = TyParameterSubstitutor.withArgs(baseParams, args)
         return super.getMemberSubstitutor(context)?.let {
@@ -133,14 +133,6 @@ interface ITyGeneric : ITyResolvable {
 }
 
 open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) : Ty(TyKind.Generic), ITyGeneric {
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) {
-            return true
-        }
-
-        return other is ITyGeneric && other.base == base && other.displayName == displayName
-    }
 
     override fun equals(context: SearchContext, other: ITy): Boolean {
         if (this === other) {
@@ -173,8 +165,19 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
         return false
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+
+        return other is ITyGeneric
+            && other.args.size == args.size
+            && other.base == base
+            && args.withIndex().all { (index, ty) -> ty.equals(other.args[index]) }
+    }
+
     override fun hashCode(): Int {
-        return displayName.hashCode()
+        return args.fold(base.hashCode()) { acc, iTy -> 31 * acc + iTy.hashCode() }
     }
 
     override fun getSuperType(context: SearchContext): ITy? {

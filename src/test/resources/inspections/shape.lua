@@ -12,7 +12,7 @@ local NotShape1
 local notShape1
 
 shape1 = {a = 1}
-notShape1 = <error descr="Type mismatch. Required: 'NotShape1' Found: 'table'">{a = 1}</error>
+notShape1 = <error descr="Type mismatch. Required: 'NotShape1' Found: '{ a: 1 }'">{a = 1}</error>
 
 shape1 = notShape1
 notShape1 = <error descr="Type mismatch. Required: 'NotShape1' Found: 'Shape1'">shape1</error>
@@ -66,7 +66,7 @@ local notALiteral = {a = aString}
 
 derivedGenericShape = <error descr="Type mismatch. Missing member: 'b' of: 'DerivedGenericShape<number>'">{a = aNumber}</error>
 derivedGenericShape = {a = 1, b = <error descr="Type mismatch. Required: 'number' Found: 'string'">aString</error>}
-derivedGenericShape = <error descr="Type mismatch. Required: 'DerivedGenericShape<number>' Found: 'table'">notALiteral</error>
+derivedGenericShape = <error descr="Type mismatch. Required: 'DerivedGenericShape<number>' Found: '{ a: string }'">notALiteral</error>
 
 ---@param shape DerivedGenericShape<string>
 local function takesAShape(shape)
@@ -115,7 +115,7 @@ local nestedShape3 = {
 ---@return NestedShape
 local function returnNestedShape()
     return {
-        shape1 = {a = <error descr="Type mismatch. Required: 'number' Found: 'table'">{}</error>},
+        shape1 = {a = <error descr="Type mismatch. Required: 'number' Found: '{}'">{}</error>},
         shape2 = {a = aNumber, b = <error descr="Type mismatch. Required: 'string' Found: 'number'">aNumber</error>}
     }
 end
@@ -226,7 +226,7 @@ primitiveAndTable = {
 local arrayOfUnions = {
     {
         tag = <error descr="Type mismatch. Required: '\"String\"' Found: '\"Number\"', on union candidate UnionMemberA">"Number"</error>,
-        value = <error descr="Type mismatch. Required: 'number' Found: 'table', on union candidate UnionMemberB"><error descr="Type mismatch. Required: 'string' Found: 'table', on union candidate UnionMemberA">{}</error></error>
+        value = <error descr="Type mismatch. Required: 'number' Found: '{}', on union candidate UnionMemberB"><error descr="Type mismatch. Required: 'string' Found: '{}', on union candidate UnionMemberA">{}</error></error>
     }
 }
 

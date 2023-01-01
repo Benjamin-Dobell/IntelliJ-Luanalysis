@@ -106,3 +106,18 @@ function recursiveConcreteness(value)
 
     return value
 end
+
+---@generic T
+---@param t T
+function anonymousGenericFieldAccessedFromExternalScope(t)
+    return {
+        a = t
+    }
+end
+
+---@type boolean
+local aBoolean
+local booleanFoo = anonymousGenericFieldAccessedFromExternalScope(aBoolean)
+
+aBoolean = booleanFoo.a
+booleanFoo.a = <error descr="Type mismatch. Required: 'boolean' Found: '\"not a boolean\"'">"not a boolean"</error>

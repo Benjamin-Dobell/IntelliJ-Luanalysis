@@ -11,7 +11,7 @@ local NotDocTable1
 local notDocTable1
 
 docTable1 = {a = 1}
-notDocTable1 = <error descr="Type mismatch. Required: 'NotDocTable1' Found: 'table'">{a = 1}</error>
+notDocTable1 = <error descr="Type mismatch. Required: 'NotDocTable1' Found: '{ a: 1 }'">{a = 1}</error>
 
 docTable1 = notDocTable1
 notDocTable1 = <error descr="Type mismatch. Required: 'NotDocTable1' Found: 'DocTable1'">docTable1</error>
@@ -84,7 +84,7 @@ local nestedDocTable3 = {
 ---@return NestedDocTable
 local function returnNestedDocTable()
     return {
-        docTable1 = {a = <error descr="Type mismatch. Required: 'number' Found: 'table'">{}</error>},
+        docTable1 = {a = <error descr="Type mismatch. Required: 'number' Found: '{}'">{}</error>},
         docTable2 = {a = aNumber, b = <error descr="Type mismatch. Required: 'string' Found: 'number'">aNumber</error>}
     }
 end
@@ -178,7 +178,7 @@ primitiveAndTable = {
 local arrayOfUnions = {
     {
         tag = <error descr="Type mismatch. Required: '\"String\"' Found: '\"Number\"', on union candidate DocTableUnionMemberA">"Number"</error>,
-        value = <error descr="Type mismatch. Required: 'number' Found: 'table', on union candidate DocTableUnionMemberB"><error descr="Type mismatch. Required: 'string' Found: 'table', on union candidate DocTableUnionMemberA">{}</error></error>
+        value = <error descr="Type mismatch. Required: 'number' Found: '{}', on union candidate DocTableUnionMemberB"><error descr="Type mismatch. Required: 'string' Found: '{}', on union candidate DocTableUnionMemberA">{}</error></error>
     }
 }
 

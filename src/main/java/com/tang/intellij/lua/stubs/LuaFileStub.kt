@@ -23,7 +23,6 @@ import com.intellij.psi.StubBuilder
 import com.intellij.psi.stubs.*
 import com.intellij.psi.tree.IStubFileElementType
 import com.intellij.util.io.StringRef
-import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.lang.LuaLanguage
 import com.tang.intellij.lua.lang.LuaParserDefinition
 import com.tang.intellij.lua.psi.LuaPsiFile

@@ -19,7 +19,6 @@ import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
-import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.comment.psi.api.LuaComment
@@ -31,6 +30,7 @@ import java.util.*
 open class FoundLuaScope(open val scope: LuaScopedTypeTreeScope, val psiScopedTypeIndex: Int? = null)
 
 interface LuaScopedTypeTreeScope {
+    val name: String
     val psi: PsiElement
     val tree: LuaScopedTypeTree
     val parent: LuaScopedTypeTreeScope?
@@ -78,6 +78,8 @@ interface LuaScopedTypeTree {
 }
 
 private class ScopedTypeTreeScope(override val psi: LuaTypeScope, override val tree: ScopedTypeTree, override val parent: ScopedTypeTreeScope?): LuaScopedTypeTreeScope {
+    override val name = psi.containingFile.getFileIdentifier() + "@" + psi.node.startOffset
+
     private val types = ArrayList<LuaScopedType>(0)
     private val childScopes = LinkedList<ScopedTypeTreeScope>()
 
@@ -427,6 +429,8 @@ private class ScopedTypeStubTree(file: LuaPsiFile) : ScopedTypeTree(file) {
 }
 
 class ScopedTypeSubstitutor(context: SearchContext, val scope: LuaScopedTypeTreeScope) : TySubstitutor() {
+    override val name = "scoped:" + scope.name
+
     override fun substitute(context: SearchContext, clazz: ITyClass): ITy {
         return (clazz as? TyGenericParameter)?.let { genericParam ->
             val scopedTy = scope.findName(context, genericParam.varName)?.type as? TyGenericParameter

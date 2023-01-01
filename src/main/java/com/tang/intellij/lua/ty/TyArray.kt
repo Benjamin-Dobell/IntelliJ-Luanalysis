@@ -41,7 +41,7 @@ open class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
     }
 
     override fun hashCode(): Int {
-        return displayName.hashCode()
+        return base.hashCode() * 31 + 31
     }
 
     override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {

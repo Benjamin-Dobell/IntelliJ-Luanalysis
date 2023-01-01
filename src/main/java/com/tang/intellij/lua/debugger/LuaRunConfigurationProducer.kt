@@ -18,9 +18,7 @@ package com.tang.intellij.lua.debugger
 
 import com.intellij.execution.actions.ConfigurationContext
 import com.intellij.execution.actions.LazyRunConfigurationProducer
-import com.intellij.execution.actions.RunConfigurationProducer
 import com.intellij.execution.configurations.ConfigurationFactory
-import com.intellij.openapi.externalSystem.service.execution.AbstractExternalSystemTaskConfigurationType
 import com.intellij.openapi.util.Ref
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.debugger.app.LuaAppConfigurationType

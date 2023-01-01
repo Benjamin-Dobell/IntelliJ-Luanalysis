@@ -20,10 +20,6 @@ import com.intellij.psi.stubs.*
 import com.tang.intellij.lua.psi.LuaReturnStat
 import com.tang.intellij.lua.psi.LuaTypes
 import com.tang.intellij.lua.psi.impl.LuaReturnStatImpl
-import com.tang.intellij.lua.stubs.LuaDocTyStub
-import com.tang.intellij.lua.stubs.LuaStubElementType
-import com.tang.intellij.lua.stubs.readTyNullable
-import com.tang.intellij.lua.stubs.writeTyNullable
 import com.tang.intellij.lua.ty.ITy
 
 class LuaReturnStatType : LuaStubElementType<LuaReturnStatStub, LuaReturnStat>("Return Statement") {

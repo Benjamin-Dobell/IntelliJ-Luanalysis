@@ -24,6 +24,8 @@ import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
 interface ITySubstitutor {
+    val name: String;
+
     fun substitute(context: SearchContext, alias: ITyAlias): ITy
     fun substitute(context: SearchContext, function: ITyFunction): ITy
     fun substitute(context: SearchContext, clazz: ITyClass): ITy
@@ -306,7 +308,10 @@ abstract class TySubstitutor : ITySubstitutor {
     }
 }
 
-class TyAliasSubstitutor() : TySubstitutor() {
+// TODO: Merge into ScopedTypeSubstitutor
+class TyAliasSubstitutor private constructor() : TySubstitutor() {
+    override val name = "TyAliasSubstitutor"
+
     val processedNames = mutableSetOf<String>()
 
     override fun substitute(context: SearchContext, alias: ITyAlias): ITy {
@@ -336,9 +341,17 @@ class TyAliasSubstitutor() : TySubstitutor() {
     override fun substitute(context: SearchContext, clazz: ITyClass): ITy {
         return clazz.recoverAlias(context, this)
     }
+
+    companion object {
+        fun substitute(context: SearchContext, clazz: ITy): ITy {
+            return TyAliasSubstitutor().substitute(context, clazz)
+        }
+    }
 }
 
 class TySelfSubstitutor(val call: LuaCallExpr?, val self: ITy? = null) : TySubstitutor() {
+    override val name = "TySelfSubstitutor"
+
     private val selfType: ITy by lazy {
         if (self != null) {
             return@lazy self
@@ -359,6 +372,8 @@ class TySelfSubstitutor(val call: LuaCallExpr?, val self: ITy? = null) : TySubst
 }
 
 class GenericParameterResolutionSubstitutor : TySubstitutor() {
+    override val name = "GenericParameterResolutionSubstitutor"
+
     override fun substitute(context: SearchContext, clazz: ITyClass): ITy {
         if (clazz is TyGenericParameter) {
             val superTy = clazz.getSuperType(context)
@@ -380,6 +395,8 @@ class GenericParameterResolutionSubstitutor : TySubstitutor() {
 }
 
 class TyParameterSubstitutor(val map: Map<String, ITy>) : TySubstitutor() {
+    override val name = "TyParameterSubstitutor"
+
     override fun substitute(context: SearchContext, clazz: ITyClass): ITy {
         val ty = (clazz as? TyGenericParameter)?.let { genericParam ->
             map.get(genericParam.className) ?: genericParam
@@ -388,6 +405,9 @@ class TyParameterSubstitutor(val map: Map<String, ITy>) : TySubstitutor() {
         if (ty is TyDocTable) {
             val params = clazz.params
 
+            // TODO: Investigate. This seems incorrect. We're just substituting the TyDocTable's generic params with
+            //       this params in this substitutor. However, if the TyDocTable is declared inside a function or class
+            //       there may be generic parameters in scope that were used in field types.
             if (params?.isNotEmpty() == true) {
                 var paramsSubstituted = false
 
@@ -426,6 +446,8 @@ class TyParameterSubstitutor(val map: Map<String, ITy>) : TySubstitutor() {
 }
 
 class TyChainSubstitutor private constructor(val substitutors: MutableList<ITySubstitutor>) : ITySubstitutor {
+    override val name = "chain:" + substitutors.joinToString(",")
+
     override fun substitute(context: SearchContext, alias: ITyAlias): ITy {
         return substitutors.fold(alias as ITy) { ty, subsitutor -> ty.substitute(context, subsitutor) }
     }

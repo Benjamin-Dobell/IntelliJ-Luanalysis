@@ -33,5 +33,7 @@ class ProjectSearchContext : SearchContext {
 
     override val element: PsiElement? = null
 
+    override val identifier: String = "project"
+
     override fun getProjectContext() = this
 }

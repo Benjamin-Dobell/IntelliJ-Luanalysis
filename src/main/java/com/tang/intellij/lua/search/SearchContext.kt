@@ -22,13 +22,9 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.ProjectAndLibrariesScope
 import com.tang.intellij.lua.ext.ILuaTypeInfer
-import com.tang.intellij.lua.psi.LuaIndexExpr
 import com.tang.intellij.lua.psi.LuaPsiTypeGuessable
 import com.tang.intellij.lua.psi.ScopedTypeSubstitutor
 import com.tang.intellij.lua.ty.ITy
-import com.tang.intellij.lua.ty.ITyClass
-import com.tang.intellij.lua.ty.isAnonymous
-import com.tang.intellij.lua.ty.isSelfClass
 import java.util.*
 
 /**
@@ -38,6 +34,7 @@ import java.util.*
 abstract class SearchContext() {
     abstract val project: Project
     abstract val element: PsiElement?
+    abstract val identifier: String
 
     open fun getProjectContext(): ProjectSearchContext {
         return ProjectSearchContext(this)
@@ -46,7 +43,7 @@ abstract class SearchContext() {
     val index: Int get() = myIndex // Multiple results index
     val supportsMultipleResults: Boolean get() = myMultipleResults
 
-    private var myDumb = false
+    private var myDumb = contextStack.get().lastOrNull()?.isDumb ?: false
     private var myIndex = 0
     private var myMultipleResults = false
     private var myInStack = false
@@ -127,14 +124,11 @@ abstract class SearchContext() {
     }
 
     companion object {
-        private val threadLocal = object : ThreadLocal<Stack<SearchContext>>() {
-            override fun initialValue(): Stack<SearchContext> {
-                return Stack()
-            }
-        }
+        private val contextStack = ThreadLocal.withInitial { Stack<SearchContext>() }
 
         fun get(project: Project): SearchContext {
-            val stack = threadLocal.get()
+            val stack = contextStack.get()
+
             return if (stack.isEmpty()) {
                 ProjectSearchContext(project)
             } else {
@@ -159,7 +153,7 @@ abstract class SearchContext() {
                 val result = action(ctx)
                 result
             } else {
-                val stack = threadLocal.get()
+                val stack = contextStack.get()
                 val size = stack.size
                 stack.push(ctx)
                 ctx.myInStack = true

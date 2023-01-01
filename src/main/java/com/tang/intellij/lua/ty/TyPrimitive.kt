@@ -22,11 +22,12 @@ import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.psi.LuaDocPrimitiveTableTy
 import com.tang.intellij.lua.search.SearchContext
 
+// All primitive types: boolean, number, function, table, string (as per TyPrimitiveKind)
 interface ITyPrimitive : ITy {
     val primitiveKind: TyPrimitiveKind
 }
 
-// number, boolean, nil, void ...
+// boolean, number, function, table
 class TyPrimitive(override val primitiveKind: TyPrimitiveKind,
                   override val displayName: String) : Ty(TyKind.Primitive), ITyPrimitive {
 
@@ -71,10 +72,10 @@ class TyPrimitive(override val primitiveKind: TyPrimitiveKind,
         return false
     }
 
-    override fun guessMemberType(context: SearchContext, name: String): ITy? {
+    override fun guessMemberType(searchContext: SearchContext, name: String): ITy? {
         return if (primitiveKind == TyPrimitiveKind.Table) {
             Primitives.UNKNOWN
-        } else super<Ty>.guessMemberType(context, name)
+        } else super<Ty>.guessMemberType(searchContext, name)
     }
 
     override fun guessIndexerType(context: SearchContext, indexTy: ITy, exact: Boolean): ITy? {

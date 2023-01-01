@@ -18,10 +18,17 @@ package com.tang.intellij.lua.search
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
+import com.tang.intellij.lua.psi.getFileIdentifier
 
 
 class PsiSearchContext(override val element: PsiElement) : SearchContext() {
     override val project: Project by lazy {
         element.project
     }
+
+    override val identifier: String
+        get() {
+            val id = element.containingFile.getFileIdentifier()
+            return "$id@(${element.node.startOffset})"
+        }
 }

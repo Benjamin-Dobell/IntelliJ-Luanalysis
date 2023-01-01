@@ -25,112 +25,177 @@ interface ITyRenderer {
     fun renderSignature(sb: StringBuilder, signature: IFunSignature)
 }
 
+private val MaxRenderedTableMembers = 10;
+private val MaxRenderedUnionMembers = 20;
+private val MaxRecursionDepth = 5;
+private val MaxSingleLineTableMembers = 3;
+private val MaxSingleLineUnionMembers = 5;
+private val MaxSingleLineGenericParams = 5;
+
+private fun joinSingleLineOrWrap(list: Collection<String>, maxOnLine: Int, divider: String, prefix: String = "", suffix: String = "", spaceWrapItems: Boolean = prefix.isNotEmpty()): String {
+    return if (list.size == 0) {
+        prefix + suffix
+    } else if (list.size <= maxOnLine) {
+        list.joinToString(divider + " ", if (spaceWrapItems) prefix + " " else prefix, if (spaceWrapItems) " " + suffix else suffix)
+    } else {
+        list.joinToString(divider + "\n  ", prefix + "\n  ", "\n" + suffix)
+    }
+}
+
 open class TyRenderer : TyVisitor(), ITyRenderer {
+    private var visitedTys = ThreadLocal.withInitial { mutableSetOf<ITy>() }
+
+    private fun withRecursionGuard(ty: ITy, sb: StringBuilder, block: () -> Unit) {
+        if (!visitedTys.get().add(ty)) {
+            sb.append("{...}");
+            return;
+        }
+
+        try {
+            if (visitedTys.get().size > MaxRecursionDepth) {
+                sb.append("<...>")
+            } else {
+                block()
+            }
+        } finally {
+            visitedTys.get().remove(ty)
+        }
+    }
 
     override fun render(ty: ITy): String {
-        return buildString { render(ty, this) }
+        return buildString {
+            render(ty, this)
+        }
     }
 
     override fun render(ty: ITy, sb: StringBuilder) {
         ty.accept(object : TyVisitor() {
-            override fun visitTy(ty: ITy) {
-                when (ty) {
-                    is ITyPrimitive -> sb.append(renderType(ty.displayName))
-                    is TyPrimitiveLiteral -> sb.append(renderType(ty.displayName))
-                    is TyVoid -> sb.append(renderType(Constants.WORD_VOID))
-                    is TyUnknown -> sb.append(renderType(Constants.WORD_ANY))
-                    is TyNil -> sb.append(renderType(Constants.WORD_NIL))
-                    is ITyGeneric -> {
-                        val base = ty.base
+            override fun visitTy(visitedTy: ITy) {
+                withRecursionGuard(visitedTy, sb) {
+                    when (visitedTy) {
+                        is ITyPrimitive -> sb.append(renderTypeName(visitedTy.displayName))
+                        is TyPrimitiveLiteral -> sb.append(renderTypeName(visitedTy.displayName))
+                        is TyVoid -> sb.append(renderTypeName(Constants.WORD_VOID))
+                        is TyUnknown -> sb.append(renderTypeName(Constants.WORD_ANY))
+                        is TyNil -> sb.append(renderTypeName(Constants.WORD_NIL))
+                        is ITyGeneric -> {
+                            val base = visitedTy.base
 
-                        if (base is TyDocTable) {
-                            visitClass(base)
-                        } else {
-                            val list = ty.args.map { render(it) }
-                            val baseName = if (base is ITyClass) {
-                                base.className
-                            } else if (base is ITyAlias) {
-                                base.name
+                            if (base is TyDocTable) {
+                                visitClass(base)
                             } else {
-                                base.displayName
+                                val list = visitedTy.args.map { render(it) }
+                                val baseName = if (base is ITyClass) {
+                                    base.className
+                                } else if (base is ITyAlias) {
+                                    base.name
+                                } else {
+                                    base.displayName
+                                }
+                                sb.append("${baseName}${renderParamsList(list)}")
                             }
-                            sb.append("${baseName}${renderParamsList(list)}")
                         }
-                    }
-                    is TyGenericParameter -> {
 
-                    }
-                    is TySnippet -> sb.append(ty.toString())
-                    else -> {
-                        error("")
+                        is TyGenericParameter -> {
+
+                        }
+
+                        is TySnippet -> sb.append(visitedTy.toString())
+                        else -> {
+                            error("")
+                        }
                     }
                 }
             }
 
             override fun visitAlias(alias: ITyAlias) {
-                sb.append(renderAlias(alias))
+                withRecursionGuard(alias, sb) {
+                    sb.append(renderAlias(alias))
+                }
             }
 
             override fun visitClass(clazz: ITyClass) {
-                sb.append(renderClass(clazz))
+                withRecursionGuard(clazz, sb) {
+                    sb.append(renderClass(clazz))
+                }
             }
 
             override fun visitUnion(u: TyUnion) {
-                val list = mutableSetOf<String>()
-                u.acceptChildren(object : TyVisitor() {
-                    override fun visitTy(ty: ITy) {
-                        val s = render(ty)
-                        if (s.isNotEmpty()) {
-                            list.add(if (isUnionPunctuationRequired(ty)) "(${s})" else s)
+                withRecursionGuard(u, sb) {
+                    val set = mutableSetOf<String>()
+
+                    u.acceptChildren(object : TyVisitor() {
+                        override fun visitTy(ty: ITy) {
+                            val s = render(ty)
+                            if (s.isNotEmpty()) {
+                                set.add(if (isUnionPunctuationRequired(ty)) "(${s})" else s)
+                            }
                         }
+                    })
+
+                    val list = set.asSequence().take(MaxRenderedUnionMembers).toMutableList()
+
+                    if (set.size > MaxRenderedUnionMembers) {
+                        list.add("...")
                     }
-                })
-                sb.append(if (list.isEmpty()) Constants.WORD_ANY else list.joinToString(" | "))
+
+                    sb.append(if (set.isEmpty()) {
+                        Constants.WORD_ANY
+                    } else {
+                        joinSingleLineOrWrap(list, MaxSingleLineUnionMembers, " |")
+                    })
+                }
             }
 
             override fun visitFun(f: ITyFunction) {
-                sb.append("fun")
-                renderSignature(sb, f.mainSignature)
+                withRecursionGuard(f, sb) {
+                    sb.append("fun")
+                    renderSignature(sb, f.mainSignature)
+                }
             }
 
             override fun visitArray(array: ITyArray) {
-                val base = array.base
-                val parenthesesRequired = isArrayPunctuationRequired(base)
+                withRecursionGuard(array, sb) {
+                    val base = array.base
+                    val parenthesesRequired = isArrayPunctuationRequired(base)
 
-                if (parenthesesRequired) {
-                    sb.append("(")
+                    if (parenthesesRequired) {
+                        sb.append("(")
+                    }
+
+                    array.base.accept(this)
+
+                    if (parenthesesRequired) {
+                        sb.append(")")
+                    }
+
+                    sb.append("[]")
                 }
-
-                array.base.accept(this)
-
-                if (parenthesesRequired) {
-                    sb.append(")")
-                }
-
-                sb.append("[]")
             }
 
             override fun visitMultipleResults(multipleResults: TyMultipleResults) {
-                val results = multipleResults.list
-                val parenthesesRequired = multipleResults.variadic && isReturnPunctuationRequired(results.last())
+                withRecursionGuard(multipleResults, sb) {
+                    val results = multipleResults.list
+                    val parenthesesRequired = multipleResults.variadic && isReturnPunctuationRequired(results.last())
 
-                results.asSequence().take(results.size - 1).forEach {
-                    sb.append(render(it))
-                    sb.append(", ")
-                }
+                    results.asSequence().take(results.size - 1).forEach {
+                        sb.append(render(it))
+                        sb.append(", ")
+                    }
 
-                if (parenthesesRequired) {
-                    sb.append("(")
-                }
+                    if (parenthesesRequired) {
+                        sb.append("(")
+                    }
 
-                sb.append(render(results.last()))
+                    sb.append(render(results.last()))
 
-                if (parenthesesRequired) {
-                    sb.append(")")
-                }
+                    if (parenthesesRequired) {
+                        sb.append(")")
+                    }
 
-                if (multipleResults.variadic) {
-                    sb.append("...")
+                    if (multipleResults.variadic) {
+                        sb.append("...")
+                    }
                 }
             }
         })
@@ -183,7 +248,11 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
     }
 
     open fun renderParamsList(params: Collection<String>?): String {
-        return if (params != null && params.isNotEmpty()) "<${params.joinToString(", ")}>" else ""
+        return if (params != null && params.isNotEmpty()) {
+            joinSingleLineOrWrap(params, MaxSingleLineGenericParams, ",", "<", ">", false)
+        } else {
+            ""
+        }
     }
 
     open fun renderAlias(alias: ITyAlias): String = "${alias.name}${renderParamsList(alias.params?.map { it.toString() })}"
@@ -193,7 +262,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
             clazz is TyDocTable -> {
                 val context = SearchContext.get(clazz.table.project)
                 val list = mutableListOf<String>()
-                clazz.table.tableFieldList.forEach { field ->
+                clazz.table.tableFieldList.take(MaxRenderedTableMembers).forEach { field ->
                     val name = field.name
                     val indexTy = if (name == null) field.guessIndexType(context) else null
                     val key = name ?: "[${render(indexTy ?: Primitives.VOID)}]"
@@ -204,16 +273,58 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                             clazz.guessIndexerType(context, indexTy!!)
                         } ?: fieldValue.getType()
 
-                        val renderedFieldTy = (fieldTy as? TyGenericParameter)?.varName ?: render(fieldTy)
-                        list.add("${key}: ${renderedFieldTy}")
+                        val renderedFieldTy = render(fieldTy)
+
+                        list.add(if (isMemberPunctuationRequired(fieldTy)) {
+                            "${key}: (${renderedFieldTy})"
+                        } else {
+                            "${key}: ${renderedFieldTy}"
+                        })
                     }
                 }
-                "{ ${list.joinToString(", ")} }"
+
+                if (clazz.table.tableFieldList.size > MaxRenderedTableMembers) {
+                    list.add("...")
+                }
+
+                joinSingleLineOrWrap(list, MaxSingleLineTableMembers, ",", "{", "}")
             }
             clazz is TyGenericParameter -> {
                 clazz.superClass?.let { "${clazz.varName} : ${it.displayName}" } ?: clazz.varName
             }
-            clazz.isAnonymousTable -> renderType(Constants.WORD_TABLE)
+            clazz is TyTable && clazz.isAnonymousTable -> {
+                if (clazz is TyLazySubstitutedTable) {
+                    var superclass = clazz.superClass as? ITyClass
+
+                    while (superclass != null) {
+                        if (superclass.isAnonymousTable == false) {
+                            return render(superclass)
+                        }
+
+                        superclass = superclass.superClass as? ITyClass
+                    }
+                }
+
+                val context = SearchContext.get(clazz.table.project)
+                val list = mutableListOf<String>()
+                clazz.processMembers(context) { owner, member ->
+                    val name = member.name
+                    val indexTy = if (name == null) member.guessIndexType(context) else null
+                    val key = name ?: "[${render(indexTy ?: Primitives.VOID)}]"
+                    member.guessType(context).let { fieldTy ->
+                        val renderedFieldTy = render(fieldTy ?: Primitives.UNKNOWN)
+
+                        list.add(if (isMemberPunctuationRequired(fieldTy)) {
+                            "${key}: (${renderedFieldTy})"
+                        } else {
+                            "${key}: ${renderedFieldTy}"
+                        })
+                    }
+                    list.size < MaxRenderedTableMembers
+                }
+
+                joinSingleLineOrWrap(list, MaxSingleLineTableMembers, ",", "{", "}")
+            }
             clazz.isAnonymous -> {
                 if (isSuffixedClass(clazz)) {
                     clazz.varName
@@ -226,29 +337,35 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
         }
     }
 
-    open fun renderType(t: String): String {
+    open fun renderTypeName(t: String): String {
         return t
     }
 
-    private fun isUnionPunctuationRequired(ty: ITy): Boolean {
+    fun isUnionPunctuationRequired(ty: ITy): Boolean {
         return ty is TyFunction
                 || ty is TyMultipleResults
                 || (ty is TyGenericParameter && ty.superClass != null)
     }
 
-    private fun isParameterPunctuationRequired(ty: ITy): Boolean {
+    fun isMemberPunctuationRequired(ty: ITy?): Boolean {
+        return ty is TyFunction
+            || ty is TyMultipleResults
+            || (ty is TyGenericParameter && ty.superClass != null)
+    }
+
+    fun isParameterPunctuationRequired(ty: ITy): Boolean {
         return ty is TyFunction
                 || ty is TyMultipleResults
                 || (ty is TyGenericParameter && ty.superClass != null)
     }
 
-    private fun isReturnPunctuationRequired(ty: ITy): Boolean {
+    fun isReturnPunctuationRequired(ty: ITy): Boolean {
         return ty is TyFunction
                 || ty is TyUnion
                 || (ty is TyGenericParameter && ty.superClass != null)
     }
 
-    private fun isArrayPunctuationRequired(ty: ITy): Boolean {
+    fun isArrayPunctuationRequired(ty: ITy): Boolean {
         return ty is TyFunction
                 || ty is TyUnion
                 || (ty is TyGenericParameter && ty.superClass != null)

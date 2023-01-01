@@ -57,7 +57,7 @@ numberArray = {[1] = 1, <error descr="Type mismatch. Required array index: '2' F
 numberNumberTable = {[1] = 1, [3] = 3}
 
 numberArray = {<error descr="Type mismatch. Required: 'number[]' Found non-array field 'one'">one = 1</error>, <error descr="Type mismatch. Required: 'number[]' Found non-array field 'two'">two = 2</error>, <error descr="Type mismatch. Required: 'number[]' Found non-array field 'three'">three = 3</error>}
-numberNumberTable = <error descr="Type mismatch. Required: 'table<number, number>' Found: 'table'">{one = 1, two = 2, three = 3}</error>
+numberNumberTable = <error descr="Type mismatch. Required: 'table<number, number>' Found: '{ one: 1, two: 2, three: 3 }'">{one = 1, two = 2, three = 3}</error>
 
 stringArray = {"one", "two", "three"}
 numberStringTable = {"one", "two", "three"}
@@ -98,7 +98,7 @@ local anyValue
 
 local tableWithoutEntries = {}
 
-anyValue = <error descr="No such member 'keyThatDoesNotExist' found on type 'table'">tableWithoutEntries.keyThatDoesNotExist</error>
+anyValue = <error descr="No such member 'keyThatDoesNotExist' found on type '{}'">tableWithoutEntries.keyThatDoesNotExist</error>
 
 stringArray = {}
 numberArray = {}
@@ -106,7 +106,7 @@ numberNumberTable = {}
 numberStringTable = {}
 explicitUnknown = {}
 implicitUnknown = {}
-explictlyTypedLiteral = <error descr="Type mismatch. Required: '\"stringLiteral\"' Found: 'table'">{}</error>
+explictlyTypedLiteral = <error descr="Type mismatch. Required: '\"stringLiteral\"' Found: '{}'">{}</error>
 wantsNumberNumberTable({})
 
 ---@type number
@@ -121,11 +121,11 @@ local function returnSpecificTable()
     elseif thing == 2 then
         local anonymousTable2 = {}
         anonymousTable2.a = 2
-        return <error descr="Type mismatch. Required: 'table<\"a\", 1>' Found: 'table'">anonymousTable2</error>
+        return <error descr="Type mismatch. Required: 'table<\"a\", 1>' Found: '{ a: 2 }'">anonymousTable2</error>
     elseif thing == 3 then
         local anonymousTable3 = {}
         anonymousTable3.b = 1
-        return <error descr="Type mismatch. Required: 'table<\"a\", 1>' Found: 'table'">anonymousTable3</error>
+        return <error descr="Type mismatch. Required: 'table<\"a\", 1>' Found: '{ b: 1 }'">anonymousTable3</error>
     else
         return {}
     end
@@ -141,7 +141,7 @@ local tableLiteralWithNonLiteralKey = {
     },
 }
 
-tableLiteralWithNonLiteralKey = <error descr="Type mismatch. Required: 'table<string, { aNumber: number }>' Found: 'table'">{
+tableLiteralWithNonLiteralKey = <error descr="Type mismatch. Required: 'table<string, { aNumber: number }>' Found: '{ [string]: { aNumber: \"wrong\" } }'">{
     [aString] = {
         aNumber = "wrong"
     },

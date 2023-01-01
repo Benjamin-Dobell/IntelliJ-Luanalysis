@@ -4,5 +4,12 @@ local function setLogLevel(level)
     local logLevel = level
 
     ---@type string
-    local aString = <error descr="Type mismatch. Required: 'string' Found: 'Logger.DEBUG | Logger.ERROR | Logger.INFO | Logger.VERBOSE | Logger.WARNING | number'">level</error>
+    local aString = <error descr="Type mismatch. Required: 'string' Found: '
+  Logger.DEBUG |
+  Logger.ERROR |
+  Logger.INFO |
+  Logger.VERBOSE |
+  Logger.WARNING |
+  number
+'">level</error>
 end

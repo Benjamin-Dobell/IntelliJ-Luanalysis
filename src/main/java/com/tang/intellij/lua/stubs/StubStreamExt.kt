@@ -20,7 +20,6 @@ import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.util.io.StringRef
 import com.tang.intellij.lua.psi.LuaParamInfo
-import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
 
 fun StubOutputStream.writeParamInfoArray(params: Array<out LuaParamInfo>) {
