@@ -71,11 +71,54 @@ class GenericAnalyzer(
         } else TyVarianceFlags.STRICT_UNKNOWN
     }
 
+    private fun visitShape(shape: ITy) {
+        Ty.eachResolved(context, cur) { source ->
+            val sourceSubstitutor = source.getMemberSubstitutor(context)
+            val shapeSubstitutor = shape.getMemberSubstitutor(context)
+
+            source.processMembers(context, true) { _, sourceMember ->
+                val indexTy = sourceMember.guessIndexType(context)
+
+                val shapeMember = if (indexTy != null) {
+                    shape.findIndexer(context, indexTy, false)
+                } else {
+                    sourceMember.name?.let { shape.findMember(context, it) }
+                }
+
+                if (shapeMember == null) {
+                    return@processMembers true
+                }
+
+                val shapeMemberTy = shapeMember.guessType(context).let {
+                    if (it == null) {
+                        return@processMembers true
+                    }
+
+                    if (shapeSubstitutor != null) {
+                        it.substitute(context, shapeSubstitutor)
+                    } else {
+                        it
+                    }
+                }
+
+                val sourceMemberTy = (sourceMember.guessType(context) ?: Primitives.UNKNOWN).let {
+                    if (sourceSubstitutor != null) it.substitute(context, sourceSubstitutor) else it
+                }
+
+                warp(sourceMemberTy) {
+                    Ty.resolve(context, shapeMemberTy).accept(this)
+                }
+
+                true
+            }
+        }
+    }
+
     fun analyze(context: SearchContext, arg: ITy, par: ITy) {
         this.context = context
 
         cur = arg
-        warp(cur) { par.accept(this) }
+        warp(cur) { Ty.resolve(context, par).accept(this) }
         cur = Primitives.VOID
     }
 
@@ -98,22 +141,26 @@ class GenericAnalyzer(
     }
 
     override fun visitClass(clazz: ITyClass) {
-        Ty.eachResolved(context, cur) {
-            val clazzParams = clazz.params
+        val clazzParams = clazz.params
 
-            if (clazzParams != null && it is ITyClass) {
-                it.params?.asSequence()?.zip(clazzParams.asSequence())?.forEach { (param, clazzParam) ->
-                    warp(param) {
-                        Ty.resolve(context, clazzParam).accept(this)
+        if (clazzParams != null) {
+            Ty.eachResolved(context, cur) {
+                if (it is ITyClass) {
+                    it.params?.asSequence()?.zip(clazzParams.asSequence())?.forEach { (param, clazzParam) ->
+                        warp(param) {
+                            Ty.resolve(context, clazzParam).accept(this)
+                        }
                     }
                 }
             }
+        }
 
-            if (clazz is TyGenericParameter) {
-                val genericName = clazz.className
-                val genericParam = genericMap.get(genericName)
+        if (clazz is TyGenericParameter) {
+            val genericName = clazz.className
+            val genericParam = genericMap.get(genericName)
 
-                if (genericParam != null) {
+            if (genericParam != null) {
+                Ty.eachResolved(context, cur) {
                     val mappedType = paramTyMap.get(genericName)
                     val currentType = it.substitute(paramContext, paramSubstitutor)
                     val substitutedGenericParam = genericParam.substitute(paramContext, genericParamResolutionSubstitutor)
@@ -136,22 +183,9 @@ class GenericAnalyzer(
                         genericParam
                     }
                 }
-            } else if (clazz is TyDocTable) {
-                clazz.processMembers(context, true) { _, classMember ->
-                    val curMember = classMember.guessIndexType(context)?.let { indexTy ->
-                        it.findEffectiveIndexer(context, indexTy, false)
-                    } ?: classMember.name?.let { name -> it.findEffectiveMember(context, name) }
-
-                    val classMemberTy = classMember.guessType(context) ?: Primitives.UNKNOWN
-                    val curMemberTy = curMember?.guessType(context) ?: Primitives.NIL
-
-                    warp(curMemberTy) {
-                        Ty.resolve(context, classMemberTy).accept(this)
-                    }
-
-                    true
-                }
             }
+        } else if (clazz.isShape(context)) {
+            visitShape(clazz)
         }
     }
 
@@ -187,19 +221,9 @@ class GenericAnalyzer(
     }
 
     override fun visitGeneric(generic: ITyGeneric) {
-        Ty.eachResolved(context, cur) {
-            if (it is ITyGeneric) {
-                warp(it.base) {
-                    Ty.resolve(context, generic.base).accept(this)
-                }
-
-                it.args.asSequence().zip(generic.args.asSequence()).forEach { (param, genericParam) ->
-                    warp(param) {
-                        Ty.resolve(context, genericParam).accept(this)
-                    }
-                }
-            } else if (generic.base == Primitives.TABLE && generic.args.size == 2) {
-                if (it == Primitives.TABLE) {
+        if (generic.base == Primitives.TABLE && generic.args.size == 2) {
+            Ty.eachResolved(context, cur) { source ->
+                if (source == Primitives.TABLE) {
                     warp(Primitives.UNKNOWN) {
                         Ty.resolve(context, generic.args.first()).accept(this)
                     }
@@ -207,21 +231,37 @@ class GenericAnalyzer(
                     warp(Primitives.UNKNOWN) {
                         Ty.resolve(context, generic.args.last()).accept(this)
                     }
-                } else if (it is ITyArray) {
+                } else if (source is ITyArray) {
                     warp(Primitives.NUMBER) {
                         Ty.resolve(context, generic.args.first()).accept(this)
                     }
 
-                    warp(it.base) {
+                    warp(source.base) {
                         Ty.resolve(context, generic.args.last()).accept(this)
                     }
-                } else if (it.isShape(context)) {
-                    val genericTable = createTableGenericFromMembers(context, it)
+                } else if (source.isShape(context)) {
+                    val genericTable = createTableGenericFromMembers(context, source)
 
                     genericTable.args.asSequence().zip(generic.args.asSequence()).forEach { (param, genericParam) ->
                         warp(param) {
                             Ty.resolve(context, genericParam).accept(this)
                         }
+                    }
+                }
+            }
+        } else if (generic.isShape(context)) {
+            visitShape(generic)
+        }
+
+        Ty.eachResolved(context, cur) { source ->
+            if (source is ITyGeneric) {
+                warp(source.base) {
+                    Ty.resolve(context, generic.base).accept(this)
+                }
+
+                source.args.asSequence().zip(generic.args.asSequence()).forEach { (param, genericParam) ->
+                    warp(param) {
+                        Ty.resolve(context, genericParam).accept(this)
                     }
                 }
             }

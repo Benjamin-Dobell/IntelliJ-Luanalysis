@@ -556,7 +556,7 @@ end
 ---@type 'hi' | 'bye'
 local hiOrBye = implicitGenericSubstitution({a = 'hi'}, {a = 'bye'})
 string1 = <error descr="Type mismatch. Required: '\"string1\"' Found: '\"bye\" | \"hi\"'">implicitGenericSubstitution({a = 'hi'}, {a = 'bye'})</error>
-anyString = implicitGenericSubstitution({a = <error descr="Type mismatch. Required: 'T : string' Found: '\"hi\"'">'hi'</error>}, <error descr="Type mismatch. Missing member: 'a' of: '{ a: (T : string) }'">{b = 'nope'}</error>)
+anyString = implicitGenericSubstitution({a = 'hi'}, <error descr="Type mismatch. Missing member: 'a' of: '{ a: \"hi\" }'">{b = 'nope'}</error>)
 
 ---@generic T
 ---@param a T
@@ -699,3 +699,69 @@ function genericParamScopeIssue()
 
     genericParamScopeIssueSetup(a)
 end
+
+---@alias GenericAliasArray<V> V[]
+
+---@alias GenericAliasTableArray<V> table<number, V>
+
+---@alias GenericAliasAnonymousTableArray<V> { [number]: nil | V }
+
+---@shape GenericShapeArray<V>
+---@field [number] nil | V
+
+---@alias DeeplyNestedGeneric<X, Y> { a: { [1]: number, [2]: X }, b: (fun(): Y)[] }
+
+---@generic T
+---@param arg T[]
+---@return T
+local function takesGenericArray(arg) return arg[1] end
+
+---@generic T
+---@param arg GenericAliasArray<T>
+---@return T
+local function takesGenericAliasArray(arg) return arg[1] end
+
+---@generic T
+---@param arg GenericAliasTableArray<T>
+---@return T
+local function takesGenericAliasTableArray(arg) return arg[1] end
+
+---@generic T
+---@param arg GenericAliasAnonymousTableArray<T>
+---@return T
+local function takesGenericAliasAnonymousTableArray(arg) return --[[---@not nil]] arg[1] end
+
+---@generic T
+---@param arg GenericShapeArray<T>
+---@return T
+local function takesGenericShapeArray(arg) return --[[---@not nil]] arg[1] end
+
+---@generic S, T
+---@param arg DeeplyNestedGeneric<S, T>
+---@return S, T
+local function takesDeeplyNestedGeneric(arg)
+    return arg.a[2], arg.b()
+end
+
+aString = takesGenericArray({"foobar"})
+aString = takesGenericAliasArray({"foobar"})
+aString = takesGenericAliasTableArray({"foobar"})
+aString = takesGenericAliasAnonymousTableArray({"foobar"})
+aString = takesGenericShapeArray({"foobar"})
+
+local resolvedS, resolvedT = takesDeeplyNestedGeneric({
+    a = {
+        1,
+        "hi"
+    },
+    b = {
+        function()
+            return 1
+        end
+    }
+})
+
+anyString = resolvedS
+anyNumber = resolvedT
+anyString = <error descr="Type mismatch. Required: 'string' Found: 'number'">resolvedT</error>
+anyNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">resolvedS</error>
