@@ -137,7 +137,7 @@ private fun equalToShape(context: SearchContext, target: ITy, source: ITy): Bool
         }
 
         if (sourceMember == null) {
-            isEqual = TyUnion.find(targetMemberTy, TyNil::class.java) == null
+            isEqual = TyUnion.find(targetMemberTy, TyNil::class.java) != null
             return@processMembers isEqual
         }
 
