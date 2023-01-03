@@ -20,4 +20,7 @@ public interface LuaDocTagParam extends LuaDocTag {
   @NotNull
   ITy getType();
 
+  @Nullable
+  PsiElement getOptional();
+
 }

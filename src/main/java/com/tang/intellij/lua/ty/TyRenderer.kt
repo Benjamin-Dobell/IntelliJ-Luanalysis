@@ -92,7 +92,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                                 } else {
                                     base.displayName
                                 }
-                                sb.append("${baseName}${renderParamsList(list)}")
+                                sb.append("${baseName}${renderGenericParams(list)}")
                             }
                         }
 
@@ -213,6 +213,11 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                 }
 
                 sb.append(it.name)
+
+                if (it.optional) {
+                    sb.append("?")
+                }
+
                 sb.append(": ")
 
                 val paramTy = it.ty ?: Primitives.UNKNOWN
@@ -247,7 +252,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
         }
     }
 
-    open fun renderParamsList(params: Collection<String>?): String {
+    open fun renderGenericParams(params: Collection<String>?): String {
         return if (params != null && params.isNotEmpty()) {
             joinSingleLineOrWrap(params, MaxSingleLineGenericParams, ",", "<", ">", false)
         } else {
@@ -255,7 +260,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
         }
     }
 
-    open fun renderAlias(alias: ITyAlias): String = "${alias.name}${renderParamsList(alias.params?.map { it.toString() })}"
+    open fun renderAlias(alias: ITyAlias): String = "${alias.name}${renderGenericParams(alias.params?.map { it.toString() })}"
 
     open fun renderClass(clazz: ITyClass): String {
         return when {
@@ -333,7 +338,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                 }
             }
             clazz.isGlobal -> "[global ${clazz.varName}]"
-            else -> "${clazz.className}${renderParamsList(clazz.params?.map { it.toString() })}"
+            else -> "${clazz.className}${renderGenericParams(clazz.params?.map { it.toString() })}"
         }
     }
 

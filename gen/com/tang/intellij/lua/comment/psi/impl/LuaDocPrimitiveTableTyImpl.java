@@ -45,13 +45,13 @@ public class LuaDocPrimitiveTableTyImpl extends LuaDocTyImpl implements LuaDocPr
   @Override
   @NotNull
   public ITy guessType(@NotNull SearchContext context) {
-    return LuaDocPsiImplUtilKt.guessType(context, this);
+    return LuaDocPsiImplUtilKt.guessType(this, context);
   }
 
   @Override
   @NotNull
   public ITy guessParentType(@NotNull SearchContext context) {
-    return LuaDocPsiImplUtilKt.guessParentType(context, this);
+    return LuaDocPsiImplUtilKt.guessParentType(this, context);
   }
 
   @Override

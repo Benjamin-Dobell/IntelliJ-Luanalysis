@@ -20,7 +20,7 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaDocTagFieldImpl extends StubBasedPsiElementBase<LuaDocTagFieldStub> implements LuaDocTagField {
 
-  public LuaDocTagFieldImpl(@NotNull LuaDocTagFieldStub stub, @NotNull IStubElementType type) {
+  public LuaDocTagFieldImpl(@NotNull LuaDocTagFieldStub stub, @NotNull IStubElementType<?, ?> type) {
     super(stub, type);
   }
 
@@ -75,7 +75,7 @@ public class LuaDocTagFieldImpl extends StubBasedPsiElementBase<LuaDocTagFieldSt
   @Override
   @NotNull
   public ITy guessParentType(@NotNull SearchContext context) {
-    return LuaDocPsiImplUtilKt.guessParentType(context, this);
+    return LuaDocPsiImplUtilKt.guessParentType(this, context);
   }
 
   @Override

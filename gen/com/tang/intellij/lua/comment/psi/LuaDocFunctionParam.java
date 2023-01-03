@@ -13,4 +13,7 @@ public interface LuaDocFunctionParam extends LuaDocPsiElement {
   @NotNull
   PsiElement getId();
 
+  @Nullable
+  PsiElement getOptional();
+
 }

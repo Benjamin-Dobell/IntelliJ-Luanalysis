@@ -48,7 +48,7 @@ fun renderSignature(sb: StringBuilder, signature: IFunSignature, tyRenderer: TyR
 
     if (params != null || varargTy != null) {
         params?.forEach {
-            sig.add("${it.name}: ${tyRenderer.render(it.ty ?: Primitives.UNKNOWN)}")
+            sig.add("${it.name}${if (it.optional) "?" else ""}: ${tyRenderer.render(it.ty ?: Primitives.UNKNOWN)}")
         }
         varargTy?.let {
             sig.add("...: ${tyRenderer.render(it)}")
@@ -204,7 +204,7 @@ fun renderDefinition(sb: StringBuilder, block: () -> Unit) {
 }
 
 private fun renderTagList(sb: StringBuilder, name: String, comment: LuaComment) {
-    val tags = comment.findTags(name.toLowerCase())
+    val tags = comment.findTags(name.lowercase())
     renderTagList(sb, name, tags) { tagDef ->
         tagDef.commentString?.text?.let { sb.append(it) }
     }

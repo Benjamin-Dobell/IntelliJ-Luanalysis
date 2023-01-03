@@ -412,10 +412,10 @@ private fun getParamsInner(funcBodyOwner: LuaFuncBodyOwner<*>): Array<LuaParamIn
 
         for (i in paramNameList.indices) {
             val name = paramNameList[i].text
-            val ty = comment?.let {
-                comment.getParamDef(name)?.type
+            val paramDef = comment?.let {
+                comment.getParamDef(name)
             }
-            list.add(LuaParamInfo(name, ty))
+            list.add(LuaParamInfo(name, paramDef?.type, paramDef?.optional != null))
         }
 
         return list.toTypedArray()

@@ -28,9 +28,9 @@ import com.intellij.psi.stubs.StubElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.LuaCommentUtil
-import com.tang.intellij.lua.comment.reference.LuaTypeReference
 import com.tang.intellij.lua.comment.reference.LuaDocParamNameReference
 import com.tang.intellij.lua.comment.reference.LuaDocSeeReference
+import com.tang.intellij.lua.comment.reference.LuaTypeReference
 import com.tang.intellij.lua.lang.type.LuaNumber
 import com.tang.intellij.lua.lang.type.LuaString
 import com.tang.intellij.lua.psi.*
@@ -56,7 +56,7 @@ fun getName(docTypeRef: LuaDocTypeRef): String {
     return docTypeRef.id?.text ?: "table"
 }
 
-fun resolveType(context: SearchContext, docTypeRef: LuaDocTypeRef): ITy {
+fun resolveType(docTypeRef: LuaDocTypeRef, context: SearchContext): ITy {
     if (docTypeRef.name == Constants.WORD_TABLE) {
         return Primitives.TABLE
     } else if (docTypeRef.name == Constants.WORD_SELF) {
@@ -103,14 +103,14 @@ fun getValueType(tagField: LuaDocTagField): LuaDocTy? {
     return tagField.tyList.getOrNull(if (tagField.lbrack != null) 1 else 0)
 }
 
-fun guessType(context: SearchContext, tagField: LuaDocTagField): ITy {
+fun guessType(tagField: LuaDocTagField, context: SearchContext): ITy {
     val stub = tagField.stub
     if (stub != null)
         return stub.valueTy
-    return tagField.valueType?.getType() ?: Primitives.UNKNOWN
+    return getValueType(tagField)?.getType() ?: Primitives.UNKNOWN
 }
 
-fun guessParentType(context: SearchContext, tagField: LuaDocTagField): ITy {
+fun guessParentType(tagField: LuaDocTagField, context: SearchContext): ITy {
     val parent = tagField.parent
     val classDef = PsiTreeUtil.findChildOfType(parent, LuaDocTagClass::class.java)
     return classDef?.type ?: Primitives.UNKNOWN
@@ -330,10 +330,10 @@ fun getType(luaDocGeneralTy: LuaDocGeneralTy): ITy {
     return withRecursionGuard("getType", luaDocGeneralTy) {
         PsiSearchContext(luaDocGeneralTy).let {
             SearchContext.withDumb(it, null) {
-                resolveType(it, typeRef)
+                resolveType(typeRef, it)
             }
         }
-    } ?: TyLazyClass(typeRef.name, luaDocGeneralTy)
+    } ?: TyLazyClass(getName(typeRef), luaDocGeneralTy)
 }
 
 fun getType(luaDocFunctionTy: LuaDocFunctionTy): ITy {
@@ -343,13 +343,13 @@ fun getType(luaDocFunctionTy: LuaDocFunctionTy): ITy {
 fun getParams(luaDocFunctionTy: LuaDocFunctionTy): Array<LuaParamInfo>? {
     return luaDocFunctionTy.functionParams?.let  {
         it.functionParamList.map {
-            LuaParamInfo(it.id.text, it.ty?.getType())
+            LuaParamInfo(it.id.text, it.ty?.getType(), it.optional != null)
         }.toTypedArray()
     }
 }
 
 fun getVarargParam(luaDocFunctionTy: LuaDocFunctionTy): ITy? {
-    return luaDocFunctionTy.functionParams?.varargParam?.type
+    return luaDocFunctionTy.functionParams?.varargParam?.let { getType(it) }
 }
 
 fun getReturnType(luaDocFunctionTy: LuaDocFunctionTy): ITy? {
@@ -360,9 +360,9 @@ fun getType(luaDocGenericTy: LuaDocGenericTy): ITy {
     val paramTys = luaDocGenericTy.tyList.map { it.getType() }.toTypedArray()
     val baseTy = withRecursionGuard("getType", luaDocGenericTy) {
         SearchContext.withDumb(luaDocGenericTy.project, null) {
-            luaDocGenericTy.typeRef.resolveType(it)
+            resolveType(luaDocGenericTy.typeRef, it)
         }
-    } ?: TyLazyClass(luaDocGenericTy.typeRef.name, luaDocGenericTy)
+    } ?: TyLazyClass(getName(luaDocGenericTy.typeRef), luaDocGenericTy)
     return TyGeneric(paramTys, baseTy)
 }
 
@@ -407,7 +407,7 @@ fun getType(tbl: LuaDocTableTy): ITy {
     return TyDocTable(tbl.tableDef)
 }
 
-fun guessParentType(context: SearchContext, f: LuaDocTableField): ITy {
+fun guessParentType(f: LuaDocTableField, context: SearchContext): ITy {
     val p = f.parent as LuaDocTableDef
     return TyDocTable(p)
 }
@@ -449,7 +449,7 @@ fun getValueType(f: LuaDocTableField): LuaDocTy? {
     } else PsiTreeUtil.getStubChildOfType(f, LuaDocTy::class.java)
 }
 
-fun guessIndexType(context: SearchContext, f: LuaDocTableField): ITy? {
+fun guessIndexType(f: LuaDocTableField, context: SearchContext): ITy? {
     if (f.name != null) {
         return null
     }
@@ -480,12 +480,12 @@ fun guessIndexType(context: SearchContext, f: LuaDocTableField): ITy? {
     }
 }
 
-fun guessType(context: SearchContext, f: LuaDocTableField): ITy {
+fun guessType(f: LuaDocTableField, context: SearchContext): ITy {
     f.stub?.valueTy?.let {
         return it
     }
 
-    return f.valueType?.getType() ?: Primitives.UNKNOWN
+    return getValueType(f)?.getType() ?: Primitives.UNKNOWN
 }
 
 fun isExplicitlyTyped(f: LuaDocTableField): Boolean {
@@ -509,7 +509,7 @@ fun getType(alias: LuaDocTagAlias): TyAlias {
     return if (stub != null) {
         return stub.type
     } else {
-        TyAlias(alias.name, alias.genericDefList.map { TyGenericParameter(it) }.toTypedArray(), alias.ty?.getType() ?: Primitives.UNKNOWN)
+        TyAlias(getName(alias), alias.genericDefList.map { TyGenericParameter(it) }.toTypedArray(), alias.ty?.getType() ?: Primitives.UNKNOWN)
     }
 }
 
@@ -526,11 +526,11 @@ fun getVisibility(luaDocPrimitiveTableTy: LuaDocPrimitiveTableTy): Visibility {
 }
 
 // WARNING: LuaClassMember requires us to implement guessType() returning the *member* value type.
-fun guessType(context: SearchContext, luaDocPrimitiveTableTy: LuaDocPrimitiveTableTy): ITy {
+fun guessType(luaDocPrimitiveTableTy: LuaDocPrimitiveTableTy, context: SearchContext): ITy {
     return Primitives.UNKNOWN
 }
 
-fun guessParentType(context: SearchContext, luaDocPrimitiveTableTy: LuaDocPrimitiveTableTy): ITy {
+fun guessParentType(luaDocPrimitiveTableTy: LuaDocPrimitiveTableTy, context: SearchContext): ITy {
     return luaDocPrimitiveTableTy.getType()
 }
 
@@ -551,11 +551,11 @@ fun getVisibility(luaDocGenericTableTy: LuaDocGenericTableTy): Visibility {
 }
 
 // WARNING: LuaClassMember requires us to implement guessType() returning the *member* value type.
-fun guessType(context: SearchContext, luaDocGenericTableTy: LuaDocGenericTableTy): ITy {
+fun guessType(luaDocGenericTableTy: LuaDocGenericTableTy, context: SearchContext): ITy {
     return luaDocGenericTableTy.valueType?.getType() ?: Primitives.UNKNOWN
 }
 
-fun guessParentType(context: SearchContext, luaDocGenericTableTy: LuaDocGenericTableTy): ITy {
+fun guessParentType(luaDocGenericTableTy: LuaDocGenericTableTy, context: SearchContext): ITy {
     return luaDocGenericTableTy.getType()
 }
 
@@ -575,16 +575,16 @@ fun getVisibility(luaDocArrTy: LuaDocArrTy): Visibility {
     return Visibility.PUBLIC
 }
 
-fun guessIndexType(context: SearchContext, luaDocArrTy: LuaDocArrTy): ITy {
+fun guessIndexType(luaDocArrTy: LuaDocArrTy, context: SearchContext): ITy {
     return Primitives.NUMBER
 }
 
 // WARNING: LuaClassMember requires us to implement guessType() returning the *member* value type.
-fun guessType(context: SearchContext, luaDocArrTy: LuaDocArrTy): ITy {
+fun guessType(luaDocArrTy: LuaDocArrTy, context: SearchContext): ITy {
     return luaDocArrTy.ty.getType()
 }
 
-fun guessParentType(context: SearchContext, luaDocArrTy: LuaDocArrTy): ITy {
+fun guessParentType(luaDocArrTy: LuaDocArrTy, context: SearchContext): ITy {
     return luaDocArrTy.getType()
 }
 

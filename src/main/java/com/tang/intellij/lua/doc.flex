@@ -101,6 +101,7 @@ BOOLEAN=true|false
 %state xTAG_NAME
 %state xCOMMENT_STRING
 %state xPARAM
+%state xPARAM_SUFFIX
 %state xTYPE
 %state xCLASS
 %state xCLASS_PARAMS
@@ -139,7 +140,7 @@ BOOLEAN=true|false
     .                          { yybegin(xCOMMENT_STRING); yypushback(yylength()); }
 }
 
-<xTAG, xTAG_WITH_ID, xTAG_NAME, xPARAM, xTYPE, xCLASS, xCLASS_PARAM_LIST, xCLASS_EXTEND, xFIELD, xFIELD_ID, xFIELD_VALUE, xCOMMENT_STRING, xGENERIC, xALIAS, xALIAS_PARAM_LIST, xSUPPRESS> {
+<xTAG, xTAG_WITH_ID, xTAG_NAME, xPARAM, xPARAM_SUFFIX, xTYPE, xCLASS, xCLASS_PARAM_LIST, xCLASS_EXTEND, xFIELD, xFIELD_ID, xFIELD_VALUE, xCOMMENT_STRING, xGENERIC, xALIAS, xALIAS_PARAM_LIST, xSUPPRESS> {
     {LINE_WS}+                 { return com.intellij.psi.TokenType.WHITE_SPACE; }
     {BLOCK_END}                {
         if (yylength() - 2 == nBrackets) {
@@ -222,8 +223,13 @@ BOOLEAN=true|false
 }
 
 <xPARAM> {
-    {ID}                       { beginType(); return ID; }
+    {ID}                       { yybegin(xPARAM_SUFFIX); return ID; }
     "..."                      { beginType(); return ELLIPSIS; } //varargs
+}
+
+<xPARAM_SUFFIX> {
+    "?"                        { beginType(); return QUESTION_MARK; }
+    [^]                        { beginType(); yypushback(yylength()); }
 }
 
 <xFIELD> {
@@ -245,6 +251,7 @@ BOOLEAN=true|false
     "@"                        { yybegin(xCOMMENT_STRING); return STRING_BEGIN; }
     ","                        { _typeReq = true; return COMMA; }
     "|"                        { _typeReq = true; return OR; }
+    "?"                        { return QUESTION_MARK; }
     ":"                        { _typeReq = true; return EXTENDS;}
     "<"                        { _typeLevel++; return LT; }
     ">"                        {

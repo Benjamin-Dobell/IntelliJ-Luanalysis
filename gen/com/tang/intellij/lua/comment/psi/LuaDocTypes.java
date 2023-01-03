@@ -79,6 +79,7 @@ public interface LuaDocTypes {
   IElementType PROPERTY = new LuaDocTokenType("PROPERTY");
   IElementType PROTECTED = new LuaDocTokenType("PROTECTED");
   IElementType PUBLIC = new LuaDocTokenType("PUBLIC");
+  IElementType QUESTION_MARK = new LuaDocTokenType("?");
   IElementType RBRACK = new LuaDocTokenType("]");
   IElementType RCURLY = new LuaDocTokenType("}");
   IElementType RPAREN = new LuaDocTokenType(")");

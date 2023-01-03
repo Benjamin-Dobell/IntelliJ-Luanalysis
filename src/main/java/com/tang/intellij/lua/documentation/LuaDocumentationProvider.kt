@@ -42,7 +42,7 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
             return if (t.isNotEmpty()) buildString { DocumentationManagerUtil.createHyperlink(this, t, t, true) } else t
         }
 
-        override fun renderParamsList(params: Collection<String>?): String {
+        override fun renderGenericParams(params: Collection<String>?): String {
             return if (params != null && params.isNotEmpty()) "&lt;${params.joinToString(", ")}&gt;" else ""
         }
     }

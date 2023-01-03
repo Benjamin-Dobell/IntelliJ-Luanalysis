@@ -39,4 +39,10 @@ public class LuaDocFunctionParamImpl extends ASTWrapperPsiElement implements Lua
     return notNullChild(findChildByType(ID));
   }
 
+  @Override
+  @Nullable
+  public PsiElement getOptional() {
+    return findChildByType(QUESTION_MARK);
+  }
+
 }

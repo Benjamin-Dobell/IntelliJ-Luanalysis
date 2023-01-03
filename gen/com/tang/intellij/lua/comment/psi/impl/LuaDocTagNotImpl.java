@@ -17,7 +17,7 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaDocTagNotImpl extends StubBasedPsiElementBase<LuaDocTagNotStub> implements LuaDocTagNot {
 
-  public LuaDocTagNotImpl(@NotNull LuaDocTagNotStub stub, @NotNull IStubElementType type) {
+  public LuaDocTagNotImpl(@NotNull LuaDocTagNotStub stub, @NotNull IStubElementType<?, ?> type) {
     super(stub, type);
   }
 

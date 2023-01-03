@@ -349,6 +349,10 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                 val typeInfo = concreteArgTypes.getOrNull(i) ?: variadicArg
 
                 if (typeInfo == null || typeInfo == variadicArg) {
+                    if (pi.optional) {
+                        return@processParameters true
+                    }
+
                     var problemElement = call.lastChild.lastChild
 
                     // Some PSI elements injected by IntelliJ (e.g. PsiErrorElementImpl) can be empty and thus cannot be targeted for our own errors.

@@ -52,6 +52,7 @@
         RCURLY = "}"
         BACKTICK = "`"
         ELLIPSIS = '...'
+        QUESTION_MARK = "?"
         SNIPPET = "SNIPPET"
         STRING_LITERAL = "STRING_LITERAL"
         TRUE_LITERAL = "TRUE_LITERAL"
@@ -241,8 +242,11 @@ generic_ty ::= type_ref '<' generic_param_list '>' {
     methods = [getType]
 }
 
-function_param ::= ID (':' complex_ty)? {
+function_param ::= ID QUESTION_MARK? (':' complex_ty)? {
     pin = 1
+    methods = [
+        optional = 'QUESTION_MARK'
+    ]
 }
 
 private vararg_ellipsis_param ::= ELLIPSIS ':' complex_ty {
@@ -336,9 +340,12 @@ tag_lan ::= TAG_NAME_LANGUAGE PROPERTY comment_string? { pin = 1 }
 param_name_ref ::= ID {
     methods = [getReference]
 }
-tag_param ::= TAG_NAME_PARAM param_name_ref complex_ty comment_string? {
+tag_param ::= TAG_NAME_PARAM param_name_ref QUESTION_MARK? complex_ty comment_string? {
     pin = 1
-    methods = [getType]
+    methods = [
+        getType
+        optional = 'QUESTION_MARK'
+    ]
 }
 tag_vararg ::= TAG_NAME_VARARG complex_ty comment_string? {
     pin = 1

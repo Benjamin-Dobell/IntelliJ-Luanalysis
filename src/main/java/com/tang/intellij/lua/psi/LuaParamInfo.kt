@@ -32,7 +32,7 @@ import com.tang.intellij.lua.ty.TyMultipleResults
  * parameter info
  * Created by tangzx on 2017/2/4.
  */
-class LuaParamInfo(val name: String, val ty: ITy?) {
+class LuaParamInfo(val name: String, val ty: ITy?, val optional: Boolean) {
 
     override fun equals(other: Any?): Boolean {
         //only check ty
@@ -61,23 +61,25 @@ class LuaParamInfo(val name: String, val ty: ITy?) {
             return this
         }
 
-        return LuaParamInfo(name, substitutedTy)
+        return LuaParamInfo(name, substitutedTy, optional)
     }
 
     companion object {
         fun createSelf(thisType: ITy? = null): LuaParamInfo {
-            return LuaParamInfo(Constants.WORD_SELF, thisType)
+            return LuaParamInfo(Constants.WORD_SELF, thisType, false)
         }
 
         fun deserialize(stubInputStream: StubInputStream): LuaParamInfo {
             val name = StringRef.toString(stubInputStream.readName())
             val ty = stubInputStream.readTyNullable()
-            return LuaParamInfo(name, ty)
+            val optional = stubInputStream.readBoolean()
+            return LuaParamInfo(name, ty, optional)
         }
 
         fun serialize(param: LuaParamInfo, stubOutputStream: StubOutputStream) {
             stubOutputStream.writeName(param.name)
             stubOutputStream.writeTyNullable(param.ty)
+            stubOutputStream.writeBoolean(param.optional)
         }
     }
 }

@@ -18,7 +18,7 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaDocTagClassImpl extends StubBasedPsiElementBase<LuaDocTagClassStub> implements LuaDocTagClass {
 
-  public LuaDocTagClassImpl(@NotNull LuaDocTagClassStub stub, @NotNull IStubElementType type) {
+  public LuaDocTagClassImpl(@NotNull LuaDocTagClassStub stub, @NotNull IStubElementType<?, ?> type) {
     super(stub, type);
   }
 

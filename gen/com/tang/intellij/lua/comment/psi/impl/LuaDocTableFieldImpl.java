@@ -19,7 +19,7 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaDocTableFieldImpl extends StubBasedPsiElementBase<LuaDocTableFieldStub> implements LuaDocTableField {
 
-  public LuaDocTableFieldImpl(@NotNull LuaDocTableFieldStub stub, @NotNull IStubElementType type) {
+  public LuaDocTableFieldImpl(@NotNull LuaDocTableFieldStub stub, @NotNull IStubElementType<?, ?> type) {
     super(stub, type);
   }
 
@@ -56,7 +56,7 @@ public class LuaDocTableFieldImpl extends StubBasedPsiElementBase<LuaDocTableFie
   @Override
   @NotNull
   public ITy guessParentType(@NotNull SearchContext context) {
-    return LuaDocPsiImplUtilKt.guessParentType(context, this);
+    return LuaDocPsiImplUtilKt.guessParentType(this, context);
   }
 
   @Override
@@ -98,13 +98,13 @@ public class LuaDocTableFieldImpl extends StubBasedPsiElementBase<LuaDocTableFie
   @Override
   @Nullable
   public ITy guessIndexType(@NotNull SearchContext context) {
-    return LuaDocPsiImplUtilKt.guessIndexType(context, this);
+    return LuaDocPsiImplUtilKt.guessIndexType(this, context);
   }
 
   @Override
   @NotNull
   public ITy guessType(@NotNull SearchContext context) {
-    return LuaDocPsiImplUtilKt.guessType(context, this);
+    return LuaDocPsiImplUtilKt.guessType(this, context);
   }
 
   @Override

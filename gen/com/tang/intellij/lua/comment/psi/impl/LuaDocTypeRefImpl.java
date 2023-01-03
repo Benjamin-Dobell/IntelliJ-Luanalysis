@@ -51,7 +51,7 @@ public class LuaDocTypeRefImpl extends ASTWrapperPsiElement implements LuaDocTyp
   @Override
   @NotNull
   public ITy resolveType(@NotNull SearchContext context) {
-    return LuaDocPsiImplUtilKt.resolveType(context, this);
+    return LuaDocPsiImplUtilKt.resolveType(this, context);
   }
 
 }
