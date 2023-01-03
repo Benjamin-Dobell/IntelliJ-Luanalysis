@@ -145,7 +145,7 @@ private fun equalToShape(context: SearchContext, target: ITy, source: ITy): Bool
             if (sourceSubstitutor != null) it.substitute(context, sourceSubstitutor) else it
         }
 
-        if (!targetMemberTy.equals(context, sourceMemberTy)) {
+        if (!targetMemberTy.equals(context, sourceMemberTy, 0)) {
             isEqual = false
             return@processMembers false
         }
@@ -181,15 +181,16 @@ abstract class TyClass(override val className: String,
         return other is ITyClass && other.className == className && other.flags == flags
     }
 
-    override fun equals(context: SearchContext, other: ITy): Boolean {
+    override fun equals(context: SearchContext, other: ITy, equalityFlags: Int): Boolean {
         if (this === other) {
             return true
         }
 
         Ty.resolve(context, this).let {
             if (it !== this) {
-                return it.equals(context, other)
+                return it.equals(context, other, equalityFlags)
             }
+
         }
 
         val resolvedOther = Ty.resolve(context, other)
@@ -207,7 +208,7 @@ abstract class TyClass(override val className: String,
             }
         }
 
-        if (isShape(context) && resolvedOther.isShape(context)) {
+        if (equalityFlags and TyEqualityFlags.NON_STRUCTURAL == 0 && isShape(context) && resolvedOther.isShape(context)) {
             return equalToShape(context, this, resolvedOther)
         }
 
@@ -401,16 +402,16 @@ abstract class TyClass(override val className: String,
     }
 }
 
-class TyPsiDocClass(val tagClass: LuaDocTagClass) : TyClass(
-        tagClass.name,
-        tagClass.genericDefList.map { TyGenericParameter(it) }.toTypedArray(),
-        "",
-        tagClass.superClass?.getType(),
-        tagClass.overloads
-) {
+class TyPsiDocClass(override val psi: LuaDocTagClass) : TyClass(
+    psi.name,
+    psi.genericDefList.map { TyGenericParameter(it) }.toTypedArray(),
+    "",
+    psi.superClass?.getType(),
+    psi.overloads
+), IPsiTy<LuaDocTagClass> {
     init {
-        aliasName = tagClass.aliasName
-        this.flags = if (tagClass.isShape) TyFlags.SHAPE else 0
+        aliasName = psi.aliasName
+        this.flags = if (psi.isShape) TyFlags.SHAPE else 0
     }
 
     override fun willResolve(context: SearchContext): Boolean {
@@ -623,7 +624,7 @@ fun getGlobalTypeName(nameExpr: LuaNameExpr): String {
     return getGlobalTypeName(nameExpr.name)
 }
 
-open class TyTable(val table: LuaTableExpr, name: String = getTableTypeName(table)) : TyClass(name) {
+open class TyTable(override val psi: LuaTableExpr, name: String = getTableTypeName(psi)) : TyClass(name), IPsiTy<LuaTableExpr> {
     init {
         this.flags = TyFlags.ANONYMOUS_TABLE or TyFlags.SHAPE
     }
@@ -639,7 +640,7 @@ open class TyTable(val table: LuaTableExpr, name: String = getTableTypeName(tabl
             return super.processMembers(context, deep, process)
         }
 
-        table.tableFieldList.forEach {
+        psi.tableFieldList.forEach {
             if (!process(this, it)) {
                 return false
             }
@@ -653,7 +654,7 @@ open class TyTable(val table: LuaTableExpr, name: String = getTableTypeName(tabl
             return super.processMember(context, name, deep, process)
         }
 
-        return table.tableFieldList.firstOrNull {
+        return psi.tableFieldList.firstOrNull {
             val fieldName = it.name
             if (fieldName != null) {
                 fieldName == name
@@ -676,7 +677,7 @@ open class TyTable(val table: LuaTableExpr, name: String = getTableTypeName(tabl
         var narrowestTypeMember: TypeMember? = null
         var narrowestIndexTy: ITy? = null
 
-        table.tableFieldList.forEach { field ->
+        psi.tableFieldList.forEach { field ->
             val candidateIndexerTy = field.guessIndexType(context) ?: field.name?.let {
                 TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, it)
             }
@@ -717,7 +718,7 @@ fun getSubstitutedTableTypeName(context: SearchContext, table: LuaTableExpr, sub
 }
 
 
-open class TyDocTable(val table: LuaDocTableDef, name: String = getDocTableTypeName(table)) : TyClass(name) {
+open class TyDocTable(override val psi: LuaDocTableDef, name: String = getDocTableTypeName(psi)) : TyClass(name), IPsiTy<LuaDocTableDef> {
     init {
         this.flags = TyFlags.SHAPE
     }
@@ -729,7 +730,7 @@ open class TyDocTable(val table: LuaDocTableDef, name: String = getDocTableTypeN
     override fun doLazyInit(searchContext: SearchContext) = Unit
 
     override fun processMembers(context: SearchContext, deep: Boolean, process: ProcessTypeMember): Boolean {
-        table.tableFieldList.forEach {
+        psi.tableFieldList.forEach {
             if (!process(this, it)) {
                 return false
             }
@@ -738,7 +739,7 @@ open class TyDocTable(val table: LuaDocTableDef, name: String = getDocTableTypeN
     }
 
     override fun processMember(context: SearchContext, name: String, deep: Boolean, process: ProcessTypeMember): Boolean {
-        return table.tableFieldList.firstOrNull {
+        return psi.tableFieldList.firstOrNull {
             val fieldName = it.name
             if (fieldName != null) {
                 fieldName == name
@@ -757,7 +758,7 @@ open class TyDocTable(val table: LuaDocTableDef, name: String = getDocTableTypeN
         var narrowestTypeMember: TypeMember? = null
         var narrowestIndexTy: ITy? = null
 
-        table.tableFieldList.forEach { field ->
+        psi.tableFieldList.forEach { field ->
             val candidateIndexerTy = field.guessIndexType(context) ?: field.name?.let {
                 TyPrimitiveLiteral.getTy(TyPrimitiveKind.String, it)
             }
@@ -779,7 +780,7 @@ open class TyDocTable(val table: LuaDocTableDef, name: String = getDocTableTypeN
     }
 }
 
-class TySubstitutedDocTable(docTable: TyDocTable, val substitutor: ITySubstitutor): TyDocTable(docTable.table, getSubstitutedDocTableTypeName(docTable.table)) {
+class TySubstitutedDocTable(docTable: TyDocTable, val substitutor: ITySubstitutor): TyDocTable(docTable.psi, getSubstitutedDocTableTypeName(docTable.psi)) {
     init {
         // TODO: This is a hack. This just convinces the LuaClassMemberIndex to look for members using the parent doc
         //       table's name. Instead we should implement processMember/Indexer and call LuaClassMemberIndex with the
@@ -794,7 +795,7 @@ class TySubstitutedDocTable(docTable: TyDocTable, val substitutor: ITySubstituto
     }
 }
 
-class TyLazySubstitutedTable(context: SearchContext, table: TyTable, val substitutor: ITySubstitutor): TyTable(table.table, getSubstitutedTableTypeName(context, table.table, substitutor)) {
+class TyLazySubstitutedTable(context: SearchContext, table: TyTable, val substitutor: ITySubstitutor): TyTable(table.psi, getSubstitutedTableTypeName(context, table.psi, substitutor)) {
     init {
         // TODO: This is a hack. This just convinces the LuaClassMemberIndex to look for members using the parent
         //       table's name. Instead we should implement processMember/Indexer and call LuaClassMemberIndex with the

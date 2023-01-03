@@ -37,13 +37,13 @@ class TyGenericParameter(name: String, varName: String, superClass: ITy? = null)
         return other is TyGenericParameter && superClass?.equals(other.superClass) ?: (other.superClass == null)
     }
 
-    override fun equals(context: SearchContext, other: ITy): Boolean {
+    override fun equals(context: SearchContext, other: ITy, equalityFlags: Int): Boolean {
         return (other is TyGenericParameter
                 && superClass?.let { superClass ->
             other.superClass?.let { otherSuperClass ->
-                superClass.equals(context, otherSuperClass)
+                superClass.equals(context, otherSuperClass, equalityFlags)
             } ?: false
-        } ?: (other.superClass == null)) || super.equals(context, other)
+        } ?: (other.superClass == null)) || super.equals(context, other, equalityFlags)
     }
 
     override fun hashCode(): Int {
@@ -134,7 +134,7 @@ interface ITyGeneric : ITyResolvable {
 
 open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) : Ty(TyKind.Generic), ITyGeneric {
 
-    override fun equals(context: SearchContext, other: ITy): Boolean {
+    override fun equals(context: SearchContext, other: ITy, equalityFlags: Int): Boolean {
         if (this === other) {
             return true
         }
@@ -142,12 +142,12 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
         val resolved = Ty.resolve(context, this)
 
         if (resolved !== this) {
-            return resolved.equals(context, other)
+            return resolved.equals(context, other, equalityFlags)
         }
 
         val resolvedOther = Ty.resolve(context, other)
 
-        if (resolvedOther is ITyGeneric && args.size == resolvedOther.args.size && base.equals(context, resolvedOther.base)) {
+        if (resolvedOther is ITyGeneric && args.size == resolvedOther.args.size && base.equals(context, resolvedOther.base, equalityFlags)) {
             val allParamsEqual = args.asSequence().zip(resolvedOther.args.asSequence()).all { (param, otherParam) ->
                 param.equals(otherParam)
             }
@@ -276,11 +276,11 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
         }
 
         if (otherBase != null) {
-            if (otherBase.equals(context, resolvedBase)) {
+            if (otherBase.equals(context, resolvedBase, TyEqualityFlags.fromVarianceFlags(varianceFlags))) {
                 val baseArgCount = otherArgs?.size ?: 0
                 return baseArgCount == 0 || args.size == otherArgs?.size && args.asSequence().zip(otherArgs.asSequence()).all { (arg, otherArg) ->
                     // Args are always invariant as we don't support use-site variance nor immutable/read-only annotations
-                    arg.equals(context, otherArg)
+                    arg.equals(context, otherArg, TyEqualityFlags.fromVarianceFlags(varianceFlags))
                             || (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0 && otherArg.isUnknown)
                             || (
                                 (contravariantParams || (varianceFlags and TyVarianceFlags.ABSTRACT_PARAMS != 0 && arg is TyGenericParameter))
@@ -365,18 +365,18 @@ object TyGenericSerializer : TySerializer<ITyGeneric>() {
 }
 
 class TyDocTableGeneric(
-        val genericTableTy: LuaDocGenericTableTy,
-        val keyType: ITy = genericTableTy.keyType?.getType() ?: Primitives.UNKNOWN,
-        val valueType: ITy = genericTableTy.valueType?.getType() ?: Primitives.UNKNOWN
+    override val psi: LuaDocGenericTableTy,
+    val keyType: ITy = psi.keyType?.getType() ?: Primitives.UNKNOWN,
+    val valueType: ITy = psi.valueType?.getType() ?: Primitives.UNKNOWN
 ) : TyGeneric(
         arrayOf(keyType, valueType),
         Primitives.TABLE
-) {
+), IPsiTy<LuaDocGenericTableTy> {
     override fun processMember(context: SearchContext, name: String, deep: Boolean, process: ProcessTypeMember): Boolean {
         Ty.eachResolved(context, keyType) {
             if ((it is ITyPrimitive && it.primitiveKind == TyPrimitiveKind.String)
                 || (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String && it.value == name)) {
-                return process(this, genericTableTy)
+                return process(this, psi)
             }
         }
 
@@ -386,12 +386,12 @@ class TyDocTableGeneric(
     override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: ProcessTypeMember): Boolean {
         if (exact) {
             Ty.eachResolved(context, keyType) {
-                if (it.equals(context, indexTy)) {
-                    return process(this, genericTableTy)
+                if (it.equals(context, indexTy, 0)) {
+                    return process(this, psi)
                 }
             }
         } else if (keyType.contravariantOf(context, indexTy, TyVarianceFlags.STRICT_UNKNOWN)) {
-            return process(this, genericTableTy)
+            return process(this, psi)
         }
 
         return true

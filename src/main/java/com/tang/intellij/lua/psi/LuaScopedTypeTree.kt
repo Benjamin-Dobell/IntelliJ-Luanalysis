@@ -153,7 +153,7 @@ private class ScopedTypeTreeScope(override val psi: LuaTypeScope, override val t
             val classTag = if (cls is TySerializedClass) {
                 LuaClassIndex.find(context, cls.className)
             } else if (cls is TyPsiDocClass) {
-                cls.tagClass
+                cls.psi
             } else null
 
             // Need to ensure we don't check the same scope *without* beforeIndex

@@ -108,7 +108,7 @@ class TyMultipleResults : Ty {
         return requiredSize <= 1 && list.first().contravariantOf(context, other, varianceFlags)
     }
 
-    override fun equals(context: SearchContext, other: ITy): Boolean {
+    override fun equals(context: SearchContext, other: ITy, equalityFlags: Int): Boolean {
         if (this === other) {
             return true
         }
@@ -118,7 +118,7 @@ class TyMultipleResults : Ty {
         return resolvedOther is TyMultipleResults
                 && resolvedOther.variadic == variadic
                 && resolvedOther.list.size == list.size
-                && resolvedOther.list.asSequence().zip(list.asSequence()).all { (otherTy, ty) -> otherTy.equals(context, ty) }
+                && resolvedOther.list.asSequence().zip(list.asSequence()).all { (otherTy, ty) -> otherTy.equals(context, ty, equalityFlags) }
     }
 
     override fun equals(other: Any?): Boolean {

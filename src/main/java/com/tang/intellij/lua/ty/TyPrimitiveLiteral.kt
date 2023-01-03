@@ -53,7 +53,7 @@ class TyPrimitiveLiteral private constructor(val primitiveKind: TyPrimitiveKind,
         return other is TyPrimitiveLiteral && primitiveKind == other.primitiveKind && value.equals(other.value)
     }
 
-    override fun equals(context: SearchContext, other: ITy): Boolean {
+    override fun equals(context: SearchContext, other: ITy, equalityFlags: Int): Boolean {
         if (this === other) {
             return true
         }

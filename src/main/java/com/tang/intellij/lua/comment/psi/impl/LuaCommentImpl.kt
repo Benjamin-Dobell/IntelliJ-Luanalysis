@@ -182,6 +182,8 @@ class LuaCommentImpl(node: ASTNode) : ASTWrapperPsiElement(node), LuaComment {
             val map = list.associateBy { it.varName }
 
             object : TySubstitutor() {
+                override val name = "name substitutor"
+
                 override fun substitute(context: SearchContext, clazz: ITyClass): ITy {
                     return map[clazz.className] ?: super.substitute(context, clazz)
                 }

@@ -43,7 +43,7 @@ class AssignTypeInspection : StrictInspection() {
                         // Get owner class
                         val assigneeOwnerType = assignee.guessParentType(context)
 
-                        if (assigneeOwnerType is TyTable && resolvedValue is TyTable && assigneeOwnerType.table == resolvedValue.table) {
+                        if (assigneeOwnerType is TyTable && resolvedValue is TyTable && assigneeOwnerType.psi == resolvedValue.psi) {
                             return
                         }
 
@@ -87,7 +87,7 @@ class AssignTypeInspection : StrictInspection() {
 
                         val variableType = assignee.guessType(context)
 
-                        if (variableType == null || (variableType is TyTable && resolvedValue is TyTable && variableType.table == resolvedValue.table)) {
+                        if (variableType == null || (variableType is TyTable && resolvedValue is TyTable && variableType.psi == resolvedValue.psi)) {
                             return
                         }
 

@@ -23,7 +23,10 @@ import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.readTyNullable
 import com.tang.intellij.lua.stubs.writeTyNullable
-import com.tang.intellij.lua.ty.*
+import com.tang.intellij.lua.ty.ITy
+import com.tang.intellij.lua.ty.ITySubstitutor
+import com.tang.intellij.lua.ty.Primitives
+import com.tang.intellij.lua.ty.TyMultipleResults
 
 /**
  * parameter info
@@ -36,14 +39,14 @@ class LuaParamInfo(val name: String, val ty: ITy?) {
         return other is LuaParamInfo && other.ty == ty
     }
 
-    fun equals(context: SearchContext, other: LuaParamInfo): Boolean {
+    fun equals(context: SearchContext, other: LuaParamInfo, equalityFlags: Int): Boolean {
         if (ty == null) {
             return other.ty == null
         } else if (other.ty == null) {
             return false
         }
 
-        return ty.equals(context, other.ty)
+        return ty.equals(context, other.ty, equalityFlags)
     }
 
     override fun hashCode(): Int {

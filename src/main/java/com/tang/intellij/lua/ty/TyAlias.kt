@@ -53,12 +53,12 @@ class TyAlias(override val name: String,
         return other is ITyAlias && other.name == name && other.flags == flags
     }
 
-    override fun equals(context: SearchContext, other: ITy): Boolean {
+    override fun equals(context: SearchContext, other: ITy, equalityFlags: Int): Boolean {
         if (this === other) {
             return true
         }
 
-        return ty.equals(context, other)
+        return ty.equals(context, other, equalityFlags)
     }
 
     override fun hashCode(): Int {

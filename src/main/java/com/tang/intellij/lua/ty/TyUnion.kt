@@ -21,7 +21,6 @@ import com.intellij.psi.stubs.StubOutputStream
 import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.search.SearchContext
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -172,7 +171,7 @@ class TyUnion : Ty {
         childSet.forEach { it.accept(visitor) }
     }
 
-    override fun equals(context: SearchContext, other: ITy): Boolean {
+    override fun equals(context: SearchContext, other: ITy, equalityFlags: Int): Boolean {
         val resolvedTy = childSet.reduce { resolved, ty ->
             resolved.union(context, Ty.resolve(context, ty))
         }
@@ -196,7 +195,7 @@ class TyUnion : Ty {
         if (resolvedSet.size == resolvedOtherSet.size) {
             val allMembersMatch = resolvedSet.all { ty ->
                 resolvedOtherSet.contains(ty) || resolvedOtherSet.any { otherTy ->
-                    ty.equals(context, otherTy)
+                    ty.equals(context, otherTy, equalityFlags)
                 }
             }
 

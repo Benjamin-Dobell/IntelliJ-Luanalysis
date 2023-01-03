@@ -25,7 +25,7 @@ import com.tang.intellij.lua.search.SearchContext
 class TySnippet(val content: String) : Ty(TyKind.Snippet) {
     override fun toString() = content
 
-    override fun equals(context: SearchContext, other: ITy): Boolean {
+    override fun equals(context: SearchContext, other: ITy, equalityFlags: Int): Boolean {
         return false
     }
 }

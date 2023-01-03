@@ -16,6 +16,7 @@
 
 package com.tang.intellij.lua.ty
 
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.RecursionManager.doPreventingRecursion
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.PsiSearchContext
@@ -51,12 +52,14 @@ class GenericAnalyzer(
 
     val analyzedParams: Map<String, ITy> = paramTyMap
 
+    val visitedTys = mutableSetOf<ITy>()
+
     private fun isInlineTable(ty: ITy): Boolean {
         if (ty !is TyTable) {
             return false
         }
 
-        var ancestor = ty.table.parent
+        var ancestor = ty.psi.parent
 
         while (ancestor is LuaTableExpr) {
             ancestor = ancestor.parent
@@ -69,6 +72,15 @@ class GenericAnalyzer(
         return if (isInlineTable(ty)) {
             TyVarianceFlags.STRICT_UNKNOWN or TyVarianceFlags.WIDEN_TABLES
         } else TyVarianceFlags.STRICT_UNKNOWN
+    }
+
+    private fun accept(ty: ITy) {
+        ProgressManager.checkCanceled()
+
+        if (visitedTys.add(ty)) {
+            ty.accept(this)
+            visitedTys.remove(ty)
+        }
     }
 
     private fun visitShape(shape: ITy) {
@@ -106,7 +118,7 @@ class GenericAnalyzer(
                 }
 
                 warp(sourceMemberTy) {
-                    Ty.resolve(context, shapeMemberTy).accept(this)
+                    accept(Ty.resolve(context, shapeMemberTy))
                 }
 
                 true
@@ -118,12 +130,12 @@ class GenericAnalyzer(
         this.context = context
 
         cur = arg
-        warp(cur) { Ty.resolve(context, par).accept(this) }
+        warp(cur) { accept(Ty.resolve(context, par)) }
         cur = Primitives.VOID
     }
 
     override fun visitAlias(alias: ITyAlias) {
-        alias.ty.accept(this)
+        accept(alias.ty)
     }
 
     override fun visitMultipleResults(multipleResults: TyMultipleResults) {
@@ -132,7 +144,7 @@ class GenericAnalyzer(
         if (flattenedCur is TyMultipleResults) {
             multipleResults.forResultPairs(context, flattenedCur, true) { resultMember, curMember ->
                 warp(curMember ?: Primitives.NIL) {
-                    resultMember.accept(this)
+                    accept(resultMember)
                 }
             }
         } else {
@@ -148,7 +160,7 @@ class GenericAnalyzer(
                 if (it is ITyClass) {
                     it.params?.asSequence()?.zip(clazzParams.asSequence())?.forEach { (param, clazzParam) ->
                         warp(param) {
-                            Ty.resolve(context, clazzParam).accept(this)
+                            accept(Ty.resolve(context, clazzParam))
                         }
                     }
                 }
@@ -184,14 +196,14 @@ class GenericAnalyzer(
                     }
                 }
             }
-        } else if (clazz.isShape(context)) {
+        } else if (clazz is IPsiTy<*> && clazz.isShape(context)) {
             visitShape(clazz)
         }
     }
 
     override fun visitUnion(u: TyUnion) {
         Ty.eachResolved(context, u) {
-            it.accept(this)
+            accept(it)
         }
     }
 
@@ -199,12 +211,12 @@ class GenericAnalyzer(
         Ty.eachResolved(context, cur) {
             if (it is ITyArray) {
                 warp(it.base) {
-                    Ty.resolve(context, array.base).accept(this)
+                    accept(Ty.resolve(context, array.base))
                 }
             } else if (it is ITyClass && TyArray.isArray(context, it)) {
                 it.processMembers(context) { _, member ->
                     warp(member.guessType(context) ?: Primitives.UNKNOWN) {
-                        Ty.resolve(context, array.base).accept(this)
+                        accept(Ty.resolve(context, array.base))
                     }
                     true
                 }
@@ -225,43 +237,43 @@ class GenericAnalyzer(
             Ty.eachResolved(context, cur) { source ->
                 if (source == Primitives.TABLE) {
                     warp(Primitives.UNKNOWN) {
-                        Ty.resolve(context, generic.args.first()).accept(this)
+                        accept(Ty.resolve(context, generic.args.first()))
                     }
 
                     warp(Primitives.UNKNOWN) {
-                        Ty.resolve(context, generic.args.last()).accept(this)
+                        accept(Ty.resolve(context, generic.args.last()))
                     }
                 } else if (source is ITyArray) {
                     warp(Primitives.NUMBER) {
-                        Ty.resolve(context, generic.args.first()).accept(this)
+                        accept(Ty.resolve(context, generic.args.first()))
                     }
 
                     warp(source.base) {
-                        Ty.resolve(context, generic.args.last()).accept(this)
+                        accept(Ty.resolve(context, generic.args.last()))
                     }
                 } else if (source.isShape(context)) {
                     val genericTable = createTableGenericFromMembers(context, source)
 
                     genericTable.args.asSequence().zip(generic.args.asSequence()).forEach { (param, genericParam) ->
                         warp(param) {
-                            Ty.resolve(context, genericParam).accept(this)
+                            accept(Ty.resolve(context, genericParam))
                         }
                     }
                 }
             }
-        } else if (generic.isShape(context)) {
+        } else if (generic.base.isShape(context)) {
             visitShape(generic)
         }
 
         Ty.eachResolved(context, cur) { source ->
             if (source is ITyGeneric) {
                 warp(source.base) {
-                    Ty.resolve(context, generic.base).accept(this)
+                    accept(Ty.resolve(context, generic.base))
                 }
 
                 source.args.asSequence().zip(generic.args.asSequence()).forEach { (param, genericParam) ->
                     warp(param) {
-                        Ty.resolve(context, genericParam).accept(this)
+                        accept(Ty.resolve(context, genericParam))
                     }
                 }
             }
@@ -272,7 +284,7 @@ class GenericAnalyzer(
         arg.returnTy?.let {
             warp(it) {
                 par.returnTy?.let {
-                    Ty.resolve(context, it).accept(this)
+                    accept(Ty.resolve(context, it))
                 }
             }
         }
@@ -315,7 +327,7 @@ abstract class TySubstitutor : ITySubstitutor {
 
         return if (paramsSubstituted || substitutedBase !== generic.base) {
             if (generic is TyDocTableGeneric) {
-                TyDocTableGeneric(generic.genericTableTy, substitutedArgs.first(), substitutedArgs.last())
+                TyDocTableGeneric(generic.psi, substitutedArgs.first(), substitutedArgs.last())
             } else {
                 TyGeneric(substitutedArgs.toTypedArray(), substitutedBase)
             }

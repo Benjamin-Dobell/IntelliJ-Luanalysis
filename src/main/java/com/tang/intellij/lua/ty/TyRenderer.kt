@@ -260,9 +260,9 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
     open fun renderClass(clazz: ITyClass): String {
         return when {
             clazz is TyDocTable -> {
-                val context = SearchContext.get(clazz.table.project)
+                val context = SearchContext.get(clazz.psi.project)
                 val list = mutableListOf<String>()
-                clazz.table.tableFieldList.take(MaxRenderedTableMembers).forEach { field ->
+                clazz.psi.tableFieldList.take(MaxRenderedTableMembers).forEach { field ->
                     val name = field.name
                     val indexTy = if (name == null) field.guessIndexType(context) else null
                     val key = name ?: "[${render(indexTy ?: Primitives.VOID)}]"
@@ -283,7 +283,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                     }
                 }
 
-                if (clazz.table.tableFieldList.size > MaxRenderedTableMembers) {
+                if (clazz.psi.tableFieldList.size > MaxRenderedTableMembers) {
                     list.add("...")
                 }
 
@@ -305,7 +305,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
                     }
                 }
 
-                val context = SearchContext.get(clazz.table.project)
+                val context = SearchContext.get(clazz.psi.project)
                 val list = mutableListOf<String>()
                 clazz.processMembers(context) { owner, member ->
                     val name = member.name

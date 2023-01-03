@@ -37,7 +37,7 @@ class TyPrimitive(override val primitiveKind: TyPrimitiveKind,
         return other is ITyPrimitive && other.primitiveKind == primitiveKind
     }
 
-    override fun equals(context: SearchContext, other: ITy): Boolean {
+    override fun equals(context: SearchContext, other: ITy, equalityFlags: Int): Boolean {
         if (this === other) {
             return true
         }
@@ -103,7 +103,7 @@ open class TyPrimitiveClass(override val primitiveKind: TyPrimitiveKind,
         return other is ITyPrimitive && other.primitiveKind == primitiveKind
     }
 
-    override fun equals(context: SearchContext, other: ITy): Boolean {
+    override fun equals(context: SearchContext, other: ITy, equalityFlags: Int): Boolean {
         if (this === other) {
             return true
         }

@@ -29,9 +29,11 @@ import com.tang.intellij.lua.codeInsight.inspection.MatchFunctionSignatureInspec
 import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.LuaCallExpr
+import com.tang.intellij.lua.psi.LuaPsiElement
 import com.tang.intellij.lua.psi.LuaTableExpr
 import com.tang.intellij.lua.psi.argList
 import com.tang.intellij.lua.search.SearchContext
+import conditionallyCached
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -68,6 +70,7 @@ class TyFlags {
         const val UNKNOWN = 0x20 // Unless STRICT_UNKNOWN is enabled, this type is covariant of all other types.
     }
 }
+
 class TyVarianceFlags {
     companion object {
         const val STRICT_UNKNOWN = 0x1 // When enabled UNKNOWN types are no longer treated as covariant of all types.
@@ -78,9 +81,27 @@ class TyVarianceFlags {
     }
 }
 
+class TyEqualityFlags {
+    companion object {
+        const val NON_STRUCTURAL = 0x1 // Treat shapes as classes i.e. a shape is only covariant of another shape if it explicitly inherits from it.
+
+        fun fromVarianceFlags(varianceFlags: Int): Int {
+            return if (varianceFlags and TyVarianceFlags.NON_STRUCTURAL != 0) {
+                TyEqualityFlags.NON_STRUCTURAL
+            } else {
+                0
+            }
+        }
+    }
+}
+
 data class SignatureMatchResult(val signature: IFunSignature?, val substitutedSignature: IFunSignature?, val returnTy: ITy)
 
 typealias ProcessTypeMember = (ownerTy: ITy, member: TypeMember) -> Boolean
+
+interface IPsiTy<T : LuaPsiElement> {
+    val psi: T
+}
 
 interface ITy : Comparable<ITy> {
     val kind: TyKind
@@ -91,7 +112,7 @@ interface ITy : Comparable<ITy> {
 
     val booleanType: ITy
 
-    fun equals(context: SearchContext, other: ITy): Boolean
+    fun equals(context: SearchContext, other: ITy, equalityFlags: Int): Boolean
 
     fun union(context: SearchContext, ty: ITy): ITy
 
@@ -501,8 +522,9 @@ abstract class Ty(override val kind: TyKind) : ITy {
 
     final override var flags: Int = 0
 
-    override val displayName: String
-        get() = TyRenderer.SIMPLE.render(this)
+    override val displayName by conditionallyCached({ !(this is IPsiTy<*>) || !SearchContext.get(psi.project).isDumb }) {
+        TyRenderer.SIMPLE.render(this)
+    }
 
     // Lazy initialization because Primitives.TRUE is itself a Ty that needs to be instantiated and refers to itself.
     override val booleanType: ITy by lazy { Primitives.TRUE }
@@ -548,7 +570,19 @@ abstract class Ty(override val kind: TyKind) : ITy {
 
         val resolvedOther = resolve(context, other)
 
-        if (this.equals(context, resolvedOther)) {
+        if (varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 && isShape(context)) {
+            val isContravariant: Boolean? = recursionGuard(resolvedOther, {
+                // Note: ProblemUtil.contravariantOfShape will call back into this method with
+                //       TyVarianceFlags.NON_STRUCTURAL set as a fast nominal check, before checking structurally.
+                ProblemUtil.contravariantOfShape(context, this, resolvedOther, varianceFlags)
+            })
+
+            if (isContravariant != null) {
+                return isContravariant
+            }
+        }
+
+        if (this.equals(context, resolvedOther, TyEqualityFlags.fromVarianceFlags(varianceFlags))) {
             return true
         }
 
@@ -564,16 +598,6 @@ abstract class Ty(override val kind: TyKind) : ITy {
             }
 
             return true
-        }
-
-        if ((varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 || other.isAnonymousTable) && isShape(context)) {
-            val isContravariant: Boolean? = recursionGuard(resolvedOther, {
-                ProblemUtil.contravariantOfShape(context, this, resolvedOther, varianceFlags)
-            })
-
-            if (isContravariant != null) {
-                return isContravariant
-            }
         }
 
         val otherSuper = other.getSuperType(context)
@@ -871,7 +895,7 @@ class TyUnknown : Ty(TyKind.Unknown) {
         this.flags = this.flags or TyFlags.UNKNOWN
     }
 
-    override fun equals(context: SearchContext, other: ITy): Boolean {
+    override fun equals(context: SearchContext, other: ITy, equalityFlags: Int): Boolean {
         if (other === Primitives.UNKNOWN) {
             return true
         }
@@ -904,7 +928,7 @@ class TyNil : Ty(TyKind.Nil) {
 
     override val booleanType = Primitives.FALSE
 
-    override fun equals(context: SearchContext, other: ITy): Boolean {
+    override fun equals(context: SearchContext, other: ITy, equalityFlags: Int): Boolean {
         if (other === Primitives.NIL) {
             return true
         }
@@ -931,7 +955,7 @@ class TyNil : Ty(TyKind.Nil) {
 
 class TyVoid : Ty(TyKind.Void) {
 
-    override fun equals(context: SearchContext, other: ITy): Boolean {
+    override fun equals(context: SearchContext, other: ITy, equalityFlags: Int): Boolean {
         if (other === Primitives.VOID) {
             return true
         }

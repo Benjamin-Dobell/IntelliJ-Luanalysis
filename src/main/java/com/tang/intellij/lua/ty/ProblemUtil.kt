@@ -90,6 +90,12 @@ object ProblemUtil {
             return false
         }
 
+        // We perform a non-structural (i.e. inheritance) check first as a happy path optimization. This is a *very*
+        // significant optimization when you've deeply nested shapes whose members are other (non-anonymous) shapes.
+        if (target.contravariantOf(context, source, varianceFlags or TyVarianceFlags.NON_STRUCTURAL)) {
+            return true;
+        }
+
         val sourceSubstitutor = source.getMemberSubstitutor(context)
         val targetSubstitutor = target.getMemberSubstitutor(context)
 
@@ -204,7 +210,7 @@ object ProblemUtil {
             val targetMemberTy = (if (indexTy != null) {
                 val targetMember = target.findIndexer(context, indexTy)
 
-                if (targetMember?.guessIndexType(context)?.equals(context, indexTy) == true) {
+                if (targetMember?.guessIndexType(context)?.equals(context, indexTy, 0) == true) {
                     // If the target index type == source index type, then we have already checked compatibility of this member above.
                     return@processMembers true
                 }
@@ -232,7 +238,7 @@ object ProblemUtil {
             // TODO: DRY
             if (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN != 0 || !sourceMemberTy.isUnknown) {
                 if (varianceFlags and TyVarianceFlags.WIDEN_TABLES == 0) {
-                    if (!targetMemberTy.equals(context, sourceMemberTy)) {
+                    if (!targetMemberTy.equals(context, sourceMemberTy, 0)) {
                         isContravariant = false
 
                         if (processProblem != null && sourceElement != null) {
@@ -311,7 +317,7 @@ object ProblemUtil {
                 resolvedSourceTy.lazyInit(context)
 
                 if ((varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 || resolvedSourceTy.isAnonymousTable) && resolvedSourceTy.isShape(context)) {
-                    val sourceIsInline = resolvedSourceTy is TyTable && resolvedSourceTy.table == sourceElement
+                    val sourceIsInline = resolvedSourceTy is TyTable && resolvedSourceTy.psi == sourceElement
                     val indexes = sortedMapOf<Int, PsiElement>()
                     var foundNumberIndexer = false
 
@@ -453,7 +459,7 @@ object ProblemUtil {
             base.lazyInit(context)
         }
 
-        if (varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 && resolvedSourceTy is TyTable && resolvedSourceTy.table == sourceElement && base.isShape(context)) {
+        if (varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 && resolvedSourceTy is TyTable && resolvedSourceTy.psi == sourceElement && base.isShape(context)) {
             isContravariant = contravariantOfShape(
                 context,
                 resolvedTargetTy,
