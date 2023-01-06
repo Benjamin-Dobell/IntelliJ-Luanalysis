@@ -289,7 +289,7 @@ public class LuaVisitor extends PsiElementVisitor {
   }
 
   public void visitTypeMethod(@NotNull LuaTypeMethod o) {
-    visitPsiElement(o);
+    visitFuncBodyOwner(o);
   }
 
   public void visitPsiElement(@NotNull LuaPsiElement o) {

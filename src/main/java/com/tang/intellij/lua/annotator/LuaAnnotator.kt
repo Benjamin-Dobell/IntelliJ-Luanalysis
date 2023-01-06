@@ -16,11 +16,15 @@
 
 package com.tang.intellij.lua.annotator
 
-import com.intellij.lang.annotation.*
+import com.intellij.lang.annotation.AnnotationBuilder
+import com.intellij.lang.annotation.AnnotationHolder
+import com.intellij.lang.annotation.Annotator
+import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.Constants
+import com.tang.intellij.lua.codeInsight.intention.MakeParameterOptionalIntention
 import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.highlighting.LuaHighlightingData
 import com.tang.intellij.lua.psi.*
@@ -135,12 +139,6 @@ class LuaAnnotator : Annotator {
             }
             createInfoAnnotation(id)
                     .textAttributes(textAttributes)
-                    .create()
-        }
-
-        override fun visitParamDef(o: LuaParamDef) {
-            createInfoAnnotation(o, "Parameter : \"${o.name}\"")
-                    .textAttributes(LuaHighlightingData.PARAMETER)
                     .create()
         }
 
@@ -304,6 +302,24 @@ class LuaAnnotator : Annotator {
             createInfoAnnotation(o, null)
                     .textAttributes(LuaHighlightingData.TYPE_REFERENCE)
                     .create()
+        }
+
+        override fun visitFunctionParams(o: LuaDocFunctionParams) {
+            var encounteredOptional = false
+
+            o.functionParamList.forEach { param ->
+                if (encounteredOptional) {
+                    if (param.optional == null) {
+                        myHolder!!
+                            .newAnnotation(HighlightSeverity.ERROR, "Required parameters cannot follow optional parameters")
+                            .range(param)
+                            .withFix(MakeParameterOptionalIntention())
+                            .create()
+                    }
+                } else if (param.optional != null) {
+                    encounteredOptional = true
+                }
+            }
         }
     }
 }

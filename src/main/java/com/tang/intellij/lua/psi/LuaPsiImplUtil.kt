@@ -29,7 +29,6 @@ import com.intellij.psi.stubs.StubElement
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.Constants
-import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.comment.psi.impl.LuaDocTagTypeImpl
 import com.tang.intellij.lua.ext.recursionGuard
@@ -397,14 +396,7 @@ fun getParams(owner: LuaFuncBodyOwner<*>): Array<LuaParamInfo> {
 }
 
 private fun getParamsInner(funcBodyOwner: LuaFuncBodyOwner<*>): Array<LuaParamInfo> {
-    val comment = if (funcBodyOwner is LuaCommentOwner) {
-        LuaCommentUtil.findComment(funcBodyOwner)
-    } else {
-        PsiTreeUtil.getParentOfType(funcBodyOwner, LuaCommentOwner::class.java)?.let {
-            LuaCommentUtil.findComment(it)
-        }
-    }
-
+    val comment = funcBodyOwner.comment
     val paramNameList = funcBodyOwner.paramDefList
 
     if (paramNameList != null) {

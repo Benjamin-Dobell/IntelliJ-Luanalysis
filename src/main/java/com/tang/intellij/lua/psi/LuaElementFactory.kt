@@ -20,7 +20,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.util.PsiTreeUtil
+import com.tang.intellij.lua.comment.psi.LuaDocFunctionParam
 import com.tang.intellij.lua.comment.psi.LuaDocTagField
+import com.tang.intellij.lua.comment.psi.LuaDocTagParam
 import com.tang.intellij.lua.lang.LuaLanguage
 
 /**
@@ -60,14 +62,19 @@ object LuaElementFactory {
         return file.firstChild
     }
 
-    fun createDocIdentifier(project: Project, name: String): PsiElement {
+    fun createDocTagField(project: Project, name: String): PsiElement {
         val element = createWith(project, "---@field $name string")
         val fieldDef = PsiTreeUtil.findChildOfType(element, LuaDocTagField::class.java)!!
         return fieldDef.id!!
     }
 
-    fun createParamter(project: Project, name: String): PsiElement {
-        val element = createWith(project, "local function($name)end")
-        return PsiTreeUtil.findChildOfType(element, LuaParamDef::class.java)!!
+    fun createDocFunctionParam(project: Project, name: String, type: String, optional: Boolean): PsiElement {
+        val element = createWith(project, "---@type fun(${name}${if (optional) "?" else ""}: ${type})")
+        return PsiTreeUtil.findChildOfType(element, LuaDocFunctionParam::class.java)!!
+    }
+
+    fun createDocTagParam(project: Project, name: String, type: String, optional: Boolean, comment: String?): PsiElement {
+        val element = createWith(project, "---@param ${name}${if (optional) "?" else ""} ${type} ${comment}")
+        return PsiTreeUtil.findChildOfType(element, LuaDocTagParam::class.java)!!
     }
 }

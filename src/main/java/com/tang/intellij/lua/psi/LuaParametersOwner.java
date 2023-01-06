@@ -28,7 +28,7 @@ import java.util.List;
  * Created by TangZX on 2016/12/21.
  */
 
-public interface LuaParametersOwner<Stub extends StubElement> extends LuaPsiElement, StubBasedPsiElement<Stub> {
+public interface LuaParametersOwner<Stub extends StubElement> extends LuaPsiElement, LuaCommentOwner, StubBasedPsiElement<Stub> {
     @Nullable
     List<LuaParamDef> getParamDefList();
 }

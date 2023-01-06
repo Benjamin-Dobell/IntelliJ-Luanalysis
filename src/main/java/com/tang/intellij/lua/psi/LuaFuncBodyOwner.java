@@ -32,7 +32,7 @@ import org.jetbrains.annotations.Nullable;
  *
  * Created by TangZX on 2016/12/9.
  */
-public interface LuaFuncBodyOwner<Stub extends LuaFuncBodyOwnerStub> extends LuaParametersOwner<Stub>, LuaPsiTypeGuessable
+public interface LuaFuncBodyOwner<Stub extends LuaFuncBodyOwnerStub> extends LuaParametersOwner<Stub>, LuaPsiTypeGuessable, LuaCommentOwner
 {
 
     @Nullable

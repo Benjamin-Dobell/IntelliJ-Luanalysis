@@ -231,6 +231,10 @@
             <category>Lua</category>
             <className>com.tang.intellij.lua.codeInsight.intention.ComputeConstantValueIntention</className>
         </intentionAction>
+        <intentionAction>
+            <category>Lua</category>
+            <className>com.tang.intellij.lua.codeInsight.intention.MakeParameterOptionalIntention</className>
+        </intentionAction>
 
         <lang.inspectionSuppressor language="Lua" implementationClass="com.tang.intellij.lua.codeInsight.inspection.LuaSuppressManager"/>
 
@@ -391,6 +395,15 @@
                 groupName="Lua > Emmy doc"
                 language="Lua"
                 implementationClass="com.tang.intellij.lua.codeInsight.inspection.doc.GenericParameterShadowed"/>
+
+        <localInspection
+                displayName="Required parameter after optional parameter"
+                enabledByDefault="true"
+                groupName="Lua > Emmy doc"
+                level="ERROR"
+                language="Lua"
+                runForWholeFile="true"
+                implementationClass="com.tang.intellij.lua.codeInsight.inspection.doc.RequiredParameterInspection"/>
     </extensions>
 
     <actions>

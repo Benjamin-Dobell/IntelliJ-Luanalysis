@@ -75,7 +75,7 @@ fun getName(identifierOwner: PsiNameIdentifierOwner): String? {
 fun setName(identifierOwner: PsiNameIdentifierOwner, newName: String): PsiElement {
     val oldId = identifierOwner.nameIdentifier
     if (oldId != null) {
-        val newId = LuaElementFactory.createDocIdentifier(identifierOwner.project, newName)
+        val newId = LuaElementFactory.createDocTagField(identifierOwner.project, newName)
         oldId.replace(newId)
         return newId
     }

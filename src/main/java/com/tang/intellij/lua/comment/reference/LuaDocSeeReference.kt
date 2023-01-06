@@ -38,7 +38,7 @@ class LuaDocSeeReference(see: LuaDocTagSee) :
     }
 
     override fun handleElementRename(newElementName: String): PsiElement {
-        val id = LuaElementFactory.createDocIdentifier(myElement.project, newElementName)
+        val id = LuaElementFactory.createDocTagField(myElement.project, newElementName)
         this.id.replace(id)
         return id
     }
