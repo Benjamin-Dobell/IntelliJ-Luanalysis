@@ -20,6 +20,7 @@ import com.intellij.codeInsight.documentation.DocumentationManagerUtil
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.comment.psi.api.LuaComment
+import com.tang.intellij.lua.search.ProjectSearchContext
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
 
@@ -133,7 +134,7 @@ fun renderComment(sb: StringBuilder, comment: LuaComment?, tyRenderer: ITyRender
         renderTagList(sections, "Fields", fields) { renderFieldDef(sections, it, tyRenderer) }
         //Parameters
         val docParams = comment.findTags(LuaDocTagParam::class.java)
-        renderTagList(sections, "Parameters", docParams) { renderDocParam(sections, it, tyRenderer) }
+        renderTagList(sections, "Parameters", docParams) { renderDocParam(sections, it, false, tyRenderer) }
         //Returns
         val retTag = comment.findTag(LuaDocTagReturn::class.java)
         retTag?.let { renderTagList(sections, "Returns", listOf(retTag)) { renderReturn(sections, it, tyRenderer) } }
@@ -225,14 +226,14 @@ private fun <T : LuaDocPsiElement> renderTagList(sb: StringBuilder, name: String
     }
 }
 
-fun renderDocParam(sb: StringBuilder, child: LuaDocTagParam, tyRenderer: ITyRenderer, paramTitle: Boolean = false) {
-    val paramNameRef = child.paramNameRef
+fun renderDocParam(sb: StringBuilder, param: LuaDocTagParam, withinImplementation: Boolean, tyRenderer: ITyRenderer, paramTitle: Boolean = false) {
+    val paramNameRef = param.paramNameRef
     if (paramNameRef != null) {
         if (paramTitle)
             sb.append("<b>param</b> ")
         sb.append("<code>${paramNameRef.text}</code>: ")
-        renderDocType(null, null, sb, child.ty, tyRenderer)
-        renderCommentString(" - ", null, sb, child.commentString)
+        renderDocType(null, null, sb, param.ty, tyRenderer, if (withinImplementation && param.optional != null) Primitives.NIL else null)
+        renderCommentString(" - ", null, sb, param.commentString)
     }
 }
 
@@ -249,11 +250,16 @@ fun renderCommentString(prefix: String?, postfix: String?, sb: StringBuilder, ch
     }
 }
 
-private fun renderDocType(prefix: String?, postfix: String?, sb: StringBuilder, type: LuaDocType?, tyRenderer: ITyRenderer) {
+private fun renderDocType(prefix: String?, postfix: String?, sb: StringBuilder, type: LuaDocType?, tyRenderer: ITyRenderer, mergeTy: ITy? = null) {
     if (type != null) {
         if (prefix != null) sb.append(prefix)
 
-        val ty = type.getType()
+        val ty = if (mergeTy != null) {
+            type.getType().union(ProjectSearchContext(type.project), mergeTy)
+        } else {
+            type.getType()
+        }
+
         val parenthesesRequired = ty is TyFunction || ty is TyMultipleResults
 
         if (parenthesesRequired) {

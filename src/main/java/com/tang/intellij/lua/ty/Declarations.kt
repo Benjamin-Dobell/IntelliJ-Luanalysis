@@ -21,6 +21,7 @@ import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.psi.LuaDocTagField
 import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.psi.*
+import com.tang.intellij.lua.search.PsiSearchContext
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.search.withRecursionGuard
 
@@ -64,7 +65,7 @@ private fun inferReturnTyInner(context: SearchContext, owner: LuaFuncBodyOwner<*
                     return
                 }
 
-                val returnTy = guessReturnType(o, context)
+                val returnTy = guessReturnType(o, PsiSearchContext(o))
 
                 if (returnTy == null) {
                     type = null
@@ -140,8 +141,9 @@ private fun LuaLocalDef.infer(context: SearchContext): ITy? {
 
             type = if (exprList != null) {
                 // TODO: unknown vs. any - should be unknown
-                context.withIndex(index, false) {
-                    exprList.guessTypeAt(context)
+                val localContext = PsiSearchContext(localStat)
+                localContext.withIndex(index, false) {
+                    exprList.guessTypeAt(localContext)
                 } ?: Primitives.UNKNOWN
             } else {
                 val stub = this.stub
@@ -236,143 +238,140 @@ private fun inferFile(context: SearchContext, file: LuaPsiFile): ITy {
  */
 private fun resolveParamType(context: SearchContext, paramDef: LuaParamDef): ITy? {
     val stub = paramDef.stub
-
     val paramName = stub?.name ?: paramDef.name
+    var ty: ITy? = stub?.docTy
 
-    val docTy: ITy? = if (stub != null) {
-        stub.docTy
-    } else {
-        // from comment
-        val commentOwner = PsiTreeUtil.getParentOfType(paramDef, LuaCommentOwner::class.java)
-
-        if (commentOwner != null) {
-            var comment = commentOwner.comment
-
-            if (comment == null) {
-                comment = (commentOwner.parent?.parent as? LuaDeclaration)?.comment // Doc comment may appear on declarations
-            }
-
-            val docTy = comment?.getParamDef(paramName)?.type
-
-            if (docTy != null)
-                return docTy
-        }
-        null
+    val comment = PsiTreeUtil.getStubOrPsiParentOfType(paramDef, LuaCommentOwner::class.java)?.let { commentOwner ->
+        commentOwner.comment
+            ?: (commentOwner.parent?.parent as? LuaDeclaration)?.comment // Doc comment may appear on declarations
     }
 
-    if (docTy != null)
-        return docTy
+
+    if (comment != null) {
+        comment.getParamDef(paramName)?.let { paramTag ->
+            val contextElement = context.element
+
+            if (paramTag.optional != null
+                && contextElement != null
+                && PsiTreeUtil.isAncestor(comment.owner!!, contextElement, true)
+            ) {
+                // Within the scope of a function, optional parameters may be nil
+                ty = paramTag.type.union(context, Primitives.NIL)
+            } else {
+                ty = paramTag.type
+            }
+        }
+    }
+
+    if (ty != null) {
+        return ty
+    }
 
     val paramOwner = PsiTreeUtil.getStubOrPsiParentOfType(paramDef, LuaParametersOwner::class.java)
 
-    // 如果是个类方法，则有可能在父类里
-    if (paramOwner is LuaClassMethodDefStat) {
-        val classType = paramOwner.guessParentClass(context)
-        val methodName = paramOwner.name
-        var set: ITy? = null
-        if (classType != null && methodName != null) {
-            Ty.processSuperClasses(context, classType) { superType ->
-                val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass
-                val superMethod = superClass?.findMember(context, methodName)
-                if (superMethod is LuaTypeMethod<*>) {
-                    val params = superMethod.params//todo : 优化
-                    for (param in params) {
-                        if (paramName == param.name) {
-                            set = param.ty
-                            if (set != null) {
-                                return@processSuperClasses false
+    when (paramOwner) {
+        is LuaClassMethodDefStat -> {
+            val classType = paramOwner.guessParentClass(context)
+            val methodName = paramOwner.name
+
+            if (classType != null && methodName != null) {
+                Ty.processSuperClasses(context, classType) { superType ->
+                    val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass
+                    val superMethod = superClass?.findMember(context, methodName)
+
+                    // TODO: Optionalalalallalalala
+
+                    if (superMethod is LuaTypeMethod<*>) {
+                        val params = superMethod.params
+
+                        for (param in params) {
+                            if (paramName == param.name) {
+                                ty = param.ty
+
+                                if (ty != null) {
+                                    return@processSuperClasses false
+                                }
                             }
                         }
                     }
+                    true
                 }
-                true
             }
         }
 
-        if (set != null) {
-            return set
+        is LuaFuncDefStat -> {
+            if (paramName == Constants.WORD_SELF) {
+                // module fun
+                // function method(self) end
+
+                val moduleName = paramDef.getModuleName(context)
+                if (moduleName != null) {
+                    ty = TyLazyClass(moduleName)
+                }
+            }
+        }
+
+        is LuaForBStat -> {
+            // for (iterator support)
+
+            val exprList = paramOwner.exprList
+            val paramIndex = paramOwner.getIndexFor(paramDef)
+
+            val iterator: ITyFunction?
+
+            val callExpr = exprList?.expressionList?.firstOrNull() as? LuaCallExpr
+
+            if (callExpr != null) {
+                iterator = context.withMultipleResults {
+                    callExpr.guessType(context)
+                }?.let {
+                    TyMultipleResults.getResult(context, it, 0) as? ITyFunction
+                }
+            } else {
+                iterator = (exprList?.expressionList?.firstOrNull() as? LuaPsiTypeGuessable)?.guessType(context) as? ITyFunction
+            }
+
+            if (iterator != null) {
+                val returnTy = iterator.mainSignature.returnTy?.not(context, Primitives.NIL)?.let {
+                    TyMultipleResults.flatten(context, it)
+                }
+
+                if (returnTy is TyMultipleResults) {
+                    ty = returnTy.list.getOrNull(paramIndex) ?: Primitives.UNKNOWN
+                } else if (paramIndex == 0) {
+                    ty = returnTy
+                } else {
+                    ty = Primitives.VOID
+                }
+            }
+        }
+
+        is LuaForAStat -> {
+            // for param = 1, 2 do end
+            ty = Primitives.NUMBER
+        }
+
+        is LuaClosureExpr -> {
+            /**
+             * ---@param processor fun(p1:TYPE):void
+             * local function test(processor)
+             * end
+             *
+             * test(function(p1)  end)
+             *
+             * guess type for p1
+             */
+
+            paramOwner.shouldBe(context)?.let {
+                Ty.eachResolved(context, it) {
+                    if (it is ITyFunction) {
+                        val paramIndex = paramOwner.getIndexFor(paramDef)
+                        ty = TyUnion.union(context, ty, it.mainSignature.getArgTy(paramIndex))
+                    }
+                }
+            }
         }
     }
 
-    // module fun
-    // function method(self) end
-    if (paramOwner is LuaFuncDefStat && paramName == Constants.WORD_SELF) {
-        val moduleName = paramDef.getModuleName(context)
-        if (moduleName != null) {
-            return TyLazyClass(moduleName)
-        }
-    }
-
-    //for (iterator support)
-    if (paramOwner is LuaForBStat) {
-        val exprList = paramOwner.exprList
-        val paramIndex = paramOwner.getIndexFor(paramDef)
-
-        val iterator: ITyFunction?
-
-        val callExpr = exprList?.expressionList?.firstOrNull() as? LuaCallExpr
-
-        if (callExpr != null) {
-            iterator = context.withMultipleResults {
-                callExpr.guessType(context)
-            }?.let {
-                TyMultipleResults.getResult(context, it, 0) as? ITyFunction
-            }
-        } else {
-            iterator = (exprList?.expressionList?.firstOrNull() as? LuaPsiTypeGuessable)?.guessType(context) as? ITyFunction
-        }
-
-        if (iterator != null) {
-            var result: ITy = Primitives.VOID
-            val returnTy = iterator.mainSignature.returnTy?.not(context, Primitives.NIL)?.let {
-                TyMultipleResults.flatten(context, it)
-            }
-
-            if (returnTy == null) {
-                return null
-            }
-
-            if (returnTy is TyMultipleResults) {
-                result = returnTy.list.getOrNull(paramIndex)?.let {
-                    result.union(context, it)
-                } ?: Primitives.UNKNOWN
-            } else if (paramIndex == 0) {
-                result = result.union(context, returnTy)
-            }
-
-            return result
-        }
-    }
-    // for param = 1, 2 do end
-    if (paramOwner is LuaForAStat)
-        return Primitives.NUMBER
-    /**
-     * ---@param processor fun(p1:TYPE):void
-     * local function test(processor)
-     * end
-     *
-     * test(function(p1)  end)
-     *
-     * guess type for p1
-     */
-    if (paramOwner is LuaClosureExpr) {
-        val shouldBe = paramOwner.shouldBe(context)
-
-        if (shouldBe == null) {
-            return null
-        }
-
-        var ret: ITy? = null
-
-        Ty.eachResolved(context, shouldBe) {
-            if (it is ITyFunction) {
-                val paramIndex = paramOwner.getIndexFor(paramDef)
-                ret = TyUnion.union(context, ret, it.mainSignature.getArgTy(paramIndex))
-            }
-        }
-
-        return ret
-    }
-
-    return null
+    return ty
 }
