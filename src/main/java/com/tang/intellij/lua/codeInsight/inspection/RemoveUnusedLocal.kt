@@ -25,6 +25,7 @@ import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.refactoring.RefactoringFactory
 import com.tang.intellij.lua.Constants
 import com.tang.intellij.lua.comment.psi.LuaDocPsiElement
+import com.tang.intellij.lua.lang.LuaFileType
 import com.tang.intellij.lua.psi.*
 import org.jetbrains.annotations.Nls
 
@@ -34,6 +35,10 @@ import org.jetbrains.annotations.Nls
  */
 class RemoveUnusedLocal : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
+        if (session.file.name.matches(LuaFileType.DEFINITION_FILE_REGEX)) {
+            return PsiElementVisitor.EMPTY_VISITOR
+        }
+
         return object : LuaVisitor() {
 
             override fun visitParamDef(o: LuaParamDef) {
