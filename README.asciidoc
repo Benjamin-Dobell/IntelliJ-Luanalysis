@@ -81,7 +81,7 @@ image:./snapshot/1_emmydoc_block_comments.png[image]
 
 === Type casts
 
-In addition to defining new types, the `@type` tag can now we also used to cast the result of a Lua expression.
+In addition to defining new types, the `@type` tag can now be also used to cast the result of a Lua expression.
 
 This is most useful with the newly added support for EmmyDoc block comments as we can easily specify inline type casts:
 
@@ -91,7 +91,7 @@ https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f
 
 === Improved variance detection
 
-EmmyLua attempts to determine if a type is assignable to another type simply by checking if the former is a ``subtype'' of latter, however proper type variance of complex types is not implemented.
+EmmyLua attempts to determine if a type is assignable to another type simply by checking if the former is a ''subtype'' of latter, however proper type variance of complex types is not implemented.
 For example, functions may be covariant or contravariant of other function types, depending on parameters and return value types:
 
 image:./snapshot/3_improved_variance_detection.png[image]
@@ -118,7 +118,7 @@ https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f
 
 === Binding of EmmyDoc to lambdas in assignments
 
-i.e. Type checking now works inside function ``lambdas'' assigned to a variable with an EmmyDoc definition.
+i.e. Type checking now works inside function ''lambdas'' assigned to a variable with an EmmyDoc definition.
 
 image:./snapshot/6_emmydoc_lambda_binding.png[image]
 
@@ -126,7 +126,7 @@ https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f
 
 === Table type checking improvements
 
-Various improvements, for example EmmyDoc ``arrays'' are now assignable to compatible table types e.g.
+Various improvements, for example EmmyDoc ''arrays'' are now assignable to compatible table types e.g.
 
 image:./snapshot/7_table_improvements.png[image]
 
