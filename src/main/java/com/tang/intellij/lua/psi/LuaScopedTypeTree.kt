@@ -428,22 +428,23 @@ private class ScopedTypeStubTree(file: LuaPsiFile) : ScopedTypeTree(file) {
     }
 }
 
-class ScopedTypeSubstitutor(context: SearchContext, val scope: LuaScopedTypeTreeScope) : TySubstitutor() {
+class ScopedTypeSubstitutor private constructor(context: SearchContext, val scope: LuaScopedTypeTreeScope) : TySubstitutor() {
     override val name = "scoped:" + scope.name
 
-    override fun substitute(context: SearchContext, clazz: ITyClass): ITy {
-        return (clazz as? TyGenericParameter)?.let { genericParam ->
-            val scopedTy = scope.findName(context, genericParam.varName)?.type as? TyGenericParameter
+    val supportsConcreteGenerics = context.supportsConcreteGenerics
 
-            if (scopedTy?.className == genericParam.className) {
+    override fun substitute(context: SearchContext, clazz: ITyClass): ITy {
+        if (supportsConcreteGenerics && clazz is TyGenericParameter) {
+            val scopedTy = scope.findName(context, clazz.varName)?.type as? TyGenericParameter
+
+            if (scopedTy?.className == clazz.className) {
                 // If the generic parameter we found is the same as the source, then we're within the scope in which the generic parameter is defined.
                 // In this scope, the generic parameter is a concrete (albeit unknown) type.
-                TyClass.createConcreteGenericParameter(genericParam)
-            } else {
-                genericParam
+                return TyClass.createConcreteGenericParameter(clazz)
             }
+        }
 
-        } ?: clazz
+        return clazz
     }
 
     companion object {

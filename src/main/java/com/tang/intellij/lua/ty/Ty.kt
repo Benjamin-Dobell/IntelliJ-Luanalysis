@@ -108,6 +108,8 @@ interface ITy : Comparable<ITy> {
 
     val displayName: String
 
+    val identifier get() = displayName
+
     val flags: Int
 
     val booleanType: ITy
@@ -252,9 +254,9 @@ interface ITy : Comparable<ITy> {
         }
     }
 
-    fun processMember(context: SearchContext, name: String, deep: Boolean = true, process: ProcessTypeMember): Boolean
+    fun processMember(context: SearchContext, name: String, deep: Boolean = true, indexerSubstitutor: ITySubstitutor? = null, process: ProcessTypeMember): Boolean
 
-    fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean = false, deep: Boolean = true, process: ProcessTypeMember): Boolean
+    fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean = false, deep: Boolean = true, indexerSubstitutor: ITySubstitutor? = null, process: ProcessTypeMember): Boolean
 
     fun processMembers(context: SearchContext, deep: Boolean = true, process: ProcessTypeMember): Boolean
 
@@ -335,13 +337,15 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
     val candidates = findCandidateSignatures(context, call)
     var fallbackReturnTy: ITy? = null
 
-    candidates.forEach {
+    var inexactMatch: SignatureMatchResult? = null
+
+    candidates.forEach { candidate ->
         var parameterCount = 0
         var candidateFailed = false
         val signatureProblems = if (problems != null) mutableListOf<Problem>() else null
 
-        val substitutor = call.createSubstitutor(context, it)
-        val signature = it.substitute(context, substitutor)
+        val substitutor = call.createSubstitutor(candidate)
+        val signature = candidate.substitute(context, substitutor)
 
         if (signature.params != null) {
             signature.processParameters(call) { i, pi ->
@@ -432,18 +436,24 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                             candidateFailed = true
                         }
                     }
-                } else {
-                    if (parameterCount < args.size) {
-                        for (i in parameterCount until args.size) {
-                            candidateFailed = true
-                            signatureProblems?.add(Problem(null, args[i], "Too many arguments."))
-                        }
-                    } else {
-                        // Last argument is TyMultipleResults, just a weak warning.
-                        val excess = parameterCount - args.size
-                        val message = if (excess == 1) "1 result is an excess argument." else "${excess} results are excess arguments."
-                        signatureProblems?.add(Problem(null, args.last(), message, ProblemHighlightType.WEAK_WARNING))
+                } else if (parameterCount < args.size) {
+                    for (i in parameterCount until args.size) {
+                        candidateFailed = true
+                        signatureProblems?.add(Problem(null, args[i], "Too many arguments."))
                     }
+                } else {
+                    // Last argument is TyMultipleResults, just a weak warning.
+                    val excess = concreteArgTypes.size - parameterCount
+                    val message = if (excess == 1) "1 result is an excess argument." else "${excess} results are excess arguments."
+                    signatureProblems?.add(Problem(null, args.last(), message, ProblemHighlightType.WEAK_WARNING))
+
+                    inexactMatch.let {
+                        if (it?.signature == null || (signature.params?.size ?: 0) > (it.signature.params?.size ?: 0)) {
+                            inexactMatch = SignatureMatchResult(candidate, signature, signature.returnTy ?: TyMultipleResults(listOf(Primitives.UNKNOWN), true))
+                        }
+                    }
+
+                    candidateFailed = true
                 }
             } else if (varargParamTy != null && variadicArg != null) {
                 if (processProblem != null) {
@@ -466,7 +476,7 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
                 signatureProblems?.forEach(processProblem)
             }
 
-            return SignatureMatchResult(it, signature, signature.returnTy ?: TyMultipleResults(listOf(Primitives.UNKNOWN), true))
+            return SignatureMatchResult(candidate, signature, signature.returnTy ?: TyMultipleResults(listOf(Primitives.UNKNOWN), true))
         }
 
         if (fallbackReturnTy == null && signature.returnTy != Primitives.VOID) {
@@ -474,8 +484,20 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
         }
 
         if (signatureProblems != null) {
-            problems?.put(it, signatureProblems)
+            problems?.put(candidate, signatureProblems)
         }
+    }
+
+    val inexactMatchSignature = inexactMatch?.signature
+
+    if (inexactMatchSignature != null) {
+        val signatureProblems = problems?.get(inexactMatchSignature)
+
+        if (processProblem != null) {
+            signatureProblems?.forEach(processProblem)
+        }
+
+        return inexactMatch
     }
 
     if (processProblem != null) {
@@ -493,7 +515,7 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
         fallbackReturnTy = if (candidates.size > 0) {
             Primitives.VOID
         } else if (this is ITyFunction) {
-            val substitutor = call.createSubstitutor(context, mainSignature)
+            val substitutor = call.createSubstitutor(mainSignature)
             mainSignature.substitute(context, substitutor).returnTy ?: TyMultipleResults(listOf(Primitives.UNKNOWN), true)
         } else {
             var fallbackSignature: IFunSignature? = null
@@ -651,11 +673,11 @@ abstract class Ty(override val kind: TyKind) : ITy {
         }
     }
 
-    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: ProcessTypeMember): Boolean {
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, indexerSubstitutor: ITySubstitutor?, process: ProcessTypeMember): Boolean {
         return true
     }
 
-    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: ProcessTypeMember): Boolean {
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, indexerSubstitutor: ITySubstitutor?, process: ProcessTypeMember): Boolean {
         return true
     }
 

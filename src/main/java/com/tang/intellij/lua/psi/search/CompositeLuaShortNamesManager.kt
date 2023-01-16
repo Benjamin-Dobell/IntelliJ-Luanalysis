@@ -26,6 +26,7 @@ import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.stubs.index.ProcessLuaPsiClassMember
 import com.tang.intellij.lua.ty.ITy
 import com.tang.intellij.lua.ty.ITyClass
+import com.tang.intellij.lua.ty.ITySubstitutor
 
 class CompositeLuaShortNamesManager : LuaShortNamesManager {
     override fun findAlias(context: SearchContext, name: String): LuaTypeAlias? {
@@ -87,25 +88,26 @@ class CompositeLuaShortNamesManager : LuaShortNamesManager {
         return collection
     }
 
-    override fun processMember(context: SearchContext, type: ITyClass, fieldName: String, searchIndexers: Boolean, deep: Boolean, process: ProcessLuaPsiClassMember): Boolean {
+    override fun processMember(context: SearchContext, type: ITyClass, fieldName: String, searchIndexers: Boolean, deep: Boolean, indexerSubstitutor: ITySubstitutor?, process: ProcessLuaPsiClassMember): Boolean {
         for (manager in EP_NAME.extensionList) {
-            if (!manager.processMember(context, type, fieldName, searchIndexers, deep, process))
+            if (!manager.processMember(context, type, fieldName, searchIndexers, deep, indexerSubstitutor, process))
                 return false
         }
         return true
     }
 
     override fun processIndexer(
-        context: SearchContext,
-        type: ITyClass,
-        indexTy: ITy,
-        exact: Boolean,
-        searchMembers: Boolean,
-        deep: Boolean,
-        process: ProcessLuaPsiClassMember
+            context: SearchContext,
+            type: ITyClass,
+            indexTy: ITy,
+            exact: Boolean,
+            searchMembers: Boolean,
+            deep: Boolean,
+            indexerSubstitutor: ITySubstitutor?,
+            process: ProcessLuaPsiClassMember
     ): Boolean {
         for (manager in EP_NAME.extensionList) {
-            if (!manager.processIndexer(context, type, indexTy, exact, searchMembers, deep, process))
+            if (!manager.processIndexer(context, type, indexTy, exact, searchMembers, deep, indexerSubstitutor, process))
                 return false
         }
         return true

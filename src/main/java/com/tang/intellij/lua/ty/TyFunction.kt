@@ -184,33 +184,12 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
     }
 
     override val displayName: String by lazy {
-        val namedParams = mutableListOf<Pair<String, ITy>>()
-
-        params?.forEach {
-            namedParams.add(Pair(it.name, it.ty ?: Primitives.UNKNOWN))
+        let { signature ->
+            buildString {
+                this.append("fun")
+                TyRenderer.SIMPLE.renderSignature(this, signature)
+            }
         }
-
-        variadicParamTy?.let {
-            namedParams.add(Pair("...", it))
-        }
-
-        val paramsText = namedParams.map {
-            val paramTy = it.second
-            val typeText = if (paramTy is TyGenericParameter && paramTy.superClass != null) {
-                "(${paramTy.displayName})"
-            } else paramTy.displayName
-            "${it.first}: ${typeText}"
-        }.joinToString(", ")
-
-        val paramsComponent = if (paramsText.length > 0) "(${paramsText})" else ""
-
-        val returnTypeName = returnTy?.let {
-            if (it is TyGenericParameter && it.superClass != null) {
-                "(${it.displayName})"
-            } else it.displayName
-        }
-
-        "fun${paramsComponent}${returnTypeName?.let {": " + it} ?: ""}"
     }
 
     override val paramSignature: String get() {
@@ -272,8 +251,28 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
             }
 
             for (i in otherParams.indices) {
-                val param = it.getOrNull(i) ?: return false
-                val otherParamTy = otherParams[i].ty ?: Primitives.UNKNOWN
+                val param = it.getOrNull(i)
+                val otherParam = otherParams[i]
+
+                if (param == null) {
+                    if (otherParam.optional) {
+                        // Allows assignment of fun(str?: string) to fun().
+
+                        // Technically this is unsafe, since fun() is also assignable to fun(num?: number). However, it's useful, and TypeScript allow it, so
+                        // we'll follow suit.
+
+                        break
+                    } else {
+                        return false
+                    }
+                }
+
+                if (param.optional && !otherParam.optional && otherParam.ty != null) {
+                    return false
+                }
+
+                val otherParamTy = otherParam.ty ?: Primitives.UNKNOWN
+
                 if (!otherParamTy.contravariantOf(context, param.ty ?: Primitives.UNKNOWN, flags)) {
                     return false
                 }

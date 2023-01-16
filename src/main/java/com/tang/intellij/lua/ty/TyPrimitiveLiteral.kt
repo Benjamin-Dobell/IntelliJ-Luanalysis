@@ -40,7 +40,7 @@ class TyPrimitiveLiteral private constructor(val primitiveKind: TyPrimitiveKind,
         }
     }
 
-    override fun getSuperType(context: SearchContext): ITy? {
+    override fun getSuperType(context: SearchContext): ITy {
         return primitiveType
     }
 

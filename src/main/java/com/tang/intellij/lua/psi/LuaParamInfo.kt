@@ -35,8 +35,7 @@ import com.tang.intellij.lua.ty.TyMultipleResults
 class LuaParamInfo(val name: String, val ty: ITy?, val optional: Boolean) {
 
     override fun equals(other: Any?): Boolean {
-        //only check ty
-        return other is LuaParamInfo && other.ty == ty
+        return other is LuaParamInfo && other.optional == optional && other.ty == ty
     }
 
     fun equals(context: SearchContext, other: LuaParamInfo, equalityFlags: Int): Boolean {
@@ -44,13 +43,19 @@ class LuaParamInfo(val name: String, val ty: ITy?, val optional: Boolean) {
             return other.ty == null
         } else if (other.ty == null) {
             return false
+        } else if (other.optional != optional) {
+            return false
         }
 
         return ty.equals(context, other.ty, equalityFlags)
     }
 
     override fun hashCode(): Int {
-        return ty.hashCode()
+        return if (optional) {
+            31 * ty.hashCode()
+        } else {
+            ty.hashCode()
+        }
     }
 
     fun substitute(context: SearchContext, substitutor: ITySubstitutor): LuaParamInfo {

@@ -17,10 +17,7 @@
 package com.tang.intellij.test.inspections
 
 import com.tang.intellij.lua.codeInsight.inspection.*
-import com.tang.intellij.lua.codeInsight.inspection.doc.GenericConstraintInspection
-import com.tang.intellij.lua.codeInsight.inspection.doc.GenericParameterShadowed
-import com.tang.intellij.lua.codeInsight.inspection.doc.IllegalAliasInspection
-import com.tang.intellij.lua.codeInsight.inspection.doc.IllegalInheritanceInspection
+import com.tang.intellij.lua.codeInsight.inspection.doc.*
 import com.tang.intellij.lua.lang.LuaLanguageLevel
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.project.StdLibraryProvider
@@ -34,11 +31,12 @@ class TypeSafetyTest : LuaInspectionsTestBase(
         IllegalOverrideInspection(),
         MatchFunctionSignatureInspection(),
         ReturnTypeInspection(),
+        RequiredParameterInspection(),
         UndeclaredMemberInspection(),
         UndeclaredVariableInspection()
 ) {
-    fun check(filename: String, checkWarn: Boolean = true, checkInfo: Boolean = false, checkWeakWarn: Boolean = false) {
-        LuaSettings.instance.isNilStrict = true
+    fun check(filename: String, checkWarn: Boolean = true, checkInfo: Boolean = false, checkWeakWarn: Boolean = false, strictNil: Boolean = true) {
+        LuaSettings.instance.isNilStrict = strictNil
         LuaSettings.instance.isUnknownCallable = false
         LuaSettings.instance.isUnknownIndexable = false
         try {
@@ -84,6 +82,10 @@ class TypeSafetyTest : LuaInspectionsTestBase(
 
     fun testFunctionMultipleReturns() {
         check("function_multiple_returns.lua", true, false, true)
+    }
+
+    fun testFunctionOptionalParameters() {
+        check("function_optional_parameters.lua")
     }
 
     fun testFunctionPartiallyTyped() {
@@ -183,6 +185,10 @@ class TypeSafetyTest : LuaInspectionsTestBase(
             LuaSettings.instance.isUnknownIndexable = true
             StdLibraryProvider.reload()
         }
+    }
+
+    fun testNonStrictNil() {
+        check("non_strict_nil.lua", strictNil = false)
     }
 
     fun testNumbers() {

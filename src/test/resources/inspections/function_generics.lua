@@ -765,3 +765,21 @@ anyString = resolvedS
 anyNumber = resolvedT
 anyString = <error descr="Type mismatch. Required: 'string' Found: 'number'">resolvedT</error>
 anyNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">resolvedS</error>
+
+---@type fun<K, V>(tab: table<K, V>): ((fun(tab: table<K, V>, k: K): (K, V)), K)
+local iteratish
+
+---@generic K1, V1
+---@param tab table<K1, V1>
+function iteratishIndirection(tab)
+return iteratish(tab)
+end
+
+local iterator, initialK = iteratishIndirection(numberStringTable)
+
+initialK = <error descr="Type mismatch. Required: 'number' Found: 'string'">anyString</error>
+initialK = anyNumber
+anyString = <error descr="Type mismatch. Required: 'string' Found: 'number'">initialK</error>
+anyNumber = initialK
+<error descr="Type mismatch. Required: 'string' Found: 'number'">anyString</error>, <error descr="Type mismatch. Required: 'number' Found: 'string'">anyNumber</error> = <error descr="Result 1, type mismatch. Required: 'string' Found: 'number'"><error descr="Result 2, type mismatch. Required: 'number' Found: 'string'">iterator(numberStringTable, initialK)</error></error>
+anyNumber, anyString = iterator(numberStringTable, initialK)

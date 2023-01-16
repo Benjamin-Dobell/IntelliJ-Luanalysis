@@ -27,6 +27,7 @@ import com.tang.intellij.lua.psi.LuaExpression
 import com.tang.intellij.lua.psi.LuaIndexExpr
 import com.tang.intellij.lua.psi.LuaVisitor
 import com.tang.intellij.lua.search.ProjectSearchContext
+import com.tang.intellij.lua.search.PsiSearchContext
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
 
@@ -59,10 +60,13 @@ class MatchFunctionSignatureInspection : StrictInspection() {
             override fun visitCallExpr(o: LuaCallExpr) {
                 super.visitCallExpr(o)
 
-                val searchContext = ProjectSearchContext(o.project)
+                val searchContext = PsiSearchContext(o)
                 val prefixExpr = o.expression
-                var resolvedTy = prefixExpr.guessType(searchContext)?.let {
-                    Ty.resolve(searchContext, it)
+
+                var resolvedTy = searchContext.withConcreteGenericSupport(false) {
+                    prefixExpr.guessType(searchContext)?.let {
+                        Ty.resolve(searchContext, it)
+                    }
                 } ?: Primitives.UNKNOWN
 
                 if (resolvedTy is TyUnion && resolvedTy.size == 2 && resolvedTy.getChildTypes().last().isAnonymous) {
@@ -74,8 +78,10 @@ class MatchFunctionSignatureInspection : StrictInspection() {
                         return@each
                     }
 
-                    val matchResult = it.matchSignature(searchContext, o) { problem ->
-                        myHolder.registerProblem(problem.sourceElement, problem.message, problem.highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
+                    val matchResult = searchContext.withConcreteGenericSupport(false) {
+                        it.matchSignature(searchContext, o) { problem ->
+                            myHolder.registerProblem(problem.sourceElement, problem.message, problem.highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
+                        }
                     }
 
                     if (matchResult != null) {

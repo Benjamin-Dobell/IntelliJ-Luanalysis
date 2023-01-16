@@ -23,9 +23,9 @@ import com.tang.intellij.lua.comment.psi.LuaDocTagClass
 import com.tang.intellij.lua.psi.LuaPsiTypeMember
 
 object StubKeys {
-    val CLASS_MEMBER = StubIndexKey.createIndexKey<Int, LuaPsiTypeMember>("lua.index.class.member")
-    val SHORT_NAME = StubIndexKey.createIndexKey<String, NavigatablePsiElement>("lua.index.short_name")
-    val CLASS = StubIndexKey.createIndexKey<String, LuaDocTagClass>("lua.index.class")
-    val SUPER_CLASS = StubIndexKey.createIndexKey<String, LuaDocTagClass>("lua.index.super_class")
-    val ALIAS = StubIndexKey.createIndexKey<String, LuaDocTagAlias>("lua.index.alias")
+    val CLASS_MEMBER = StubIndexKey.createIndexKey<String, LuaPsiTypeMember>("au.com.glassechidna.luanalysis.class.member")
+    val SHORT_NAME = StubIndexKey.createIndexKey<String, NavigatablePsiElement>("au.com.glassechidna.luanalysis.short_name")
+    val CLASS = StubIndexKey.createIndexKey<String, LuaDocTagClass>("au.com.glassechidna.luanalysis.class")
+    val SUPER_CLASS = StubIndexKey.createIndexKey<String, LuaDocTagClass>("au.com.glassechidna.luanalysis.super_class")
+    val ALIAS = StubIndexKey.createIndexKey<String, LuaDocTagAlias>("au.com.glassechidna.luanalysis.alias")
 }

@@ -42,12 +42,14 @@ abstract class SearchContext() {
 
     val index: Int get() = myIndex // Multiple results index
     val supportsMultipleResults: Boolean get() = myMultipleResults
+    val supportsConcreteGenerics: Boolean get() = myConcreteGenericSupport
 
     private var myDumb = contextStack.get().lastOrNull()?.isDumb ?: false
     private var myIndex = 0
     private var myMultipleResults = false
     private var myInStack = false
     private var myScope: GlobalSearchScope? = null
+    private var myConcreteGenericSupport = true
 
     private val myInferCache = mutableMapOf<LuaPsiTypeGuessable, ITy>()
 
@@ -87,6 +89,14 @@ abstract class SearchContext() {
         } else {
             withIndex(0, false, action)
         }
+    }
+
+    fun <T> withConcreteGenericSupport(support: Boolean, action: () -> T): T {
+        val savedConcreteGenericSupport = myConcreteGenericSupport
+        myConcreteGenericSupport = support
+        val ret = action()
+        myConcreteGenericSupport = savedConcreteGenericSupport
+        return ret
     }
 
     val scope get(): GlobalSearchScope {

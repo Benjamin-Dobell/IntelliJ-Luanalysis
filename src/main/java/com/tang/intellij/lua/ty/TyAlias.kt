@@ -69,12 +69,12 @@ class TyAlias(override val name: String,
         return ty.processMembers(context, deep, process)
     }
 
-    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: ProcessTypeMember): Boolean {
-        return ty.processMember(context, name, deep, process)
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, indexerSubstitutor: ITySubstitutor?, process: ProcessTypeMember): Boolean {
+        return ty.processMember(context, name, deep, indexerSubstitutor, process)
     }
 
-    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: ProcessTypeMember): Boolean {
-        return ty.processIndexer(context, indexTy, exact, deep, process)
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, indexerSubstitutor: ITySubstitutor?, process: ProcessTypeMember): Boolean {
+        return ty.processIndexer(context, indexTy, exact, deep, indexerSubstitutor, process)
     }
 
     override fun accept(visitor: ITyVisitor) {

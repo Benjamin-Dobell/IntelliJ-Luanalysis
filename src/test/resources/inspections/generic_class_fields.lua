@@ -56,3 +56,24 @@ genericFieldsD.doThing(function(t)
     aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">t</error>
     return true
 end)
+
+---@class GenericIndexerDictionary<K, V>
+---@field [K] V
+
+---@type GenericIndexerDictionary<string, number>
+local dictionaryStringToNumber
+
+---@type GenericIndexerDictionary<number, string>
+local dictionaryNumberToString
+
+aNumber = dictionaryStringToNumber[aString]
+aNumber = <error descr="No such indexer '[number]' found on type 'GenericIndexerDictionary<string, number>'">dictionaryStringToNumber[aNumber]</error>
+aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">dictionaryStringToNumber[aString]</error>
+aString = <error descr="No such indexer '[number]' found on type 'GenericIndexerDictionary<string, number>'">dictionaryStringToNumber[aNumber]</error>
+
+aNumber = <error descr="No such indexer '[string]' found on type 'GenericIndexerDictionary<number, string>'">dictionaryNumberToString[aString]</error>
+aNumber = <error descr="Type mismatch. Required: 'number' Found: 'string'">dictionaryNumberToString[aNumber]</error>
+aString = <error descr="No such indexer '[string]' found on type 'GenericIndexerDictionary<number, string>'">dictionaryNumberToString[aString]</error>
+aString = dictionaryNumberToString[aNumber]
+
+dictionaryNumberToString[aNumber] = <error descr="Type mismatch. Required: 'string' Found: 'number'">dictionaryStringToNumber[aString]</error>

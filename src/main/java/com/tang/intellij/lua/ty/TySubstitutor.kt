@@ -18,6 +18,7 @@ package com.tang.intellij.lua.ty
 
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.RecursionManager.doPreventingRecursion
+import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.PsiSearchContext
 import com.tang.intellij.lua.search.SearchContext
@@ -172,6 +173,8 @@ class GenericAnalyzer(
             val genericParam = genericMap.get(genericName)
 
             if (genericParam != null) {
+                val isNilStrict = LuaSettings.instance.isNilStrict
+
                 Ty.eachResolved(context, cur) {
                     val mappedType = paramTyMap.get(genericName)
                     val currentType = it.substitute(paramContext, paramSubstitutor)
@@ -184,6 +187,8 @@ class GenericAnalyzer(
                         )) {
                         if (mappedType == null) {
                             currentType
+                        } else if (!isNilStrict && currentType is TyNil) {
+                            mappedType.union(context, Primitives.NIL)
                         } else if (mappedType.contravariantOf(context, currentType, varianceFlags(currentType))) {
                             mappedType
                         } else if (currentType.contravariantOf(context, mappedType, varianceFlags(mappedType))) {
@@ -396,7 +401,7 @@ class TyAliasSubstitutor private constructor() : TySubstitutor() {
 
     companion object {
         fun substitute(context: SearchContext, clazz: ITy): ITy {
-            return TyAliasSubstitutor().substitute(context, clazz)
+            return clazz.substitute(context, TyAliasSubstitutor())
         }
     }
 }

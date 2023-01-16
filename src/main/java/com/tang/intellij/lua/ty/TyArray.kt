@@ -186,7 +186,7 @@ object TyArraySerializer : TySerializer<ITyArray>() {
 }
 
 class TyDocArray(override val psi: LuaDocArrTy, base: ITy = psi.ty.getType()) : TyArray(base), IPsiTy<LuaDocArrTy> {
-    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: ProcessTypeMember): Boolean {
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, indexerSubstitutor: ITySubstitutor?, process: ProcessTypeMember): Boolean {
         if (exact) {
             if (Primitives.NUMBER.equals(context, indexTy, 0)) {
                 return process(this, psi)

@@ -20,7 +20,7 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.stubs.IndexSink
-import com.intellij.psi.stubs.IntStubIndexExtension
+import com.intellij.psi.stubs.StringStubIndexExtension
 import com.intellij.psi.stubs.StubIndex
 import com.intellij.util.Processor
 import com.intellij.util.containers.ContainerUtil
@@ -33,10 +33,10 @@ typealias ProcessLuaPsiClassMember = (ownerTy: ITyClass, member: LuaPsiTypeMembe
 
 // TODO: Underlying processKey(...) logic is fragile/wrong. We should not be resolving/traversing classes looking for
 //       keys in the index. A type we encounter may not store its members in the index (see TySubstitutedDocTable).
-class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
+class LuaClassMemberIndex : StringStubIndexExtension<LuaPsiTypeMember>() {
     override fun getKey() = StubKeys.CLASS_MEMBER
 
-    override fun get(s: Int, project: Project, scope: GlobalSearchScope): Collection<LuaPsiTypeMember> =
+    override fun get(s: String, project: Project, scope: GlobalSearchScope): Collection<LuaPsiTypeMember> =
             StubIndex.getElements(StubKeys.CLASS_MEMBER, s, project, scope, LuaPsiTypeMember::class.java)
 
     companion object {
@@ -47,7 +47,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
                 return false
             }
 
-            LuaClassMemberIndex.instance.get(key.hashCode(), context.project, context.scope).forEach {
+            LuaClassMemberIndex.instance.get(key, context.project, context.scope).forEach {
                 ProgressManager.checkCanceled()
 
                 if (!process(type, it)) {
@@ -122,7 +122,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
                 return listOf()
             }
 
-            return instance.get(className.hashCode(), context.project, context.scope)
+            return instance.get(className, context.project, context.scope)
         }
 
         fun processMember(
@@ -131,6 +131,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
             fieldName: String,
             searchIndexers: Boolean,
             deep: Boolean,
+            indexerSubstitutor: ITySubstitutor?,
             process: ProcessLuaPsiClassMember
         ): Boolean {
             val memberKey = "*$fieldName"
@@ -144,11 +145,18 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
             var inexactIndexerTy: ITy? = null
 
             processAllIndexers(context, cls, deep) { _, member ->
-                val candidateIndexerTy = member.guessIndexType(context)
+                val memberIndexerTy = member.guessIndexType(context)
+                val candidateIndexerTy = memberIndexerTy?.let {
+                    if (indexerSubstitutor != null) {
+                        it.substitute(context, indexerSubstitutor)
+                    } else {
+                        it
+                    }
+                }
 
                 if (candidateIndexerTy?.contravariantOf(context, indexTy, TyVarianceFlags.STRICT_UNKNOWN) == true) {
                     if (inexactIndexerTy?.contravariantOf(context, candidateIndexerTy, TyVarianceFlags.STRICT_UNKNOWN) != false) {
-                        inexactIndexerTy = candidateIndexerTy
+                        inexactIndexerTy = memberIndexerTy
                     }
                 }
 
@@ -156,14 +164,14 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
             }
 
             return inexactIndexerTy?.let {
-                processClassKeys(context, cls, listOf("*[${it.displayName}]"), deep, process)
+                processClassKeys(context, cls, listOf("*[${it.identifier}]"), deep, process)
             } ?: true
         }
 
         // TODO: Push this logic back on consumers (assuming it's correct for the use case) and delete the method.
         fun findMethod(context: SearchContext, cls: ITyClass, memberName: String, deep: Boolean = true): LuaTypeMethod<*>? {
             var target: LuaTypeMethod<*>? = null
-            processMember(context, cls, memberName, false, deep) { _, member ->
+            processMember(context, cls, memberName, false, deep, null) { _, member ->
                 if (member is LuaTypeMethod<*>) {
                     target = member
                     false
@@ -185,16 +193,17 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
             exact: Boolean,
             searchMembers: Boolean,
             deep: Boolean,
+            indexerSubstitutor: ITySubstitutor?,
             process: ProcessLuaPsiClassMember
         ): Boolean {
             var exactIndexerFound = false
             val exactIndexerResult = if (searchMembers && indexTy is TyPrimitiveLiteral && indexTy.primitiveKind == TyPrimitiveKind.String) {
-                processMember(context, type, indexTy.value, true, deep) { ownerTy, member ->
+                processMember(context, type, indexTy.value, true, deep, indexerSubstitutor) { ownerTy, member ->
                     exactIndexerFound = true
                     process(ownerTy, member)
                 }
             } else {
-                processClassKeys(context, type, listOf("*[${indexTy.displayName}]"), deep) { ownerTy, member ->
+                processClassKeys(context, type, listOf("*[${indexTy.identifier}]"), deep) { ownerTy, member ->
                     exactIndexerFound = true
                     process(ownerTy, member)
                 }
@@ -207,11 +216,18 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
             var inexactIndexerTy: ITy? = null
 
             processAllIndexers(context, type, deep) { _, member ->
-                val candidateIndexerTy = member.guessIndexType(context)
+                val memberIndexerTy = member.guessIndexType(context)
+                val candidateIndexerTy = memberIndexerTy?.let {
+                    if (indexerSubstitutor != null) {
+                        it.substitute(context, indexerSubstitutor)
+                    } else {
+                        it
+                    }
+                }
 
                 if (candidateIndexerTy?.contravariantOf(context, indexTy, TyVarianceFlags.STRICT_UNKNOWN) == true) {
                     if (inexactIndexerTy?.contravariantOf(context, candidateIndexerTy, TyVarianceFlags.STRICT_UNKNOWN) != false) {
-                        inexactIndexerTy = candidateIndexerTy
+                        inexactIndexerTy = memberIndexerTy
                     }
                 }
 
@@ -219,7 +235,7 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
             }
 
             return inexactIndexerTy?.let {
-                processClassKeys(context, type, listOf("*[${it.displayName}]"), deep, process)
+                processClassKeys(context, type, listOf("*[${it.identifier}]"), deep, process)
             } ?: false
         }
 
@@ -241,14 +257,14 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
 
             val key = "$namespace*$memberName"
 
-            val members = LuaClassMemberIndex.instance.get(key.hashCode(), context.project, context.scope)
+            val members = LuaClassMemberIndex.instance.get(key, context.project, context.scope)
             return ContainerUtil.process(members, processor)
         }
 
         fun indexMemberStub(indexSink: IndexSink, className: String, memberName: String) {
             val nonSelfClassName = getSuffixlessClassName(className)
-            indexSink.occurrence(StubKeys.CLASS_MEMBER, nonSelfClassName.hashCode())
-            indexSink.occurrence(StubKeys.CLASS_MEMBER, "$nonSelfClassName*$memberName".hashCode())
+            indexSink.occurrence(StubKeys.CLASS_MEMBER, nonSelfClassName)
+            indexSink.occurrence(StubKeys.CLASS_MEMBER, "$nonSelfClassName*$memberName")
         }
 
         fun indexIndexerStub(indexSink: IndexSink, className: String, indexTy: ITy) {
@@ -257,8 +273,8 @@ class LuaClassMemberIndex : IntStubIndexExtension<LuaPsiTypeMember>() {
                 if (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String) {
                     indexMemberStub(indexSink, nonSelfClassName, it.value)
                 } else {
-                    indexMemberStub(indexSink, nonSelfClassName, "[${it.displayName}]")
-                    indexSink.occurrence(StubKeys.CLASS_MEMBER, "$nonSelfClassName[]".hashCode())
+                    indexMemberStub(indexSink, nonSelfClassName, "[${it.identifier}]")
+                    indexSink.occurrence(StubKeys.CLASS_MEMBER, "$nonSelfClassName[]")
                 }
             }
         }

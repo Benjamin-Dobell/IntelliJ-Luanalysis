@@ -131,9 +131,9 @@ class TyUnion : Ty {
         } else this
     }
 
-    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: ProcessTypeMember): Boolean {
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, indexerSubstitutor: ITySubstitutor?, process: ProcessTypeMember): Boolean {
         childSet.forEach {
-            if (!it.processMember(context, name, deep, process)) {
+            if (!it.processMember(context, name, deep, indexerSubstitutor, process)) {
                 return false
             }
         }
@@ -141,9 +141,9 @@ class TyUnion : Ty {
         return true
     }
 
-    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: ProcessTypeMember): Boolean {
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, indexerSubstitutor: ITySubstitutor?, process: ProcessTypeMember): Boolean {
         childSet.forEach {
-            if (!it.processIndexer(context, indexTy, exact, deep, process)) {
+            if (!it.processIndexer(context, indexTy, exact, deep, indexerSubstitutor, process)) {
                 return false
             }
         }

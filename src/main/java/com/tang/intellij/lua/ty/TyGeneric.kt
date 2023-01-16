@@ -301,12 +301,12 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
         return substitutor.substitute(context, this)
     }
 
-    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: ProcessTypeMember): Boolean {
-        return base.processMember(context, name, deep, process)
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, indexerSubstitutor: ITySubstitutor?, process: ProcessTypeMember): Boolean {
+        return base.processMember(context, name, deep, TyChainSubstitutor.chain(getMemberSubstitutor(context), indexerSubstitutor), process)
     }
 
-    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: ProcessTypeMember): Boolean {
-        return base.processIndexer(context, indexTy, exact, deep, process)
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, indexerSubstitutor: ITySubstitutor?, process: ProcessTypeMember): Boolean {
+        return base.processIndexer(context, indexTy, exact, deep, TyChainSubstitutor.chain(getMemberSubstitutor(context), indexerSubstitutor), process)
     }
 
     override fun isShape(context: SearchContext): Boolean {
@@ -331,7 +331,7 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
     }
 
     override fun processMembers(context: SearchContext, deep: Boolean, process: ProcessTypeMember): Boolean {
-        if (!base.processMembers(context, false, { _, classMember -> process(this, classMember) })) {
+        if (!base.processMembers(context, false) { _, classMember -> process(this, classMember) }) {
             return false
         }
 
@@ -372,8 +372,14 @@ class TyDocTableGeneric(
         arrayOf(keyType, valueType),
         Primitives.TABLE
 ), IPsiTy<LuaDocGenericTableTy> {
-    override fun processMember(context: SearchContext, name: String, deep: Boolean, process: ProcessTypeMember): Boolean {
-        Ty.eachResolved(context, keyType) {
+    override fun processMember(context: SearchContext, name: String, deep: Boolean, indexerSubstitutor: ITySubstitutor?, process: ProcessTypeMember): Boolean {
+        val indexerTy = if (indexerSubstitutor != null) {
+            keyType.substitute(context, indexerSubstitutor)
+        } else {
+            keyType
+        }
+
+        Ty.eachResolved(context, indexerTy) {
             if ((it is ITyPrimitive && it.primitiveKind == TyPrimitiveKind.String)
                 || (it is TyPrimitiveLiteral && it.primitiveKind == TyPrimitiveKind.String && it.value == name)) {
                 return process(this, psi)
@@ -383,14 +389,20 @@ class TyDocTableGeneric(
         return true
     }
 
-    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, process: ProcessTypeMember): Boolean {
+    override fun processIndexer(context: SearchContext, indexTy: ITy, exact: Boolean, deep: Boolean, indexerSubstitutor: ITySubstitutor?, process: ProcessTypeMember): Boolean {
+        val indexerTy = if (indexerSubstitutor != null) {
+            keyType.substitute(context, indexerSubstitutor)
+        } else {
+            keyType
+        }
+
         if (exact) {
-            Ty.eachResolved(context, keyType) {
+            Ty.eachResolved(context, indexerTy) {
                 if (it.equals(context, indexTy, 0)) {
                     return process(this, psi)
                 }
             }
-        } else if (keyType.contravariantOf(context, indexTy, TyVarianceFlags.STRICT_UNKNOWN)) {
+        } else if (indexerTy.contravariantOf(context, indexTy, TyVarianceFlags.STRICT_UNKNOWN)) {
             return process(this, psi)
         }
 
