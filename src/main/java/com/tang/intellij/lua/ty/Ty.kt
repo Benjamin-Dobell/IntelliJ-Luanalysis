@@ -588,7 +588,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
     override fun toString() = displayName
 
     override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
-        if ((other.kind == TyKind.Unknown && varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0)
+        if (((other.kind == TyKind.Unknown || other.isGlobal) && varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0)
             || (other.kind == TyKind.Nil && varianceFlags and TyVarianceFlags.STRICT_NIL == 0 && !LuaSettings.instance.isNilStrict)
         ) {
             return true

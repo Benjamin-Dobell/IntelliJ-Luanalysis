@@ -52,11 +52,6 @@ class LuaClassMethodType : LuaStubElementType<LuaClassMethodDefStatStub, LuaClas
             }
         }
 
-        if (classNameSet.isEmpty()) {
-            classNameSet.add(createSerializedClass(expr.text))
-        }
-
-
         val visibility = def.visibility
         val isStatic = methodName.dot != null
         val isDeprecated = def.isDeprecated

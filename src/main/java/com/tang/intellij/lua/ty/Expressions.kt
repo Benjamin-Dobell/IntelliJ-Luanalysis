@@ -378,7 +378,7 @@ private fun LuaNameExpr.infer(context: SearchContext): ITy? {
             }
         }
 
-        withSearchGuard(this) {
+        var ty = withSearchGuard(this) {
             val multiResolve = multiResolve(context, this)
             var maxTimes = 10
 
@@ -400,6 +400,19 @@ private fun LuaNameExpr.infer(context: SearchContext): ITy? {
 
             type
         } ?: getType(context, this)
+
+        // Global
+        if (ty == null && context.isDumb && this.isGlobal()) {
+            // In order to facilitate the extension of globals without needing to *explicitly* refer to the
+            // underlying global variable's class by name. Since we can't look up / resolve the global's variable's
+            // type during indexing, we instead attach members to a global type (identified by variable name). When
+            // we process a class' members later, we also process against its aliasName i.e. name of global variable.
+            // NOTE: We only need to hit this code path in "dumb mode" (i.e. during stub indexing) since that's where
+            //       we create/index class members. All other times, we'll leave the ty as nil (unknown).
+            ty = TyClass.createGlobalType(this)
+        }
+
+        ty
     })
 }
 
@@ -429,15 +442,6 @@ private fun getType(context: SearchContext, def: PsiElement): ITy? {
                     }
                 }
             }
-
-            //Global
-            if (type != null && isGlobal(def) && def.docTy == null && type !is ITyPrimitive) {
-                // Explicitly instantiating a union (not calling the type.union()) as the global type resolves to type,
-                // and hence we would have just got type back. We're creating a union because we need to ensure members
-                // are indexed against the global name (for completion) as well as the other type (for type resolution).
-                type = TyUnion(listOf(type, TyClass.createGlobalType(def)))
-            }
-
             type
         }
         is LuaPsiTypeGuessable -> def.guessType(context)
@@ -445,10 +449,10 @@ private fun getType(context: SearchContext, def: PsiElement): ITy? {
     }
 }
 
-private fun isGlobal(nameExpr: LuaNameExpr): Boolean {
-    val minx = nameExpr as LuaNameExprMixin
-    val gs = minx.greenStub
-    return gs?.isGlobal ?: (resolveLocal(null, nameExpr) == null)
+fun LuaNameExpr.isGlobal(): Boolean {
+    val mixin = this as LuaNameExprMixin
+    val greenStub = mixin.greenStub
+    return greenStub?.isGlobal ?: (resolveLocal(null, this) == null)
 }
 
 fun LuaLiteralExpr.infer(): ITy {

@@ -35,7 +35,7 @@ class UndeclaredMemberInspection : StrictInspection() {
                     val memberName = o.name
 
                     Ty.eachResolved(context, prefix) { prefixTy ->
-                        if (!prefixTy.isGlobal && !(prefixTy.isUnknown && LuaSettings.instance.isUnknownIndexable)) {
+                        if ((!prefixTy.isGlobal && !prefixTy.isUnknown) || !LuaSettings.instance.isUnknownIndexable) {
                             if (memberName != null) {
                                 if (prefixTy.guessMemberType(context, memberName) == null) {
                                     myHolder.registerProblem(o, "No such member '%s' found on type '%s'".format(memberName, prefixTy))

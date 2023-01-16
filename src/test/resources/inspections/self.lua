@@ -28,7 +28,7 @@ end
 ---@return self
 function SelfA.dotMethod()
     ---@type self
-    local selfTypedVar = <warning descr="Undeclared variable 'self'.">self</warning>
+    local selfTypedVar
 
     ---@type SelfA
     local someSelfA
@@ -46,7 +46,7 @@ end
 ---@return self
 SelfA.lambdaMethod = function()
     ---@type self
-    local selfTypedVar = <warning descr="Undeclared variable 'self'.">self</warning>
+    local selfTypedVar
 
     ---@type SelfA
     local someSelfA

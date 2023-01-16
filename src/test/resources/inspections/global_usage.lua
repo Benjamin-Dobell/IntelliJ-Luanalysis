@@ -16,5 +16,9 @@ aNumber = GlobalAnonymousClass.anotherNumber
 aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">GlobalClass.someNumber</error>
 aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">GlobalAnonymousClass.anotherNumber</error>
 
----@type number
 local fromStdLib = math.pi
+aNumber = fromStdLib
+aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">fromStdLib</error>
+
+aNumber = math.extension(aNumber)
+aString = <error descr="Type mismatch. Required: 'string' Found: 'number'">math.extension(aNumber)</error>

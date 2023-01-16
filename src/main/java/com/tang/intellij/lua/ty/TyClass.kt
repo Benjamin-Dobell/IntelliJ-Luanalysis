@@ -38,7 +38,7 @@ import com.tang.intellij.lua.stubs.*
 
 interface ITyClass : ITyResolvable {
     val className: String
-    val varName: String
+    val varName: String?
 
     var superClass: ITy?
     var aliasName: String?
@@ -168,7 +168,7 @@ private fun equalToShape(context: SearchContext, target: ITy, source: ITy): Bool
 
 abstract class TyClass(override val className: String,
                        override var params: Array<TyGenericParameter>? = null,
-                       override val varName: String = "",
+                       override val varName: String? = "",
                        override var superClass: ITy? = null,
                        override var signatures: Array<IFunSignature>? = null
 ) : Ty(TyKind.Class), ITyClass {
@@ -407,7 +407,7 @@ abstract class TyClass(override val className: String,
 class TyPsiDocClass(override val psi: LuaDocTagClass) : TyClass(
     psi.name,
     psi.genericDefList.map { TyGenericParameter(it) }.toTypedArray(),
-    "",
+    null,
     psi.superClass?.getType(),
     psi.overloads
 ), IPsiTy<LuaDocTagClass> {
@@ -425,7 +425,7 @@ class TyPsiDocClass(override val psi: LuaDocTagClass) : TyClass(
 
 open class TySerializedClass(name: String,
                              params: Array<TyGenericParameter>? = null,
-                             varName: String = name,
+                             varName: String? = null,
                              superClass: ITy? = null,
                              signatures: Array<IFunSignature>? = null,
                              alias: String? = null,
@@ -467,7 +467,7 @@ class TyLazyClass(name: String, val psi: PsiElement? = null) : TySerializedClass
 
 fun createSerializedClass(name: String,
                           params: Array<TyGenericParameter>? = null,
-                          varName: String = name,
+                          varName: String? = null,
                           superClass: ITy? = null,
                           signatures: Array<IFunSignature>? = null,
                           alias: String? = null,
@@ -619,7 +619,7 @@ fun getConcreteGenericParameterName(genericParam: TyGenericParameter): String {
 }
 
 fun getGlobalTypeName(text: String): String {
-    return if (text == Constants.WORD_G) text else "$$text"
+    return if (text == Constants.WORD_G) text else "${Constants.WORD_G}.$text"
 }
 
 fun getGlobalTypeName(nameExpr: LuaNameExpr): String {

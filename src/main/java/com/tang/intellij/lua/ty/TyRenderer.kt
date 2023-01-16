@@ -332,10 +332,10 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
             }
             clazz.isAnonymous -> {
                 if (isSuffixedClass(clazz)) {
-                    clazz.varName
-                } else {
-                    "[local ${clazz.varName}]"
+                    clazz.varName?.let { return it }
                 }
+
+                "[local ${clazz.varName}]"
             }
             clazz.isGlobal -> "[global ${clazz.varName}]"
             else -> "${clazz.className}${renderGenericParams(clazz.params?.map { it.toString() })}"

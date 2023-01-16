@@ -16,3 +16,10 @@ function GlobalAnonymousClass.doSomethingElse()
 end
 
 GlobalAnonymousClass.anotherNumber = 2
+
+--- Extend built-in global without explicitly referring to its type
+
+---@param a number
+function math.extension(a)
+    return a
+end
