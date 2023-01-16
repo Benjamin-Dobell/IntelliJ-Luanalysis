@@ -1,5 +1,8 @@
+
+
 ## [Unreleased]
 
+## [1.4.0]
 - **Requires IntelliJ IDEA 211 (2022.1)**
 - **Support for declaring optional function parameters.** Supported in both short-form and long-form:
   - `fun(optionalParam?: number): void`
@@ -25,7 +28,6 @@
 - [Fixed debug.traceback() type definitions. Implemented by Sebastian Gładki](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/pull/106).
 
 ## [1.3.0]
-
 - **Requires IntelliJ IDEA 211 (2021.1)**
 - **Breaking:** The standard library `DebugInfo` class (returned from `debug.getinfo`) is now known as
   `std__DebugInfo` and is a shape rather than a class. Fields presence and types have also been corrected.
@@ -43,7 +45,6 @@
   are 1-to-1 matching any donations** up to $5000 (total) made before February 2022._
 
 ## [1.2.3]
-
 - @class/@shape can now inherit from aliased types.
 - [Made doc tables behave more like shapes.](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/67)
   As a result also improved doc table tuple support. Main outstanding differences:
@@ -69,7 +70,6 @@
 - Fixed lexing of aliases with constrained generics.
 
 ## [1.2.2]
-
 - New "Illegal Overrides" inspection. Reports illegal member overrides when declaring a field/method on an inherited type.&lt;br />If you're overriding a method with an incompatible type (e.g. subclass `init` function with different parameters) then you should annotate the parent `init` (and child) as `@private`.
 - Improved support for progressively adding type annotations to an existing Lua codebase. Essentially, local variables (without a declaration site assignment) and function parameters are now assumed to be of type `any`.
 - Mouse-over documentation now supports indexed fields e.g. docs are now displayed when hovering over the `[1]` in `arr[1]`.
@@ -97,12 +97,10 @@
 - Fixed occasional misreported generic parameter shadowed errors.
 
 ## [1.2.1]
-
 - Improved return inspection handling for unions of multiple results
 - Improved stdlib string module definitions
 
 ## [1.2.0]
-
 - **Requires IntelliJ IDEA 203 (2020.3)**
 - **Breaking:** Removed unsafe assumed constructor functionality ([#12](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/12))
 - **Lua 5.4 support:** &lt;const&gt; and &lt;close&gt; local variables and corresponding immutability inspections.
@@ -133,7 +131,7 @@
 - Smarter union behavior that eliminates duplicate/covariant types from the union. This tends to result in much simple error message.
 - Fixed handling of some situations where table literals ought to be interpreted as arrays, but were not.
 
- ## [1.1.0]
+## [1.1.0]
 - Ctrl/Cmd + Click ("Go To") on a string literal argument of a require("file") now takes you to the return value of the referenced file, rather than simply opening the file.
 - Fixed type resolution of require("file") expressions, where the referenced file has no return statements.
 - Added/fixed support for negative number literal types.
