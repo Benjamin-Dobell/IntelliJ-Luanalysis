@@ -91,7 +91,7 @@ https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f
 
 === Improved variance detection
 
-EmmyLua attempts to determine if a type is assignable to another type simply by checking if the former is a ''subtype'' of latter, however proper type variance of complex types is not implemented.
+EmmyLua attempts to determine if a type is assignable to another type simply by checking if the former is a "subtype" of latter, however proper type variance of complex types is not implemented.
 For example, functions may be covariant or contravariant of other function types, depending on parameters and return value types:
 
 image:./snapshot/3_improved_variance_detection.png[image]
@@ -118,7 +118,7 @@ https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f
 
 === Binding of EmmyDoc to lambdas in assignments
 
-i.e. Type checking now works inside function ''lambdas'' assigned to a variable with an EmmyDoc definition.
+i.e. Type checking now works inside function "lambdas" assigned to a variable with an EmmyDoc definition.
 
 image:./snapshot/6_emmydoc_lambda_binding.png[image]
 
@@ -126,7 +126,7 @@ https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f
 
 === Table type checking improvements
 
-Various improvements, for example EmmyDoc ''arrays'' are now assignable to compatible table types e.g.
+Various improvements, for example EmmyDoc "arrays" are now assignable to compatible table types e.g.
 
 image:./snapshot/7_table_improvements.png[image]
 
@@ -174,7 +174,7 @@ image:./snapshot/10_2_generic_params_within_classes.png[image]
 
 https://github.com/Benjamin-Dobell/LuanalysisTypesDemo/blob/cfea19c9fd744078f50f61e74e620b7505b58c65/src/generic_class_scope.lua
 
-=== ``No such member'' inspection
+=== "No such member" inspection
 
 image:./snapshot/11_no_such_member.png[image]
 
@@ -205,7 +205,7 @@ Presently this results in both missing errors, and additional inaccurate errors,
 
 A shape can be defined similarly to a class, except that contravariance is determined by compatibility of the members _not_ the inheritance hierarchy.
 
-This is most useful when working with ``structures'' (e.g. JSON) rather than OOP classes.
+This is most useful when working with "structures" (e.g. JSON) rather than OOP classes.
 
 image:./snapshot/14_shape.png[image]
 
@@ -362,6 +362,25 @@ image:./snapshot/26_variadic_casts.png[image]
 One variadic type may also be cast to another:
 
 image:./snapshot/26_2_variadic_casts.png[image]
+
+=== Support for optional parameters
+
+We now support optional parameters in both short and long-form function type definitions e.g.
+
+image:./snapshot/27_optional_params.png[image]
+
+Importantly, optional is _not_ short-hand for `nil | type`.
+
+image:./snapshot/27_2_optional_params.png[image]
+
+You cannot provide `nil` unless the optional parameter type itself include `nil` as part of a union in its type definition. This is desirable for
+correctness purposes when implementing functions in Lua, say for example if the implementation makes use of
+[`select('#', ...)`](https://www.lua.org/manual/5.3/manual.html#pdf-select). However, beyond that, Lua is regularly used as a scripting language, binding Lua
+function calls to implementations in other languages that have support for overloads etc. where the number and type of arguments are important.
+
+Inspections that prevent incorrect optional parameter order have also been implemented:
+
+image:./snapshot/27_3_optional_params.png[image]
 
 == Building from Source
 
