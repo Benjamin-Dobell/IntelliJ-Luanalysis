@@ -1,4 +1,29 @@
 ## [Unreleased]
+
+- **Requires IntelliJ IDEA 211 (2022.1)**
+- **Support for declaring optional function parameters.** Supported in both short-form and long-form:
+  - `fun(optionalParam?: number): void`
+  - `---@param optionalParam? number`
+- Improved displayed name for types, in particular anonymous tables. You'll now see something like `{ a: 1 }`, rather than just `table`.
+- [Generic functions are now assignable to other generic functions](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/84).
+- [General performance improvements, particularly when checking variance compatibility of deeply nested shapes](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/commit/b8c20ac2e42600ce25071d1c4237c4f6d4f0e49c).
+- [Ensure global classes (i.e. built-ins) can be extended](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/commit/5db79fb622ea0f41185a688310d2567976699946).
+- ["Multiple statements in one line" wrapping setting. Implemented by Jochem Pouwels](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/pull/49).
+- [Improved completion by including literal named fields](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/commit/76350fda3cb49dc5f429406fc1b65e48eb868d31).
+- [Improved support for lambda classes with static methods](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/commit/bd912ee8f2c3e2f24c311bc915395853c72f34e2).
+- [Fixed incorrect overload matching when arguments were provided as multiple results from a function call](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/129).
+- [Fixed incorrect type deductions in the presence of aliased generics](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/99).
+- [Fixed unused local/param warnings incorrectly being reported in `.def.lua` files](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/129).
+- [Fixed generic parameter resolution through aliases and shapes](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/99).
+- [Fixed type of anonymous table members derived from generic params](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/commit/fe113c132100ca631b81b444ce014474f7e61387).
+- [Fixed aliased shape equality](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/commit/30c757d993aeb8ab850905741daf259cffd18e86).
+- [Fixed generic concreteness handling within function bodies (including recursive calls)](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/commit/1c46e798cda2b7f7743825292609a60d7224cf2d).
+- [Fixed issue with tuples params passed to a callable type causing a stack overflow](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/87).
+- [Fixed "}" sometimes being generated instead of "end". Implemented by Jochem Pouwels](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/pull/54).
+- [Fixed incorrect declaration type inference in the presence of `@not`](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/commit/1a78ef5e35086bd67dd4f1ba95f15a3e0568b547).
+- [Fixed generic resolution within type annotations on return statements](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/commit/eb3631a34632b3e8465d22a6837f756858aaad28).
+- [Fixed debug.traceback() type definitions. Implemented by Sebastian Gładki](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/pull/106).
+
 ## [1.3.0]
 
 - **Requires IntelliJ IDEA 211 (2021.1)**
