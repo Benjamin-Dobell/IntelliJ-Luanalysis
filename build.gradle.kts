@@ -41,7 +41,7 @@ intellij {
     version.set(properties("platformVersion"))
 
     downloadSources.set(properties("platformDownloadSources").toBoolean())
-    updateSinceUntilBuild.set(true)
+    updateSinceUntilBuild.set(false)
 
     plugins.set(
         properties("platformPlugins")
@@ -83,8 +83,6 @@ tasks {
 
     patchPluginXml {
         version.set(properties("pluginVersion"))
-        sinceBuild.set(properties("pluginSinceBuild"))
-
         changeNotes.set(
             provider {
                 changelog.getLatest().toHTML()
