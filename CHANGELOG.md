@@ -14,7 +14,7 @@
 - ["Multiple statements in one line" wrapping setting. Implemented by Jochem Pouwels](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/pull/49).
 - [Improved completion by including literal named fields](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/commit/76350fda3cb49dc5f429406fc1b65e48eb868d31).
 - [Improved support for lambda classes with static methods](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/commit/bd912ee8f2c3e2f24c311bc915395853c72f34e2).
-- [Fixed incorrect overload matching when arguments were provided as multiple results from a function call](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/129).
+- [Fixed incorrect overload matching when arguments were provided as multiple results from a function call](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/143).
 - [Fixed incorrect type deductions in the presence of aliased generics](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/99).
 - [Fixed unused local/param warnings incorrectly being reported in `.def.lua` files](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/129).
 - [Fixed generic parameter resolution through aliases and shapes](https://github.com/Benjamin-Dobell/IntelliJ-Luanalysis/issues/99).
