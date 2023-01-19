@@ -23,7 +23,6 @@ import com.tang.intellij.lua.comment.psi.LuaDocTagClass
 import com.tang.intellij.lua.comment.psi.LuaDocTagField
 import com.tang.intellij.lua.comment.psi.LuaDocVisitor
 import com.tang.intellij.lua.psi.*
-import java.util.*
 
 
 private class LexicalContext(val element: LuaTreeElement? = null, val parent: LexicalContext? = null) {
@@ -319,12 +318,12 @@ class LuaStructureVisitor : LuaVisitor() {
     }
 
     override fun visitClassMethodDefStat(o: LuaClassMethodDefStat) {
-        handleCompoundName(o.classMethodName.expression)?.let { treeElem->
-            val elem = LuaClassMethodElement(o, o.visibility)
-
+        handleCompoundName(o.classMethodName.expression)?.let { treeElem ->
+            val elem = LuaClassMethodElement(o, o.name ?: "", o.paramSignature, o.visibility)
             treeElem.addChild(elem)
 
             val funcBody = o.funcBody
+
             if (funcBody != null) {
                 pushContext(elem, false)
 

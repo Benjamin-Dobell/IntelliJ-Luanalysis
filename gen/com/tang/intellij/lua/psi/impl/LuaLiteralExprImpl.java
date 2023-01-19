@@ -15,8 +15,8 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaLiteralExprImpl extends LuaLiteralExprMixin implements LuaLiteralExpr {
 
-  public LuaLiteralExprImpl(@NotNull LuaLiteralExprStub stub, @NotNull IStubElementType<?, ?> nodeType) {
-    super(stub, nodeType);
+  public LuaLiteralExprImpl(@NotNull LuaLiteralExprStub stub, @NotNull IStubElementType<?, ?> type) {
+    super(stub, type);
   }
 
   public LuaLiteralExprImpl(@NotNull ASTNode node) {

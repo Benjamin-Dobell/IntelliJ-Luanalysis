@@ -18,8 +18,8 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaIndexExprImpl extends LuaIndexExprMixin implements LuaIndexExpr {
 
-  public LuaIndexExprImpl(@NotNull LuaIndexExprStub stub, @NotNull IStubElementType<?, ?> nodeType) {
-    super(stub, nodeType);
+  public LuaIndexExprImpl(@NotNull LuaIndexExprStub stub, @NotNull IStubElementType<?, ?> type) {
+    super(stub, type);
   }
 
   public LuaIndexExprImpl(@NotNull ASTNode node) {

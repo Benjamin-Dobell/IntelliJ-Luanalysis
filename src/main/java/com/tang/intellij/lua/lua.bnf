@@ -283,6 +283,7 @@ left funcPrefixRef ::= '.' <<repeat checkFuncPrefix 1>> ID { extends = indexExpr
 classMethodName ::=  nameExpr (funcPrefixRef)* (('.' ID) | (':' ID)) {
     pin = 1
     methods = [
+        getNameExpr
         getExpression
         dot = 'DOT'
         colon = 'COLON'

@@ -44,7 +44,11 @@ class CreateFunctionDocIntention : FunctionIntention() {
         if (funcBody != null) {
             val templateManager = TemplateManager.getInstance(bodyOwner.project)
             val template = templateManager.createTemplate("", "")
-            template.addTextSegment("---" + bodyOwner.name!!)
+
+            bodyOwner.name?.let {
+                template.addTextSegment("---" + it)
+            }
+
             val typeSuggest = MacroCallNode(SuggestTypeMacro())
 
             // params

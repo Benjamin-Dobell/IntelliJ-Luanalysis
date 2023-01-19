@@ -56,7 +56,7 @@ private fun inferReturnTyInner(context: SearchContext, owner: LuaFuncBodyOwner<*
     }
 
     //infer from return stat
-    return withRecursionGuard("inferReturnTyInner", owner) {
+    return withRecursionGuard("inferReturnTyInner", owner, context.isDumb) {
         var type: ITy? = Primitives.VOID
 
         owner.acceptChildren(object : LuaRecursiveVisitor() {

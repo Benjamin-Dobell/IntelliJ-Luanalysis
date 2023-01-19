@@ -21,6 +21,7 @@ import com.intellij.codeInsight.template.impl.MacroCallNode
 import com.intellij.codeInsight.template.impl.TextExpression
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.codeInsight.template.macro.NamesMacro
 import com.tang.intellij.lua.comment.psi.LuaDocAccessModifier
 import com.tang.intellij.lua.psi.LuaClassMethodDefStat
@@ -30,7 +31,9 @@ class SetVisibilityIntention : FunctionIntention() {
 
     override fun isAvailable(bodyOwner: LuaFuncBodyOwner<*>, editor: Editor): Boolean {
         if (bodyOwner is LuaClassMethodDefStat) {
-            return bodyOwner.comment?.findTag(LuaDocAccessModifier::class.java) == null
+            bodyOwner.comment?.let { comment ->
+                return PsiTreeUtil.getChildOfType(comment, LuaDocAccessModifier::class.java) == null
+            }
         }
         return false
     }

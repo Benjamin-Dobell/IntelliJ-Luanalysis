@@ -19,8 +19,8 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaClassMethodDefStatImpl extends StubBasedPsiElementBase<LuaClassMethodDefStatStub> implements LuaClassMethodDefStat {
 
-  public LuaClassMethodDefStatImpl(@NotNull LuaClassMethodDefStatStub stub, @NotNull IStubElementType<?, ?> nodeType) {
-    super(stub, nodeType);
+  public LuaClassMethodDefStatImpl(@NotNull LuaClassMethodDefStatStub stub, @NotNull IStubElementType<?, ?> type) {
+    super(stub, type);
   }
 
   public LuaClassMethodDefStatImpl(@NotNull ASTNode node) {

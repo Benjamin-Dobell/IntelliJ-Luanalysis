@@ -15,8 +15,8 @@ import com.tang.intellij.lua.stubs.LuaPlaceholderStub;
 
 public class LuaListArgsImpl extends LuaArgsImpl implements LuaListArgs {
 
-  public LuaListArgsImpl(@NotNull LuaPlaceholderStub stub, @NotNull IStubElementType<?, ?> nodeType) {
-    super(stub, nodeType);
+  public LuaListArgsImpl(@NotNull LuaPlaceholderStub stub, @NotNull IStubElementType<?, ?> type) {
+    super(stub, type);
   }
 
   public LuaListArgsImpl(@NotNull ASTNode node) {

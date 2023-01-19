@@ -163,24 +163,55 @@ object LuaPsiTreeUtilEx {
         } while (continueSearch && curr !is PsiFile)
     }
 
-    fun processChildren(element: PsiElement?, processor: Processor<PsiElement>) {
+    fun <T : PsiElement> processChildren(element: PsiElement?, childClass: Class<T>, processor: Processor<T>): Boolean {
         if (element is STUB_PSI) {
             val stub = element.stub
             if (stub != null) {
-                for (childrenStub in stub.childrenStubs) {
-                    if (!processor.process(childrenStub.psi))
-                        break
+                for (child in stub.childrenStubs) {
+                    if (childClass.isInstance(child)) {
+                        @Suppress("UNCHECKED_CAST")
+                        if (!processor.process(child as T)) {
+                            return false
+                        }
+                    }
                 }
-                return
+                return true
+            }
+        }
+
+        var child = element?.firstChild
+        while (child != null) {
+            if (childClass.isInstance(child)) {
+                @Suppress("UNCHECKED_CAST")
+                if (!processor.process(child as T)) {
+                    return false
+                }
+            }
+            child = child.nextSibling
+        }
+        return true
+    }
+
+    fun processChildren(element: PsiElement?, processor: Processor<PsiElement>): Boolean {
+        if (element is STUB_PSI) {
+            val stub = element.stub
+
+            if (stub != null) {
+                for (child in stub.childrenStubs) {
+                    if (!processor.process(child.psi))
+                        return false
+                }
+                return true
             }
         }
 
         var child = element?.firstChild
         while (child != null) {
             if (!processor.process(child)) {
-                break
+                return false
             }
             child = child.nextSibling
         }
+        return true
     }
 }

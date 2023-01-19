@@ -20,8 +20,8 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaTableFieldImpl extends StubBasedPsiElementBase<LuaTableFieldStub> implements LuaTableField {
 
-  public LuaTableFieldImpl(@NotNull LuaTableFieldStub stub, @NotNull IStubElementType<?, ?> nodeType) {
-    super(stub, nodeType);
+  public LuaTableFieldImpl(@NotNull LuaTableFieldStub stub, @NotNull IStubElementType<?, ?> type) {
+    super(stub, type);
   }
 
   public LuaTableFieldImpl(@NotNull ASTNode node) {

@@ -39,8 +39,11 @@ fun <T>withSearchGuard(psi: LuaNameExpr, action: () -> T?): T? {
     }
 }
 
-fun <T>withRecursionGuard(name: String, psi: PsiElement, action: () -> T?): T? {
-    val guardSet = recursionGuardSets.get().getOrPut(name) {
+fun <T>withRecursionGuard(name: String, psi: PsiElement, dumb: Boolean = false, action: () -> T?): T? {
+    // When trying to infer types in "smart" mode, IntelliJ may detect file changes *then* proceed to reindex those files i.e. enter dumb mode. When we've
+    // entered dumb mode, we basically want to disregard any recursion detection that was taking place in smart mode, so we maintain a separate guard set.
+    val guardName = if (dumb) name + "Dumb" else name
+    val guardSet = recursionGuardSets.get().getOrPut(guardName) {
         Sets.newIdentityHashSet()
     }
 

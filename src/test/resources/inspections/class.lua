@@ -50,3 +50,34 @@ local declarationlessCallable
 
 declarationlessCallable = DeclarationlessCallable()
 callable = <error descr="Type mismatch. Required: 'Callable' Found: 'DeclarationlessCallable'">DeclarationlessCallable()</error>
+
+---@class Socket
+local Socket = {}
+
+---@class Socket__Thread
+Socket.Thread = {}
+
+---@param timeout number
+function Socket.Thread.execute(timeout)
+end
+
+Socket.AnonymousThread = {}
+
+---@param timeout number
+function Socket.AnonymousThread.execute(timeout)
+end
+
+
+---@class IndexerExtendedClass
+
+---@class ABitWacky
+---@field [string] IndexerExtendedClass
+local Take = {}
+
+---@param a number
+function Take.Anything.foo(a)
+end
+
+---@param b number
+function Take.AnythingAtAll.bar(b)
+end

@@ -15,8 +15,8 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaUnaryExprImpl extends LuaExprMixin<LuaUnaryExprStub> implements LuaUnaryExpr {
 
-  public LuaUnaryExprImpl(@NotNull LuaUnaryExprStub stub, @NotNull IStubElementType<?, ?> nodeType) {
-    super(stub, nodeType);
+  public LuaUnaryExprImpl(@NotNull LuaUnaryExprStub stub, @NotNull IStubElementType<?, ?> type) {
+    super(stub, type);
   }
 
   public LuaUnaryExprImpl(@NotNull ASTNode node) {

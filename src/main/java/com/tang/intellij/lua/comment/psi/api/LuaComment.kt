@@ -17,6 +17,7 @@
 package com.tang.intellij.lua.comment.psi.api
 
 import com.intellij.psi.PsiComment
+import com.intellij.util.Processor
 import com.tang.intellij.lua.comment.psi.*
 import com.tang.intellij.lua.psi.LuaCommentOwner
 import com.tang.intellij.lua.search.SearchContext
@@ -34,11 +35,13 @@ interface LuaComment : PsiComment, LuaDocPsiElement {
     val isDeprecated: Boolean
     val isFunctionImplementation: Boolean
     fun findGenericDefs(): Collection<LuaDocGenericDef>
-    fun <T : LuaDocPsiElement> findTag(t:Class<T>): T?
-    fun <T : LuaDocPsiElement> findTags(t:Class<T>): Collection<T>
+    fun <T : LuaDocTag> findTag(tagClass: Class<T>): T?
+    fun <T : LuaDocTag> findTags(tagClass: Class<T>): Collection<T>
+    fun <T : LuaDocTag> processTags(tagClass: Class<T>, process: Processor<T>): Boolean
     fun findTags(name: String): Collection<LuaDocTagDef>
     fun getParamDef(name: String): LuaDocTagParam?
     fun getFieldDef(name: String): LuaDocTagField?
+    fun getFieldDef(context: SearchContext, indexerTy: ITy, exact: Boolean, indexerSubstitutor: ITySubstitutor? = null): LuaDocTagField?
     val tagClass: LuaDocTagClass?
     val tagReturn: LuaDocTagReturn?
     val tagType: LuaDocTagType?

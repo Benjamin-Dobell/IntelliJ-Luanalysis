@@ -43,15 +43,13 @@ class LuaClassMemberIndex : StringStubIndexExtension<LuaPsiTypeMember>() {
         val instance = LuaClassMemberIndex()
 
         private fun processKey(context: SearchContext, type: ITyClass, key: String, process: ProcessLuaPsiClassMember): Boolean {
-            if (context.isDumb) {
-                return false
-            }
+            if (!context.isDumb) {
+                LuaClassMemberIndex.instance.get(key, context.project, context.scope).forEach {
+                    ProgressManager.checkCanceled()
 
-            LuaClassMemberIndex.instance.get(key, context.project, context.scope).forEach {
-                ProgressManager.checkCanceled()
-
-                if (!process(type, it)) {
-                    return false
+                    if (!process(type, it)) {
+                        return false
+                    }
                 }
             }
 
@@ -134,6 +132,10 @@ class LuaClassMemberIndex : StringStubIndexExtension<LuaPsiTypeMember>() {
             indexerSubstitutor: ITySubstitutor?,
             process: ProcessLuaPsiClassMember
         ): Boolean {
+            if (context.isDumb) {
+                return true
+            }
+
             val memberKey = "*$fieldName"
             val keys = if (searchIndexers) listOf(memberKey, "*[\"${fieldName}\"]") else listOf(memberKey)
 
@@ -183,6 +185,10 @@ class LuaClassMemberIndex : StringStubIndexExtension<LuaPsiTypeMember>() {
         }
 
         fun processAllIndexers(context: SearchContext, type: ITyClass, deep: Boolean, process: ProcessLuaPsiClassMember): Boolean {
+            if (context.isDumb) {
+                return true
+            }
+
             return processClassKeys(context, type, listOf("[]"), deep, process)
         }
 
@@ -196,6 +202,10 @@ class LuaClassMemberIndex : StringStubIndexExtension<LuaPsiTypeMember>() {
             indexerSubstitutor: ITySubstitutor?,
             process: ProcessLuaPsiClassMember
         ): Boolean {
+            if (context.isDumb) {
+                return true
+            }
+
             var exactIndexerFound = false
             val exactIndexerResult = if (searchMembers && indexTy is TyPrimitiveLiteral && indexTy.primitiveKind == TyPrimitiveKind.String) {
                 processMember(context, type, indexTy.value, true, deep, indexerSubstitutor) { ownerTy, member ->
@@ -240,6 +250,10 @@ class LuaClassMemberIndex : StringStubIndexExtension<LuaPsiTypeMember>() {
         }
 
         fun processAll(context: SearchContext, type: ITyClass, process: ProcessLuaPsiClassMember) {
+            if (context.isDumb) {
+                return
+            }
+
             if (processKey(context, type, type.className, process)) {
                 type.lazyInit(context)
                 type.processAlias { aliasedName ->
@@ -252,7 +266,7 @@ class LuaClassMemberIndex : StringStubIndexExtension<LuaPsiTypeMember>() {
 
         fun processNamespaceMember(context: SearchContext, namespace: String, memberName: String, processor: Processor<LuaPsiTypeMember>): Boolean {
             if (context.isDumb) {
-                return false
+                return true
             }
 
             val key = "$namespace*$memberName"

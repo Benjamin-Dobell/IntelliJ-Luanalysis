@@ -21,6 +21,7 @@ import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.PsiReference
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.tree.IElementType
+import com.intellij.psi.util.PsiTreeUtil
 import com.tang.intellij.lua.comment.psi.LuaDocAccessModifier
 import com.tang.intellij.lua.comment.psi.api.LuaComment
 import com.tang.intellij.lua.psi.*
@@ -64,8 +65,10 @@ abstract class LuaIndexExprMixin : LuaExprMixin<LuaIndexExprStub>, LuaTypeField,
         val stub = this.stub
         if (stub != null)
             return stub.visibility
-        return comment?.findTag(LuaDocAccessModifier::class.java)?.let {
-            Visibility.get(it.text)
+        return comment?.let { comment ->
+            PsiTreeUtil.getChildOfType(comment, LuaDocAccessModifier::class.java)?.let {
+                Visibility.get(it.text)
+            }
         } ?: Visibility.PUBLIC
     }
 }

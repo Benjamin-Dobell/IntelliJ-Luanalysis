@@ -15,8 +15,8 @@ import com.tang.intellij.lua.stubs.LuaPlaceholderStub;
 
 public class LuaSingleArgImpl extends LuaArgsImpl implements LuaSingleArg {
 
-  public LuaSingleArgImpl(@NotNull LuaPlaceholderStub stub, @NotNull IStubElementType<?, ?> nodeType) {
-    super(stub, nodeType);
+  public LuaSingleArgImpl(@NotNull LuaPlaceholderStub stub, @NotNull IStubElementType<?, ?> type) {
+    super(stub, type);
   }
 
   public LuaSingleArgImpl(@NotNull ASTNode node) {

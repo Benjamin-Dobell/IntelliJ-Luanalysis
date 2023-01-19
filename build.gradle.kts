@@ -1,4 +1,5 @@
 import de.undercouch.gradle.tasks.download.Download
+import org.jetbrains.changelog.Changelog
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 fun properties(key: String) = project.findProperty(key).toString()
@@ -9,7 +10,7 @@ plugins {
 
     id("org.jetbrains.intellij") version "1.7.0"
 
-    id("org.jetbrains.changelog") version "1.3.1"
+    id("org.jetbrains.changelog") version "2.0.0"
 
     id("de.undercouch.download") version "3.4.3"
 }
@@ -54,6 +55,7 @@ intellij {
 changelog {
     version.set(properties("pluginVersion"))
     groups.set(emptyList<String>())
+    repositoryUrl.set(properties("pluginRepositoryUrl"))
 }
 
 sourceSets {
@@ -83,11 +85,15 @@ tasks {
 
     patchPluginXml {
         version.set(properties("pluginVersion"))
-        changeNotes.set(
-            provider {
-                changelog.getLatest().toHTML()
+        changeNotes.set(provider {
+            with(changelog) {
+                renderItem(
+                        getOrNull(properties("pluginVersion"))
+                                ?: runCatching { getLatest() }.getOrElse { getUnreleased() },
+                        org.jetbrains.changelog.Changelog.OutputType.HTML,
+                )
             }
-        )
+        })
     }
 
     val debuggerArchitectures = arrayOf("x86", "x64")

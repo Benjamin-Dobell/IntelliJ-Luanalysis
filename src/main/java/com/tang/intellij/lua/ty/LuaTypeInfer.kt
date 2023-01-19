@@ -23,7 +23,7 @@ import com.tang.intellij.lua.search.withRecursionGuard
 
 class LuaTypeInfer : ILuaTypeInfer {
     override fun inferType(context: SearchContext, target: LuaPsiTypeGuessable): ITy? {
-        return withRecursionGuard("inferType", target.psi) {
+        return withRecursionGuard("inferType", target.psi, context.isDumb) {
             inferInner(context, target)
         }
     }

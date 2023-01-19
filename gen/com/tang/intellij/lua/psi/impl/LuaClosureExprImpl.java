@@ -17,8 +17,8 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaClosureExprImpl extends LuaExprMixin<LuaClosureExprStub> implements LuaClosureExpr {
 
-  public LuaClosureExprImpl(@NotNull LuaClosureExprStub stub, @NotNull IStubElementType<?, ?> nodeType) {
-    super(stub, nodeType);
+  public LuaClosureExprImpl(@NotNull LuaClosureExprStub stub, @NotNull IStubElementType<?, ?> type) {
+    super(stub, type);
   }
 
   public LuaClosureExprImpl(@NotNull ASTNode node) {

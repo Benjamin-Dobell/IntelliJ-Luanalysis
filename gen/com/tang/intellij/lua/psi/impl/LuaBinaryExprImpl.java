@@ -15,8 +15,8 @@ import com.intellij.psi.stubs.IStubElementType;
 
 public class LuaBinaryExprImpl extends LuaExprMixin<LuaBinaryExprStub> implements LuaBinaryExpr {
 
-  public LuaBinaryExprImpl(@NotNull LuaBinaryExprStub stub, @NotNull IStubElementType<?, ?> nodeType) {
-    super(stub, nodeType);
+  public LuaBinaryExprImpl(@NotNull LuaBinaryExprStub stub, @NotNull IStubElementType<?, ?> type) {
+    super(stub, type);
   }
 
   public LuaBinaryExprImpl(@NotNull ASTNode node) {

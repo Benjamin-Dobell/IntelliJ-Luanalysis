@@ -17,8 +17,8 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaCallExprImpl extends LuaExprMixin<LuaExprPlaceStub> implements LuaCallExpr {
 
-  public LuaCallExprImpl(@NotNull LuaExprPlaceStub stub, @NotNull IStubElementType<?, ?> nodeType) {
-    super(stub, nodeType);
+  public LuaCallExprImpl(@NotNull LuaExprPlaceStub stub, @NotNull IStubElementType<?, ?> type) {
+    super(stub, type);
   }
 
   public LuaCallExprImpl(@NotNull ASTNode node) {

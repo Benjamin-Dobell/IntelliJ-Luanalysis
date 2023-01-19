@@ -36,9 +36,13 @@ abstract class LuaInspectionsTestBase(private vararg val inspections: LocalInspe
         myFixture.checkHighlighting(checkWarn, checkInfo, checkWeakWarn)
     }
 
-    protected fun checkByFile(filename: String, checkWarn: Boolean = true, checkInfo: Boolean = false, checkWeakWarn: Boolean = false) {
-        myFixture.configureByFile(filename)
+    protected fun checkByFiles(filenames: Array<String>, checkWarn: Boolean = true, checkInfo: Boolean = false, checkWeakWarn: Boolean = false) {
+        myFixture.configureByFiles(*filenames)
         enableInspection()
         myFixture.checkHighlighting(checkWarn, checkInfo, checkWeakWarn)
+    }
+
+    protected fun checkByFile(filename: String, checkWarn: Boolean = true, checkInfo: Boolean = false, checkWeakWarn: Boolean = false) {
+        checkByFiles(arrayOf(filename), checkWarn, checkInfo, checkWeakWarn)
     }
 }

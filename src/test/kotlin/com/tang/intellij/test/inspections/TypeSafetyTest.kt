@@ -35,17 +35,20 @@ class TypeSafetyTest : LuaInspectionsTestBase(
         UndeclaredMemberInspection(),
         UndeclaredVariableInspection()
 ) {
-    fun check(filename: String, checkWarn: Boolean = true, checkInfo: Boolean = false, checkWeakWarn: Boolean = false, strictNil: Boolean = true) {
+    fun check(filenames: Array<String>, checkWarn: Boolean = true, checkInfo: Boolean = false, checkWeakWarn: Boolean = false, strictNil: Boolean = true) {
         LuaSettings.instance.isNilStrict = strictNil
         LuaSettings.instance.isUnknownCallable = false
         LuaSettings.instance.isUnknownIndexable = false
         try {
-            checkByFile(filename, checkWarn, checkInfo, checkWeakWarn)
+            checkByFiles(filenames, checkWarn, checkInfo, checkWeakWarn)
         } finally {
             LuaSettings.instance.isNilStrict = false
             LuaSettings.instance.isUnknownCallable = true
             LuaSettings.instance.isUnknownIndexable = true
         }
+    }
+    fun check(filename: String, checkWarn: Boolean = true, checkInfo: Boolean = false, checkWeakWarn: Boolean = false, strictNil: Boolean = true) {
+        check(arrayOf(filename), checkWarn, checkInfo, checkWeakWarn, strictNil)
     }
 
     fun testAlias() {
@@ -58,6 +61,10 @@ class TypeSafetyTest : LuaInspectionsTestBase(
 
     fun testClass() {
         check("class.lua")
+    }
+
+    fun testClassFromAnotherFile() {
+        check(arrayOf("class.lua", "class_from_another_file.lua"))
     }
 
     fun testDocTables() {
@@ -124,8 +131,7 @@ class TypeSafetyTest : LuaInspectionsTestBase(
     }
 
     fun testGlobalUsage() {
-        myFixture.configureByFile("global_definitions.lua")
-        check("global_usage.lua")
+        check(arrayOf("global_definitions.lua", "global_usage.lua"))
     }
 
     fun testIndexedFields() {
@@ -216,9 +222,7 @@ class TypeSafetyTest : LuaInspectionsTestBase(
     }
 
     fun testRequire() {
-        myFixture.configureByFile("requireB.lua")
-        myFixture.configureByFile("requireC.lua")
-        check("requireA.lua")
+        check(arrayOf("requireB.lua", "requireC.lua", "requireA.lua"))
     }
 
     fun testSelf() {

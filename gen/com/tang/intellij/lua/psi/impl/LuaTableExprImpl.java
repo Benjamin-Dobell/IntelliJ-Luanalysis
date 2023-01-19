@@ -15,8 +15,8 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaTableExprImpl extends LuaExprMixin<LuaTableExprStub> implements LuaTableExpr {
 
-  public LuaTableExprImpl(@NotNull LuaTableExprStub stub, @NotNull IStubElementType<?, ?> nodeType) {
-    super(stub, nodeType);
+  public LuaTableExprImpl(@NotNull LuaTableExprStub stub, @NotNull IStubElementType<?, ?> type) {
+    super(stub, type);
   }
 
   public LuaTableExprImpl(@NotNull ASTNode node) {

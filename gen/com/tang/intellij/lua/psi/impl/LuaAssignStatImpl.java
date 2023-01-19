@@ -16,8 +16,8 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaAssignStatImpl extends StubBasedPsiElementBase<LuaPlaceholderStub> implements LuaAssignStat {
 
-  public LuaAssignStatImpl(@NotNull LuaPlaceholderStub stub, @NotNull IStubElementType<?, ?> nodeType) {
-    super(stub, nodeType);
+  public LuaAssignStatImpl(@NotNull LuaPlaceholderStub stub, @NotNull IStubElementType<?, ?> type) {
+    super(stub, type);
   }
 
   public LuaAssignStatImpl(@NotNull ASTNode node) {

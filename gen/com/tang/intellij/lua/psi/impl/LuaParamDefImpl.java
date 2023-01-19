@@ -17,8 +17,8 @@ import com.intellij.psi.tree.IElementType;
 
 public class LuaParamDefImpl extends StubBasedPsiElementBase<LuaParamDefStub> implements LuaParamDef {
 
-  public LuaParamDefImpl(@NotNull LuaParamDefStub stub, @NotNull IStubElementType<?, ?> nodeType) {
-    super(stub, nodeType);
+  public LuaParamDefImpl(@NotNull LuaParamDefStub stub, @NotNull IStubElementType<?, ?> type) {
+    super(stub, type);
   }
 
   public LuaParamDefImpl(@NotNull ASTNode node) {
