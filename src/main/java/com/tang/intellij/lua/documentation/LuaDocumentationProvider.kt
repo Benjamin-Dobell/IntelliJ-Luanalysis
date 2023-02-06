@@ -249,7 +249,8 @@ class LuaDocumentationProvider : AbstractDocumentationProvider(), DocumentationP
             val withinImplementation = originalElement?.let { PsiTreeUtil.isAncestor(owner, it, true) } ?: false
             renderDocParam(sb, docParamDef, withinImplementation, tyRenderer, true)
         } else {
-            val ty = infer(SearchContext.get(paramDef.project), paramDef) ?: Primitives.UNKNOWN
+            val context = originalElement?.let { PsiSearchContext(it ) } ?: SearchContext.get(paramDef.project)
+            val ty = infer(context, paramDef) ?: Primitives.UNKNOWN
             sb.append("<b>param</b> <code>${paramDef.name}</code> : ")
             renderTy(sb, ty, tyRenderer)
         }

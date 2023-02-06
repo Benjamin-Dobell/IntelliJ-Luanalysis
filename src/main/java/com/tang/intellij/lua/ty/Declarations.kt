@@ -282,30 +282,26 @@ private fun resolveParamType(context: SearchContext, paramDef: LuaParamDef): ITy
 
     when (paramOwner) {
         is LuaClassMethodDefStat -> {
-            val classType = paramOwner.guessParentClass(context)
-            val methodName = paramOwner.name
+            val effectiveMember = paramOwner.guessParentClass(context)?.let { parentClass ->
+                paramOwner.name?.let { name -> parentClass.findEffectiveMember(context, name) }
+            }
 
-            if (classType != null && methodName != null) {
-                Ty.processSuperClasses(context, classType) { superType ->
-                    val superClass = (if (superType is ITyGeneric) superType.base else superType) as? ITyClass
-                    val superMethod = superClass?.findMember(context, methodName)
+            if (effectiveMember != null && effectiveMember != paramOwner) {
+                val param = (effectiveMember.guessType(context) as? ITyFunction)?.let {
+                    it.mainSignature.params?.getOrNull(paramOwner.getIndexFor(paramDef))
+                }
+                param?.ty?.let { paramTy ->
+                    val contextElement = context.element
 
-                    // TODO: Optionalalalallalalala
-
-                    if (superMethod is LuaTypeMethod<*>) {
-                        val params = superMethod.params
-
-                        for (param in params) {
-                            if (paramName == param.name) {
-                                ty = param.ty
-
-                                if (ty != null) {
-                                    return@processSuperClasses false
-                                }
-                            }
-                        }
+                    return if (param.optional
+                        && contextElement != null
+                        && PsiTreeUtil.isAncestor(paramOwner, contextElement, true)
+                    ) {
+                        // Within the scope of a function, optional parameters may be nil
+                        paramTy.union(context, Primitives.NIL)
+                    } else {
+                        paramTy
                     }
-                    true
                 }
             }
         }

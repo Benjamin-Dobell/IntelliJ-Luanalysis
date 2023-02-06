@@ -744,3 +744,36 @@ function LegalMultipleResultsOverride.multipleResultsMethod() return 1, true end
 local IllegalMultipleResultsOverride = {}
 
 <error descr="Illegal override of \"multipleResultsMethod\". Type mismatch. Required: 'fun(): number, boolean' Found: 'fun(): true, 1'">function IllegalMultipleResultsOverride.multipleResultsMethod() return true, 1 end</error>
+
+
+---@class ClassWithFunctionField
+---@field foo fun(firstParam?: string): void
+local ClassWithFunctionField = {}
+
+-- Note: Param type inference ought to work base on param index i.e. not depend on param names.
+function ClassWithFunctionField.foo(optionalStringParam)
+    optionalStringParam = anyString
+    anyString = <error descr="Type mismatch. Required: 'string' Found: 'nil | string'">optionalStringParam</error>
+end
+
+---@class ChildOfClassWithFunctionField : ClassWithFunctionField
+local ChildOfClassWithFunctionField = {}
+
+function ChildOfClassWithFunctionField.foo(overiddenOptionStringParam)
+    overiddenOptionStringParam = anyString
+    anyString = <error descr="Type mismatch. Required: 'string' Found: 'nil | string'">overiddenOptionStringParam</error>
+end
+
+---@type ClassWithFunctionField
+local classWithFunctionField
+
+classWithFunctionField.foo(anyString)
+classWithFunctionField.foo(<error descr="Type mismatch. Required: 'string' Found: 'number'">anyNumber</error>)
+classWithFunctionField.foo()
+
+---@type ChildOfClassWithFunctionField
+local childOfClassWithFunctionField
+
+childOfClassWithFunctionField.foo(anyString)
+childOfClassWithFunctionField.foo(<error descr="Type mismatch. Required: 'string' Found: 'number'">anyNumber</error>)
+childOfClassWithFunctionField.foo()
