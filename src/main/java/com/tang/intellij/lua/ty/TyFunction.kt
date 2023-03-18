@@ -380,7 +380,7 @@ abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
                         && (sig.params?.size ?: 0) == 0 && sig.variadicParamTy?.isUnknown == true
             } else {
                 other.processSignatures(context) { otherSig ->
-                    matched = sig.contravariantOf(context, otherSig, varianceFlags)
+                    matched = sig.contravariantOf(context, otherSig, varianceFlags or TyVarianceFlags.ABSTRACT_GENERICS)
                     !matched
                 }
             }

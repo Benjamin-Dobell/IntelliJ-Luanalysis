@@ -56,8 +56,11 @@ open class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
         val resolvedBase = Ty.resolve(context, base)
 
         if (other is ITyArray) {
-            return resolvedBase.equals(context, other.base, TyEqualityFlags.fromVarianceFlags(varianceFlags))
-                    || (varianceFlags and TyVarianceFlags.WIDEN_TABLES != 0 && resolvedBase.contravariantOf(context, other.base, varianceFlags))
+            if ((varianceFlags and TyVarianceFlags.WIDEN_TABLES != 0) || (varianceFlags and TyVarianceFlags.ABSTRACT_GENERICS != 0 && resolvedBase is TyGenericParameter)) {
+                return resolvedBase.contravariantOf(context, other.base, varianceFlags)
+            }
+
+            return resolvedBase.equals(context, other.base, TyEqualityFlags.fromVarianceFlags(varianceFlags));
         }
 
         var indexedMemberType: ITy = Primitives.VOID

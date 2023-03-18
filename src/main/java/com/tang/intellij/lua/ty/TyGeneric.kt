@@ -33,23 +33,6 @@ fun genericParameterName(def: LuaDocGenericDef): String {
 class TyGenericParameter(name: String, override val varName: String, superClass: ITy? = null) : TySerializedClass(name, null, varName, superClass, null) {
     constructor(def: LuaDocGenericDef) : this(genericParameterName(def), def.id.text, def.superClass?.getType())
 
-    override fun equals(other: Any?): Boolean {
-        return other is TyGenericParameter && superClass?.equals(other.superClass) ?: (other.superClass == null)
-    }
-
-    override fun equals(context: SearchContext, other: ITy, equalityFlags: Int): Boolean {
-        return (other is TyGenericParameter
-                && superClass?.let { superClass ->
-            other.superClass?.let { otherSuperClass ->
-                superClass.equals(context, otherSuperClass, equalityFlags)
-            } ?: false
-        } ?: (other.superClass == null)) || super.equals(context, other, equalityFlags)
-    }
-
-    override fun hashCode(): Int {
-        return super.hashCode() * 31 + (superClass?.hashCode() ?: 0)
-    }
-
     override val kind: TyKind
         get() = TyKind.GenericParam
 
@@ -66,7 +49,7 @@ class TyGenericParameter(name: String, override val varName: String, superClass:
     }
 
     override fun contravariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
-        return if (varianceFlags and TyVarianceFlags.ABSTRACT_PARAMS != 0) {
+        return if (varianceFlags and TyVarianceFlags.ABSTRACT_GENERICS != 0) {
             getSuperType(context)?.contravariantOf(context, other, varianceFlags) ?: true
         } else {
             super.contravariantOf(context, other, varianceFlags)
@@ -283,7 +266,7 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
                     arg.equals(context, otherArg, TyEqualityFlags.fromVarianceFlags(varianceFlags))
                             || (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0 && otherArg.isUnknown)
                             || (
-                                (contravariantParams || (varianceFlags and TyVarianceFlags.ABSTRACT_PARAMS != 0 && arg is TyGenericParameter))
+                                (contravariantParams || (varianceFlags and TyVarianceFlags.ABSTRACT_GENERICS != 0 && arg is TyGenericParameter))
                                 && arg.contravariantOf(context, otherArg, varianceFlags)
                             )
                 }

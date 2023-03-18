@@ -20,7 +20,6 @@ import com.intellij.psi.stubs.StubInputStream
 import com.intellij.psi.stubs.StubOutputStream
 import com.tang.intellij.lua.ext.recursionGuard
 import com.tang.intellij.lua.search.SearchContext
-import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -284,7 +283,7 @@ class TyUnion : Ty {
 
         fun union(context: SearchContext, t1: ITy, t2: ITy): ITy {
             return when {
-                t1 === t2 || t1 == t2 -> t1
+                t1 === t2 || t1.equals(context, t2, 0) -> t1
                 t1 is TyUnion -> t1.union(context, t2)
                 t2 is TyUnion -> t2.union(context, t1)
                 t1 is TyMultipleResults || t2 is TyMultipleResults -> union(context, listOf(t1, t2))

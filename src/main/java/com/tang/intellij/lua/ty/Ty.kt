@@ -74,7 +74,7 @@ class TyFlags {
 class TyVarianceFlags {
     companion object {
         const val STRICT_UNKNOWN = 0x1 // When enabled UNKNOWN types are no longer treated as covariant of all types.
-        const val ABSTRACT_PARAMS = 0x2 // A generic is to be considered contravariant if its TyParameter generic parameters are contravariant.
+        const val ABSTRACT_GENERICS = 0x2 // A type is to be considered contravariant if its generic parameters are contravariant.
         const val WIDEN_TABLES = 0x4 // Generics (and arrays) are to be considered contravariant if their generic parameters (or base) are contravariant. Additionally, shapes are contravariant if their fields are contravariant.
         const val STRICT_NIL = 0x8 // In certain contexts nil is always strict, irrespective of the user's 'Strict nil checks' setting.
         const val NON_STRUCTURAL = 0x10 // Treat shapes as classes i.e. a shape is only covariant of another shape if it explicitly inherits from it.

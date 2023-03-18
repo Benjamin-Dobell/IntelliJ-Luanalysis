@@ -182,7 +182,7 @@ class GenericAnalyzer(
                     paramTyMap[genericName] = if (substitutedGenericParam.contravariantOf(
                             context,
                             currentType,
-                            TyVarianceFlags.ABSTRACT_PARAMS or TyVarianceFlags.STRICT_UNKNOWN
+                            TyVarianceFlags.ABSTRACT_GENERICS or TyVarianceFlags.STRICT_UNKNOWN
                         )) {
                         if (mappedType == null) {
                             currentType
