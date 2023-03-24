@@ -591,40 +591,37 @@ abstract class Ty(override val kind: TyKind) : ITy {
             return true
         }
 
-        val resolvedOther = resolve(context, other)
+        eachResolved(context, other) { resolvedOther ->
+            if (varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 && isShape(context)) {
+                val isContravariant: Boolean? = recursionGuard(resolvedOther, {
+                    // Note: ProblemUtil.contravariantOfShape will call back into this method with
+                    //       TyVarianceFlags.NON_STRUCTURAL set as a fast nominal check, before checking structurally.
+                    ProblemUtil.contravariantOfShape(context, this, resolvedOther, varianceFlags)
+                })
 
-        if (varianceFlags and TyVarianceFlags.NON_STRUCTURAL == 0 && isShape(context)) {
-            val isContravariant: Boolean? = recursionGuard(resolvedOther, {
-                // Note: ProblemUtil.contravariantOfShape will call back into this method with
-                //       TyVarianceFlags.NON_STRUCTURAL set as a fast nominal check, before checking structurally.
-                ProblemUtil.contravariantOfShape(context, this, resolvedOther, varianceFlags)
-            })
-
-            if (isContravariant != null) {
-                return isContravariant
-            }
-        }
-
-        if (this.equals(context, resolvedOther, TyEqualityFlags.fromVarianceFlags(varianceFlags))) {
-            return true
-        }
-
-        if (resolvedOther != other) {
-            return contravariantOf(context, resolvedOther, varianceFlags)
-        }
-
-        if (resolvedOther is TyUnion) {
-            TyUnion.each(resolvedOther) {
-                if (it !is TySnippet && !contravariantOf(context, it, varianceFlags)) {
+                if (isContravariant == false) {
                     return false
+                } else if (isContravariant == true) {
+                    return@eachResolved
                 }
             }
 
-            return true
+            if (this.equals(context, resolvedOther, TyEqualityFlags.fromVarianceFlags(varianceFlags))) {
+                return@eachResolved
+            }
+
+            if (resolvedOther === other) {
+                val otherSuper = other.getSuperType(context)
+
+                if (otherSuper == null || !contravariantOf(context, otherSuper, varianceFlags)) {
+                    return false
+                }
+            } else if (resolvedOther !is TySnippet && !contravariantOf(context, resolvedOther, varianceFlags)) {
+                return false
+            }
         }
 
-        val otherSuper = other.getSuperType(context)
-        return otherSuper != null && contravariantOf(context, otherSuper, varianceFlags)
+        return true
     }
 
     override fun covariantOf(context: SearchContext, other: ITy, varianceFlags: Int): Boolean {
