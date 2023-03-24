@@ -237,129 +237,125 @@ private fun guessBinaryOpType(context: SearchContext, binaryExpr: LuaBinaryExpr)
 
 fun LuaCallExpr.createSubstitutor(sig: IFunSignature): ITySubstitutor {
     val context = PsiSearchContext(this)
-    return context.withConcreteGenericSupport(false) {
-        val selfSubstitutor = TySelfSubstitutor(this)
-        val genericParams = sig.genericParams
+    val selfSubstitutor = TySelfSubstitutor(this)
+    val genericParams = sig.genericParams
 
-        if (genericParams?.isNotEmpty() == true) {
-            val list = mutableListOf<ITy>()
+    if (genericParams?.isNotEmpty() == true) {
+        val list = mutableListOf<ITy>()
 
-            // self type
-            if (this.isMethodColonCall) {
-                this.prefixExpression?.let { prefix ->
-                    context.withIndex(0) {
-                        list.add(prefix.guessType(context) ?: Primitives.UNKNOWN)
-                    }
-                }
-            }
-
-            for (i in 0 until argList.size - 1) {
+        // self type
+        if (this.isMethodColonCall) {
+            this.prefixExpression?.let { prefix ->
                 context.withIndex(0) {
-                    list.add(argList[i].guessType(context) ?: Primitives.UNKNOWN)
+                    list.add(prefix.guessType(context) ?: Primitives.UNKNOWN)
                 }
             }
-
-            argList.lastOrNull()?.let {
-                context.withMultipleResults {
-                    val lastArgTy = it.guessType(context) ?: Primitives.UNKNOWN
-
-                    if (lastArgTy is TyMultipleResults) {
-                        list.addAll(lastArgTy.list)
-                    } else {
-                        list.add(lastArgTy)
-                    }
-                }
-            }
-
-            val paramContext = (sig as? IPsiFunSignature)?.psi?.let { PsiSearchContext(it) } ?: context
-            val genericAnalyzer = GenericAnalyzer(genericParams, paramContext, this.args)
-
-            val lastParamIndex = list.lastIndex
-            var processedIndex = -1
-            sig.processParameters { index, param ->
-                val argTy = list.getOrNull(index)
-
-                if (argTy != null) {
-                    context.withListEntry(index == lastParamIndex) {
-                        genericAnalyzer.analyze(context, argTy, param.ty ?: Primitives.UNKNOWN)
-                    }
-                }
-
-                processedIndex = index
-                true
-            }
-
-            // vararg
-            val varargTy = sig.variadicParamTy
-            if (varargTy != null) {
-                for (index in processedIndex + 1 until list.size) {
-                    context.withListEntry(index == lastParamIndex) {
-                        genericAnalyzer.analyze(context, list[index], varargTy)
-                    }
-                }
-            }
-
-            val analyzedParams = genericAnalyzer.analyzedParams.toMutableMap()
-
-            sig.genericParams?.forEach {
-                val superCls = it.superClass
-                if (superCls != null && Ty.isInvalid(analyzedParams[it.className])) {
-                    analyzedParams[it.className] = superCls
-                }
-            }
-
-            return@withConcreteGenericSupport TyChainSubstitutor.chain(selfSubstitutor, TyParameterSubstitutor(analyzedParams))
         }
 
-        selfSubstitutor
+        for (i in 0 until argList.size - 1) {
+            context.withIndex(0) {
+                list.add(argList[i].guessType(context) ?: Primitives.UNKNOWN)
+            }
+        }
+
+        argList.lastOrNull()?.let {
+            context.withMultipleResults {
+                val lastArgTy = it.guessType(context) ?: Primitives.UNKNOWN
+
+                if (lastArgTy is TyMultipleResults) {
+                    list.addAll(lastArgTy.list)
+                } else {
+                    list.add(lastArgTy)
+                }
+            }
+        }
+
+        val paramContext = (sig as? IPsiFunSignature)?.psi?.let { PsiSearchContext(it) } ?: context
+        val genericAnalyzer = GenericAnalyzer(genericParams, paramContext, this.args)
+
+        val lastParamIndex = list.lastIndex
+        var processedIndex = -1
+        sig.processParameters { index, param ->
+            val argTy = list.getOrNull(index)
+
+            if (argTy != null) {
+                context.withListEntry(index == lastParamIndex) {
+                    genericAnalyzer.analyze(context, argTy, param.ty ?: Primitives.UNKNOWN)
+                }
+            }
+
+            processedIndex = index
+            true
+        }
+
+        // vararg
+        val varargTy = sig.variadicParamTy
+        if (varargTy != null) {
+            for (index in processedIndex + 1 until list.size) {
+                context.withListEntry(index == lastParamIndex) {
+                    genericAnalyzer.analyze(context, list[index], varargTy)
+                }
+            }
+        }
+
+        val analyzedParams = genericAnalyzer.analyzedParams.toMutableMap()
+
+        sig.genericParams?.forEach {
+            val superCls = it.superClass
+            if (superCls != null && Ty.isInvalid(analyzedParams[it.className])) {
+                analyzedParams[it.className] = superCls
+            }
+        }
+
+        return TyChainSubstitutor.chain(selfSubstitutor, TyGenericParameterSubstitutor(analyzedParams))
     }
+
+    return selfSubstitutor
 }
 
 private fun LuaCallExpr.infer(): ITy? {
     val context = PsiSearchContext(this)
-    return context.withConcreteGenericSupport(false) {
-        val luaCallExpr = this
-        // xxx()
-        val expr = luaCallExpr.expression
+    val luaCallExpr = this
+    // xxx()
+    val expr = luaCallExpr.expression
 
-        // require('module') resolution
-        // TODO: Lazy module type like TyLazyClass, but with file paths for use when context.isDumb
-        if (!context.isDumb && expr is LuaNameExpr && LuaSettings.isRequireLikeFunctionName(expr.name)) {
-            return@withConcreteGenericSupport (luaCallExpr.firstStringArg as? LuaLiteralExpr)?.stringValue?.let {
-                resolveRequireFile(it, luaCallExpr.project)
-            }?.let {
-                context.withMultipleResults {
-                    it.guessType(context)
-                }
+    // require('module') resolution
+    // TODO: Lazy module type like TyLazyClass, but with file paths for use when context.isDumb
+    if (!context.isDumb && expr is LuaNameExpr && LuaSettings.isRequireLikeFunctionName(expr.name)) {
+        return (luaCallExpr.firstStringArg as? LuaLiteralExpr)?.stringValue?.let {
+            resolveRequireFile(it, luaCallExpr.project)
+        }?.let {
+            context.withMultipleResults {
+                it.guessType(context)
             }
         }
-
-        var ret: ITy = Primitives.VOID
-
-        val ty = context.withIndex(0) {
-            infer(context, expr)
-        }
-
-        if (ty == null) {
-            return@withConcreteGenericSupport null
-        }
-
-        Ty.eachResolved(context, ty) {
-            if (ty == Primitives.FUNCTION) {
-                return@withConcreteGenericSupport TyMultipleResults(listOf(Primitives.UNKNOWN), true)
-            }
-
-            val signatureReturnTy = it.matchSignature(context, this)?.returnTy
-
-            if (signatureReturnTy == null) {
-                return@withConcreteGenericSupport null
-            }
-
-            ret = ret.union(context, signatureReturnTy)
-        }
-
-        ret
     }
+
+    var ret: ITy = Primitives.VOID
+
+    val ty = context.withIndex(0) {
+        infer(context, expr)
+    }
+
+    if (ty == null) {
+        return null
+    }
+
+    Ty.eachResolved(context, ty) {
+        if (ty == Primitives.FUNCTION) {
+            return TyMultipleResults(listOf(Primitives.UNKNOWN), true)
+        }
+
+        val signatureReturnTy = it.matchSignature(context, this)?.returnTy
+
+        if (signatureReturnTy == null) {
+            return null
+        }
+
+        ret = ret.union(context, signatureReturnTy)
+    }
+
+    return ret
 }
 
 private fun LuaNameExpr.infer(context: SearchContext): ITy? {

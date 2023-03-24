@@ -22,7 +22,7 @@ function GenericSelfA:colonMethod()
     aNumber = <error descr="Type mismatch. Required: 'number' Found: 'self'">selfTypedVar</error>
 
 
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'T'">selfTypedVar.a</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'T : string'">selfTypedVar.a</error>
     aString = selfTypedVar.a
 
     return self
@@ -40,7 +40,7 @@ function GenericSelfA.dotMethod()
     selfTypedVar = <error descr="Type mismatch. Required: 'self' Found: 'GenericSelfA<string>'">someGenericSelfA</error>
     aNumber = <error descr="Type mismatch. Required: 'number' Found: 'self'">selfTypedVar</error>
 
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'T'">selfTypedVar.a</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'T : string'">selfTypedVar.a</error>
     aString = selfTypedVar.a
 
     return selfTypedVar
@@ -58,7 +58,7 @@ GenericSelfA.lambdaMethod = function()
     selfTypedVar = <error descr="Type mismatch. Required: 'self' Found: 'GenericSelfA<string>'">someGenericSelfA</error>
     aNumber = <error descr="Type mismatch. Required: 'number' Found: 'self'">selfTypedVar</error>
 
-    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'T'">selfTypedVar.a</error>
+    aNumber = <error descr="Type mismatch. Required: 'number' Found: 'T : string'">selfTypedVar.a</error>
     aString = selfTypedVar.a
 
     return selfTypedVar

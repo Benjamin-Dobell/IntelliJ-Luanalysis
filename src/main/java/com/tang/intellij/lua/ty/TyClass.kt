@@ -161,7 +161,7 @@ private fun equalToShape(context: SearchContext, target: ITy, source: ITy): Bool
 
     var sourceMemberCount = 0
 
-    source.processMembers(context, true) { _, sourceMember ->
+    source.processMembers(context, true) { _, _ ->
         sourceMemberCount++ < targetMemberCount
     }
 
@@ -397,11 +397,6 @@ abstract class TyClass(override val className: String,
         fun createSelfType(classTy: ITyClass): TyClass {
             val tyName = getSelfClassName(classTy)
             return createSerializedClass(tyName, null, Constants.WORD_SELF, classTy, null, null, TyFlags.ANONYMOUS)
-        }
-
-        fun createConcreteGenericParameter(genericParam: TyGenericParameter): TyClass {
-            val tyName = getConcreteGenericParameterName(genericParam)
-            return createSerializedClass(tyName, null, genericParam.varName, genericParam, null, null, TyFlags.ANONYMOUS)
         }
     }
 }
@@ -661,17 +656,6 @@ fun getSelfClassName(classTy: ITyClass): String {
 
 fun isSelfClass(classTy: ITyClass): Boolean {
     return classTy.isAnonymous && classTy.className.endsWith(CLASS_NAME_SUFFIX_SELF)
-}
-
-private const val GENERIC_PARAMETER_NAME_SUFFIX_CONCRETE = "#concrete"
-
-fun getConcreteGenericParameterName(genericParam: TyGenericParameter): String {
-    val genericName = genericParam.varName
-    return if (genericName.endsWith(GENERIC_PARAMETER_NAME_SUFFIX_CONCRETE)) {
-        genericName
-    } else {
-        genericName + GENERIC_PARAMETER_NAME_SUFFIX_CONCRETE
-    }
 }
 
 fun getGlobalTypeName(text: String): String {

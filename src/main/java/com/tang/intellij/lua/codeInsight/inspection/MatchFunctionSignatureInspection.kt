@@ -62,10 +62,8 @@ class MatchFunctionSignatureInspection : StrictInspection() {
                 val searchContext = PsiSearchContext(o)
                 val prefixExpr = o.expression
 
-                var resolvedTy = searchContext.withConcreteGenericSupport(false) {
-                    prefixExpr.guessType(searchContext)?.let {
-                        Ty.resolve(searchContext, it)
-                    }
+                var resolvedTy = prefixExpr.guessType(searchContext)?.let {
+                    Ty.resolve(searchContext, it)
                 } ?: Primitives.UNKNOWN
 
                 if (resolvedTy is TyUnion && resolvedTy.size == 2 && resolvedTy.getChildTypes().last().isAnonymous) {
@@ -77,10 +75,8 @@ class MatchFunctionSignatureInspection : StrictInspection() {
                         return@each
                     }
 
-                    val matchResult = searchContext.withConcreteGenericSupport(false) {
-                        it.matchSignature(searchContext, o) { problem ->
-                            myHolder.registerProblem(problem.sourceElement, problem.message, problem.highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
-                        }
+                    val matchResult = it.matchSignature(searchContext, o) { problem ->
+                        myHolder.registerProblem(problem.sourceElement, problem.message, problem.highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
                     }
 
                     if (matchResult != null) {

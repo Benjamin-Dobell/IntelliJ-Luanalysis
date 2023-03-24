@@ -66,14 +66,12 @@ private fun inferReturnTyInner(context: SearchContext, owner: LuaFuncBodyOwner<*
                 }
 
                 val c = PsiSearchContext(o)
-                val returnTy = c.withConcreteGenericSupport(false) {
-                    if (context.index != 0 || context.supportsMultipleResults) {
-                        c.withIndex(context.index, context.supportsMultipleResults) {
-                            guessReturnType(o, c)
-                        }
-                    } else {
+                val returnTy = if (context.index != 0 || context.supportsMultipleResults) {
+                    c.withIndex(context.index, context.supportsMultipleResults) {
                         guessReturnType(o, c)
                     }
+                } else {
+                    guessReturnType(o, c)
                 }
 
                 if (returnTy == null) {
@@ -151,10 +149,8 @@ private fun LuaLocalDef.infer(context: SearchContext): ITy? {
             type = if (exprList != null) {
                 // TODO: unknown vs. any - should be unknown
                 val localContext = PsiSearchContext(localStat)
-                localContext.withConcreteGenericSupport(context.supportsConcreteGenerics) {
-                    localContext.withIndex(index, false) {
-                        exprList.guessTypeAt(localContext)
-                    }
+                localContext.withIndex(index, false) {
+                    exprList.guessTypeAt(localContext)
                 } ?: Primitives.UNKNOWN
             } else {
                 val stub = this.stub
@@ -369,22 +365,20 @@ private fun resolveParamType(context: SearchContext, paramDef: LuaParamDef): ITy
              * guess type for p1
              */
 
-            context.withConcreteGenericSupport(true) {
-                paramOwner.shouldBe(context)?.let {
-                    Ty.eachResolved(context, it) {
-                        if (it is ITyFunction) {
-                            val paramIndex = paramOwner.getIndexFor(paramDef)
-                            val param = it.mainSignature.params?.getOrNull(paramIndex)
-                            val paramTy = param?.let {
-                                if (it.optional) {
-                                    TyUnion.union(context, Primitives.NIL, it.ty)
-                                } else {
-                                    it.ty
-                                }
-                            } ?: Primitives.UNKNOWN // TODO: Any vs unknown. Should be unknown
+            paramOwner.shouldBe(context)?.let {
+                Ty.eachResolved(context, it) {
+                    if (it is ITyFunction) {
+                        val paramIndex = paramOwner.getIndexFor(paramDef)
+                        val param = it.mainSignature.params?.getOrNull(paramIndex)
+                        val paramTy = param?.let {
+                            if (it.optional) {
+                                TyUnion.union(context, Primitives.NIL, it.ty)
+                            } else {
+                                it.ty
+                            }
+                        } ?: Primitives.UNKNOWN // TODO: Any vs unknown. Should be unknown
 
-                            ty = TyUnion.union(context, ty, paramTy)
-                        }
+                        ty = TyUnion.union(context, ty, paramTy)
                     }
                 }
             }

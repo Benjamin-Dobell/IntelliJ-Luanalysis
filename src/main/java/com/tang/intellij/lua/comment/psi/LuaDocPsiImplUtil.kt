@@ -341,7 +341,7 @@ fun getType(luaDocFunctionTy: LuaDocFunctionTy): ITy {
 }
 
 fun getParams(luaDocFunctionTy: LuaDocFunctionTy): Array<LuaParamInfo>? {
-    return luaDocFunctionTy.functionParams?.let  {
+    return luaDocFunctionTy.functionParams?.let {
         it.functionParamList.map {
             LuaParamInfo(it.id.text, it.ty?.getType(), it.optional != null)
         }.toTypedArray()
@@ -420,7 +420,7 @@ fun getNameIdentifier(f: LuaDocTableField): PsiElement? {
     return f.id
 }
 
-fun getName(f:LuaDocTableField): String? {
+fun getName(f: LuaDocTableField): String? {
     val stub = f.stub
     return if (stub != null) {
         stub.name
@@ -509,7 +509,8 @@ fun getType(alias: LuaDocTagAlias): TyAlias {
     return if (stub != null) {
         return stub.type
     } else {
-        TyAlias(getName(alias), alias.genericDefList.map { TyGenericParameter(it) }.toTypedArray(), alias.ty?.getType() ?: Primitives.UNKNOWN)
+        TyAlias(getName(alias), alias.genericDefList.map { TyGenericParameter(it) }.toTypedArray(), alias.ty?.getType()
+            ?: Primitives.UNKNOWN)
     }
 }
 

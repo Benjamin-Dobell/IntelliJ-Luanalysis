@@ -379,9 +379,26 @@ abstract class TyFunction : Ty(TyKind.Function), ITyFunction {
                 matched = multipleResults?.variadic == true && multipleResults.list.size == 1 && multipleResults.list.first().isUnknown
                         && (sig.params?.size ?: 0) == 0 && sig.variadicParamTy?.isUnknown == true
             } else {
+                val genericScopeName = sig.genericParams?.firstOrNull()?.scopeName
+
                 other.processSignatures(context) { otherSig ->
-                    matched = sig.contravariantOf(context, otherSig, varianceFlags or TyVarianceFlags.ABSTRACT_GENERICS)
-                    !matched
+                    val otherGenericScopeName = otherSig.genericParams?.firstOrNull()?.scopeName
+                    val scopeNames = if (genericScopeName != null) {
+                        if (otherGenericScopeName != null) {
+                            listOf(genericScopeName, otherGenericScopeName)
+                        } else {
+                            listOf(genericScopeName)
+                        }
+                    } else if (otherGenericScopeName != null) {
+                        listOf(otherGenericScopeName)
+                    } else {
+                        listOf()
+                    }
+
+                    context.withAbstractGenericScopeNames(scopeNames) {
+                        matched = sig.contravariantOf(context, otherSig, varianceFlags)
+                        !matched
+                    }
                 }
             }
             !matched

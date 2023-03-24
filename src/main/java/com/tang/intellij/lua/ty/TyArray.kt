@@ -56,7 +56,7 @@ open class TyArray(override val base: ITy) : Ty(TyKind.Array), ITyArray {
         val resolvedBase = Ty.resolve(context, base)
 
         if (other is ITyArray) {
-            if ((varianceFlags and TyVarianceFlags.WIDEN_TABLES != 0) || (varianceFlags and TyVarianceFlags.ABSTRACT_GENERICS != 0 && resolvedBase is TyGenericParameter)) {
+            if ((varianceFlags and TyVarianceFlags.WIDEN_TABLES != 0)) {
                 return resolvedBase.contravariantOf(context, other.base, varianceFlags)
             }
 

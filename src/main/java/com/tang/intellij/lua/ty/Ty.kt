@@ -17,7 +17,6 @@
 package com.tang.intellij.lua.ty
 
 import com.intellij.codeInspection.ProblemHighlightType
-import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.StubInputStream
@@ -74,10 +73,9 @@ class TyFlags {
 class TyVarianceFlags {
     companion object {
         const val STRICT_UNKNOWN = 0x1 // When enabled UNKNOWN types are no longer treated as covariant of all types.
-        const val ABSTRACT_GENERICS = 0x2 // A type is to be considered contravariant if its generic parameters are contravariant.
-        const val WIDEN_TABLES = 0x4 // Generics (and arrays) are to be considered contravariant if their generic parameters (or base) are contravariant. Additionally, shapes are contravariant if their fields are contravariant.
-        const val STRICT_NIL = 0x8 // In certain contexts nil is always strict, irrespective of the user's 'Strict nil checks' setting.
-        const val NON_STRUCTURAL = 0x10 // Treat shapes as classes i.e. a shape is only covariant of another shape if it explicitly inherits from it.
+        const val WIDEN_TABLES = 0x2 // Generics (and arrays) are to be considered contravariant if their generic parameters (or base) are contravariant. Additionally, shapes are contravariant if their fields are contravariant.
+        const val STRICT_NIL = 0x4 // In certain contexts nil is always strict, irrespective of the user's 'Strict nil checks' setting.
+        const val NON_STRUCTURAL = 0x8 // Treat shapes as classes i.e. a shape is only covariant of another shape if it explicitly inherits from it.
     }
 }
 
@@ -196,9 +194,9 @@ interface ITy : Comparable<ITy> {
         return flags and TyFlags.SHAPE != 0
     }
 
-    fun guessMemberType(searchContext: SearchContext, name: String): ITy? {
-        val context = if (isAnonymous) searchContext else searchContext.getProjectContext()
-        val member = findEffectiveMember(context, name)
+    fun guessMemberType(context: SearchContext, name: String): ITy? {
+        val guessContext = if (isAnonymous) context else context.getProjectContext()
+        val member = findEffectiveMember(guessContext, name)
 
         if (member == null) {
             return if (isUnknown && LuaSettings.instance.isUnknownIndexable) {
@@ -208,21 +206,21 @@ interface ITy : Comparable<ITy> {
             }
         }
 
-        return member.guessType(context)?.let {
-            val substitutor = getMemberSubstitutor(context)
-            return if (substitutor != null) it.substitute(context, substitutor) else it
+        return member.guessType(guessContext)?.let {
+            val substitutor = getMemberSubstitutor(guessContext)
+            return if (substitutor != null) it.substitute(guessContext, substitutor) else it
         } ?: Primitives.UNKNOWN
     }
 
-    fun guessIndexerType(searchContext: SearchContext, indexTy: ITy, exact: Boolean = false): ITy? {
-        val context = searchContext.getProjectContext()
+    fun guessIndexerType(context: SearchContext, indexTy: ITy, exact: Boolean = false): ITy? {
+        val guessContext = if (isAnonymous) context else context.getProjectContext()
         var ty: ITy? = null
         val substitutor: Lazy<ITySubstitutor?> = lazy {
-            getMemberSubstitutor(context)
+            getMemberSubstitutor(guessContext)
         }
 
-        Ty.eachResolved(context, indexTy) { resolvedIndexTy ->
-            val member = findEffectiveIndexer(context, resolvedIndexTy, exact)
+        Ty.eachResolved(guessContext, indexTy) { resolvedIndexTy ->
+            val member = findEffectiveIndexer(guessContext, resolvedIndexTy, exact)
 
             if (member == null) {
                 if (isUnknown && LuaSettings.instance.isUnknownIndexable) {
@@ -232,9 +230,9 @@ interface ITy : Comparable<ITy> {
                 }
             }
 
-            val memberTy = member.guessType(context)?.let {
+            val memberTy = member.guessType(guessContext)?.let {
                 substitutor.value?.let { substitutor ->
-                    it.substitute(context, substitutor)
+                    it.substitute(guessContext, substitutor)
                 } ?: it
             }
 
@@ -242,7 +240,7 @@ interface ITy : Comparable<ITy> {
                 return Primitives.UNKNOWN
             }
 
-            ty = TyUnion.union(context, ty, memberTy)
+            ty = TyUnion.union(guessContext, ty, memberTy)
         }
 
         return ty
@@ -348,125 +346,130 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
         val signature = candidate.substitute(context, substitutor)
 
         if (signature.params != null) {
-            signature.processParameters(call) { i, pi ->
-                parameterCount = i + 1
-                val typeInfo = concreteArgTypes.getOrNull(i) ?: variadicArg
+            val scopeName = signature.genericParams?.firstOrNull()?.scopeName
 
-                if (typeInfo == null || typeInfo == variadicArg) {
-                    if (pi.optional) {
-                        return@processParameters true
-                    }
+            context.withAbstractGenericScopeName(scopeName) {
+                signature.processParameters(call) { i, pi ->
+                    parameterCount = i + 1
+                    val typeInfo = concreteArgTypes.getOrNull(i) ?: variadicArg
 
-                    var problemElement = call.lastChild.lastChild
-
-                    // Some PSI elements injected by IntelliJ (e.g. PsiErrorElementImpl) can be empty and thus cannot be targeted for our own errors.
-                    while (problemElement != null && problemElement.textLength == 0) {
-                        problemElement = problemElement.prevSibling
-                    }
-
-                    problemElement = problemElement ?: call.lastChild
-
-                    candidateFailed = true
-
-                    if (!call.isMethodColonCall && i == 0 && pi.name == Constants.WORD_SELF) {
-                        signatureProblems?.add(Problem(null, problemElement, "Missing self argument.\n\nDid you mean to call the method with a colon?"))
-                    } else {
-                        signatureProblems?.add(Problem(null, problemElement, "Missing argument: ${pi.name}: ${pi.ty}"))
-                    }
-
-                    if (typeInfo == null) {
-                        return@processParameters true
-                    }
-                }
-
-                val paramType = pi.ty ?: Primitives.UNKNOWN
-                val argType = typeInfo.ty
-                val argExpr = args.getOrNull(i) ?: args.last()
-                val varianceFlags = if (argExpr is LuaTableExpr) {
-                    TyVarianceFlags.WIDEN_TABLES
-                } else 0
-
-                if (processProblem != null) {
-                    val contravariant = ProblemUtil.contravariantOf(context, paramType, argType, varianceFlags, null, argExpr) { problem ->
-                        var contextualMessage = if (i >= args.size &&
-                            (concreteArgTypes.size > args.size || (variadicArg != null && concreteArgTypes.size >= args.size))
-                        ) {
-                            "Result ${i + 1}, ${problem.message.decapitalize()}"
-                        } else {
-                            problem.message
+                    if (typeInfo == null || typeInfo == variadicArg) {
+                        if (pi.optional) {
+                            return@processParameters true
                         }
+
+                        var problemElement = call.lastChild.lastChild
+
+                        // Some PSI elements injected by IntelliJ (e.g. PsiErrorElementImpl) can be empty and thus cannot be targeted for our own errors.
+                        while (problemElement != null && problemElement.textLength == 0) {
+                            problemElement = problemElement.prevSibling
+                        }
+
+                        problemElement = problemElement ?: call.lastChild
+
+                        candidateFailed = true
 
                         if (!call.isMethodColonCall && i == 0 && pi.name == Constants.WORD_SELF) {
-                            contextualMessage += ".\n\nDid you mean to call the method with a colon?"
+                            signatureProblems?.add(Problem(null, problemElement, "Missing self argument.\n\nDid you mean to call the method with a colon?"))
+                        } else {
+                            signatureProblems?.add(Problem(null, problemElement, "Missing argument: ${pi.name}: ${pi.ty}"))
                         }
 
-                        signatureProblems?.add(Problem(null, problem.sourceElement, contextualMessage, problem.highlightType))
+                        if (typeInfo == null) {
+                            return@processParameters true
+                        }
                     }
 
-                    if (!contravariant) {
-                        candidateFailed = true
-                    }
-                } else if (!paramType.contravariantOf(context, argType, varianceFlags)) {
-                    candidateFailed = true
-                }
+                    val paramType = pi.ty ?: Primitives.UNKNOWN
+                    val argType = typeInfo.ty
+                    val argExpr = args.getOrNull(i) ?: args.last()
+                    val varianceFlags = if (argExpr is LuaTableExpr) {
+                        TyVarianceFlags.WIDEN_TABLES
+                    } else 0
 
-                true
-            }
-
-            val varargParamTy = signature.variadicParamTy
-
-            if (parameterCount < concreteArgTypes.size) {
-                if (varargParamTy != null) {
-                    for (i in parameterCount until args.size) {
-                        val argType = concreteArgTypes.getOrNull(i)?.ty?.let {
-                            if (it is TyMultipleResults) it.list.first() else it
-                        } ?: variadicArg!!.ty
-                        val argExpr = args.get(i)
-                        val varianceFlags = if (argExpr is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
-
-                        if (processProblem != null) {
-                            val contravariant = ProblemUtil.contravariantOf(context, varargParamTy, argType, varianceFlags, null, argExpr) { problem ->
-                                signatureProblems?.add(Problem(null, problem.sourceElement, problem.message, problem.highlightType))
+                    if (processProblem != null) {
+                        val contravariant = ProblemUtil.contravariantOf(context, paramType, argType, varianceFlags, null, argExpr) { problem ->
+                            var contextualMessage = if (i >= args.size &&
+                                (concreteArgTypes.size > args.size || (variadicArg != null && concreteArgTypes.size >= args.size))
+                            ) {
+                                "Result ${i + 1}, ${problem.message.decapitalize()}"
+                            } else {
+                                problem.message
                             }
 
-                            if (!contravariant) {
-                                candidateFailed = true
+                            if (!call.isMethodColonCall && i == 0 && pi.name == Constants.WORD_SELF) {
+                                contextualMessage += ".\n\nDid you mean to call the method with a colon?"
                             }
-                        } else if (!varargParamTy.contravariantOf(context, argType, varianceFlags)) {
+
+                            signatureProblems?.add(Problem(null, problem.sourceElement, contextualMessage, problem.highlightType))
+                        }
+
+                        if (!contravariant) {
                             candidateFailed = true
                         }
-                    }
-                } else if (parameterCount < args.size) {
-                    for (i in parameterCount until args.size) {
+                    } else if (!paramType.contravariantOf(context, argType, varianceFlags)) {
                         candidateFailed = true
-                        signatureProblems?.add(Problem(null, args[i], "Too many arguments."))
-                    }
-                } else {
-                    // Last argument is TyMultipleResults, just a weak warning.
-                    val excess = concreteArgTypes.size - parameterCount
-                    val message = if (excess == 1) "1 result is an excess argument." else "${excess} results are excess arguments."
-                    signatureProblems?.add(Problem(null, args.last(), message, ProblemHighlightType.WEAK_WARNING))
-
-                    inexactMatch.let {
-                        if (it?.signature == null || (signature.params?.size ?: 0) > (it.signature.params?.size ?: 0)) {
-                            inexactMatch = SignatureMatchResult(candidate, signature, signature.returnTy ?: TyMultipleResults(listOf(Primitives.UNKNOWN), true))
-                        }
                     }
 
-                    candidateFailed = true
+                    true
                 }
-            } else if (varargParamTy != null && variadicArg != null) {
-                if (processProblem != null) {
-                    val contravariant = ProblemUtil.contravariantOf(context, varargParamTy, variadicArg.ty, 0, null, variadicArg.param) { problem ->
-                        val contextualMessage = "Variadic result, ${problem.message.decapitalize()}"
-                        signatureProblems?.add(Problem(null, problem.sourceElement, contextualMessage, problem.highlightType))
-                    }
 
-                    if (!contravariant) {
+                val varargParamTy = signature.variadicParamTy
+
+                if (parameterCount < concreteArgTypes.size) {
+                    if (varargParamTy != null) {
+                        for (i in parameterCount until args.size) {
+                            val argType = concreteArgTypes.getOrNull(i)?.ty?.let {
+                                if (it is TyMultipleResults) it.list.first() else it
+                            } ?: variadicArg!!.ty
+                            val argExpr = args.get(i)
+                            val varianceFlags = if (argExpr is LuaTableExpr) TyVarianceFlags.WIDEN_TABLES else 0
+
+                            if (processProblem != null) {
+                                val contravariant = ProblemUtil.contravariantOf(context, varargParamTy, argType, varianceFlags, null, argExpr) { problem ->
+                                    signatureProblems?.add(Problem(null, problem.sourceElement, problem.message, problem.highlightType))
+                                }
+
+                                if (!contravariant) {
+                                    candidateFailed = true
+                                }
+                            } else if (!varargParamTy.contravariantOf(context, argType, varianceFlags)) {
+                                candidateFailed = true
+                            }
+                        }
+                    } else if (parameterCount < args.size) {
+                        for (i in parameterCount until args.size) {
+                            candidateFailed = true
+                            signatureProblems?.add(Problem(null, args[i], "Too many arguments."))
+                        }
+                    } else {
+                        // Last argument is TyMultipleResults, just a weak warning.
+                        val excess = concreteArgTypes.size - parameterCount
+                        val message = if (excess == 1) "1 result is an excess argument." else "${excess} results are excess arguments."
+                        signatureProblems?.add(Problem(null, args.last(), message, ProblemHighlightType.WEAK_WARNING))
+
+                        inexactMatch.let {
+                            if (it?.signature == null || (signature.params?.size ?: 0) > (it.signature.params?.size ?: 0)) {
+                                inexactMatch = SignatureMatchResult(candidate, signature, signature.returnTy
+                                    ?: TyMultipleResults(listOf(Primitives.UNKNOWN), true))
+                            }
+                        }
+
                         candidateFailed = true
                     }
-                } else if (!varargParamTy.contravariantOf(context, variadicArg.ty, 0)) {
-                    candidateFailed = true
+                } else if (varargParamTy != null && variadicArg != null) {
+                    if (processProblem != null) {
+                        val contravariant = ProblemUtil.contravariantOf(context, varargParamTy, variadicArg.ty, 0, null, variadicArg.param) { problem ->
+                            val contextualMessage = "Variadic result, ${problem.message.decapitalize()}"
+                            signatureProblems?.add(Problem(null, problem.sourceElement, contextualMessage, problem.highlightType))
+                        }
+
+                        if (!contravariant) {
+                            candidateFailed = true
+                        }
+                    } else if (!varargParamTy.contravariantOf(context, variadicArg.ty, 0)) {
+                        candidateFailed = true
+                    }
                 }
             }
         }
@@ -536,12 +539,6 @@ fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, processProblem
 
     // Callable, but no matching signature
     return SignatureMatchResult(null, null, fallbackReturnTy!!)
-}
-
-fun ITy.matchSignature(context: SearchContext, call: LuaCallExpr, problemsHolder: ProblemsHolder): SignatureMatchResult? {
-    return matchSignature(context, call) { problem ->
-        problemsHolder.registerProblem(problem.sourceElement, problem.message, problem.highlightType ?: ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
-    }
 }
 
 abstract class Ty(override val kind: TyKind) : ITy {

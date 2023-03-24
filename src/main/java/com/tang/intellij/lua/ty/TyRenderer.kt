@@ -70,27 +70,33 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
 
     override fun render(ty: ITy, sb: StringBuilder) {
         ty.accept(object : TyVisitor() {
-            override fun visitTy(visitedTy: ITy) {
-                withRecursionGuard(visitedTy, sb) {
-                    when (visitedTy) {
-                        is ITyPrimitive -> sb.append(renderTypeName(visitedTy.displayName))
-                        is TyPrimitiveLiteral -> sb.append(renderTypeName(visitedTy.displayName))
+            override fun visitTy(ty: ITy) {
+                withRecursionGuard(ty, sb) {
+                    when (ty) {
+                        is ITyPrimitive -> sb.append(renderTypeName(ty.displayName))
+                        is TyPrimitiveLiteral -> sb.append(renderTypeName(ty.displayName))
                         is TyVoid -> sb.append(renderTypeName(Constants.WORD_VOID))
                         is TyUnknown -> sb.append(renderTypeName(Constants.WORD_ANY))
                         is TyNil -> sb.append(renderTypeName(Constants.WORD_NIL))
                         is ITyGeneric -> {
-                            val base = visitedTy.base
+                            val base = ty.base
 
                             if (base is TyDocTable) {
                                 visitClass(base)
                             } else {
-                                val list = visitedTy.args.map { render(it) }
-                                val baseName = if (base is ITyClass) {
-                                    base.className
-                                } else if (base is ITyAlias) {
-                                    base.name
-                                } else {
-                                    base.displayName
+                                val list = ty.args.map { render(it) }
+                                val baseName = when (base) {
+                                    is ITyClass -> {
+                                        base.className
+                                    }
+
+                                    is ITyAlias -> {
+                                        base.name
+                                    }
+
+                                    else -> {
+                                        base.displayName
+                                    }
                                 }
                                 sb.append("${baseName}${renderGenericParams(list)}")
                             }
@@ -100,7 +106,7 @@ open class TyRenderer : TyVisitor(), ITyRenderer {
 
                         }
 
-                        is TySnippet -> sb.append(visitedTy.toString())
+                        is TySnippet -> sb.append(ty.toString())
                         else -> {
                             error("")
                         }

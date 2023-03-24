@@ -66,7 +66,7 @@ class AssignTypeInspection : StrictInspection() {
                                 } else assigneeMemberType
 
                                 val processor = ProblemUtil.unionAwareProblemProcessor(context, assigneeOwnerType, assigneeCandidateOwnerTy, processProblem)
-                                val flags = TyVarianceFlags.ABSTRACT_GENERICS or if (assigneeCandidateOwnerTy is ITyArray) {
+                                val flags = if (assigneeCandidateOwnerTy is ITyArray) {
                                     varianceFlags or TyVarianceFlags.STRICT_NIL
                                 } else {
                                     varianceFlags
@@ -95,7 +95,7 @@ class AssignTypeInspection : StrictInspection() {
                             context,
                             variableType,
                             value,
-                            varianceFlags or TyVarianceFlags.ABSTRACT_GENERICS,
+                            varianceFlags,
                             targetElement,
                             expressionElement,
                             processProblem

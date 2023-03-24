@@ -280,11 +280,9 @@ val LuaFuncBodyOwner<*>.genericParams: Array<TyGenericParameter>? get() {
 
     val list = mutableListOf<TyGenericParameter>()
 
-    if (this is LuaCommentOwner) {
-        comment?.findTags(LuaDocTagGenericList::class.java)?.forEach {
-            it.genericDefList.forEach { genericDef ->
-                list.add(TyGenericParameter(genericDef))
-            }
+    comment?.findTags(LuaDocTagGenericList::class.java)?.forEach {
+        it.genericDefList.forEach { genericDef ->
+            list.add(TyGenericParameter(genericDef))
         }
     }
 

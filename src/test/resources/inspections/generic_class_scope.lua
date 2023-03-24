@@ -43,6 +43,14 @@ end
 GenericInMethod.lambdaMethodShadow = function(arg)
 end
 
+---@generic SubT : T
+---@param subT SubT
+function GenericInMethod:genericParamExtendingConcreteGenericParam(subT)
+    subT = <error descr="Type mismatch. Required: 'SubT : T' Found: '1'">1</error>
+    subT = <error descr="Type mismatch. Required: 'SubT : T' Found: 'T'">self.a</error>
+    self.a = subT
+end
+
 ---@class Concreteness<T>
 ---@field myT T
 local Concreteness = {}

@@ -36,7 +36,7 @@ interface ITyAlias : ITyResolvable {
         val params = this.params
 
         return if (params != null && genericArgs != null) {
-            val paramSubstitutor = TyParameterSubstitutor.withArgs(params, genericArgs)
+            val paramSubstitutor = TyGenericParameterSubstitutor.withArgs(params, genericArgs)
             ty.substitute(context, paramSubstitutor)
         } else {
             ty

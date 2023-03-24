@@ -57,8 +57,8 @@ local function fn2(arg)
     local var = arg
 
     anyNumber = var
-    number1 = <error descr="Type mismatch. Required: '1' Found: 'T'">var</error>
-    anyString = <error descr="Type mismatch. Required: 'string' Found: 'T'">var</error>
+    number1 = <error descr="Type mismatch. Required: '1' Found: 'T : number'">var</error>
+    anyString = <error descr="Type mismatch. Required: 'string' Found: 'T : number'">var</error>
 end
 
 -- T = number
@@ -92,8 +92,8 @@ local function fn4(arg1, arg2)
 
     anyNumber = arg1
     anyNumber = arg2
-    number1 = <error descr="Type mismatch. Required: '1' Found: 'T'">arg1</error>
-    number1 = <error descr="Type mismatch. Required: '1' Found: 'T'">arg2</error>
+    number1 = <error descr="Type mismatch. Required: '1' Found: 'T : number'">arg1</error>
+    number1 = <error descr="Type mismatch. Required: '1' Found: 'T : number'">arg2</error>
 
     ---@type T
     local t
@@ -109,7 +109,7 @@ end
 fn4(number1, number2)
 
 -- T = number
-fn4(<error descr="Type mismatch. Required: 'T : number' Found: '1'">number1</error>, <error descr="Type mismatch. Required: 'T : number' Found: '\"string1\"'">string1</error>)
+fn4(number1, <error descr="Type mismatch. Required: 'T : number' Found: '\"string1\"'">string1</error>)
 
 
 

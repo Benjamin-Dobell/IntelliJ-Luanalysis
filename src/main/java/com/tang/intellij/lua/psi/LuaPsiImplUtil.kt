@@ -202,8 +202,8 @@ fun getName(funcDefStat: LuaFuncDefStat): String? {
 
 fun getPresentation(funcDefStat: LuaFuncDefStat): ItemPresentation {
     return object : ItemPresentation {
-        override fun getPresentableText(): String {
-            return funcDefStat.name!! + funcDefStat.paramSignature
+        override fun getPresentableText(): String? {
+            return funcDefStat.name?.let { it + funcDefStat.paramSignature }
         }
 
         override fun getLocationString(): String {

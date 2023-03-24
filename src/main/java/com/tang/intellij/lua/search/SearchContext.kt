@@ -42,14 +42,13 @@ abstract class SearchContext() {
 
     val index: Int get() = myIndex // Multiple results index
     val supportsMultipleResults: Boolean get() = myMultipleResults
-    val supportsConcreteGenerics: Boolean get() = myConcreteGenericSupport
 
     private var myDumb = contextStack.get().lastOrNull()?.isDumb ?: false
     private var myIndex = 0
     private var myMultipleResults = false
     private var myInStack = false
     private var myScope: GlobalSearchScope? = null
-    private var myConcreteGenericSupport = true
+    private var myAbstractGenericScopeNames: Set<String>? = null
 
     private val myInferCache = mutableMapOf<LuaPsiTypeGuessable, ITy>()
 
@@ -91,14 +90,6 @@ abstract class SearchContext() {
         }
     }
 
-    fun <T> withConcreteGenericSupport(support: Boolean, action: () -> T): T {
-        val savedConcreteGenericSupport = myConcreteGenericSupport
-        myConcreteGenericSupport = support
-        val ret = action()
-        myConcreteGenericSupport = savedConcreteGenericSupport
-        return ret
-    }
-
     val scope get(): GlobalSearchScope {
         if (isDumb)
             return GlobalSearchScope.EMPTY_SCOPE
@@ -106,6 +97,10 @@ abstract class SearchContext() {
             myScope = ProjectAndLibrariesScope(project)
         }
         return myScope!!
+    }
+
+    val abstractGenericScopeNames get(): Set<String>? {
+        return myAbstractGenericScopeNames
     }
 
     val isDumb: Boolean
@@ -118,6 +113,33 @@ abstract class SearchContext() {
         myScope = oriScope
         return ret
     }
+
+    fun <T> withAbstractGenericScopeNames(scopeNames: Iterable<String>, action: () -> T): T {
+        val oldScopeNames = myAbstractGenericScopeNames
+        myAbstractGenericScopeNames = scopeNames.toSet()
+        val ret = action()
+        myAbstractGenericScopeNames = oldScopeNames
+        return ret
+    }
+
+    fun <T> withAbstractGenericScopeName(scopeName: String?, action: () -> T): T {
+        val oldScopeNames = myAbstractGenericScopeNames
+        myAbstractGenericScopeNames = scopeName?.let { setOf(scopeName) }
+        val ret = action()
+        myAbstractGenericScopeNames = oldScopeNames
+        return ret
+    }
+
+    data class CacheStats(
+        var hits: Int = 0,
+        var missed: Int = 0,
+        var skips: Int = 0
+    ) {
+        val resolutions = mapOf<String, Int>();
+    }
+
+    // Mapping type names to stats
+    val cacheStats = mapOf<String, CacheStats>()
 
     private fun inferAndCache(psi: LuaPsiTypeGuessable): ITy? {
         return if (index == -1) {

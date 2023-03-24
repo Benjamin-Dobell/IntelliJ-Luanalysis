@@ -37,38 +37,52 @@ interface LuaScopedTypeTreeScope {
 
     fun findName(context: SearchContext, name: String, beforeIndex: Int? = null): LuaScopedType?
     fun findOwner(context: SearchContext): ITy?
+
+    companion object {
+        fun fileIdentifierFromScopeName(scopeName: String): String {
+            return scopeName.split("@").first()
+        }
+
+        fun scopeNameFromPsi(psi: PsiElement): String {
+            return psi.containingFile.getFileIdentifier() + "@" + psi.node.startOffset
+        }
+    }
 }
 
 interface LuaScopedTypeTree {
     companion object {
         private val treeKey = Key.create<ScopedTypeTree>("lua.object.tree.types")
 
-        fun get(file: PsiFile): LuaScopedTypeTree? {
-            if (file !is LuaPsiFile) {
-                return null
-            }
-
-            val currentTree = file.getUserData(treeKey)
+        fun get(luaFile: LuaPsiFile): LuaScopedTypeTree {
+            val currentTree = luaFile.getUserData(treeKey)
 
             if (currentTree?.shouldRebuild() != false) {
-                if (!file.isContentsLoaded) {
+                if (!luaFile.isContentsLoaded) {
                     try {
-                        return ScopedTypeStubTree(file).apply {
-                            buildTree(file)
-                            file.putUserData(treeKey, this)
+                        return ScopedTypeStubTree(luaFile).apply {
+                            buildTree(luaFile)
+                            luaFile.putUserData(treeKey, this)
                         }
                     } catch (e: Exception) {
                         // Fallback to PSI tree
                     }
                 }
 
-                return ScopedTypePsiTree(file).apply {
-                    buildTree(file)
-                    file.putUserData(treeKey, this)
+                return ScopedTypePsiTree(luaFile).apply {
+                    buildTree(luaFile)
+                    luaFile.putUserData(treeKey, this)
                 }
             }
 
             return currentTree
+        }
+
+        fun get(file: PsiFile): LuaScopedTypeTree? {
+            if (file !is LuaPsiFile) {
+                return null
+            }
+
+            return get(file as LuaPsiFile)
         }
     }
 
@@ -78,7 +92,7 @@ interface LuaScopedTypeTree {
 }
 
 private class ScopedTypeTreeScope(override val psi: LuaTypeScope, override val tree: ScopedTypeTree, override val parent: ScopedTypeTreeScope?): LuaScopedTypeTreeScope {
-    override val name = psi.containingFile.getFileIdentifier() + "@" + psi.node.startOffset
+    override val name = LuaScopedTypeTreeScope.scopeNameFromPsi(psi)
 
     private val types = ArrayList<LuaScopedType>(0)
     private val childScopes = LinkedList<ScopedTypeTreeScope>()
@@ -431,19 +445,7 @@ private class ScopedTypeStubTree(file: LuaPsiFile) : ScopedTypeTree(file) {
 class ScopedTypeSubstitutor private constructor(context: SearchContext, val scope: LuaScopedTypeTreeScope) : TySubstitutor() {
     override val name = "scoped:" + scope.name
 
-    val supportsConcreteGenerics = context.supportsConcreteGenerics
-
     override fun substitute(context: SearchContext, clazz: ITyClass): ITy {
-        if (supportsConcreteGenerics && clazz is TyGenericParameter) {
-            val scopedTy = scope.findName(context, clazz.varName)?.type as? TyGenericParameter
-
-            if (scopedTy?.className == clazz.className) {
-                // If the generic parameter we found is the same as the source, then we're within the scope in which the generic parameter is defined.
-                // In this scope, the generic parameter is a concrete (albeit unknown) type.
-                return TyClass.createConcreteGenericParameter(clazz)
-            }
-        }
-
         return clazz
     }
 
