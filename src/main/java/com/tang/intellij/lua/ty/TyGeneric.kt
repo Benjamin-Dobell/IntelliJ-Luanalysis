@@ -237,6 +237,43 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
             return false
         }
 
+        var otherBase: ITy? = null
+        var otherArgs: Array<out ITy>? =  null
+        var contravariantParams = false
+
+        if (resolvedOther is ITyGeneric) {
+            otherBase = resolvedOther.base
+            otherArgs = resolvedOther.args
+        } else if (resolvedBase == Primitives.TABLE && args.size == 2) {
+            if (resolvedOther == Primitives.TABLE) {
+                return args.first().isUnknown && args.last().isUnknown
+            }
+
+            if (resolvedOther.isShape(context)) {
+                val genericTable = createTableGenericFromMembers(context, resolvedOther)
+                otherBase = genericTable.base
+                otherArgs = genericTable.args
+                contravariantParams = varianceFlags and TyVarianceFlags.WIDEN_TABLES != 0
+            }
+        } else if (resolvedOther is ITyClass) {
+            otherBase = resolvedOther
+            otherArgs = resolvedOther.getParams(context)
+        }
+
+        if (otherBase != null && otherBase.equals(context, resolvedBase, TyEqualityFlags.fromVarianceFlags(varianceFlags))) {
+            val baseArgCount = otherArgs?.size ?: 0
+            return baseArgCount == 0 || args.size == otherArgs?.size && args.asSequence().zip(otherArgs.asSequence()).all { (arg, otherArg) ->
+                // Args are always invariant as we don't support use-site variance nor immutable/read-only annotations
+                arg.equals(context, otherArg, TyEqualityFlags.fromVarianceFlags(varianceFlags))
+                    || (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0 && otherArg.isUnknown)
+                    || (
+                    (contravariantParams ||
+                        (arg is TyGenericParameter && context.abstractGenericScopeNames?.contains(arg.scopeName) == true)
+                        )  && arg.contravariantOf(context, otherArg, varianceFlags)
+                    )
+            }
+        }
+
         if (resolvedBase.isShape(context)) {
             val memberSubstitutor = getMemberSubstitutor(context)
             val otherMemberSubstitutor = resolvedOther.getMemberSubstitutor(context)
@@ -279,45 +316,6 @@ open class TyGeneric(override val args: Array<out ITy>, override val base: ITy) 
                     varianceFlags
                 )))
             } else false
-        }
-
-        var otherBase: ITy? = null
-        var otherArgs: Array<out ITy>? =  null
-        var contravariantParams = false
-
-        if (resolvedOther is ITyGeneric) {
-            otherBase = resolvedOther.base
-            otherArgs = resolvedOther.args
-        } else if (resolvedBase == Primitives.TABLE && args.size == 2) {
-            if (resolvedOther == Primitives.TABLE) {
-                return args.first().isUnknown && args.last().isUnknown
-            }
-
-            if (resolvedOther.isShape(context)) {
-                val genericTable = createTableGenericFromMembers(context, resolvedOther)
-                otherBase = genericTable.base
-                otherArgs = genericTable.args
-                contravariantParams = varianceFlags and TyVarianceFlags.WIDEN_TABLES != 0
-            }
-        } else if (resolvedOther is ITyClass) {
-            otherBase = resolvedOther
-            otherArgs = resolvedOther.getParams(context)
-        }
-
-        if (otherBase != null) {
-            if (otherBase.equals(context, resolvedBase, TyEqualityFlags.fromVarianceFlags(varianceFlags))) {
-                val baseArgCount = otherArgs?.size ?: 0
-                return baseArgCount == 0 || args.size == otherArgs?.size && args.asSequence().zip(otherArgs.asSequence()).all { (arg, otherArg) ->
-                    // Args are always invariant as we don't support use-site variance nor immutable/read-only annotations
-                    arg.equals(context, otherArg, TyEqualityFlags.fromVarianceFlags(varianceFlags))
-                            || (varianceFlags and TyVarianceFlags.STRICT_UNKNOWN == 0 && otherArg.isUnknown)
-                            || (
-                                (contravariantParams ||
-                                    (arg is TyGenericParameter && context.abstractGenericScopeNames?.contains(arg.scopeName) == true)
-                                )  && arg.contravariantOf(context, otherArg, varianceFlags)
-                            )
-                }
-            }
         }
 
         return super.contravariantOf(context, resolvedOther, varianceFlags)
