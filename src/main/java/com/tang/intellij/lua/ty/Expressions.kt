@@ -477,7 +477,9 @@ private fun LuaIndexExpr.infer(context: SearchContext): ITy? {
 
     //from value
     var result: ITy? = null
-    val prefixType = indexExpr.guessParentType(context)
+    val prefixType = context.withIndex(0) {
+        indexExpr.guessParentType(context)
+    }
 
     Ty.eachResolved(context, prefixType) { ty ->
         result = TyUnion.union(context, result, guessFieldType(context, indexExpr, ty))

@@ -151,3 +151,7 @@ end
 local function returnBooleanOperationOnMultipleResults(val)
     return val > 0 and returnsNumberNumber() or returnsStringString()
 end
+
+-- Correctly handle chainged function calls through methods returning multiple results
+aString, aNumber = aString:gsub('', ''):gsub('', '')
+<error descr="Type mismatch. Required: 'number' Found: 'string'">aNumber</error>, <error descr="Type mismatch. Required: 'string' Found: 'number'">aString</error> = <error descr="Result 1, type mismatch. Required: 'number' Found: 'string'"><error descr="Result 2, type mismatch. Required: 'string' Found: 'number'">aString:gsub('', ''):gsub('', '')</error></error>
