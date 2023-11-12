@@ -68,8 +68,11 @@ sourceSets {
         }
     }
 }
-
 tasks {
+    withType<JavaExec> {
+        jvmArgs = listOf("-Xms2048m", "-Xmx8192m")
+    }
+
     withType<JavaCompile> {
         sourceCompatibility = "11"
         targetCompatibility = "11"
