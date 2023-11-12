@@ -285,6 +285,16 @@ class GenericAnalyzer(
     }
 
     private fun visitSig(arg: IFunSignature, par: IFunSignature) {
+        par.params?.let { parParams ->
+            arg.params?.asSequence()?.zip(parParams.asSequence())?.forEach { (argParam, parParam) ->
+                if (argParam.ty != null) {
+                    warp(argParam.ty) {
+                        accept(Ty.resolve(context, parParam.ty ?: Primitives.UNKNOWN))
+                    }
+                }
+            }
+        }
+
         arg.returnTy?.let {
             warp(it) {
                 par.returnTy?.let {

@@ -808,3 +808,25 @@ numberArray = <error descr="Type mismatch. Required: 'number[]' Found: '(number 
 stringOrNumberArray = arrayWithUnionOfGenerics(stringArray, numberArray)
 stringArray = <error descr="Type mismatch. Required: 'string[]' Found: '(number | string)[]'">arrayWithUnionOfGenerics(stringArray, numberArray)</error>
 numberArray = <error descr="Type mismatch. Required: 'number[]' Found: '(number | string)[]'">arrayWithUnionOfGenerics(stringArray, numberArray)</error>
+
+
+---@generic R
+---@param fn fun(resume: (fun(result: R): void)): void
+---@return R
+local function nestedFunctionParameterInference(fn)
+    ---@type R
+    local r
+
+    fn(function(userR)
+        r = userR
+    end)
+
+    return r
+end
+
+nestedFunctionParameterInference(
+    ---@param resume fun(result: number): void
+    function(resume)
+        resume(1)
+    end
+)
