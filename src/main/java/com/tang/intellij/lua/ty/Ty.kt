@@ -815,7 +815,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
             }
 
             while (pendingTys.isNotEmpty()) {
-                val pendingTy = pendingTys.removeLast()
+                val pendingTy = pendingTys.removeAt(pendingTys.size - 1)
 
                 if (visitedTys.add(pendingTy.ty)) {
                     val resolvedMemberTy = (pendingTy.ty as? ITyResolvable)?.resolve(context) ?: pendingTy.ty
@@ -857,7 +857,7 @@ abstract class Ty(override val kind: TyKind) : ITy {
             }
 
             while (pendingTys.isNotEmpty()) {
-                val pendingTy = pendingTys.removeLast()
+                val pendingTy = pendingTys.removeAt(pendingTys.size - 1)
 
                 if (visitedTys.add(pendingTy)) {
                     val resolvedMemberTy = (pendingTy as? ITyResolvable)?.resolve(context) ?: pendingTy

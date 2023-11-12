@@ -46,7 +46,7 @@ class IllegalAliasInspection : LocalInspectionTool() {
                 }
 
                 while (pendingTys.isNotEmpty()) {
-                    val pendingTy = pendingTys.removeLast()
+                    val pendingTy = pendingTys.removeAt(pendingTys.size - 1)
 
                     if (visitedTys.add(pendingTy)) {
                         if (pendingTy == alias || (pendingTy as? ITyGeneric)?.base == alias) {
