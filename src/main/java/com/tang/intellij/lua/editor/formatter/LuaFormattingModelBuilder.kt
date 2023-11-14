@@ -51,9 +51,11 @@ class LuaFormattingModelBuilder : FormattingModelBuilder {
 
         return SpacingBuilder(settings, LuaLanguage.INSTANCE)
                 .before(END).lineBreakInCode()
-                .after(DO).lineBreakInCode()
-                .after(THEN).lineBreakInCode()
-                .around(ELSE).lineBreakInCode()
+                .after(DO).spaces(1)
+                .after(THEN).spaces(1)
+                .after(ELSE).spaces(1)
+                .before(ELSE).lineBreakInCode()
+                .after(ELSEIF).spaces(1)
                 .before(ELSEIF).lineBreakInCode()
                 .after(LOCAL).spaces(1) //local<SPACE>
                 .around(COLON).none()
@@ -64,7 +66,7 @@ class LuaFormattingModelBuilder : FormattingModelBuilder {
                 .before(TABLE_FIELD_SEP).none() // { 1<SPACE>, 2 }
                 .after(TABLE_FIELD_SEP).spaces(if (luaCodeStyleSettings.SPACE_AFTER_TABLE_FIELD_SEP) 1 else 0) // { 1,<SPACE>2 }
                 .before(BLOCK).blankLines(0)
-                .afterInside(RPAREN, FUNC_BODY).lineBreakInCode()
+                .afterInside(RPAREN, FUNC_BODY).spaces(1)
                 .between(FUNCTION, FUNC_BODY).none()
                 .between(FUNCTION, ID).spaces(1) //function<SPACE>name()
                 .around(BINARY_OP).spaces(if (commonSettings.SPACE_AROUND_ASSIGNMENT_OPERATORS) 1 else 0)
