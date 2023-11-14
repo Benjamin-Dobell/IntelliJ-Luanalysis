@@ -29,7 +29,8 @@ interface ILuaTypeInfer {
         fun infer(context: SearchContext, target: LuaPsiTypeGuessable): ITy? {
             for (typeInfer in EP_NAME.extensionList) {
                 ProgressManager.checkCanceled()
-                return typeInfer.inferType(context, target)
+                var inferType = typeInfer.inferType(context, target)
+                if (inferType != null) return inferType
             }
             return null
         }
